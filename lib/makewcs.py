@@ -43,16 +43,18 @@ MAKEWCS V0.0 (RNH) - Created new version to implement more complete
                         new versions of wcsutil and fileutil in PyDrizzle.
         V0.6.3 (WJH) - Modified to support new version of WCSUtil which correctly
                         sets up and uses archived WCS keywords.
+        V0.7.0 (WJH) - Revised algorithm to work properly with subarray images.
+                        Also, simplified keyword access using PyFITS object.
         
 """
 
 #import iraf
 from math import *
-import string
+import string,types
 import pydrizzle
 #from WCS import WCS
 
-from pydrizzle import wcsutil,fileutil,drutil,buildasn
+from pydrizzle import wcsutil,fileutil,drutil,buildasn,obsgeometry
 
 import numarray as N
 
@@ -69,7 +71,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5}
 
-__version__ = '0.6.3 (26 January 2005)'
+__version__ = '0.7.0 (4 February 2005)'
 def run(image,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -88,8 +90,8 @@ def run(image,quiet=yes,restore=no,prepend='O'):
             elif not _found:
                 print '#\n IDCTAB: ',idctab,' could not be found. Quitting...\n#\n'
                 return
-
-            _update(image,idctab,quiet=quiet,prepend=_prepend)
+            _nimsets = get_numsci(image)
+            _update(image,idctab,num_sci,quiet=quiet,prepend=_prepend)
         else: 
             if not quiet:
                 print 'Restoring original WCS values for',image  
@@ -112,15 +114,13 @@ def run(image,quiet=yes,restore=no,prepend='O'):
 
         for img in _files:
             _phdu = img[0]+'[0]'
-            _numext = int(drutil.findNumExt(_phdu))
             _instrument = fileutil.getKeyword(_phdu,keyword='INSTRUME')
 
-            if NUM_PER_EXTN.has_key(_instrument):
-                _num_per_extn = NUM_PER_EXTN[_instrument]
-            else:
+            if not NUM_PER_EXTN.has_key(_instrument):
                 raise "Instrument %s not supported yet. Exiting..."%_instrument
-                            
-            _nimsets = _numext / _num_per_extn
+                                      
+            _nimsets = get_numsci(img[0])
+            
             for i in xrange(_nimsets):
                 if img[0].find('.fits') > 0:
                     _image = img[0]+'[sci,'+repr(i+1)+']'
@@ -128,7 +128,7 @@ def run(image,quiet=yes,restore=no,prepend='O'):
                     _image = img[0]+'['+repr(i+1)+']'
 
                 if not restore:
-                    _update(_image,idctab, quiet=quiet,instrument=_instrument,prepend=_prepend)
+                    _update(_image,idctab, _nimsets, quiet=quiet,instrument=_instrument,prepend=_prepend)
                 else:                    
                     if not quiet:
                         print 'Restoring original WCS values for',_image  
@@ -144,26 +144,21 @@ def restoreCD(image,prepend):
     except: 
         print 'ERROR: Could not restore WCS keywords for %s.'%image
 
-def _update(image,idctab,quiet=None,instrument=None,prepend=None):
+def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     
     _prepend = prepend
-    
-    # Check to see whether we are working with GEIS or FITS input
-    _fname,_iextn = fileutil.parseFilename(image)
-    
-    if _fname.find('.fits') < 0:
-        # Input image is NOT a FITS file, so 
-        #     build a FITS name for it's copy.
-        _fitsname = fileutil.buildFITSName(_fname)
-    else:
-        _fitsname = None
-    
+            
+    # Make a copy of the header for keyword access
+    # This copy includes both Primary header and 
+    # extension header
+    hdr = fileutil.getHeader(image)
+
     # Try to get the instrument if we don't have it already
-    instrument = fileutil.getKeyword(image,'INSTRUME')
+    instrument = readKeyword(hdr,'INSTRUME')
 
     # Read in any specified OFFTAB, if present (WFPC2)
-    offtab = fileutil.getKeyword(image,'OFFTAB')
-    dateobs = fileutil.getKeyword(image,'DATE-OBS')
+    offtab = readKeyword(hdr,'OFFTAB')
+    dateobs = readKeyword(hdr,'DATE-OBS')
     if not quiet:
         print "OFFTAB, DATE-OBS: ",offtab,dateobs
 
@@ -178,33 +173,38 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
         print "-Reading IDCTAB file ",idctab
 
     # Get telescope orientation from image header
-    pvt = float(fileutil.getKeyword(image,'PA_V3'))
+    pvt = float(readKeyword(hdr,'PA_V3'))
      
     # Find out about instrument, detector & filters
-    detector = fileutil.getKeyword(image,'DETECTOR')
+    detector = readKeyword(hdr,'DETECTOR')
 
     Nrefchip=1
     if instrument == 'WFPC2':
-        filter1 = fileutil.getKeyword(image,'FILTNAM1')
-        filter2 = fileutil.getKeyword(image,'FILTNAM2')
+        filter1 = readKeyword(hdr,'FILTNAM1')
+        filter2 = readKeyword(hdr,'FILTNAM2')
         Nrefchip=3
     elif instrument == 'NICMOS':
-        filter1 = fileutil.getKeyword(image,'FILTER')
+        filter1 = readKeyword(hdr,'FILTER')
         filter2 = None
     else:
-        filter1 = fileutil.getKeyword(image,'FILTER1')
-        filter2 = fileutil.getKeyword(image,'FILTER2')
+        filter1 = readKeyword(hdr,'FILTER1')
+        filter2 = readKeyword(hdr,'FILTER2')
     
     # For the ACS/WFC case the chip number doesn't match the image
     # extension
     if instrument == 'ACS' and detector == 'WFC':
-       Nrefchip = 2
-       nr = 1
+       if nimsets == 2:
+          nr = 2
+       else:
+          nr = 1 
     elif instrument == 'NICMOS':
-        Nrefchip = fileutil.getKeyword(image,'CAMERA')
+        Nrefchip = readKeyword(hdr,'CAMERA')
         nr = 1
     else:
-       nr = Nrefchip
+       if nimsets > 1:
+          nr = Nrefchip
+       else:
+          nr = 1
 
     if filter1 == None or filter1.strip() == '': filter1 = 'CLEAR'
     else: filter1 = filter1.strip()
@@ -227,17 +227,20 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
     # as this is where
     VA_fac=1.0
     if instrument == 'ACS':
-       VA_fac = float(fileutil.getKeyword(image,'VAFACTOR'))
+       _va_key = readKeyword(hdr,'VAFACTOR')
+       if _va_key != None: 
+          VA_fac = float(_va_key)
+       
        if not quiet:
           print 'VA factor: ',VA_fac
        
-    ra_targ = float(fileutil.getKeyword(image,'RA_TARG'))
-    dec_targ = float(fileutil.getKeyword(image,'DEC_TARG'))
+    ra_targ = float(readKeyword(hdr,'RA_TARG'))
+    dec_targ = float(readKeyword(hdr,'DEC_TARG'))
 
     # Get the chip number
-    _c = fileutil.getKeyword(image,'CAMERA')
-    _s = fileutil.getKeyword(image,'CCDCHIP')
-    _d = fileutil.getKeyword(image,'DETECTOR')
+    _c = readKeyword(hdr,'CAMERA')
+    _s = readKeyword(hdr,'CCDCHIP')
+    _d = readKeyword(hdr,'DETECTOR')
     if _c != None and str(_c).isdigit():
         chip = int(_c)
     elif _s == None and _d == None:
@@ -254,8 +257,30 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
         print "-PA_V3 : ",pvt," CHIP #",chip
 
     # Extract the appropriate information from the IDCTAB
-    fx,fy,refpix,order=fileutil.readIDCtab(idctab,chip=chip,direction='forward',
-                filter1=filter1,filter2=filter2,offtab=offtab,date=dateobs)
+    #fx,fy,refpix,order=fileutil.readIDCtab(idctab,chip=chip,direction='forward',
+    #            filter1=filter1,filter2=filter2,offtab=offtab,date=dateobs)
+    idcmodel = obsgeometry.IDCModel(idctab,
+                    chip=chip, direction='forward', date=dateobs,
+                    filter1=filter1, filter2=filter2, offtab=offtab)
+    fx = idcmodel.cx
+    fy = idcmodel.cy
+    refpix = idcmodel.refpix
+    order = idcmodel.norder
+    #
+    # Look for any subarray offset
+    #
+    ltv1,ltv2 = drutil.getLTVOffsets(image)
+    #
+    # If reference point is not centered on distortion model
+    # shift coefficients to be applied relative to observation
+    # reference position
+    #
+    offsetx = Old.crpix1 - ltv1 - refpix['XREF']
+    offsety = Old.crpix2 - ltv2 - refpix['YREF']
+    shiftx = refpix['XREF'] + ltv1
+    shifty = refpix['YREF'] + ltv2
+    if offsetx != 0.0 or offsety != 0.0:
+        fx,fy = idcmodel.shift(idcmodel.cx,idcmodel.cy,offsetx,offsety)
 
     # Extract the appropriate information for reference chip
     rfx,rfy,rrefpix,rorder=fileutil.readIDCtab(idctab,chip=Nrefchip,
@@ -263,7 +288,7 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
         date=dateobs)
 
     # Create the reference image name
-    rimage = image.split('[')[0]+"[%d]" % nr
+    rimage = image.split('[')[0]+"[sci,%d]" % nr
     if not quiet:
        print "Reference image: ",rimage
 
@@ -278,26 +303,27 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
     #crval1 = float(fileutil.getKeyword(rimage,'CRVAL1'))
     #crval1 = float(R.crval1)
     #crval2 = dec
-    dec = float(R.crval2)
+    #dec = float(R.crval2)
+
+    # Get an approximate reference position on the sky
+    rref = (rrefpix['XREF'] + ltv1 + offsetx, rrefpix['YREF'] + ltv2 + offsety)
+    crval1,crval2=R.xy2rd(rref)
 
     # Convert the PA_V3 orientation to the orientation at the aperture
     # This is for the reference chip only - we use this for the
     # reference tangent plane definition
     # It has the same orientation as the reference chip
-    pv = wcsutil.troll(pvt,dec,rrefpix['V2REF'],rrefpix['V3REF'])
+    pv = wcsutil.troll(pvt,crval2,rrefpix['V2REF'],rrefpix['V3REF'])
 
     # Add the chip rotation angle
     if rrefpix['THETA']:
        pv += rrefpix['THETA']
 
-    # Get an approximate reference position on the sky
-    crval1,crval2=R.xy2rd((rrefpix['XREF'],rrefpix['YREF']))
-
     # Set values for the rest of the reference WCS
     R.crval1=crval1
     R.crval2=crval2
-    R.crpix1=0.0
-    R.crpix2=0.0
+    R.crpix1=0.0 + offsetx + shiftx
+    R.crpix2=0.0 + offsety + shifty
     R_scale=rrefpix['PSCALE']/3600.0
     R.cd11=parity[0][0] *  cos(pv*pi/180.0)*R_scale
     R.cd12=parity[0][0] * -sin(pv*pi/180.0)*R_scale
@@ -324,9 +350,18 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
 
     if rrefpix['THETA']: theta += rrefpix['THETA']*pi/180.0
 
-    dX=off*sin(theta)
-    dY=off*cos(theta)
+    dX=(off*sin(theta)) + offsetx + shiftx
+    dY=(off*cos(theta)) + offsety + shifty
 
+
+    # Check to see whether we are working with GEIS or FITS input
+    _fname,_iextn = fileutil.parseFilename(image)
+    if _fname.find('.fits') < 0:
+        # Input image is NOT a FITS file, so 
+        #     build a FITS name for it's copy.
+        _fitsname = fileutil.buildFITSName(_fname)
+    else:
+        _fitsname = None
     # Create a new instance of a WCS
     if _fitsname == None:
         _new_name = image
@@ -335,12 +370,13 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
 
     #New=wcsutil.WCSObject(_new_name,new=yes)
     New = Old.copy()
-
+    
     # Calculate new CRVALs and CRPIXs
     New.crval1,New.crval2=R.xy2rd((dX,dY))
-    New.crpix1=refpix['XREF']
-    New.crpix2=refpix['YREF']
+    New.crpix1=refpix['XREF'] + ltv1 + offsetx
+    New.crpix2=refpix['YREF'] + ltv2 + offsety
 
+    # Account for subarray offset
     # Angle of chip relative to chip
     if refpix['THETA']:
        dtheta = refpix['THETA'] - rrefpix['THETA']
@@ -373,7 +409,7 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
     New.cd12=diff_angles(c,New.crval1)*cos(New.crval2*pi/180.0)
     New.cd21=diff_angles(b,New.crval2)
     New.cd22=diff_angles(d,New.crval2)
-
+    
     # Apply the velocity aberration effect if applicable
     if VA_fac != 1.0:
 
@@ -461,7 +497,49 @@ def diff_angles(a,b):
        diff += 360.0
     
     return diff
-     
+    
+def readKeyword(hdr,keyword):
+
+    try:
+        value =  hdr[keyword]
+    except KeyError:
+        value = None
+
+    # NOTE:  Need to clean up the keyword.. Occasionally the keyword value
+    # goes right up to the "/" FITS delimiter, and iraf.keypar is incapable
+    # of realizing this, so it incorporates "/" along with the keyword value.
+    # For example, after running "pydrizzle" on the image "j8e601bkq_flt.fits",
+    # the CD keywords look like this:
+    #
+    #   CD1_1   = 9.221627430999639E-06/ partial of first axis coordinate w.r.t. x
+    #   CD1_2   = -1.0346992614799E-05 / partial of first axis coordinate w.r.t. y
+    #
+    # so for CD1_1, iraf.keypar returns:
+    #       "9.221627430999639E-06/"
+    #
+    # So, the following piece of code CHECKS for this and FIXES the string,
+    # very simply by removing the last character if it is a "/".
+    # This fix courtesy of Anton Koekemoer, 2002.
+    if type(value) is types.StringType:
+        if value[-1:] == '/':
+            value = value[:-1]
+
+    return value
+
+def get_numsci(image):
+    """ Find the number of SCI extensions in the image.
+        Input:
+            image - name of single input image 
+    """ 
+    handle = fileutil.openImage(image)
+    num_sci = 0    
+    for extn in handle:
+        if extn.header.has_key('extname'):
+            if extn.header['extname'].lower() == 'sci':
+                num_sci += 1
+    handle.close()
+    return num_sci
+
 def shift_coeffs(cx,cy,xs,ys,norder):
     """
     Shift reference position of coefficients to new center 
