@@ -382,7 +382,6 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     
     # Calculate new CRVALs and CRPIXs
     New.crval1,New.crval2=R.xy2rd((dX,dY))
-    print 'ltvoffx: ',ltvoffx,'    ltvoffy: ',ltvoffy
     New.crpix1=refpix['XREF'] + ltvoffx
     New.crpix2=refpix['YREF'] + ltvoffy
 
