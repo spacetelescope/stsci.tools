@@ -9,7 +9,7 @@ BUFSIZE = 1024*1000   # 1Mb cache size
 __version__ = '0.4'
 
 
-def ImageIter(imglist,bufsize=None,overlap=0,copy=0,updateSection = None):
+def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
     """ Return image section for each image listed on input.
         The inputs can either be a single image or a list of them,
         with the return value matching the input type.
@@ -23,8 +23,6 @@ def ImageIter(imglist,bufsize=None,overlap=0,copy=0,updateSection = None):
         through the image with this many rows of overlap, with
         the default being no overlap at all.
     """
-    if bufsize == None: bufsize = BUFSIZE
-
     if type(imglist) != types.ListType:
         imgarr = imglist.data
         _imglen = 1
@@ -34,6 +32,7 @@ def ImageIter(imglist,bufsize=None,overlap=0,copy=0,updateSection = None):
         _imglen = len(imglist)
         single = 0
         _outlist = []
+    _numrows = imgarr.shape[0]
 
     if len(imgarr.shape) == 1:
         if copy:
@@ -45,7 +44,7 @@ def ImageIter(imglist,bufsize=None,overlap=0,copy=0,updateSection = None):
             yield imglist,None
 
     else:
-        nrows = int(bufsize / (imgarr.itemsize() * imgarr.shape[1]))
+        nrows = computeBuffRows(imgarr,bufsize=bufsize)
         niter = int(imgarr.shape[0] / nrows) * nrows
 
         if copy:
@@ -62,9 +61,10 @@ def ImageIter(imglist,bufsize=None,overlap=0,copy=0,updateSection = None):
             # convolving the returned image sections, and insures
             # that the last segment will always be returned with
             # overlap+1 rows.  
-            if pix > 0: pix -= overlap
-            _prange = pix+nrows
-            if _prange > imgarr.shape[0]: _prange = imgarr.shape[0]
+            
+            _prange = pix+nrows+overlap
+            if _prange > _numrows: _prange = _numrows
+            
             if copy:
                 if single:
                     _cache = imgarr[pix:_prange].copy()
@@ -76,8 +76,8 @@ def ImageIter(imglist,bufsize=None,overlap=0,copy=0,updateSection = None):
                     for img in xrange(len(imglist)): N.multiply(_outlist[img],0.,_outlist[img])
             else:
                 if single:
-                    yield imgarr.section[pix:_prange,:],(pix,_prange)
-                    #yield imgarr[pix:pix+nrows]
+                    #yield imgarr.section[pix:_prange,:],(pix,_prange)
+                    yield imgarr[pix:_prange],(pix,_prange)
                 else:
                     for hdu in imglist:
                 #_outlist.append(imglist[img][pix:pix+nrows])
@@ -90,3 +90,10 @@ def ImageIter(imglist,bufsize=None,overlap=0,copy=0,updateSection = None):
                         imglist[updateSection][pix:_prange] = _outlist[updateSection]
                     del _outlist
                     _outlist = []
+    
+def computeBuffRows(imgarr,bufsize=BUFSIZE):
+    """ Function to compute the number of rows from the 
+        input array that fits in the allocated memory given
+        by the bufsize.
+    """
+    return int(bufsize / (imgarr.itemsize() * imgarr.shape[1]))
