@@ -303,6 +303,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     # Create the tangent plane WCS on which the images are defined
     # This is close to that of the reference chip
     R=wcsutil.WCSObject(rimage)
+    R.write_archive(rimage)
     R.restore()
 
     # Reacd in declination of target (for computing orientation at aperture)
