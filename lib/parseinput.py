@@ -2,8 +2,11 @@
 #  Program: parseinput.py
 #  Author:  Christopher Hanley
 #  History:
-#   Version 0.1, 11/02/2004: Initial Creation -- CJH
-__version__ = '0.1.1 (12/06/2004)'
+#   Version 0.1,  11/02/2004: Initial Creation -- CJH
+#   Version 0.1.2 01/10/2005: Removed the appending of "_drz.fits" to extracted
+#       file names.  -- CJH
+
+__version__ = '0.1.2 (01/10/2005)'
 __author__  = 'Christopher Hanley'
 
 # irafglob provides the ability to recursively parse user input that
@@ -86,7 +89,7 @@ def parseinput(inputlist,outputname=None):
             # Extract the output name from the association table if None
             # was provided on input.
             if outputname  == None:
-                    newoutputname = assocdict['output']+'_drz.fits'
+                    newoutputname = assocdict['output']
 
             # Loop over the association dictionary to extract the input
             # file names.
