@@ -213,10 +213,8 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
 
     # Read in declination of target (for computing orientation at aperture)
     # Note that this is from the reference image
-    #dec = float(fileutil.getKeyword(rimage,'CRVAL2'))
-    #crval1 = float(fileutil.getKeyword(rimage,'CRVAL1'))
-    dec = float(Old.crval2)
-    crval1 = float(Old.crval2)
+    dec = float(fileutil.getKeyword(rimage,'CRVAL2'))
+    crval1 = float(fileutil.getKeyword(rimage,'CRVAL1'))
     crval2 = dec
 
     if filter1 == None or filter1.strip() == '': filter1 = 'CLEAR'
