@@ -28,7 +28,9 @@ def main():
               author_email = "help@stsci.edu",
               license = "http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE",
               platforms = ["Linux","Solaris","Mac OS X","Win"],
-              py_modules = ['lib/imageiter', 'lib/nimageiter', 'lib/numcombine', 'lib/versioninfo'])
+              py_modules = ['imageiter', 'nimageiter', 'numcombine', 'versioninfo'],
+              package_dir={'':'lib'})
+
 
 if __name__ == "__main__":
     main()
