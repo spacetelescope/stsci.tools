@@ -5,8 +5,10 @@
 #   Version 0.1,  11/02/2004: Initial Creation -- CJH
 #   Version 0.1.2 01/10/2005: Removed the appending of "_drz.fits" to extracted
 #       file names.  -- CJH
+#   Version 0.1.3 01/18/2005: Added the NICMOS '_asc.fits' to the list of
+#       valid association file names. 
 
-__version__ = '0.1.2 (01/10/2005)'
+__version__ = '0.1.3 (01/18/2005)'
 __author__  = 'Christopher Hanley'
 
 # irafglob provides the ability to recursively parse user input that
@@ -14,7 +16,7 @@ __author__  = 'Christopher Hanley'
 import irafglob
 from irafglob import irafglob
 
-# PyDrizzle provides the ability to read association tables ('_asn.fits')
+# PyDrizzle provides the ability to read association tables ('_asn.fits', '_asc.fits')
 import pydrizzle
 from pydrizzle import fileutil
 from pydrizzle.fileutil import readAsnTable
@@ -136,7 +138,7 @@ def isValidAssocExtn(extname):
     
     """
     # Define a list of valid extension types to define an association table.
-    validExtnNames = ['asn']
+    validExtnNames = ['asn','asc']
     
     # Loop over the list of valid extension types and compare with the input 
     # extension name.  If there is ever a match return True.
