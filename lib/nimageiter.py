@@ -6,7 +6,7 @@ import numarray as N
 
 BUFSIZE = 1024*1000   # 1Mb cache size
 
-__version__ = '0.3'
+__version__ = '0.4'
 
 
 def ImageIter(imglist,bufsize=None,overlap=0,copy=0,updateSection = None):
@@ -57,6 +57,12 @@ def ImageIter(imglist,bufsize=None,overlap=0,copy=0,updateSection = None):
                 for img in imglist: _outlist.append(N.zeros((nrows,imgarr.shape[1]),type=imgarr.typecode()))
 
         for pix in range(0,niter+1,nrows):
+            # overlap needs to be computed here
+            # This allows the user to avoid edge effects when
+            # convolving the returned image sections, and insures
+            # that the last segment will always be returned with
+            # overlap+1 rows.  
+            if pix > 0: pix -= overlap
             _prange = pix+nrows
             if _prange > imgarr.shape[0]: _prange = imgarr.shape[0]
             if copy:
@@ -84,5 +90,3 @@ def ImageIter(imglist,bufsize=None,overlap=0,copy=0,updateSection = None):
                         imglist[updateSection][pix:_prange] = _outlist[updateSection]
                     del _outlist
                     _outlist = []
-
-                    pix -= overlap
