@@ -3,7 +3,7 @@
 #  Author:  Christopher Hanley
 #  History:
 #   Version 0.1, 11/02/2004: Initial Creation -- CJH
-__version__ = '0.1 (11/02/2004)'
+__version__ = '0.1.1 (12/06/2004)'
 __author__  = 'Christopher Hanley'
 
 # irafglob provides the ability to recursively parse user input that
@@ -14,10 +14,10 @@ from irafglob import irafglob
 # PyDrizzle provides the ability to read association tables ('_asn.fits')
 import pydrizzle
 from pydrizzle import fileutil
-from fileutil import readAsnTable
+from pydrizzle.fileutil import readAsnTable
 
 def parseinput(inputlist,outputname=None):
-"""
+    """
     FUNCTION: paseinput
     PUPOSE  : Recursively parse user input based upon the irafglob
        program and construct a list of files that need to be processed.
@@ -33,7 +33,7 @@ def parseinput(inputlist,outputname=None):
     OUTPUT  : files - python list containing name of output files to be processed
               newoutputname - string object containing name of output file to be
                               created.
-"""
+    """
 
     # Initalize some variables
     files = [] # list used to store names of input files
@@ -105,15 +105,15 @@ def parseinput(inputlist,outputname=None):
 
 
 def checkASN(filename):
-"""
+    """
     FUNCTION: checkASN
     PURPOSE : Determine if the filename provided to the function belongs to
               and association.
     INPUT   : string
     OUTPUT  : boolean value 
-"""
+    """
     # Extract the file extn type:
-    extnType = filename[filename.rfind('_')+1:filename('.')]
+    extnType = filename[filename.rfind('_')+1:filename.rfind('.')]
     
     # Determine if this extn name is valid for an assocation file
     if isValidAssocExtn(extnType):
@@ -123,7 +123,7 @@ def checkASN(filename):
     
     
 def isValidAssocExtn(extname):
-"""
+    """
     FUNCTION: isValidAssocExtn
     PURPOSE : Determine if the extension name given as input could
               represent a valid association file.
@@ -131,13 +131,13 @@ def isValidAssocExtn(extname):
     OUTPUT  : boolean value
     
     
-"""
+    """
     # Define a list of valid extension types to define an association table.
     validExtnNames = ['asn']
     
     # Loop over the list of valid extension types and compare with the input 
     # extension name.  If there is ever a match return True.
-    for validname in validExtnNames:
+    for validName in validExtnNames:
         if (extname == validName):
             return True
     return False
