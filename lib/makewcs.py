@@ -64,7 +64,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3}
 
-__version__ = '0.6 (27 August 2004)'
+__version__ = '0.6.1 (29 September 2004)'
 def run(image,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -115,7 +115,7 @@ def run(image,quiet=yes,restore=no,prepend='O'):
                             
             _nimsets = _numext / _num_per_extn
             for i in xrange(_nimsets):
-                if img[0].find('.fits'):
+                if img[0].find('.fits') > 0:
                     _image = img[0]+'[sci,'+repr(i+1)+']'
                 else:
                     _image = img[0]+'['+repr(i+1)+']'
@@ -348,10 +348,10 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
     c,d=R.xy2rd((dX+dXY,dY+dYY))
 
     # Calculate the new CDs and convert to degrees
-    New.cd11=(a-New.crval1)*cos(New.crval2*pi/180.0)
-    New.cd12=(c-New.crval1)*cos(New.crval2*pi/180.0)
-    New.cd21=(b-New.crval2)
-    New.cd22=(d-New.crval2)
+    New.cd11=diff_angles(a,New.crval1)*cos(New.crval2*pi/180.0)
+    New.cd12=diff_angles(c,New.crval1)*cos(New.crval2*pi/180.0)
+    New.cd21=diff_angles(b,New.crval2)
+    New.cd22=diff_angles(d,New.crval2)
 
     # Apply the velocity aberration effect if applicable
     if VA_fac != 1.0:
@@ -362,8 +362,8 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
        # First shift the CRVALs apart
        # This is now relative to the reference chip, not the
        # target position.
-       New.crval1 = R.crval1 + VA_fac*(New.crval1 - R.crval1)
-       New.crval2 = R.crval2 + VA_fac*(New.crval2 - R.crval2)
+       New.crval1 = R.crval1 + VA_fac*diff_angles(New.crval1, R.crval1)
+       New.crval2 = R.crval2 + VA_fac*diff_angles(New.crval2, R.crval2)
 
        # and scale the CDs
        New.cd11 = New.cd11*VA_fac
@@ -432,6 +432,20 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
     del fimg
     
 
+def diff_angles(a,b):
+    """ Perform angle subtraction a-b taking into account
+        small-angle differences across 360degree line. """
+        
+    diff = a - b
+
+    if diff > 180.0:
+       diff -= 360.0
+
+    if diff < -180.0:
+       diff += 360.0
+    
+    return diff
+     
 def shift_coeffs(cx,cy,xs,ys,norder):
     """
     Shift reference position of coefficients to new center 
