@@ -71,7 +71,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5}
 
-__version__ = '0.7.0 (4 February 2005)'
+__version__ = '0.7.0 (8 February 2005)'
 def run(image,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -190,22 +190,6 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
         filter1 = readKeyword(hdr,'FILTER1')
         filter2 = readKeyword(hdr,'FILTER2')
     
-    # For the ACS/WFC case the chip number doesn't match the image
-    # extension
-    if instrument == 'ACS' and detector == 'WFC':
-       if nimsets == 2:
-          nr = 2
-       else:
-          nr = 1 
-    elif instrument == 'NICMOS':
-        Nrefchip = readKeyword(hdr,'CAMERA')
-        nr = 1
-    else:
-       if nimsets > 1:
-          nr = Nrefchip
-       else:
-          nr = 1
-
     if filter1 == None or filter1.strip() == '': filter1 = 'CLEAR'
     else: filter1 = filter1.strip()
     if filter2 == None or filter2.strip() == '': filter2 = 'CLEAR'
@@ -252,7 +236,20 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
             chip = int(_d)
         else:
             chip = 1
-
+    # For the ACS/WFC case the chip number doesn't match the image
+    # extension
+    nr = 1
+    if instrument == 'ACS' and detector == 'WFC':
+        if nimsets > 1:
+          Nrefchip = 2
+        else:
+          Nrefchip = chip
+    elif instrument == 'NICMOS':
+        Nrefchip = readKeyword(hdr,'CAMERA')
+    else:
+       if nimsets > 1:
+          nr = Nrefchip
+    
     if not quiet:
         print "-PA_V3 : ",pvt," CHIP #",chip
 
@@ -279,8 +276,9 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     offsety = Old.crpix2 - ltv2 - refpix['YREF']
     shiftx = refpix['XREF'] + ltv1
     shifty = refpix['YREF'] + ltv2
-    if offsetx != 0.0 or offsety != 0.0:
-        fx,fy = idcmodel.shift(idcmodel.cx,idcmodel.cy,offsetx,offsety)
+
+    if offsetx != 0. or offsety != 0.:
+       fx,fy = idcmodel.shift(idcmodel.cx,idcmodel.cy,offsetx,offsety)
 
     # Extract the appropriate information for reference chip
     rfx,rfy,rrefpix,rorder=fileutil.readIDCtab(idctab,chip=Nrefchip,
@@ -290,8 +288,8 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     # Create the reference image name
     rimage = image.split('[')[0]+"[sci,%d]" % nr
     if not quiet:
-       print "Reference image: ",rimage
-
+       print "Reference image: ",rimage    
+ 
     # Create the tangent plane WCS on which the images are defined
     # This is close to that of the reference chip
     R=wcsutil.WCSObject(rimage)
@@ -304,9 +302,10 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     #crval1 = float(R.crval1)
     #crval2 = dec
     #dec = float(R.crval2)
-
+    
     # Get an approximate reference position on the sky
     rref = (rrefpix['XREF'] + ltv1 + offsetx, rrefpix['YREF'] + ltv2 + offsety)
+    
     crval1,crval2=R.xy2rd(rref)
 
     # Convert the PA_V3 orientation to the orientation at the aperture
@@ -318,12 +317,15 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     # Add the chip rotation angle
     if rrefpix['THETA']:
        pv += rrefpix['THETA']
-
     # Set values for the rest of the reference WCS
     R.crval1=crval1
     R.crval2=crval2
-    R.crpix1=0.0 + offsetx + shiftx
-    R.crpix2=0.0 + offsety + shifty
+    R.crpix1=0.0 
+    R.crpix2=0.0
+    if offsetx != 0.0 or offsety != 0.0:
+       R.crpix1 += offsetx + shiftx
+       R.crpix2 += offsety + shifty
+    
     R_scale=rrefpix['PSCALE']/3600.0
     R.cd11=parity[0][0] *  cos(pv*pi/180.0)*R_scale
     R.cd12=parity[0][0] * -sin(pv*pi/180.0)*R_scale
@@ -350,9 +352,11 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
 
     if rrefpix['THETA']: theta += rrefpix['THETA']*pi/180.0
 
-    dX=(off*sin(theta)) + offsetx + shiftx
-    dY=(off*cos(theta)) + offsety + shifty
-
+    dX=(off*sin(theta))
+    dY=(off*cos(theta)) 
+    if offsetx != 0. or offsety != 0.: 
+       dX += offsetx + shiftx
+       dY += offsety + shifty
 
     # Check to see whether we are working with GEIS or FITS input
     _fname,_iextn = fileutil.parseFilename(image)
