@@ -108,7 +108,7 @@ def checkASN(filename):
     """
     FUNCTION: checkASN
     PURPOSE : Determine if the filename provided to the function belongs to
-              and association.
+              an association.
     INPUT   : string
     OUTPUT  : boolean value 
     """
@@ -142,4 +142,30 @@ def isValidAssocExtn(extname):
             return True
     return False
     
+def countinputs(inputlist):
+    """
+    FUNCTION: countinputs
+    PURPOSE : Determine the number of inputfiles provided by the user and the
+              number of those files that are association tables
+    INPUT   : string representing the user input
+    OUTPUT  : numInputs - number of inputs provided by the user
+              numASNfiles - number of associattion files provided as input
+    """
+    
+    # Initialize return values
+    numInputs = 0
+    numASNfiles = 0
+    
+    # User irafglob to count the number of inputfiles
+    files = irafglob(inputlist, atfile=None)
 
+    # Use the "len" ufunc to count the number of entries in the list
+    numInputs = len(files)
+    
+    # Loop over the list and see if any of the entries are association files
+    for file in files:
+        if (checkASN(file) == True):
+            numASNfiles += 1
+    
+    return numInputs,numASNfiles
+    
