@@ -1,6 +1,4 @@
-from distutils.core import setup, Extension
-import numarray
-from numarray.numarrayext import NumarrayExtension
+from distutils.core import setup
 import sys
 
 if not hasattr(sys, 'version_info') or sys.version_info < (2,3,0,'alpha',0):
@@ -21,13 +19,9 @@ def dolocal():
                 ])
             sys.argv.remove(a)
 
-def getExtensions():
-    ext = None                   
-    return ext
-
-
-def dosetup(ext):
-    r = setup(name = "pytools",
+def main():
+    dolocal()
+    setup(name = "pytools",
               version = "1.0.0",
               description = "General Use Python Tools",
               author = "Warren Hack, Christopher Hanley",
@@ -35,17 +29,7 @@ def dosetup(ext):
               license = "http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE",
               platforms = ["Linux","Solaris","Mac OS X","Win"],
               packages=['pytools'],
-              package_dir={'pytools':'lib'},
-              ext_modules=ext)
-    return r
-
-
-def main():
-    args = sys.argv
-    dolocal()
-    ext = getExtensions()
-    dosetup(ext)
-
+              package_dir={'pytools':'lib'})
 
 if __name__ == "__main__":
     main()
