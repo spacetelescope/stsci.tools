@@ -71,7 +71,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5}
 
-__version__ = '0.7.0 (8 February 2005)'
+__version__ = '0.7.0 (9 February 2005)'
 def run(image,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -249,7 +249,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     else:
        if nimsets > 1:
           nr = Nrefchip
-    
+
     if not quiet:
         print "-PA_V3 : ",pvt," CHIP #",chip
 
@@ -276,8 +276,18 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     offsety = Old.crpix2 - ltv2 - refpix['YREF']
     shiftx = refpix['XREF'] + ltv1
     shifty = refpix['YREF'] + ltv2
+    if ltv1 != 0. or ltv2 != 0.:
+        ltvoffx = ltv1 + offsetx
+        ltvoffy = ltv2 + offsety
+        offshiftx = offsetx + shiftx
+        offshifty = offsety + shifty
+    else:
+        ltvoffx = 0.
+        ltvoffy = 0.
+        offshiftx = 0.
+        offshifty = 0.
 
-    if offsetx != 0. or offsety != 0.:
+    if ltv1 != 0. or ltv2 != 0.:
        fx,fy = idcmodel.shift(idcmodel.cx,idcmodel.cy,offsetx,offsety)
 
     # Extract the appropriate information for reference chip
@@ -288,7 +298,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     # Create the reference image name
     rimage = image.split('[')[0]+"[sci,%d]" % nr
     if not quiet:
-       print "Reference image: ",rimage    
+       print "Reference image: ",rimage       
  
     # Create the tangent plane WCS on which the images are defined
     # This is close to that of the reference chip
@@ -301,10 +311,10 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     #crval1 = float(fileutil.getKeyword(rimage,'CRVAL1'))
     #crval1 = float(R.crval1)
     #crval2 = dec
-    #dec = float(R.crval2)
+    dec = float(R.crval2)
     
     # Get an approximate reference position on the sky
-    rref = (rrefpix['XREF'] + ltv1 + offsetx, rrefpix['YREF'] + ltv2 + offsety)
+    rref = (rrefpix['XREF']+ltvoffx, rrefpix['YREF']+ltvoffy)
     
     crval1,crval2=R.xy2rd(rref)
 
@@ -312,19 +322,17 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     # This is for the reference chip only - we use this for the
     # reference tangent plane definition
     # It has the same orientation as the reference chip
-    pv = wcsutil.troll(pvt,crval2,rrefpix['V2REF'],rrefpix['V3REF'])
+    pv = wcsutil.troll(pvt,dec,rrefpix['V2REF'],rrefpix['V3REF'])
 
     # Add the chip rotation angle
     if rrefpix['THETA']:
        pv += rrefpix['THETA']
+
     # Set values for the rest of the reference WCS
     R.crval1=crval1
     R.crval2=crval2
-    R.crpix1=0.0 
-    R.crpix2=0.0
-    if offsetx != 0.0 or offsety != 0.0:
-       R.crpix1 += offsetx + shiftx
-       R.crpix2 += offsety + shifty
+    R.crpix1=0.0 + offshiftx
+    R.crpix2=0.0 + offshifty
     
     R_scale=rrefpix['PSCALE']/3600.0
     R.cd11=parity[0][0] *  cos(pv*pi/180.0)*R_scale
@@ -352,11 +360,8 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
 
     if rrefpix['THETA']: theta += rrefpix['THETA']*pi/180.0
 
-    dX=(off*sin(theta))
-    dY=(off*cos(theta)) 
-    if offsetx != 0. or offsety != 0.: 
-       dX += offsetx + shiftx
-       dY += offsety + shifty
+    dX=(off*sin(theta)) + offshiftx
+    dY=(off*cos(theta)) + offshifty
 
     # Check to see whether we are working with GEIS or FITS input
     _fname,_iextn = fileutil.parseFilename(image)
@@ -377,8 +382,9 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     
     # Calculate new CRVALs and CRPIXs
     New.crval1,New.crval2=R.xy2rd((dX,dY))
-    New.crpix1=refpix['XREF'] + ltv1 + offsetx
-    New.crpix2=refpix['YREF'] + ltv2 + offsety
+    print 'ltvoffx: ',ltvoffx,'    ltvoffy: ',ltvoffy
+    New.crpix1=refpix['XREF'] + ltvoffx
+    New.crpix2=refpix['YREF'] + ltvoffy
 
     # Account for subarray offset
     # Angle of chip relative to chip
