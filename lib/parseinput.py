@@ -6,9 +6,11 @@
 #   Version 0.1.2 01/10/2005: Removed the appending of "_drz.fits" to extracted
 #       file names.  -- CJH
 #   Version 0.1.3 01/18/2005: Added the NICMOS '_asc.fits' to the list of
-#       valid association file names. 
+#       valid association file names.
+#   Version 0.1.4 01/25/2005: Removed reliance on ASN dict keys for ordering 
+#                   the output filelist. WJH/CJH 
 
-__version__ = '0.1.3 (01/18/2005)'
+__version__ = '0.1.4 (01/25/2005)'
 __author__  = 'Christopher Hanley'
 
 # irafglob provides the ability to recursively parse user input that
@@ -95,9 +97,8 @@ def parseinput(inputlist,outputname=None):
 
             # Loop over the association dictionary to extract the input
             # file names.
-            for f in assocdict['members'].keys():
-                if f != 'abshift' and f != 'dshift':
-                    assoclist.append(fileutil.buildRootname(f))
+            for f in assocdict['order']:
+                assoclist.append(fileutil.buildRootname(f))
             
             # Remove the name of the association table from the list of files
             files.remove(file)
