@@ -39,6 +39,8 @@ MAKEWCS V0.0 (RNH) - Created new version to implement more complete
         V0.4 (WJH/CJH) - Corrected logic for looping of extension in FITS image.
         V0.5 (RNH) - Chip to chip CRVAL shifting logic change.
         V0.6 (CJH/WJH) - Added support for non-associated STIS data.
+        V0.6.2 (WJH) - Added support for NICMOS data. This required
+                        new versions of wcsutil and fileutil in PyDrizzle.
         
 """
 
@@ -60,11 +62,12 @@ no = False
 # Ideally, this information could be included in IDCTAB...
 PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
           'SBC':[[-1.0,0.0],[0.0,1.0]],'default':[[1.0,0.0],[0.0,1.0]],
-          'WFPC2':[[-1.0,0.],[0.,1.0]],'STIS':[[-1.0,0.],[0.,1.0]]}
+          'WFPC2':[[-1.0,0.],[0.,1.0]],'STIS':[[-1.0,0.],[0.,1.0]],
+          'NICMOS':[[-1.0,0.],[0.,1.0]]}
 
-NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3}
+NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5}
 
-__version__ = '0.6.1 (29 September 2004)'
+__version__ = '0.6.2 (2 December 2004)'
 def run(image,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -92,7 +95,9 @@ def run(image,quiet=yes,restore=no,prepend='O'):
     else:
         # Work with all extensions of all images in list    
         _files = buildasn._findFiles(image)
-        print "_files: ",_files
+        if not quiet:
+            print "_files: ",_files
+
         # First get the name of the IDC table
         idctab = drutil.getIDCFile(_files[0][0],keyword='idctab')[0]
         _found = fileutil.findFile(idctab)
@@ -179,15 +184,21 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
         filter1 = fileutil.getKeyword(image,'FILTNAM1')
         filter2 = fileutil.getKeyword(image,'FILTNAM2')
         Nrefchip=3
+    elif instrument == 'NICMOS':
+        filter1 = fileutil.getKeyword(image,'FILTER')
+        filter2 = None
     else:
         filter1 = fileutil.getKeyword(image,'FILTER1')
         filter2 = fileutil.getKeyword(image,'FILTER2')
-
+    
     # For the ACS/WFC case the chip number doesn't match the image
     # extension
     if instrument == 'ACS' and detector == 'WFC':
        Nrefchip = 2
        nr = 1
+    elif instrument == 'NICMOS':
+        Nrefchip = fileutil.getKeyword(image,'CAMERA')
+        nr = 1
     else:
        nr = Nrefchip
 
@@ -211,7 +222,7 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
     if filter2.find('CLEAR') == 0: filter2 = 'CLEAR'
     
     # Set up parity matrix for chip
-    if instrument == 'WFPC2' or instrument =='STIS':
+    if instrument == 'WFPC2' or instrument =='STIS' or instrument == 'NICMOS':
         parity = PARITY[instrument]
     elif PARITY.has_key(detector):
        parity = PARITY[detector]
@@ -231,9 +242,12 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
     dec_targ = float(fileutil.getKeyword(image,'DEC_TARG'))
 
     # Get the chip number
+    _c = fileutil.getKeyword(image,'CAMERA')
     _s = fileutil.getKeyword(image,'CCDCHIP')
     _d = fileutil.getKeyword(image,'DETECTOR')
-    if _s == None and _d == None:
+    if _c != None and str(_c).isdigit():
+        chip = int(_c)
+    elif _s == None and _d == None:
         chip = 1
     else:
         if _s:
