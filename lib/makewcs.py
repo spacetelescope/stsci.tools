@@ -69,7 +69,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5}
 
-__version__ = '0.6.3 (24 January 2005)'
+__version__ = '0.6.3 (26 January 2005)'
 def run(image,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -171,7 +171,7 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
     Old=wcsutil.WCSObject(image,prefix=_prepend)
     # Reset the WCS keywords to original archived values.
     Old.restore()
-
+    
     print "-Updating image ",image
 
     if not quiet:
@@ -205,17 +205,6 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
         nr = 1
     else:
        nr = Nrefchip
-
-    # Create the reference image name
-    rimage = image.split('[')[0]+"[%d]" % nr
-    if not quiet:
-       print "Reference image: ",rimage
-
-    # Read in declination of target (for computing orientation at aperture)
-    # Note that this is from the reference image
-    dec = float(fileutil.getKeyword(rimage,'CRVAL2'))
-    crval1 = float(fileutil.getKeyword(rimage,'CRVAL1'))
-    crval2 = dec
 
     if filter1 == None or filter1.strip() == '': filter1 = 'CLEAR'
     else: filter1 = filter1.strip()
@@ -273,6 +262,24 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
         direction='forward', filter1=filter1,filter2=filter2,offtab=offtab, 
         date=dateobs)
 
+    # Create the reference image name
+    rimage = image.split('[')[0]+"[%d]" % nr
+    if not quiet:
+       print "Reference image: ",rimage
+
+    # Create the tangent plane WCS on which the images are defined
+    # This is close to that of the reference chip
+    R=wcsutil.WCSObject(rimage)
+    R.restore()
+
+    # Reacd in declination of target (for computing orientation at aperture)
+    # Note that this is from the reference image
+    #dec = float(fileutil.getKeyword(rimage,'CRVAL2'))
+    #crval1 = float(fileutil.getKeyword(rimage,'CRVAL1'))
+    #crval1 = float(R.crval1)
+    #crval2 = dec
+    dec = float(R.crval2)
+
     # Convert the PA_V3 orientation to the orientation at the aperture
     # This is for the reference chip only - we use this for the
     # reference tangent plane definition
@@ -282,10 +289,6 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
     # Add the chip rotation angle
     if rrefpix['THETA']:
        pv += rrefpix['THETA']
-
-    # Create the tangent plane WCS on which the images are defined
-    # This is close to that of the reference chip
-    R=wcsutil.WCSObject(rimage)
 
     # Get an approximate reference position on the sky
     crval1,crval2=R.xy2rd((rrefpix['XREF'],rrefpix['YREF']))
@@ -330,7 +333,7 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
     else:
         _new_name = _fitsname+'['+str(_iextn)+']'
 
-    #New=wcsutil.WCSObject(_new_name)
+    #New=wcsutil.WCSObject(_new_name,new=yes)
     New = Old.copy()
 
     # Calculate new CRVALs and CRPIXs
