@@ -38,6 +38,7 @@ MAKEWCS V0.0 (RNH) - Created new version to implement more complete
                     class for all WCS operations.
         V0.4 (WJH/CJH) - Corrected logic for looping of extension in FITS image.
         V0.5 (RNH) - Chip to chip CRVAL shifting logic change.
+        V0.6 (CJH/WJH) - Added support for non-associated STIS data.
         
 """
 
@@ -59,11 +60,11 @@ no = False
 # Ideally, this information could be included in IDCTAB...
 PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
           'SBC':[[-1.0,0.0],[0.0,1.0]],'default':[[1.0,0.0],[0.0,1.0]],
-          'WFPC2':[[-1.0,0.],[0.,1.0]]}
+          'WFPC2':[[-1.0,0.],[0.,1.0]],'STIS':[[-1.0,0.],[0.,1.0]]}
 
-NUM_PER_EXTN = {'ACS':3,'WFPC2':1}
+NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3}
 
-__version__ = '0.5 (05 August 2004)'
+__version__ = '0.6 (27 August 2004)'
 def run(image,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -210,7 +211,7 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
     if filter2.find('CLEAR') == 0: filter2 = 'CLEAR'
     
     # Set up parity matrix for chip
-    if instrument == 'WFPC2':
+    if instrument == 'WFPC2' or instrument =='STIS':
         parity = PARITY[instrument]
     elif PARITY.has_key(detector):
        parity = PARITY[detector]
