@@ -41,6 +41,8 @@ MAKEWCS V0.0 (RNH) - Created new version to implement more complete
         V0.6 (CJH/WJH) - Added support for non-associated STIS data.
         V0.6.2 (WJH) - Added support for NICMOS data. This required
                         new versions of wcsutil and fileutil in PyDrizzle.
+        V0.6.3 (WJH) - Modified to support new version of WCSUtil which correctly
+                        sets up and uses archived WCS keywords.
         
 """
 
@@ -67,7 +69,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5}
 
-__version__ = '0.6.2 (2 December 2004)'
+__version__ = '0.6.3 (24 January 2005)'
 def run(image,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -166,7 +168,9 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
         print "OFFTAB, DATE-OBS: ",offtab,dateobs
 
     # Get the original image WCS
-    Old=wcsutil.WCSObject(image)
+    Old=wcsutil.WCSObject(image,prefix=_prepend)
+    # Reset the WCS keywords to original archived values.
+    Old.restore()
 
     print "-Updating image ",image
 
@@ -209,8 +213,10 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
 
     # Read in declination of target (for computing orientation at aperture)
     # Note that this is from the reference image
-    dec = float(fileutil.getKeyword(rimage,'CRVAL2'))
-    crval1 = float(fileutil.getKeyword(rimage,'CRVAL1'))
+    #dec = float(fileutil.getKeyword(rimage,'CRVAL2'))
+    #crval1 = float(fileutil.getKeyword(rimage,'CRVAL1'))
+    dec = float(Old.crval2)
+    crval1 = float(Old.crval2)
     crval2 = dec
 
     if filter1 == None or filter1.strip() == '': filter1 = 'CLEAR'
@@ -385,11 +391,10 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
        New.cd21 = New.cd21*VA_fac
        New.cd22 = New.cd22*VA_fac
 
-    # Save the original WCS
-    Old.savecopy(_prepend,fitsname=_new_name)
-    
     # Store new one
-    New.write(fitsname=_new_name)
+    # archive=yes specifies to also write out archived WCS keywords
+    # overwrite=no specifies do not overwrite any pre-existing archived keywords
+    New.write(fitsname=_new_name,overwrite=no,quiet=quiet,archive=yes)
     
     """ Convert distortion coefficients into SIP style
         values and write out to image (assumed to be FITS). 
@@ -424,10 +429,6 @@ def _update(image,idctab,quiet=None,instrument=None,prepend=None):
           
           _new_extn.header.update(Akey,Aval)
           _new_extn.header.update(Bkey,Bval)
-          #iraf.hedit(image,Akey,Aval,add=yes,verify=no,show=no)
-          #iraf.hedit(image,Akey,Aval,add=yes,verify=no,show=no)
-          #iraf.hedit(image,Bkey,Bval,add=yes,verify=no,show=no)
-          #iraf.hedit(image,Bkey,Bval,add=yes,verify=no,show=no)
 
     # Update the SIP flag keywords as well
     #iraf.hedit(image,"CTYPE1","RA---TAN-SIP",verify=no,show=no)
