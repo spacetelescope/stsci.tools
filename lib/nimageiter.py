@@ -6,7 +6,7 @@ import numarray as N
 
 BUFSIZE = 1024*1000   # 1Mb cache size
 
-__version__ = '0.4'
+__version__ = '0.5'
 
 
 def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
@@ -97,3 +97,58 @@ def computeBuffRows(imgarr,bufsize=BUFSIZE):
         by the bufsize.
     """
     return int(bufsize / (imgarr.itemsize() * imgarr.shape[1]))
+
+def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
+    """ Return image section for each image listed on input, with
+        the object performing the file I/O upon each call to the 
+        iterator.
+        
+        The inputs can either be a single image or a list of them,
+        with the return value matching the input type.
+        All images in a list MUST have the same shape, though,
+        in order for the iterator to scroll through them properly.
+
+        The size of section gets defined by 'bufsize'.
+        The 'overlap' parameter provides a way of scrolling
+        through the image with this many rows of overlap, with
+        the default being no overlap at all.
+    """
+    if type(filelist) != types.ListType:
+        imgarr = filelist.data
+        _imglen = 1
+        single = 1
+    else:
+        imgarr = filelist[0].data
+        _imglen = len(filelist)
+        single = 0
+        _outlist = []
+    _numrows = imgarr.shape[0]
+
+    if len(imgarr.shape) == 1:
+        # This needs to be generalized to return pixel ranges
+        # based on bufsize, just like with 2-D arrays (images).
+        yield filelist,None
+
+    else:
+        nrows = computeBuffRows(imgarr,bufsize=bufsize)
+        niter = int(imgarr.shape[0] / nrows) * nrows
+
+        for pix in range(0,niter+1,nrows):
+            # overlap needs to be computed here
+            # This allows the user to avoid edge effects when
+            # convolving the returned image sections, and insures
+            # that the last segment will always be returned with
+            # overlap+1 rows.  
+            
+            _prange = pix+nrows+overlap
+            if _prange > _numrows: _prange = _numrows
+            
+            if single:
+                yield imgarr[pix:_prange],(pix,_prange)
+            else:
+                for hdu in filelist:
+                    _outlist.append(hdu[pix:_prange])
+                yield _outlist,(pix,_prange)
+                del _outlist
+                _outlist = []
+    
