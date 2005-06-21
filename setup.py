@@ -30,7 +30,7 @@ def main():
               platforms = ["Linux","Solaris","Mac OS X","Win"],
               py_modules = ['imageiter', 'nimageiter', 'numcombine',
                             'versioninfo', 'makewcs', 'irafglob',
-                            'parseinput'],
+                            'parseinput','iterfile'],
               package_dir={'':'lib'})
 
 
