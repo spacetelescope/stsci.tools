@@ -9,8 +9,11 @@
 #       valid association file names.
 #   Version 0.1.4 01/25/2005: Removed reliance on ASN dict keys for ordering 
 #                   the output filelist. WJH/CJH 
+#   Version 0.1.5 10/11/2005: Corrected typo in errorstr variable name discovered
+#                   by external user j.e.geach@durham.ac.uk.
 
-__version__ = '0.1.4 (01/25/2005)'
+
+__version__ = '0.1.5 (10/11/2005)'
 __author__  = 'Christopher Hanley'
 
 # irafglob provides the ability to recursively parse user input that
@@ -80,7 +83,7 @@ def parseinput(inputlist,outputname=None):
                 errorstr += "#                                 #\n"
                 errorstr += "# Please determine if the file is #\n"
                 errorstr += "# in the current directory and    #\n"
-                errosstr += "# that it has been properly       #\n"
+                errorstr += "# that it has been properly       #\n"
                 errorstr += "# formatted.                      #\n"
                 errorstr += "#                                 #\n"
                 errorstr += "# This error message is being     #\n"
