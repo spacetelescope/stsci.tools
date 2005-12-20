@@ -3,6 +3,8 @@
 #   DATE:    December 12, 2003
 #   PURPOSE: --- We want to reproduce limited imcombine functionality ---
 #
+#   License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
+#
 #   HISTORY:
 #      Version 0.0.0: Initial Development -- CJH -- 12/30/03
 #      Version 0.1.0: Added the ability to apply an upper and lower threshold

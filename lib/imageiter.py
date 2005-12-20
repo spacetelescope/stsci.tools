@@ -1,3 +1,9 @@
+"""
+
+License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
+
+"""
+
 from __future__ import generators
 
 import numarray as N

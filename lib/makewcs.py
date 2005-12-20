@@ -3,6 +3,8 @@ MAKEWCS.PY - Updated the WCS in an image header so that
             it matches the geometric distortion defined in an IDC table
             which is referenced in the image header.
 
+License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
+
 This version tries to implement a full updating of the WCS based on
 information about the V2/V3 plane which is obtained from th IDCTAB and,
 in the case of WFPC2, the OFFTAB.

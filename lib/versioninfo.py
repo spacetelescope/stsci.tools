@@ -1,5 +1,8 @@
 #   Program:    versionInfo.py
 #   Author:     Christopher Hanley
+#
+#   License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
+#
 #   Date:       19 January 2004
 #   Purpose:
 #       To print a user's system information when providing user support.

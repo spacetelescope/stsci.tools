@@ -1,3 +1,8 @@
+"""
+
+License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
+
+"""
 import pyfits
 
 __version__ = '0.1 (20-June-2005)'

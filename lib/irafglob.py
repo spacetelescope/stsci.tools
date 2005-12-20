@@ -1,3 +1,8 @@
+"""
+
+License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
+
+"""
 import glob
 
 __author__ = 'Paul Barrett'
