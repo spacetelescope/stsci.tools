@@ -10,7 +10,6 @@ for a in args:
     if a.startswith('--local='):
         dir = os.path.abspath(a.split("=")[1])
         sys.argv.append('--install-lib=%s' % dir)
-        data_dir = dir
         #remove --local from both sys.argv and args
         args.remove(a)
         sys.argv.remove(a)
