@@ -36,9 +36,7 @@ def printVersionInfo():
                 'pyraf',
                 'multidrizzle',
                 'pydrizzle',
-                'upincd',
-                'deriv',
-                'quickDeriv'
+                'makewcs'
                 ]
 
     # Test the list of software tasks
