@@ -9,8 +9,9 @@ args = sys.argv[:]
 for a in args:
     if a.startswith('--local='):
         dir = os.path.abspath(a.split("=")[1])
-        sys.argv.append('--install-lib=%s' % dir)
-        #remove --local from both sys.argv and args
+        sys.argv.extend([
+                "--install-lib="+dir,
+                "--install-scripts=%s" % dir])
         args.remove(a)
         sys.argv.remove(a)
 
@@ -23,8 +24,10 @@ setup(name = "pytools",
       platforms = ["Linux","Solaris","Mac OS X","Win"],
       py_modules = ['imageiter', 'nimageiter', 'numcombine',
                     'versioninfo', 'makewcs', 'irafglob',
-                    'parseinput','iterfile'],
-      package_dir={'':'lib'})
+                    'parseinput','iterfile', 'readgeis'],
+      package_dir={'':'lib'},
+      scripts = ['lib/fitsdiff.py']
+      )
 
 
 
