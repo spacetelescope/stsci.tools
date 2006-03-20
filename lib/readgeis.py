@@ -58,7 +58,7 @@
 
 # Developed by Science Software Branch, STScI, USA.
 # This version needs pyfits 0.9.6.3 or later
-__version__ = "1.8 (05 April, 2005), \xa9 AURA"
+__version__ = "1.9 (20 March, 2006), \xa9 AURA"
 
 import os, sys, string
 import pyfits
@@ -178,7 +178,7 @@ def readgeis(input):
 
     _shape = _naxis[1:]
     _shape.reverse()
-    _code = pyfits._ImageBaseHDU.NumCode[_bitpix]
+    _code = pyfits.core._ImageBaseHDU.NumCode[_bitpix]
     _bscale = phdr.get('BSCALE', 1)
     _bzero = phdr.get('BZERO', 0)
     if phdr['DATATYPE'][:10] == 'UNSIGNED*2':
