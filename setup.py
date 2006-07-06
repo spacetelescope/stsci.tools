@@ -24,7 +24,8 @@ setup(name = "pytools",
       platforms = ["Linux","Solaris","Mac OS X","Win"],
       py_modules = ['imageiter', 'nimageiter', 'numcombine',
                     'versioninfo', 'makewcs', 'irafglob',
-                    'parseinput','iterfile', 'readgeis'],
+                    'parseinput','iterfile', 'readgeis',
+                    'xyinterp'],
       package_dir={'':'lib'},
       scripts = ['lib/fitsdiff.py']
       )
