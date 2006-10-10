@@ -56,8 +56,8 @@ import string,types
 import pydrizzle
 #from WCS import WCS
 
-from pydrizzle import wcsutil,fileutil,drutil,buildasn,obsgeometry
-
+from pydrizzle import drutil,buildasn,obsgeometry
+import wcsutil,fileutil
 import numarray as N
 
 yes = True
