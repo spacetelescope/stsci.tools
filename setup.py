@@ -25,7 +25,7 @@ setup(name = "pytools",
       py_modules = ['imageiter', 'nimageiter', 'numcombine',
                     'versioninfo', 'makewcs', 'irafglob',
                     'parseinput','iterfile', 'readgeis',
-                    'xyinterp', 'fileutil', 'wcsutil'],
+                    'xyinterp', 'fileutil', 'wcsutil','linefit', 'nmpfit', 'gfit'],
       package_dir={'':'lib'},
       scripts = ['lib/fitsdiff.py']
       )
