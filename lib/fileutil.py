@@ -51,7 +51,7 @@ IRAF compatibility functions (abbreviated list):
         
 """
 import pyfits, readgeis
-import string, os, types, shutil, copy, sre
+import string, os, types, shutil, copy, re
 import calendar
 import numarray as N
 import time as _time
@@ -762,7 +762,7 @@ def removeFile(inlist):
                 # We have a wild card specification
                 regpatt = f.replace('?','.?')
                 regpatt = regpatt.replace('*','.*')
-                _reg = sre.compile(regpatt)
+                _reg = re.compile(regpatt)
                 for file in _ldir:
                     if _reg.match(file):
                         _remove(file)
@@ -1964,10 +1964,10 @@ def time(**kw):
 # in which case an expanded comma-separated list is returned.
 
 # search for leading string without embedded '$'
-__re_var_match = sre.compile(r'(?P<varname>[^$]*)\$')
+__re_var_match = re.compile(r'(?P<varname>[^$]*)\$')
 
 # search for string embedded in parentheses
-__re_var_paren = sre.compile(r'\((?P<varname>[^()]*)\)')
+__re_var_paren = re.compile(r'\((?P<varname>[^()]*)\)')
 
 def Expand(instring, noerror=0):
     """Expand a string with embedded IRAF variables (IRAF virtual filename)
