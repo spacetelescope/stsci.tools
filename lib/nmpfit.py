@@ -1,4 +1,10 @@
 """
+Python/Numeric version of this module was called mpfit. This version was modified to use numarray.
+"""
+
+__version__ = '0.1'
+
+"""
 Perform Levenberg-Marquardt least-squares minimization, based on MINPACK-1.
 
                                                                                                 AUTHORS
