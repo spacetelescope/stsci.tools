@@ -412,7 +412,8 @@ def getHeader(filename,handle=None):
             raise ValueError,'Handle must be PyFITS object!'
 
     _hdr = _fimg['PRIMARY'].header.copy()
-
+    del _hdr['NAXIS']
+    
     if _extn > 0:
         # Append correct extension/chip/group header to PRIMARY...
         for _card in getExtn(_fimg,_extn).header.ascardlist():
