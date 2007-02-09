@@ -24,13 +24,16 @@
 #      Version 0.3.0: Added support for a computing a clipped minimum array. This is based upon
 #                     the minimum function in numarray.images.combine that Todd Miller has
 #                     implemented for numarray 1.3. -- CJH -- 03/30/05
+#      Version 0.4.0: Modified numcombine to use the numerix interface.  This allows for the use
+#                     of either the numarray or numpy array packages. -- CJH -- 08/18/06
+#
 
 # Import necessary modules
-import numarray as n
-import numarray.image.combine as nic
+import numerix as n
+from numerix import image
 
 # Version number
-__version__ = '0.3.0'
+__version__ = '0.4.0'
 
 class numCombine:
     """ A lite version of the imcombine IRAF task"""
@@ -46,6 +49,14 @@ class numCombine:
         lower = None                # Throw out values < lower in a median calculation
         ):
 
+        # Convert the input arrays to the type of array used by the numerix layer
+        for i in range(len(numarrayObjectList)):
+            numarrayObjectList[i] = n.asarray(numarrayObjectList[i])
+        
+        if numarrayMaskList is not None:
+            for i in range(len(numarrayMaskList)):
+                numarrayMaskList[i] = n.asarray(numarrayMaskList[i])
+                
         # define variables
         self.__numarrayObjectList = numarrayObjectList
         self.__numarrayMaskList = numarrayMaskList
@@ -65,7 +76,7 @@ class numCombine:
             raise ValueError, "Rejecting more pixels than specified by the nkeep parameter!"
 
         # Create output numarray object
-        self.combArrObj = n.zeros(self.__numarrayObjectList[0].shape,type=self.__numarrayObjectList[0].type() )
+        self.combArrObj = n.zeros(self.__numarrayObjectList[0].shape,dtype=self.__numarrayObjectList[0].dtype )
 
         # Generate masks if necessary and combine them with the input masks (if any).
         self._createMaskList()
@@ -87,7 +98,7 @@ class numCombine:
         if ( (self.__lower != None) or (self.__upper != None) ):
             __tmpMaskList =[]
             for image in self.__numarrayObjectList:
-                __tmpMask = nic.threshhold(image,low=self.__lower,high=self.__upper)
+                __tmpMask = image.threshhold(image,low=self.__lower,high=self.__upper)
                 __tmpMaskList.append(__tmpMask)
         else:
             __tmpMaskList = None
@@ -108,13 +119,13 @@ class numCombine:
     def _median(self):
         # Create a median image.
         #print "*  Creating a median array..."
-        nic.median(self.__numarrayObjectList,self.combArrObj,outtype=self.combArrObj.type(),nlow=self.__nlow,nhigh=self.__nhigh,badmasks=self.__masks)
+        image.median(self.__numarrayObjectList,self.combArrObj,nlow=self.__nlow,nhigh=self.__nhigh,badmasks=self.__masks)
         return None
 
     def _average(self):
         # Create an average image.
         #print "*  Creating a mean array..."
-        nic.average(self.__numarrayObjectList,self.combArrObj,outtype=self.combArrObj.type(),nlow=self.__nlow,nhigh=self.__nhigh,badmasks=self.__masks)
+        image.average(self.__numarrayObjectList,self.combArrObj,nlow=self.__nlow,nhigh=self.__nhigh,badmasks=self.__masks)
         return None
 
     def _sum(self):
@@ -127,7 +138,7 @@ class numCombine:
         # identically shaped images
         try:
             # Try using the numarray.images.combine function "minimum" that is available as part of numarray version 1.3
-            nic.minimum(self.__numarrayObjectList,self.combArrObj,outtype=self.combArrObj.type(),nlow=self.__nlow,nhigh=self.__nhigh,badmasks=self.__masks)
+            image.minimum(self.__numarrayObjectList,self.combArrObj,nlow=self.__nlow,nhigh=self.__nhigh,badmasks=self.__masks)
         except:
             # If numarray version 1.3 is not installed so that the "minimum" function is not available.  We will create our own minimum images but no clipping
             # will be available.
@@ -166,7 +177,7 @@ class numCombine:
 
             # Create the minimum image by computing a median array throwing out all but one of the pixels in the stack
             # starting from the top of the stack.
-            nic.median(tmpList,self.combArrObj,outtype=self.combArrObj.type(),nlow=0,nhigh=self.__numObjs-1,badmasks=None)
+            image.median(tmpList,self.combArrObj,nlow=0,nhigh=self.__numObjs-1,badmasks=None)
 
             # If we have been given masks we need to reset the mask values to 0 in the image
             if (self.__numarrayMaskList != None):
@@ -176,7 +187,7 @@ class numCombine:
 
     def __sumImages(self,numarrayObjectList):
         """ Sum a list of numarray objects. """
-        __sum = n.zeros(numarrayObjectList[0].shape,numarrayObjectList[0].type())
+        __sum = n.zeros(numarrayObjectList[0].shape,dtype=numarrayObjectList[0].dtype)
         for image in numarrayObjectList:
             __sum += image
         return __sum

@@ -6,12 +6,12 @@ License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 from __future__ import generators
 
 import types
-import numarray as N
+import numerix as N
 
 
 BUFSIZE = 1024*1000   # 1Mb cache size
 
-__version__ = '0.5'
+__version__ = '0.6'
 
 
 def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
@@ -30,10 +30,12 @@ def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
     """
     if type(imglist) != types.ListType:
         imgarr = imglist.data
+        imgarr = N.asarray(imgarr)
         _imglen = 1
         single = 1
     else:
         imgarr = imglist[0].data
+        imgarr = N.asarray(imgarr)
         _imglen = len(imglist)
         single = 0
         _outlist = []
@@ -56,9 +58,9 @@ def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
             # Create a cache that will contain a copy of the input
                     # not just a view...
             if single:
-                _cache = N.zeros((nrows,imgarr.shape[1]),type=imgarr.typecode())
+                _cache = N.zeros((nrows,imgarr.shape[1]),dtype=imgarr.dtype)
             else:
-                for img in imglist: _outlist.append(N.zeros((nrows,imgarr.shape[1]),type=imgarr.typecode()))
+                for img in imglist: _outlist.append(N.zeros((nrows,imgarr.shape[1]),dtype=imgarr.dtype))
 
         for pix in range(0,niter+1,nrows):
             # overlap needs to be computed here
@@ -101,7 +103,8 @@ def computeBuffRows(imgarr,bufsize=BUFSIZE):
         input array that fits in the allocated memory given
         by the bufsize.
     """
-    return int(bufsize / (imgarr.itemsize() * imgarr.shape[1]))
+    imgarr = N.asarray(imgarr)
+    return int(bufsize / (imgarr.itemsize * imgarr.shape[1]))
 
 def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
     """ Return image section for each image listed on input, with
@@ -120,10 +123,12 @@ def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
     """
     if type(filelist) != types.ListType:
         imgarr = filelist.data
+        imgarr = N.asarray(imgarr)
         _imglen = 1
         single = 1
     else:
         imgarr = filelist[0].data
+        imgarr = N.asarray(imgarr)
         _imglen = len(filelist)
         single = 0
         _outlist = []

@@ -47,6 +47,8 @@ MAKEWCS V0.0 (RNH) - Created new version to implement more complete
                         sets up and uses archived WCS keywords.
         V0.7.0 (WJH) - Revised algorithm to work properly with subarray images.
                         Also, simplified keyword access using PyFITS object.
+        V0.8.0 (CJH) - Modified to work with either numarray or numpy through
+                        the use of the numerix interface layer.
         
 """
 
@@ -57,8 +59,9 @@ import pydrizzle
 #from WCS import WCS
 
 from pydrizzle import drutil,buildasn,obsgeometry
-import wcsutil,fileutil
-import numarray as N
+import fileutil, wcsutil
+
+import numerix as N
 
 yes = True
 no = False
@@ -73,7 +76,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5}
 
-__version__ = '0.7.0 (9 February 2005)'
+__version__ = '0.8.0 (31 March 2006)'
 def run(image,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -563,8 +566,8 @@ def shift_coeffs(cx,cy,xs,ys,norder):
     Derived directly from PyDrizzle V3.3d.
     """
 
-    _cxs = N.zeros(shape=cx.shape,type=cx.type())
-    _cys = N.zeros(shape=cy.shape,type=cy.type())
+    _cxs = N.zeros(shape=cx.shape,dtype=cx.dtype.name)
+    _cys = N.zeros(shape=cy.shape,dtype=cy.dtype.name)
     _k = norder + 1
 
     # loop over each input coefficient

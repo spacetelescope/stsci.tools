@@ -58,13 +58,13 @@
 
 # Developed by Science Software Branch, STScI, USA.
 # This version needs pyfits 0.9.6.3 or later
-__version__ = "1.9 (20 March, 2006), \xa9 AURA"
+__version__ = "2.0 (22 August, 2006), \xa9 AURA"
 
 import os, sys, string
 import pyfits
-import numarray
-import numarray.records as recarray
-import numarray.memmap as memmap
+import numerix
+from numerix import rec as recarray
+from numerix import memmap
 
 def stsci(hdulist):
     """For STScI GEIS files, need to do extra steps."""
@@ -216,17 +216,20 @@ def readgeis(input):
 
     # Use copy-on-write for all data types since byteswap may be needed
     # in some platforms.
-    dat = memmap.open(data_file, mode='c')
+    f1 = open(data_file, mode='rb')
+    dat = f1.read()
+#    dat = memmap(data_file, mode='c')
     hdulist.mmobject = dat
 
     loc = 0
     for k in range(gcount):
-        ext_dat = numarray.array(dat[loc:loc+data_size], type=_code, shape=_shape)
+        ext_dat = numerix.fromstring(dat[loc:loc+data_size], dtype=_code)
+        ext_dat = ext_dat.reshape(_shape)
         if _uint16:
             ext_dat += _bzero
         ext_hdu = pyfits.ImageHDU(data=ext_dat)
 
-        rec = recarray.RecArray(dat[loc+data_size:loc+group_size], formats=formats[:-1], shape=1)
+        rec = recarray.fromstring(dat[loc+data_size:loc+group_size], formats=formats[:-1], shape=1)
         loc += group_size
 
         for i in range(1, pcount+1):
@@ -251,6 +254,7 @@ def readgeis(input):
 
         hdulist.append(ext_hdu)
 
+    f1.close()
     stsci(hdulist)
     return hdulist
 

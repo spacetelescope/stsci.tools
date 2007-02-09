@@ -1,7 +1,7 @@
 import string, copy, os
 
 import pyfits
-import numarray as N
+import numerix as N
 from math import *
 
 import fileutil
@@ -52,7 +52,6 @@ DEFAULT_PREFIX = 'O'
 # 29-June-2005 WJH: Multiple WCS extensions are not created when running
 #                   'createReferenceWCS'.
 #
-# 10-Oct-2006 WJH:  Moved out of PyDrizzle into pytools, along with fileutil. 
 
 
 
@@ -82,7 +81,7 @@ def ddtohms(xsky,ysky,verbose=no):
     yskym = (N.abs(ysky) - N.floor(N.abs(ysky))) * 60.
     yskys = (yskym - N.floor(yskym)) * 60.
 
-    if isinstance(xskyh,N.NumArray):
+    if isinstance(xskyh,N.ndarray):
         rah,dech = [],[]
         for i in xrange(len(xskyh)):
             rastr = repr(int(xskyh[i]))+':'+repr(int(xskym[i]))+':'+repr(xskys[i])
@@ -499,7 +498,7 @@ class WCSObject:
             print 'XY2RD only supported for TAN projections.'
             raise TypeError
 
-        if isinstance(pos,N.NumArray):
+        if isinstance(pos,N.ndarray):
             # If we are working with an array of positions,
             # point to just X and Y values
             posx = pos[:,0]
@@ -587,7 +586,7 @@ class WCSObject:
         # Start by building the rotation matrix...
         _rot = fileutil.buildRotMatrix(_delta)
         # ...then, rotate the CD matrix and update the values...
-        _cd = N.array([[self.cd11,self.cd12],[self.cd21,self.cd22]],type=N.Float64)
+        _cd = N.array([[self.cd11,self.cd12],[self.cd21,self.cd22]],dtype=N.float64)
         _cdrot = N.dot(_cd,_rot)
         self.cd11 = _cdrot[0][0]
         self.cd12 = _cdrot[0][1]
@@ -618,7 +617,7 @@ class WCSObject:
 
         # Compute the RA and Dec for center pixel
         _cenrd = self.xy2rd(_cen)
-        _cd = N.array([[self.cd11,self.cd12],[self.cd21,self.cd22]],type=N.Float64)
+        _cd = N.array([[self.cd11,self.cd12],[self.cd21,self.cd22]],dtype=N.float64)
         _ra0 = DEGTORAD(self.crval1)
         _dec0 = DEGTORAD(self.crval2)
         _ra = DEGTORAD(_cenrd[0])

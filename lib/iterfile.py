@@ -5,7 +5,7 @@ License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 """
 import pyfits
 
-__version__ = '0.1 (20-June-2005)'
+__version__ = '0.2 (06-October-2006)'
 
 
 
@@ -37,7 +37,7 @@ class IterFitsFile(object):
     def _data(self):
         """ Returns the data array associated with this file/extenstion."""
         hdu = self.open()
-        _data = hdu.data
+        _data = hdu.data.copy()
         self.close()
         del hdu
         return _data
@@ -46,7 +46,7 @@ class IterFitsFile(object):
     def type(self):
         """ Returns the shape of the data array associated with this file."""
         hdu = self.open()
-        _type = hdu.data.type()
+        _type = hdu.data.dtype.name
         self.close()
         del hdu
         return _type

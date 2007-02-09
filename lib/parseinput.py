@@ -24,7 +24,8 @@ __author__  = 'Christopher Hanley'
 import irafglob
 from irafglob import irafglob
 
-# fileutil provides the ability to read association tables ('_asn.fits', '_asc.fits')
+# PyDrizzle provides the ability to read association tables ('_asn.fits', '_asc.fits')
+import pydrizzle
 import fileutil
 from fileutil import readAsnTable
 

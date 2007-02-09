@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/stsci/pyssgdev/Python-2.5/bin/python
 
 # $Id$
 
@@ -83,12 +83,12 @@
 
 # This version needs python 2.2 and numarray 0.6, or later.
 # Developed by Science Software Group, STScI, USA.
-__version__ = "1.3 (22 July, 2004)"
+__version__ = "1.4 (23 August 2006)"
 
 import sys, types
 import pyfits
-import numarray as num
-import numarray.strings as chararray
+import numerix as num
+from numerix import char
 
 def fitsdiff (input1, input2, comment_excl_list='', value_excl_list='', field_excl_list='', maxdiff=10, delta=0., neglect_blanks=1, output=None):
 
@@ -422,21 +422,22 @@ def diff_num(num1, num2, delta=0):
     the number of differences found.
 
     """
-
+#    num1 = num.asarray(num1)
+#    num2 = num.asarray(num2)
     # if arrays are chararrays
-    if isinstance (num1, chararray.CharArray):
+    if isinstance (num1, char.chararray):
         delta = 0
 
     # if delta is zero, it is a simple case.  Use the more general __ne__()
     if delta == 0:
         diff = num1.__ne__(num2)        # diff is a boolean array
     else:
-        diff = num.abs(num2-num1)/delta # diff is a float array
+        diff = num.absolute(num2-num1)/delta # diff is a float array
 
     diff_indices = num.nonzero(diff)        # a tuple of (shorter) arrays
 
     # how many occurrences of difference
-    n_nonzero = diff_indices[0].getshape()[0]
+    n_nonzero = diff_indices[0].size
 
     # if there is no difference, or delta is zero, stop here
     if n_nonzero == 0 or delta == 0:
@@ -445,12 +446,12 @@ def diff_num(num1, num2, delta=0):
     # if the difference occurrence is rare enough (less than one-third
     # of all elements), use an algorithm which saves space.
     # Note: "compressed" arrays are 1-D only.
-    elif n_nonzero < diff.nelements()/3:
-        cram1 = num.compress(diff, num1)
-        cram2 = num.compress(diff, num2)
-        cram_diff = num.compress(diff, diff)
-        a = num.greater(cram_diff, num.abs(cram1))
-        b = num.greater(cram_diff, num.abs(cram2))
+    elif n_nonzero < (diff.size)/3:
+        cram1 = num.compress(diff.__ne__(0.0).ravel(), num1)
+        cram2 = num.compress(diff.__ne__(0.0).ravel(), num2)
+        cram_diff = num.compress(diff.__ne__(0.0).ravel(), diff)
+        a = num.greater(cram_diff, num.absolute(cram1))
+        b = num.greater(cram_diff, num.absolute(cram2))
         r = num.logical_or(a, b)
         list = []
         for i in range(len(diff_indices)):
@@ -459,8 +460,8 @@ def diff_num(num1, num2, delta=0):
 
     # regular and more expensive way
     else:
-        a = num.greater(diff, num.abs(num1))
-        b = num.greater(diff, num.abs(num2))
+        a = num.greater(diff, num.absolute(num1))
+        b = num.greater(diff, num.absolute(num2))
         r = num.logical_or(a, b)
         return num.nonzero(r)
 
@@ -541,7 +542,7 @@ def compare_table (img1, img2, delta, maxdiff, dim, xtension, field_excl_list):
 
         found = diff_num (img1.data.field(col), img2.data.field(col), delta)
 
-        _ndiff = found[0].getshape()[0]
+        _ndiff = found[0].shape[0]
         ndiff += _ndiff
         nprint = min(maxdiff, _ndiff)
         maxdiff -= _ndiff
@@ -589,19 +590,18 @@ def compare_img (img1, img2, delta, maxdiff, dim):
     # compare the two images
     found = diff_num (img1.data, img2.data, thresh)
 
-    ndiff = found[0].getshape()[0]
+    ndiff = found[0].shape[0]
     nprint = min(maxdiff, ndiff)
     dim = len(found)
-    base1 = num.ones(dim)
+    base1 = num.ones(dim, dtype=num.int16)
     if nprint > 0:
-        index = num.zeros(dim)
+        index = num.zeros(dim, dtype=num.int16)
 
         for p in range(nprint):
 
             # start from the fastest axis
             for i in range(dim):
-                index[i] = found[i][p]
-
+                index[i] = int(found[i][p])
             # translate the 0-based 1-D locations to 1-based
             # naxis-D locations.  Also the "fast axes" order is
             # properly treated here.

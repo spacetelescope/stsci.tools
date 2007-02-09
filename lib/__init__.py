@@ -3,4 +3,7 @@ import nimageiter
 import numcombine
 import versioninfo
 import irafglob
-import xyinterp
+import numerix
+import numerixclass
+import numarray2numpy
+

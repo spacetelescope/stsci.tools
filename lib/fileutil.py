@@ -1,5 +1,5 @@
-""" fileutil.py -- General file functions 
-     These were initially designed for use with PyDrizzle.
+""" fileutil.py -- General file functions
+           These were initially designed for use with PyDrizzle.
 
 These functions only rely on booleans 'yes' and 'no', PyFITS and readgeis.
 
@@ -38,6 +38,7 @@ General functions included are:
         Reads an association (ASN) table and interprets inputs and output.
         The 'prodonly' parameter specifies whether to use products as inputs
             or not; where 'prodonly=no' specifies to only use EXP as inputs.
+
         
 IRAF compatibility functions (abbreviated list):    
     osfn(filename)
@@ -49,11 +50,12 @@ IRAF compatibility functions (abbreviated list):
     access(filename)
         Returns true if file exists, where filename can include IRAF variables
         
+
 """
 import pyfits, readgeis
-import string, os, types, shutil, copy, re
+import string,os,types,shutil,copy, re
 import calendar
-import numarray as N
+import numerix as N
 import time as _time
 
 # Environment variable handling - based on iraffunctions.py
@@ -64,7 +66,7 @@ try:
 except:
     iraf = None
 
-# Set up IRAF-compatible Boolean values
+# Set up IRAF-compatible Boolean values    
 yes = True
 no = False
 
@@ -94,7 +96,7 @@ def RADTODEG(rad):
     return (rad * 180. / N.pi)
 
 def DIVMOD(num,val):
-    if isinstance(num,N.NumArray):
+    if isinstance(num,N.ndarray):
     # Treat number as numarray object
         _num = N.remainder(num,val)
     else:
@@ -130,12 +132,11 @@ def convertDate(date):
 
 def buildRotMatrix(theta):
     _theta = DEGTORAD(theta)
-    _mrot = N.zeros(shape=(2,2),type=N.Float64)
+    _mrot = N.zeros(shape=(2,2),dtype=N.float64)
     _mrot[0] = (N.cos(_theta),N.sin(_theta))
     _mrot[1] = (-N.sin(_theta),N.cos(_theta))
 
     return _mrot
-
 
 #################
 #
@@ -844,8 +845,8 @@ def defaultModel():
     """
     order = 3
 
-    fx = N.zeros(shape=(order+1,order+1),type=N.Float64)
-    fy = N.zeros(shape=(order+1,order+1),type=N.Float64)
+    fx = N.zeros(shape=(order+1,order+1),dtype=N.float64)
+    fy = N.zeros(shape=(order+1,order+1),dtype=N.float64)
 
     fx[1,1] = 1.
     fy[1,0] = 1.
@@ -945,8 +946,8 @@ def readIDCtab (tabname, chip=1, date=None, direction='forward',
     else:
         order = norder
 
-    fx = N.zeros(shape=(order+1,order+1),type=N.Float64)
-    fy = N.zeros(shape=(order+1,order+1),type=N.Float64)
+    fx = N.zeros(shape=(order+1,order+1),dtype=N.float64)
+    fy = N.zeros(shape=(order+1,order+1),dtype=N.float64)
 
     #Determine row from which to get the coefficients.
     # How many rows do we have in the table...
@@ -1193,8 +1194,8 @@ def readWCSCoeffs(header):
     _yorder = header['b_order']
     order = max(max(_xorder,_yorder),3)
 
-    fx = N.zeros(shape=(order+1,order+1),type=N.Float64)
-    fy = N.zeros(shape=(order+1,order+1),type=N.Float64)
+    fx = N.zeros(shape=(order+1,order+1),dtype=N.float64)
+    fy = N.zeros(shape=(order+1,order+1),dtype=N.float64)
 
     # Read in CD matrix
     _cd11 = header['cd1_1']
@@ -1542,11 +1543,11 @@ def readAsnTable(fname,output=None,prodonly=yes):
         if 'MEMNAME' in colnames and 'MEMTYPE' in colnames:
             # We need to make sure no EOS characters remain part of
             # the strings we read out...
-            mname = ftab[1].data.field('MEMNAME')[row].split('\0')[0]
-            mtype = ftab[1].data.field('MEMTYPE')[row].split('\0')[0]
+            mname = string.split(ftab[1].data.field('MEMNAME')[row],'\0',1)[0]
+            mtype = string.split(ftab[1].data.field('MEMTYPE')[row],'\0',1)[0]
             mpresent = ftab[1].data.field('MEMPRSNT')[row]
-            memname = mname.strip()
-            memtype = mtype.strip()
+            memname = string.strip(mname)
+            memtype = string.strip(mtype)
             memrow = row
         else:
             print 'Association table incomplete: required column(s) MEMNAME/MEMTYPE NOT found!'
@@ -1673,7 +1674,7 @@ def readAsnTable(fname,output=None,prodonly=yes):
             _shift_units = _dshift_units
 
         # Build the shifts dictionary now...
-        if memtype.find('PROD') < 0 and not prodonly:
+        if string.find(memtype,'PROD') < 0 and not prodonly:
             # We want to use this EXP* entry.
             asndict['members'][memname] = memdict
             asndict['order'].append(memname)
@@ -1724,7 +1725,7 @@ def readAsnTable(fname,output=None,prodonly=yes):
     del ftab
 
     return asndict
-    
+
 #######################################################
 #
 #
@@ -2022,4 +2023,5 @@ def _expand1(instring, noerror):
 def access(filename):
     """Returns true if file exists"""
     return os.path.exists(Expand(filename))
+
 

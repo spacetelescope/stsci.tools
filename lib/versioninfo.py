@@ -12,9 +12,9 @@
 #       Version 0.1.1, 20-Jan-04: Modified program to
 #                                 loop over a taskList object. -- CJH
 #
-#
+#       Version 0.2.0, 31-Mar-06: Added numpy to the task list. -- CJH
 
-__version__ = '0.1.1'
+__version__ = '0.2.0'
 
 def printVersionInfo():
     # Print the current path information
@@ -31,12 +31,15 @@ def printVersionInfo():
     # Define the list of tasks to test
     taskList = [
                 'numarray',
+                'numpy',
                 'Numeric',
                 'pyfits',
                 'pyraf',
                 'multidrizzle',
                 'pydrizzle',
-                'makewcs'
+                'upincd',
+                'deriv',
+                'quickDeriv'
                 ]
 
     # Test the list of software tasks
