@@ -1,5 +1,5 @@
 """
-Python/Numeric version of this module was called mpfit. This version was modified to use numarray.
+Python/Numeric version of this module was called mpfit. This version was modified to use numpy.
 """
 
 __version__ = '0.1'
@@ -408,7 +408,7 @@ Perform Levenberg-Marquardt least-squares minimization, based on MINPACK-1.
 """
 
 #import Numeric
-import numarray
+import numpy
 import types
 
 
@@ -842,7 +842,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
                 dof = len(x) - len(mpfit.params) # deg of freedom
                 # scaled uncertainties
-                pcerror = mpfit.perror * numarray.sqrt(mpfit.fnorm / dof)
+                pcerror = mpfit.perror * numpy.sqrt(mpfit.fnorm / dof)
 
         """
         self.niter = 0
@@ -897,9 +897,9 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                 return
 
 
-        ## Make sure parameters are numarray arrays of type numarray.Float
+        ## Make sure parameters are numpy arrays of type numpy.float
         #print 'xall', xall, type(xall)
-        xall = numarray.asarray(xall, numarray.Float)
+        xall = numpy.asarray(xall, numpy.float)
 
         npar = len(xall)
         self.fnorm  = -1.
@@ -931,17 +931,17 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
         qmin = minstep * 0  ## Remove minstep for now!!
         qmax = maxstep != 0
 
-        wh = numarray.nonzero(((qmin!=0.) & (qmax!=0.)) & (maxstep < minstep))
+        wh = numpy.nonzero(((qmin!=0.) & (qmax!=0.)) & (maxstep < minstep))
 
         #check if it's 1d array?
         if (len(wh[0]) > 0):
             self.errmsg = 'ERROR: MPMINSTEP is greater than MPMAXSTEP'
             return
-        wh = numarray.nonzero((qmin!=0.) & (qmax!=0.))
+        wh = numpy.nonzero((qmin!=0.) & (qmax!=0.))
         qminmax = len(wh[0] > 0)
 
         ## Finish up the free parameters
-        ifree = (numarray.nonzero(pfixed != 1))[0]
+        ifree = (numpy.nonzero(pfixed != 1))[0]
         nfree = len(ifree)
         if nfree == 0:
             self.errmsg = 'ERROR: no free parameters'
@@ -949,7 +949,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         ## Compose only VARYING parameters
         self.params = xall      ## self.params is the set of parameters to be returned
-        x = numarray.take(self.params, ifree)  ## x is the set of free parameters
+        x = numpy.take(self.params, ifree)  ## x is the set of free parameters
 
         ## LIMITED parameters ?
         limited = self.parinfo(parinfo, 'limited', default=[0,0], n=npar)
@@ -957,12 +957,12 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         if (limited != None) and (limits != None):
             ## Error checking on limits in parinfo
-            wh = numarray.nonzero((limited[:,0] & (xall < limits[:,0])) |
+            wh = numpy.nonzero((limited[:,0] & (xall < limits[:,0])) |
                                                                     (limited[:,1] & (xall > limits[:,1])))
             if (len(wh[0]) > 0):
                 self.errmsg = 'ERROR: parameters are not within PARINFO limits'
                 return
-            wh = numarray.nonzero((limited[:,0] & limited[:,1]) &
+            wh = numpy.nonzero((limited[:,0] & limited[:,1]) &
                                                                     (limits[:,0] >= limits[:,1]) &
                                                                     (pfixed == 0))
             if (len(wh[0]) > 0):
@@ -970,17 +970,17 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                 return
 
             ## Transfer structure values to local variables
-            qulim = numarray.take(limited[:,1], ifree)
-            ulim  = numarray.take(limits [:,1], ifree)
-            qllim = numarray.take(limited[:,0], ifree)
-            llim  = numarray.take(limits [:,0], ifree)
+            qulim = numpy.take(limited[:,1], ifree)
+            ulim  = numpy.take(limits [:,1], ifree)
+            qllim = numpy.take(limited[:,0], ifree)
+            llim  = numpy.take(limits [:,0], ifree)
 
-            wh = numarray.nonzero((qulim!=0.) | (qllim!=0.))
+            wh = numpy.nonzero((qulim!=0.) | (qllim!=0.))
             if (len(wh[0]) > 0): qanylim = 1
             else: qanylim = 0
         else:
             ## Fill in local variables with dummy values
-            qulim = numarray.zeros(nfree)
+            qulim = numpy.zeros(nfree, dtype=n.int8)
             ulim  = x * 0.
             qllim = qulim
             llim  = x * 0.
@@ -996,12 +996,12 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
         if (rescale != 0):
             self.errmsg = 'ERROR: DIAG parameter scales are inconsistent'
             if (len(diag) < n): return
-            wh = (numarray.nonzero(diag <= 0))[0]
+            wh = (numpy.nonzero(diag <= 0))[0]
             if (len(wh) > 0): return
             self.errmsg = ''
 
-        # Make sure x is a numarray array of type numarray.Float
-        x = numarray.asarray(x, numarray.Float64)
+        # Make sure x is a numpy array of type numpy.float
+        x = numpy.asarray(x, numpy.float64)
 
         [self.status, fvec] = self.call(fcn, self.params, functkw)
         if (self.status < 0):
@@ -1027,7 +1027,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
         while(1):
 
             ## If requested, call fcn to enable printing of iterates
-            numarray.put(self.params, ifree, x)
+            numpy.put(self.params, ifree, x)
             if (self.qanytied): self.params = self.tie(self.params, ptied)
 
             if (nprint > 0) and (iterfunct != None):
@@ -1049,7 +1049,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                     ## If parameters were changed (grrr..) then re-tie
                     if (max(abs(xnew0-self.params)) > 0):
                         if (self.qanytied): self.params = self.tie(self.params, ptied)
-                        x = numarray.take(self.params, ifree)
+                        x = numpy.take(self.params, ifree)
 
 
             ## Calculate the jacobian matrix
@@ -1066,20 +1066,20 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
             ## Determine if any of the parameters are pegged at the limits
             if (qanylim):
                 catch_msg = 'zeroing derivatives of pegged parameters'
-                whlpeg = (numarray.nonzero(qllim & (x == llim)))[0]
+                whlpeg = (numpy.nonzero(qllim & (x == llim)))[0]
                 nlpeg = len(whlpeg)
-                whupeg = (numarray.nonzero(qulim & (x == ulim)) )[0]
+                whupeg = (numpy.nonzero(qulim & (x == ulim)) )[0]
                 nupeg = len(whupeg)
                 ## See if any "pegged" values should keep their derivatives
                 if (nlpeg > 0):
                     ## Total derivative of sum wrt lower pegged parameters
                     for i in range(nlpeg):
-                        sum = numarray.sum(fvec * fjac[:,whlpeg[i]])
+                        sum = numpy.sum(fvec * fjac[:,whlpeg[i]])
                         if (sum > 0): fjac[:,whlpeg[i]] = 0
                 if (nupeg > 0):
                     ## Total derivative of sum wrt upper pegged parameters
                     for i in range(nupeg):
-                        sum = numarray.sum(fvec * fjac[:,whupeg[i]])
+                        sum = numpy.sum(fvec * fjac[:,whupeg[i]])
                         if (sum < 0): fjac[:,whupeg[i]] = 0
 
             ## Compute the QR factorization of the jacobian
@@ -1091,8 +1091,8 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
             if (self.niter == 1):
                 if ((rescale==0) or (len(diag) < n)):
                     diag = wa2.copy()
-                    wh = (numarray.nonzero(diag == 0) )[0]
-                    numarray.put(diag, wh, 1.)
+                    wh = (numpy.nonzero(diag == 0) )[0]
+                    numpy.put(diag, wh, 1.)
 
                 ## On the first iteration, calculate the norm of the scaled x
                 ## and initialize the step bound delta
@@ -1111,7 +1111,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                     fj = fjac[j:,lj]
                     wj = wa4[j:]
                     ## *** optimization wa4(j:*)
-                    wa4[j:] = wj - fj * numarray.sum(fj*wj) / temp3
+                    wa4[j:] = wj - fj * numpy.sum(fj*wj) / temp3
                 fjac[j,lj] = wa1[j]
                 qtf[j] = wa4[j]
             ## From this point on, only the square matrix, consisting of the
@@ -1136,7 +1136,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                 for j in range(n):
                     l = ipvt[j]
                     if (wa2[l] != 0):
-                        sum = numarray.sum(fjac[0:j+1,j]*qtf[0:j+1])/self.fnorm
+                        sum = numpy.sum(fjac[0:j+1,j]*qtf[0:j+1])/self.fnorm
                         gnorm = max([gnorm,abs(sum/wa2[l])])
 
             ## Test for convergence of the gradient norm
@@ -1146,7 +1146,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
             ## Rescale if necessary
             if (rescale == 0):
-                diag = numarray.choose(diag>wa2, (wa2, diag))
+                diag = numpy.choose(diag>wa2, (wa2, diag))
 
             ## Beginning of the inner loop
             while(1):
@@ -1174,33 +1174,33 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                         ## Do not allow any steps out of bounds
                         catch_msg = 'checking for a step out of bounds'
                         if (nlpeg > 0):
-                            numarray.put(wa1, whlpeg, numarray.clip(
-                                    numarray.take(wa1, whlpeg), 0., max(wa1)))
+                            numpy.put(wa1, whlpeg, numpy.clip(
+                                    numpy.take(wa1, whlpeg), 0., max(wa1)))
                         if (nupeg > 0):
-                            numarray.put(wa1, whupeg, numarray.clip(
-                                    numarray.take(wa1, whupeg), min(wa1), 0.))
+                            numpy.put(wa1, whupeg, numpy.clip(
+                                    numpy.take(wa1, whupeg), min(wa1), 0.))
 
                         dwa1 = abs(wa1) > machep
-                        whl = (numarray.nonzero(((dwa1!=0.) & qllim) & ((x + wa1) < llim)) )[0]
+                        whl = (numpy.nonzero(((dwa1!=0.) & qllim) & ((x + wa1) < llim)) )[0]
 
                         if (len(whl) > 0):
-                            t = (((numarray.take(llim, whl) - numarray.take(x, whl)) /
-                                            numarray.take(wa1, whl)))
+                            t = (((numpy.take(llim, whl) - numpy.take(x, whl)) /
+                                            numpy.take(wa1, whl)))
 
                             alpha = min(alpha, min(t))
-                        whu = (numarray.nonzero(((dwa1!=0.) & qulim) & ((x + wa1) > ulim)) )[0]
+                        whu = (numpy.nonzero(((dwa1!=0.) & qulim) & ((x + wa1) > ulim)) )[0]
                         if (len(whu) > 0):
-                            t = ((numarray.take(ulim, whu) - numarray.take(x, whu)) /
-                                            numarray.take(wa1, whu))
+                            t = ((numpy.take(ulim, whu) - numpy.take(x, whu)) /
+                                            numpy.take(wa1, whu))
                             alpha = min(alpha, min(t))
 
                     ## Obey any max step values.
                     if (qminmax):
                         nwa1 = wa1 * alpha
-                        whmax = (numarray.nonzero((qmax != 0.) & (maxstep > 0)) )[0]
+                        whmax = (numpy.nonzero((qmax != 0.) & (maxstep > 0)) )[0]
                         if (len(whmax) > 0):
-                            mrat = max(numarray.take(nwa1, whmax) /
-                                                            numarray.take(maxstep, whmax))
+                            mrat = max(numpy.take(nwa1, whmax) /
+                                                            numpy.take(maxstep, whmax))
                             if (mrat > 1): alpha = alpha / mrat
 
                     ## Scale the resulting vector
@@ -1209,10 +1209,10 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
                     ## Adjust the final output values.  If the step put us exactly
                     ## on a boundary, make sure it is exact.
-                    wh = (numarray.nonzero((qulim!=0.) & (wa2 >= ulim*(1-machep))) )[0]
-                    if (len(wh) > 0): numarray.put(wa2, wh, numarray.take(ulim, wh))
-                    wh = (numarray.nonzero((qllim!=0.) & (wa2 <= llim*(1+machep))) )[0]
-                    if (len(wh) > 0): numarray.put(wa2, wh, numarray.take(llim, wh))
+                    wh = (numpy.nonzero((qulim!=0.) & (wa2 >= ulim*(1-machep))) )[0]
+                    if (len(wh) > 0): numpy.put(wa2, wh, numpy.take(ulim, wh))
+                    wh = (numpy.nonzero((qllim!=0.) & (wa2 <= llim*(1+machep))) )[0]
+                    if (len(wh) > 0): numpy.put(wa2, wh, numpy.take(llim, wh))
                 # endelse
                 wa3 = diag * wa1
                 pnorm = self.enorm(wa3)
@@ -1220,7 +1220,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                 ## On the first iteration, adjust the initial step bound
                 if (self.niter == 1): delta = min([delta,pnorm])
 
-                numarray.put(self.params, ifree, wa2)
+                numpy.put(self.params, ifree, wa2)
 
                 ## Evaluate the function at x+p and calculate its norm
                 mperr = 0
@@ -1245,7 +1245,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                 ## Remember, alpha is the fraction of the full LM step actually
                 ## taken
                 temp1 = self.enorm(alpha*wa3)/self.fnorm
-                temp2 = (numarray.sqrt(alpha*par)*pnorm)/self.fnorm
+                temp2 = (numpy.sqrt(alpha*par)*pnorm)/self.fnorm
                 prered = temp1*temp1 + (temp2*temp2)/0.5
                 dirder = -(temp1*temp1 + temp2*temp2)
 
@@ -1310,7 +1310,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
         if (len(self.params) == 0):
             return
         if (nfree == 0): self.params = xall.copy()
-        else: numarray.put(self.params, ifree, x)
+        else: numpy.put(self.params, ifree, x)
         if (nprint > 0) and (self.status > 0):
             catch_msg = 'calling ' + str(fcn)
             [status, fvec] = self.call(fcn, self.params, functkw)
@@ -1326,7 +1326,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
         ## (very carefully) set the covariance matrix COVAR
         if ((self.status > 0) and (nocovar==0) and (n != None)
                                                 and (fjac != None) and (ipvt != None)):
-            sz = numarray.shape(fjac)
+            sz = numpy.shape(fjac)
             if ((n > 0) and (sz[0] >= n) and (sz[1] >= n)
                             and (len(ipvt) >= n)):
                 catch_msg = 'computing the covariance matrix'
@@ -1336,19 +1336,19 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
                 ## Fill in actual covariance matrix, accounting for fixed
                 ## parameters.
-                self.covar = numarray.zeros([nn, nn], numarray.Float)
+                self.covar = numpy.zeros([nn, nn], numpy.float)
 
                 for i in range(n):
                     #indices = ifree+ifree[i]*n
-                    #numarray.put(self.covar, indices, cv[:,i])
-                    numarray.put(self.covar, i, cv[:,i])
+                    #numpy.put(self.covar, indices, cv[:,i])
+                    numpy.put(self.covar, i, cv[:,i])
                 ## Compute errors in parameters
                 catch_msg = 'computing parameter errors'
-                self.perror = numarray.zeros(nn, numarray.Float)
-                d = numarray.diagonal(self.covar)
-                wh = (numarray.nonzero(d >= 0) )[0]
+                self.perror = numpy.zeros(nn, numpy.float)
+                d = numpy.diagonal(self.covar)
+                wh = (numpy.nonzero(d >= 0) )[0]
                 if len(wh) > 0:
-                    numarray.put(self.perror, wh, numarray.sqrt(numarray.take(d, wh)))
+                    numpy.put(self.perror, wh, numpy.sqrt(numpy.take(d, wh)))
         return
 
 
@@ -1416,9 +1416,9 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
         test = default
         if (type(default) == types.ListType): test=default[0]
         if (type(test) == types.IntType):
-            values = numarray.asarray(values, numarray.Int)
+            values = numpy.asarray(values, dtype=numpy.int)
         elif (type(test) == types.FloatType):
-            values = numarray.asarray(values, numarray.Float)
+            values = numpy.asarray(values, dtype=numpy.float)
         return(values)
 
 
@@ -1435,7 +1435,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                 ## Apply the damping if requested.  This replaces the residuals
                 ## with their hyperbolic tangent.  Thus residuals larger than
                 ## DAMP are essentially clipped.
-                f = numarray.tanh(f/self.damp)
+                f = numpy.tanh(f/self.damp)
             return([status, f])
         else:
             return(fcn(x, fjac=fjac, **functkw))
@@ -1453,7 +1453,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         # Very simple-minded sum-of-squares
         if (self.fastnorm):
-            ans = numarray.sqrt(numarray.sum(vec*vec))
+            ans = numpy.sqrt(numpy.sum(vec*vec))
         else:
             agiant = self.machar.rgiant / len(vec)
             adwarf = self.machar.rdwarf * len(vec)
@@ -1465,9 +1465,9 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
             mx = max(abs(mx), abs(mn))
             if mx == 0: return(vec[0]*0.)
             if mx > agiant or mx < adwarf:
-                ans = mx * numarray.sqrt(numarray.sum((vec/mx)*(vec/mx)))
+                ans = mx * numpy.sqrt(numpy.sum((vec/mx)*(vec/mx)))
             else:
-                ans = numarray.sqrt(numarray.sum(vec*vec))
+                ans = numpy.sqrt(numpy.sum(vec*vec))
 
         return(ans)
 
@@ -1480,19 +1480,19 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
         machep = self.machar.machep
         if epsfcn == None:  epsfcn = machep
         if xall == None:    xall = x
-        if ifree == None:   ifree = numarray.arange(len(xall))
+        if ifree == None:   ifree = numpy.arange(len(xall))
         if step == None:    step = x * 0.
         nall = len(xall)
 
-        eps = numarray.sqrt(max([epsfcn, machep]))
+        eps = numpy.sqrt(max([epsfcn, machep]))
         m = len(fvec)
         n = len(x)
 
         ## Compute analytical derivative if requested
         if (autoderivative == 0):
             mperr = 0
-            fjac = numarray.zeros(nall, numarray.Float)
-            numarray.put(fjac, ifree, 1.0)  ## Specify which parameters need derivatives
+            fjac = numpy.zeros(nall, numpy.float)
+            numpy.put(fjac, ifree, 1.0)  ## Specify which parameters need derivatives
             [status, fp] = self.call(fcn, xall, functkw, fjac=fjac)
 
             if len(fjac) != m*nall:
@@ -1510,25 +1510,25 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                 fjac.shape = [m, n]
                 return(fjac)
 
-        fjac = numarray.zeros([m, n], numarray.Float)
+        fjac = numpy.zeros([m, n], numpy.float)
 
         h = eps * abs(x)
 
         ## if STEP is given, use that
         if step != None:
-            stepi = numarray.take(step, ifree)
-            wh = (numarray.nonzero(stepi > 0) )[0]
-            if (len(wh) > 0): numarray.put(h, wh, numarray.take(stepi, wh))
+            stepi = numpy.take(step, ifree)
+            wh = (numpy.nonzero(stepi > 0) )[0]
+            if (len(wh) > 0): numpy.put(h, wh, numpy.take(stepi, wh))
 
         ## if relative step is given, use that
         if (len(dstep) > 0):
-            dstepi = numarray.take(dstep, ifree)
-            wh = (numarray.nonzero(dstepi > 0) )[0]
-            if len(wh) > 0: numarray.put(h, wh, abs(numarray.take(dstepi,wh)*numarray.take(x,wh)))
+            dstepi = numpy.take(dstep, ifree)
+            wh = (numpy.nonzero(dstepi > 0) )[0]
+            if len(wh) > 0: numpy.put(h, wh, abs(numpy.take(dstepi,wh)*numpy.take(x,wh)))
 
         ## In case any of the step values are zero
-        wh = (numarray.nonzero(h == 0) )[0]
-        if len(wh) > 0: numarray.put(h, wh, eps)
+        wh = (numpy.nonzero(h == 0) )[0]
+        if len(wh) > 0: numpy.put(h, wh, eps)
 
         ## Reverse the sign of the step if we are up against the parameter
         ## limit, or if the user requested it.
@@ -1537,9 +1537,9 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
         if len(ulimited) > 0 and len(ulimit) > 0:
             #mask = mask or (ulimited and (x > ulimit-h))
             mask = mask | (ulimited & (x > ulimit-h))
-            wh = (numarray.nonzero(mask))[0]
+            wh = (numpy.nonzero(mask))[0]
 
-            if len(wh) > 0: numarray.put(h, wh, -numarray.take(h, wh))
+            if len(wh) > 0: numpy.put(h, wh, -numpy.take(h, wh))
         ## Loop through parameters, computing the derivative for each
         for j in range(n):
             xp = xall.copy()
@@ -1693,17 +1693,17 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         if (self.debug): print 'Entering qrfac...'
         machep = self.machar.machep
-        sz = numarray.shape(a)
+        sz = numpy.shape(a)
         m = sz[0]
         n = sz[1]
 
         ## Compute the initial column norms and initialize arrays
-        acnorm = numarray.zeros(n, numarray.Float)
+        acnorm = numpy.zeros(n, numpy.float)
         for j in range(n):
             acnorm[j] = self.enorm(a[:,j])
         rdiag = acnorm.copy()
         wa = rdiag.copy()
-        ipvt = numarray.arange(n)
+        ipvt = numpy.arange(n)
 
         ## Reduce a to r with householder transformations
         minmn = min([m,n])
@@ -1711,7 +1711,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
             if (pivot != 0):
                 ## Bring the column of largest norm into the pivot position
                 rmax = max(rdiag[j:])
-                kmax = (numarray.nonzero(rdiag[j:] == rmax) )[0]
+                kmax = (numpy.nonzero(rdiag[j:] == rmax) )[0]
                 ct = len(kmax)
                 kmax = kmax + j
                 if ct > 0:
@@ -1752,10 +1752,10 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                     ## *** Note optimization a(j:*,lk)
                     ## (corrected 20 Jul 2000)
                     if a[j,lj] != 0:
-                        a[j:,lk] = ajk - ajj * numarray.sum(ajk*ajj)/a[j,lj]
+                        a[j:,lk] = ajk - ajj * numpy.sum(ajk*ajj)/a[j,lj]
                         if ((pivot != 0) and (rdiag[k] != 0)):
                             temp = a[j,lk]/rdiag[k]
-                            rdiag[k] = rdiag[k] * numarray.sqrt(max((1.-temp**2), 0.))
+                            rdiag[k] = rdiag[k] * numpy.sqrt(max((1.-temp**2), 0.))
                             temp = rdiag[k]/wa[k]
                             if ((0.05*temp*temp) <= machep):
                                 rdiag[k] = self.enorm(a[j+1:,lk])
@@ -1844,7 +1844,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
     def qrsolv(self, r, ipvt, diag, qtb, sdiag):
         if (self.debug): print 'Entering qrsolv...'
-        sz = numarray.shape(r)
+        sz = numpy.shape(r)
         m = sz[0]
         n = sz[1]
 
@@ -1853,7 +1853,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         for j in range(n):
             r[j:n,j] = r[j,j:n]
-        x = numarray.diagonal(r)
+        x = numpy.diagonal(r)
         wa = qtb.copy()
 
         ## Eliminate the diagonal matrix d using a givens rotation
@@ -1872,11 +1872,11 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                 if (sdiag[k] == 0): break
                 if (abs(r[k,k]) < abs(sdiag[k])):
                     cotan  = r[k,k]/sdiag[k]
-                    sine   = 0.5/numarray.sqrt(.25 + .25*cotan*cotan)
+                    sine   = 0.5/numpy.sqrt(.25 + .25*cotan*cotan)
                     cosine = sine*cotan
                 else:
                     tang   = sdiag[k]/r[k,k]
-                    cosine = 0.5/numarray.sqrt(.25 + .25*tang*tang)
+                    cosine = 0.5/numpy.sqrt(.25 + .25*tang*tang)
                     sine   = cosine*tang
 
                 ## Compute the modified diagonal element of r and the
@@ -1897,7 +1897,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
         ## Solve the triangular system for z.  If the system is singular
         ## then obtain a least squares solution
         nsing = n
-        wh = (numarray.nonzero(sdiag == 0) )[0]
+        wh = (numpy.nonzero(sdiag == 0) )[0]
         if (len(wh) > 0):
             nsing = wh[0]
             wa[nsing:] = 0
@@ -1906,11 +1906,11 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
             wa[nsing-1] = wa[nsing-1]/sdiag[nsing-1] ## Degenerate case
             ## *** Reverse loop ***
             for j in range(nsing-2,-1,-1):
-                sum = numarray.sum(r[j+1:nsing,j]*wa[j+1:nsing])
+                sum = numpy.sum(r[j+1:nsing,j]*wa[j+1:nsing])
                 wa[j] = (wa[j]-sum)/sdiag[j]
 
         ## Permute the components of z back to components of x
-        numarray.put(x, ipvt, wa)
+        numpy.put(x, ipvt, wa)
         return(r, x, sdiag)
 
 
@@ -2014,7 +2014,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         if (self.debug): print 'Entering lmpar...'
         dwarf = self.machar.minnum
-        sz = numarray.shape(r)
+        sz = numpy.shape(r)
         m = sz[0]
         n = sz[1]
 
@@ -2022,7 +2022,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
         ## jacobian is rank-deficient, obtain a least-squares solution
         nsing = n
         wa1 = qtb.copy()
-        wh = (numarray.nonzero(numarray.diagonal(r) == 0) )[0]
+        wh = (numpy.nonzero(numpy.diagonal(r) == 0) )[0]
         if len(wh) > 0:
             nsing = wh[0]
             wa1[wh[0]:] = 0
@@ -2034,7 +2034,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                     wa1[0:j] = wa1[0:j] - r[0:j,j]*wa1[j]
 
         ## Note: ipvt here is a permutation array
-        numarray.put(x, ipvt, wa1)
+        numpy.put(x, ipvt, wa1)
 
         ## Initialize the iteration counter.  Evaluate the function at the
         ## origin, and test for acceptance of the gauss-newton direction
@@ -2051,10 +2051,10 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         parl = 0.
         if nsing >= n:
-            wa1 = numarray.take(diag, ipvt)*numarray.take(wa2, ipvt)/dxnorm
+            wa1 = numpy.take(diag, ipvt)*numpy.take(wa2, ipvt)/dxnorm
             wa1[0] = wa1[0] / r[0,0] ## Degenerate case
             for j in range(1,n):   ## Note "1" here, not zero
-                sum = numarray.sum(r[0:j,j]*wa1[0:j])
+                sum = numpy.sum(r[0:j,j]*wa1[0:j])
                 wa1[j] = (wa1[j] - sum)/r[j,j]
 
             temp = self.enorm(wa1)
@@ -2062,7 +2062,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         ## Calculate an upper bound, paru, for the zero of the function
         for j in range(n):
-            sum = numarray.sum(r[0:j+1,j]*qtb[0:j+1])
+            sum = numpy.sum(r[0:j+1,j]*qtb[0:j+1])
             wa1[j] = sum/diag[ipvt[j]]
         gnorm = self.enorm(wa1)
         paru = gnorm/delta
@@ -2081,7 +2081,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
             ## Evaluate the function at the current value of par
             if par == 0: par = max([dwarf, paru*0.001])
-            temp = numarray.sqrt(par)
+            temp = numpy.sqrt(par)
             wa1 = temp * diag
             [r, x, sdiag] = self.qrsolv(r, ipvt, wa1, qtb, sdiag)
             wa2 = diag*x
@@ -2094,7 +2094,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                     (iter == 10)): break;
 
             ## Compute the newton correction
-            wa1 = numarray.take(diag, ipvt)*numarray.take(wa2, ipvt)/dxnorm
+            wa1 = numpy.take(diag, ipvt)*numpy.take(wa2, ipvt)/dxnorm
 
             for j in range(n-1):
                 wa1[j] = wa1[j]/sdiag[j]
@@ -2198,16 +2198,16 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
     def calc_covar(self, rr, ipvt=None, tol=1.e-14):
 
         if (self.debug): print 'Entering calc_covar...'
-        if numarray.rank(rr) != 2:
+        if numpy.rank(rr) != 2:
             print 'ERROR: r must be a two-dimensional matrix'
             return(-1)
-        s = numarray.shape(rr)
+        s = numpy.shape(rr)
         n = s[0]
         if s[0] != s[1]:
             print 'ERROR: r must be a square matrix'
             return(-1)
 
-        if (ipvt == None): ipvt = numarray.arange(n)
+        if (ipvt == None): ipvt = numpy.arange(n)
         r = rr.copy()
         r.shape = [n,n]
 
@@ -2235,7 +2235,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         ## For the full lower triangle of the covariance matrix
         ## in the strict lower triangle or and in wa
-        wa = numarray.repeat([r[0,0]], n)
+        wa = numpy.repeat([r[0,0]], n)
         for j in range(n):
             jj = ipvt[j]
             sing = j > l
@@ -2266,7 +2266,7 @@ class machar:
             self.minnum = 2.2250739e-308
             self.maxgam = 171.624376956302725
 
-        self.maxlog = numarray.log(self.maxnum)
-        self.minlog = numarray.log(self.minnum)
-        self.rdwarf = numarray.sqrt(self.minnum*1.5) * 10
-        self.rgiant = numarray.sqrt(self.maxnum) * 0.1
+        self.maxlog = numpy.log(self.maxnum)
+        self.minlog = numpy.log(self.minnum)
+        self.rdwarf = numpy.sqrt(self.minnum*1.5) * 10
+        self.rgiant = numpy.sqrt(self.maxnum) * 0.1

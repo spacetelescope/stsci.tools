@@ -16,8 +16,8 @@ __vdate__ = '2006-10-13'     #Date of this version
 
 
 import nmpfit
-import numarray as N
-from numarray import mlab
+import numpy as N
+from numpy import random
 
 def _gauss_funct(p, fjac = None, x = None, y=None, err=None,
 weights=None):
@@ -48,14 +48,14 @@ def test_gaussfit():
     x=N.arange(10,20, 0.1)
     #x1=N.arange(0,10,0.1)
     #y1=5*N.e**(-(5-x1)**2/4)
-    n=mlab.randn(100)
+    n=random.randn(100)
     y= 10*N.e**(-(15-x)**2/4) +n*3
     #x=N.arange(100, typecode=N.Int)
     #y=n.zeros(10, typecode=n.Float)
-    #y= mlab.rand(100)
+    #y= random.rand(100)
     #err = N.zeros(100)
-    return gaussfit(x,y, maxiter=20) #, x,y, n
-
+    #return gaussfit(x,y, maxiter=20) #, x,y, n
+    return gfit1d(y,x, maxiter=20)
 
 def gfit1d(y, x=None, err = None, weights=None, par=None, parinfo=None,
 maxiter=200, quiet=0):
@@ -93,13 +93,13 @@ maxiter=200, quiet=0):
     [ 10.          15.           1.41421356]
 
     """
-    y = y.astype(N.Float)
+    y = y.astype(N.float)
     if weights != None:
-        weights = weights.astype(N.Float)
+        weights = weights.astype(N.float)
     if err != None:
-        err = err.astype(N.Float)
+        err = err.astype(N.float)
     if x == None and y.rank == 1:
-        x = N.arange(len(y)).astype(N.Float)
+        x = N.arange(len(y)).astype(N.float)
     if x.shape != y.shape:
         print "input arrays X and Y must be of equal shape.\n"
         return
@@ -109,7 +109,7 @@ maxiter=200, quiet=0):
     if par != None:
         p = par
     else:
-        ysigma = y.stddev()
+        ysigma = y.std()
         ind = N.nonzero(y > ysigma)[0]
         if len(ind) != 0:
             xind = int(ind.mean())
@@ -152,5 +152,5 @@ def plot_fit(y, mfit, x=None):
     pylab.plot(x,yy)
 
 def test():
-    import doctest,gfit1d
-    return doctest.testmod(gfit1d)
+    import doctest,gfit
+    return doctest.testmod(gfit)
