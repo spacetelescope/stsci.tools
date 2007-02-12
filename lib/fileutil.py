@@ -55,7 +55,7 @@ IRAF compatibility functions (abbreviated list):
 import pyfits, readgeis
 import string,os,types,shutil,copy, re
 import calendar
-import numerix as N
+import numpy as N
 import time as _time
 
 # Environment variable handling - based on iraffunctions.py

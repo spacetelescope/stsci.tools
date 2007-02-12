@@ -29,8 +29,8 @@
 #
 
 # Import necessary modules
-import numerix as n
-from numerix import image
+import numpy as n
+from numpy import image
 
 # Version number
 __version__ = '0.4.0'

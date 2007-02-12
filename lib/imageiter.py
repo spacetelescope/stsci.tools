@@ -1,4 +1,4 @@
-"""
+""
 
 License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 
@@ -6,7 +6,7 @@ License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 
 from __future__ import generators
 
-import numerix as N
+import numpy as N
 
 BUFSIZE = 1024*1000   # 1Mb cache size
 

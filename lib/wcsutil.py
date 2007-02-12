@@ -1,7 +1,7 @@
 import string, copy, os
 
 import pyfits
-import numerix as N
+import numpy as N
 from math import *
 
 import fileutil

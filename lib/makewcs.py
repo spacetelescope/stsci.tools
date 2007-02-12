@@ -61,7 +61,7 @@ import pydrizzle
 from pydrizzle import drutil,buildasn,obsgeometry
 import fileutil, wcsutil
 
-import numerix as N
+import numpy as N
 
 yes = True
 no = False

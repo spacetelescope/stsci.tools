@@ -62,9 +62,9 @@ __version__ = "2.0 (22 August, 2006), \xa9 AURA"
 
 import os, sys, string
 import pyfits
-import numerix
-from numerix import rec as recarray
-from numerix import memmap
+import numpy
+from numpy import rec as recarray
+from numpy import memmap
 
 def stsci(hdulist):
     """For STScI GEIS files, need to do extra steps."""
@@ -223,7 +223,7 @@ def readgeis(input):
 
     loc = 0
     for k in range(gcount):
-        ext_dat = numerix.fromstring(dat[loc:loc+data_size], dtype=_code)
+        ext_dat = numpy.fromstring(dat[loc:loc+data_size], dtype=_code)
         ext_dat = ext_dat.reshape(_shape)
         if _uint16:
             ext_dat += _bzero

@@ -87,8 +87,8 @@ __version__ = "1.4 (23 August 2006)"
 
 import sys, types
 import pyfits
-import numerix as num
-from numerix import char
+import numpy as num
+from numpy import char
 
 def fitsdiff (input1, input2, comment_excl_list='', value_excl_list='', field_excl_list='', maxdiff=10, delta=0., neglect_blanks=1, output=None):
 
