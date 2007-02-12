@@ -30,7 +30,7 @@ __version__ = '0.1'
 try:
     numerixflag = os.environ["NUMERIX"]
 except:
-    numerixflag = 'numarray'
+    numerixflag = 'numpy'
 
 # Deteremine if numarray is installed on the system
 try:
