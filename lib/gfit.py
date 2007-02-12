@@ -98,11 +98,12 @@ maxiter=200, quiet=0):
         weights = weights.astype(N.float)
     if err != None:
         err = err.astype(N.float)
-    if x == None and y.rank == 1:
+    if x == None and len(y.shape)==1 :
         x = N.arange(len(y)).astype(N.float)
     if x.shape != y.shape:
         print "input arrays X and Y must be of equal shape.\n"
         return
+
 
     fa = {'x':x, 'y':y, 'err':err, 'weights':weights}
 
