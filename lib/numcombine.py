@@ -30,7 +30,7 @@
 
 # Import necessary modules
 import numpy as n
-from numpy import image
+import image
 
 # Version number
 __version__ = '0.4.0'
