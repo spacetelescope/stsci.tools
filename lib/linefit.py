@@ -5,30 +5,36 @@ Returns the parameters of the model, bo, b1:
 Y = b0 + b1* X
 
 @author: Nadia Dencheva
-@version: '0.1 (2006-10-13)'
+@version: '1.0 (2007-02-20)'
 
 """
 import numpy as N
+from numpy.core import around
 
-
-__version__ = '0.1'          #Release version number only
-__vdate__ = '2006-10-16'     #Date of this version
+__version__ = '1.0'          #Release version number only
+__vdate__ = '2007-02-20'     #Date of this version
 
 
 
 def linefit(x,y,weights=None):
 
     """
+    @type  y:         1D numpy array
+    @param y:         The data to be fitted
+    @type  x:         1D numpy array
+    @param x:         The x values of the y array. x and y must
+                      have the same shape.
+    @type  weights:   1D numpy array, must have the same shape as x and y
+    @param weights:   weight values
+
     >>> x=N.array([-5, -4 ,-3 ,-2 ,-1, 0, 1, 2, 3, 4, 5])
     >>> y=N.array([1, 5, 4, 7, 10, 8, 9, 13, 14, 13, 18])
-    >>> linefit(x,y)
-    (9.2727272727272734, 1.4363636363636363)
-
+    >>> around(linefit(x,y), decimals=5)
+    array([ 9.27273,  1.43636])
     >>> x=N.array([1.3,1.3,2.0,2.0,2.7,3.3,3.3,3.7,3.7,4.,4.,4.,4.7,4.7,5.,5.3,5.3,5.3,5.7,6.,6.,6.3,6.7])
     >>> y = N.array([2.3,1.8,2.8,1.5,2.2,3.8,1.8,3.7,1.7,2.8,2.8,2.2,3.2,1.9,1.8,3.5,2.8,2.1,3.4,3.2,3.,3.,5.9])
-    >>> linefit(x,y)
-    (1.4256449273077039, 0.31578573906461893)
-
+    >>> around(linefit(x,y), decimals=5)
+    array([ 1.42564,  0.31579])
     """
 
     if len(x) != len(y):

@@ -7,12 +7,12 @@ the history of this module (fortran -> idl -> python).
 nmpfit.py is a version of mpfit.py which uses numarray.
 
 @author: Nadia Dencheva
-@version: '0.1 (2006-10-13)'
+@version: '1.0 (2007-02-20)'
 
 """
 
-__version__ = '0.1'          #Release version number only
-__vdate__ = '2006-10-13'     #Date of this version
+__version__ = '1.0'          #Release version number only
+__vdate__ = '2007-02-20'     #Date of this version
 
 
 import nmpfit
@@ -149,7 +149,6 @@ def plot_fit(y, mfit, x=None):
     except ImportError:
         print "Matplotlib is not available.\n"
         return
-    #pylab.plot(x,y)
     pylab.plot(x,yy)
 
 def test():
