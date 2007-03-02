@@ -1,3 +1,6 @@
+import numerixenv
+numerixenv.check()
+
 import string, copy, os
 
 import pyfits
@@ -56,7 +59,7 @@ DEFAULT_PREFIX = 'O'
 
 
 
-__version__ = '1.0.0 (10-Oct-2006)'
+__version__ = '1.1.0 (01-Mar-2007)'
 
 def help():
     print 'wcsutil Version '+str(__version__)+':\n'

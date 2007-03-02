@@ -29,6 +29,9 @@
 #
 
 # Import necessary modules
+import numerixenv
+numerixenv.check()
+
 import numpy as n
 import image
 

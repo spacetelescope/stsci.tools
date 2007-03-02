@@ -14,6 +14,8 @@ nmpfit.py is a version of mpfit.py which uses numarray.
 __version__ = '1.0'          #Release version number only
 __vdate__ = '2007-02-20'     #Date of this version
 
+import numerixenv
+numerixenv.check()
 
 import nmpfit
 import numpy as N
@@ -93,6 +95,9 @@ maxiter=200, quiet=0):
     [ 10.          15.           1.41421356]
 
     """
+    if numerixenv.check_input(x) or numerixenv.check_input(y):
+        raise ValueError, "Input is a NumArray array. This version of %s requires a Numpy array\n" % __name__
+    
     y = y.astype(N.float)
     if weights != None:
         weights = weights.astype(N.float)

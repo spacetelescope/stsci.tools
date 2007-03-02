@@ -51,6 +51,8 @@ MAKEWCS V0.0 (RNH) - Created new version to implement more complete
                         the use of the numerix interface layer.
         
 """
+import numerixenv
+numerixenv.check()
 
 #import iraf
 from math import *

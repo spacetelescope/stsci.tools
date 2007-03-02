@@ -60,6 +60,9 @@
 # This version needs pyfits 0.9.6.3 or later
 __version__ = "2.0 (22 August, 2006), \xa9 AURA"
 
+import numerixenv
+numerixenv.check()
+
 import os, sys, string
 import pyfits
 import numpy

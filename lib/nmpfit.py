@@ -2,7 +2,7 @@
 Python/Numeric version of this module was called mpfit. This version was modified to use numpy.
 """
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 """
 Perform Levenberg-Marquardt least-squares minimization, based on MINPACK-1.
@@ -406,8 +406,9 @@ Perform Levenberg-Marquardt least-squares minimization, based on MINPACK-1.
         Translated from MPFIT (Craig Markwardt's IDL package) to Python,
         August, 2002.  Mark Rivers
 """
+import numerixenv
+numerixenv.check()
 
-#import Numeric
 import numpy
 import types
 

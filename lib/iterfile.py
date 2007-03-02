@@ -3,6 +3,9 @@
 License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 
 """
+import numerixenv
+numerixenv.check()
+
 import pyfits
 
 __version__ = '0.2 (06-October-2006)'

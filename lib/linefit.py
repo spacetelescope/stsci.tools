@@ -8,8 +8,13 @@ Y = b0 + b1* X
 @version: '1.0 (2007-02-20)'
 
 """
+import numerixenv
+numerixenv.check()
+
+
 import numpy as N
 from numpy.core import around
+
 
 __version__ = '1.0'          #Release version number only
 __vdate__ = '2007-02-20'     #Date of this version
@@ -36,7 +41,10 @@ def linefit(x,y,weights=None):
     >>> around(linefit(x,y), decimals=5)
     array([ 1.42564,  0.31579])
     """
-
+    
+    if numerixenv.check_input(x) or numerixenv.check_input(y):
+        raise ValueError, "Input is a NumArray array. This version of %s requires a Numpy array\n" % __name__
+    
     if len(x) != len(y):
         print "Error: X and Y must have equal size\n"
         return

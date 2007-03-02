@@ -52,6 +52,9 @@ IRAF compatibility functions (abbreviated list):
         
 
 """
+import numerixenv
+numerixenv.check()
+
 import pyfits, readgeis
 import string,os,types,shutil,copy, re
 import calendar
@@ -77,7 +80,7 @@ EXTLIST =  ['_crj.fits','_flt.fits','_sfl.fits','_cal.fits','_raw.fits','.c0h','
 
 BLANK_ASNDICT = {'output':None,'order':[],'members':{'abshift':no,'dshift':no}}
 
-__version__ = '1.2.0 (10-Oct-2006)'
+__version__ = '1.3.0 (02-Mar-2007)'
 
 def help():
     print __doc__

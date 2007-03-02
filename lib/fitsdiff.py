@@ -80,6 +80,8 @@
 
 
 """
+import numerixenv
+numerixenv.check()
 
 # This version needs python 2.2 and numarray 0.6, or later.
 # Developed by Science Software Group, STScI, USA.

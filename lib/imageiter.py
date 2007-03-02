@@ -3,6 +3,8 @@
 License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 
 """
+import numerixenv
+numerixenv.check()
 
 from __future__ import generators
 
