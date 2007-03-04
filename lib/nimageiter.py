@@ -3,10 +3,10 @@
 License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 
 """
-import numerixenv
-numerixenv.check()
 
 from __future__ import generators
+import numerixenv
+numerixenv.check()
 
 import types
 import numpy as N
