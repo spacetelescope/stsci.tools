@@ -416,7 +416,11 @@ def getHeader(filename,handle=None):
             raise ValueError,'Handle must be PyFITS object!'
 
     _hdr = _fimg['PRIMARY'].header.copy()
-    del _hdr['NAXIS']
+    
+    # if the data is not in the primary array delete NAXIS
+    # so that the correct value is read from the extension header
+    if _hdr['NAXIS'] == 0:
+        del _hdr['NAXIS']
     
     if _extn > 0:
         # Append correct extension/chip/group header to PRIMARY...
