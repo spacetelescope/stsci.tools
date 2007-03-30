@@ -80,7 +80,7 @@ EXTLIST =  ['_crj.fits','_flt.fits','_sfl.fits','_cal.fits','_raw.fits','.c0h','
 
 BLANK_ASNDICT = {'output':None,'order':[],'members':{'abshift':no,'dshift':no}}
 
-__version__ = '1.3.0 (02-Mar-2007)'
+__version__ = '1.3.1 (30-Mar-2007)'
 
 def help():
     print __doc__
@@ -1619,12 +1619,17 @@ def readAsnTable(fname,output=None,prodonly=yes):
 
         # Rotation angle
         if 'ROTATION' in colnames:
+            if memdict['dshift'] == no and memdict['abshift'] == no:
+                memdict['dshift'] = yes
             memdict['delta_rot'] = ftab[1].data.field('ROTATION')[row]
         else:
             memdict['delta_rot'] = 0.
 
         # Scale: output pixel size
         if 'SCALE' in colnames:
+            if memdict['dshift'] == no and memdict['abshift'] == no:
+                memdict['dshift'] = yes
+    
             memdict['delta_scale'] = ftab[1].data.field('SCALE')[row]
         else:
             memdict['delta_scale'] = 1.
