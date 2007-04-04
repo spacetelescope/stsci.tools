@@ -163,6 +163,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     # Try to get the instrument if we don't have it already
     instrument = readKeyword(hdr,'INSTRUME')
 
+    binned = 1
     # Read in any specified OFFTAB, if present (WFPC2)
     offtab = readKeyword(hdr,'OFFTAB')
     dateobs = readKeyword(hdr,'DATE-OBS')
@@ -189,6 +190,9 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     if instrument == 'WFPC2':
         filter1 = readKeyword(hdr,'FILTNAM1')
         filter2 = readKeyword(hdr,'FILTNAM2')
+        mode = readKeyword(hdr,'MODE')
+        if mode == 'AREA':
+            binned = 2
         Nrefchip=3
     elif instrument == 'NICMOS':
         filter1 = readKeyword(hdr,'FILTER')
@@ -265,7 +269,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     #            filter1=filter1,filter2=filter2,offtab=offtab,date=dateobs)
     idcmodel = obsgeometry.IDCModel(idctab,
                     chip=chip, direction='forward', date=dateobs,
-                    filter1=filter1, filter2=filter2, offtab=offtab)
+                    filter1=filter1, filter2=filter2, offtab=offtab, binned=binned)
     fx = idcmodel.cx
     fy = idcmodel.cy
     refpix = idcmodel.refpix
