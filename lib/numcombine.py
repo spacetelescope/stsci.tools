@@ -100,8 +100,8 @@ class numCombine:
         # Create the threshold masks
         if ( (self.__lower != None) or (self.__upper != None) ):
             __tmpMaskList =[]
-            for image in self.__numarrayObjectList:
-                __tmpMask = image.threshhold(image,low=self.__lower,high=self.__upper)
+            for imgobj in self.__numarrayObjectList:
+                __tmpMask = image.threshhold(imgobj,low=self.__lower,high=self.__upper)
                 __tmpMaskList.append(__tmpMask)
         else:
             __tmpMaskList = None
@@ -134,8 +134,8 @@ class numCombine:
     def _sum(self):
         # Sum the images in the input list
         #print "* Creating a sum array..."
-        for image in self.__numarrayObjectList:
-            n.add(self.combArrObj,image,self.combArrObj)
+        for imgobj in self.__numarrayObjectList:
+            n.add(self.combArrObj,imgobj,self.combArrObj)
     def _minimum(self):
         # Nominally computes the minimum pixel value for a stack of
         # identically shaped images
@@ -160,8 +160,8 @@ class numCombine:
             # Find the maximum pixel value for the image stack.
             _maxValue = -1e+9
 
-            for image in self.__numarrayObjectList:
-                _newMax = image.max()
+            for imgobj in self.__numarrayObjectList:
+                _newMax = imgobj.max()
                 if (_newMax > _maxValue):
                     _maxValue = _newMax
 
@@ -171,12 +171,12 @@ class numCombine:
                 __maskSum = self.__sumImages(self.__numarrayMaskList)
 
                 # For each image, set pixels masked as "bad" to the "super-maximum" value.
-                for image in xrange(len(self.__numarrayObjectList)):
-                    tmp = n.where(self.__numarrayMaskList[image] == 1,_maxValue+1,self.__numarrayObjectList[image])
+                for imgobj in xrange(len(self.__numarrayObjectList)):
+                    tmp = n.where(self.__numarrayMaskList[imgobj] == 1,_maxValue+1,self.__numarrayObjectList[imgobj])
                     tmpList.append(tmp)
             else:
-                for image in xrange(len(self.__numarrayObjectList)):
-                  tmpList.append(image)
+                for imgobj in xrange(len(self.__numarrayObjectList)):
+                  tmpList.append(imgobj)
 
             # Create the minimum image by computing a median array throwing out all but one of the pixels in the stack
             # starting from the top of the stack.
@@ -191,6 +191,6 @@ class numCombine:
     def __sumImages(self,numarrayObjectList):
         """ Sum a list of numarray objects. """
         __sum = n.zeros(numarrayObjectList[0].shape,dtype=numarrayObjectList[0].dtype)
-        for image in numarrayObjectList:
-            __sum += image
+        for imgobj in numarrayObjectList:
+            __sum += imgobj
         return __sum
