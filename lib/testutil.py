@@ -1,3 +1,4 @@
+import math
 import unittest
 import numpy as N
 """ This module extends the built-in unittest capabilities to facilitate
