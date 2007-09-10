@@ -289,7 +289,9 @@ class st_ImageBaseHDU(core._ImageBaseHDU):
             raw_data.dtype = raw_data.dtype.newbyteorder('>')
 
             if (self._bzero != 0 or self._bscale != 1):
-                if _bitpix > 0:  # scale integers to Float32
+                if _bitpix > 16:  # scale integers to Float64
+                    self.data = np.array(raw_data, dtype=np.float64)
+                elif _bitpix > 0:  # scale integers to Float32
                     self.data = np.array(raw_data, dtype=np.float32)
                 else:  # floating point cases
                     self.data = raw_data
