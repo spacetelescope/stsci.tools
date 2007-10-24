@@ -1,3 +1,4 @@
+
 import math
 import unittest
 import numpy as N
@@ -60,7 +61,7 @@ class FPTestCase(unittest.TestCase):
     def assertApproxFP(self, testvalue, expected, accuracy=1.0e-5):
         ''' Floating point comparison  '''
         result = math.fabs((testvalue - expected) / expected)
-        self.failUnless(result <= accuracy)
+        self.failUnless(result <= accuracy,"test: %g, ref: %g"%(testvalue,expected))
 
     def assertApproxNumpy(self, testarray, expected, accuracy=1.0e-5):
         ''' Floating point array comparison '''
