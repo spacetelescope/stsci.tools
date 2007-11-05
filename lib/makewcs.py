@@ -56,9 +56,9 @@ numerixenv.check()
 
 #import iraf
 from math import *
-import string,types
+import string,types, os.path
 import pydrizzle
-#from WCS import WCS
+import pyfits
 
 from pydrizzle import drutil,buildasn,obsgeometry
 import fileutil, wcsutil
@@ -78,13 +78,55 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5}
 
-__version__ = '0.8.0 (31 March 2006)'
+__version__ = '0.8.1 (31 October 2007)'
 def run(image,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
     
     _prepend = prepend
-    
+
+    #find out what the input is
+    if '.fits' in image:
+        f = pyfits.open(image)
+        if f[0].data != None:
+            errormsg = '\n\nPyDrizzle does not support waiver fits format.\n'
+            errormsg += 'Convert the input files to GEIS or multiextension FITS.\n\n'
+            raise ValueError, errormsg
+        else:
+            f.close()
+        
+    if image[-1] == 'h' and image[-4] == '.':
+        #from multidrizzle import geissupport
+        #newfilename = geissupport.convertgeis2multifits(image)
+        
+        # Check to see if there is a DQ file for the geisfile, 
+        # if so, convert it to multiextension FITS format
+        #geissupport.verifyDQfile(image)
+        
+        from pytools import readgeis
+        extn = image[image.rfind('.')+1:-1]+"h"
+        rootname = image.split('.')[0]
+        newfilename = rootname + "_" + extn + '.fits'
+        if os.path.exists(newfilename):
+            os.remove(newfilename)
+            print "! Replacing ", newfilename
+        geis = readgeis.readgeis(image)
+        geis.writeto(newfilename)
+        image = newfilename
+        
+        #convert the corresponding dq file
+        #The next code block does not belong here
+        #it may go in a possible input preprocessing
+        # step common to pydrizzle and multidrizzle 
+        dqfilename = rootname + ".c1h"
+        if os.path.exists(dqfilename):
+            newdqname = rootname + "_c1h.fits"
+            if os.path.exists(newdqname):
+                os.remove(newdqname)
+                print "! Replacing ", newdqname
+            dqgeis = readgeis.readgeis(dqfilename)
+            dqgeis.writeto(newdqname)
+        
     if image.find('[') > -1:
         # We were told to only work with a specific extension
         if restore == no:
@@ -140,6 +182,7 @@ def run(image,quiet=yes,restore=no,prepend='O'):
                     if not quiet:
                         print 'Restoring original WCS values for',_image  
                     restoreCD(_image,_prepend)
+    
 
 def restoreCD(image,prepend):
     
