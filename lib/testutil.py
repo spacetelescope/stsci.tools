@@ -89,4 +89,4 @@ def testall(module,verb=0):
     each test. A summary of the number of tests run, errors, and failures
     is always printed at the end."""
     result=unittest.TextTestRunner(verbosity=verb).run(buildsuite(module))
-    print result
+    return result
