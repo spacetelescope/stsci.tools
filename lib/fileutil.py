@@ -38,7 +38,8 @@ General functions included are:
         Reads an association (ASN) table and interprets inputs and output.
         The 'prodonly' parameter specifies whether to use products as inputs
             or not; where 'prodonly=no' specifies to only use EXP as inputs.
-
+    isFits(input) - returns (True|False, fitstype), fitstype is one of
+                    ('simple', 'mef', 'waiver') 
         
 IRAF compatibility functions (abbreviated list):    
     osfn(filename)
@@ -52,6 +53,7 @@ IRAF compatibility functions (abbreviated list):
         
 
 """
+
 import numerixenv
 numerixenv.check()
 
@@ -118,6 +120,38 @@ def getDate():
     date_str = _time.strftime('%Y-%m-%dT%H:%M:%S',_ltime)
 
     return date_str
+
+def isFits(input):
+    """
+    Returns a tuple (isfits, fitstype)
+    isfits - True|False
+    fitstype - one of 'waiver', 'mef', 'simple'
+    """
+    isfits = False
+    fitstype = None
+    names = ['fits','fit', 'FITS','FIT']
+    #determine if input is a fits file based on extension
+    isfits = True in [l in input for l in names]
+    # if input is a fits file determine what kind of fits it is
+    #waiver fits len(shape) == 3
+    if isfits:
+        f = pyfits.open(input)
+        data0 = f[0].data
+        if data0 != None:
+            try:
+                if isinstance(f[1],pyfits.TableHDU):
+                    fitstype = 'waiver'
+            except:
+                pass
+            if len(data0.shape) == 2:
+                fitstype = 'simple'
+            else:
+                print 'Unrecognized type for fits file\n'
+        else:
+            fitstype = 'mef'
+        f.close()
+
+    return isfits, fitstype 
 
 def convertDate(date):
     """ Converts the DATE-OBS date string into an integer of the
