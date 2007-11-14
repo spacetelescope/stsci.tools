@@ -141,12 +141,10 @@ def isFits(input):
             try:
                 if isinstance(f[1],pyfits.TableHDU):
                     fitstype = 'waiver'
-            except:
-                pass
-            if len(data0.shape) == 2:
+            except IndexError:
+                #if len(data0.shape) == 2:
                 fitstype = 'simple'
-            else:
-                print 'Unrecognized type for fits file\n'
+            
         else:
             fitstype = 'mef'
         f.close()
