@@ -79,6 +79,10 @@ def stsci(hdulist):
         rootname = hdulist[0].header.get('ROOTNAME', '')
         filetype = hdulist[0].header.get('FILETYPE', '')
         for i in range(1, len(hdulist)):
+            # Add name and extver attributes to match PyFITS data structure
+            hdulist[i].name = filetype
+            hdulist[i]._extver = i
+            # Add extension keywords for this chip to extension
             hdulist[i].header.update(key='EXPNAME', value=rootname, comment="9 character exposure identifier")
             hdulist[i].header.update(key='EXTVER', value=i, comment="extension version number")
             hdulist[i].header.update(key='EXTNAME', value=filetype, comment="extension name")
@@ -114,7 +118,7 @@ def readgeis(input):
     data_file = input[:-1]+'d'
 
     _os = sys.platform
-    if _os[:5] == 'linux' or _os[:5] == 'sunos' or _os[:3] == 'osf' or _os[:6] == 'darwin':
+    if _os[:5] == 'linux' or _os[:5] == 'win32' or _os[:5] == 'sunos' or _os[:3] == 'osf' or _os[:6] == 'darwin':
         bytes_per_line = cardLen+1
     else:
         raise "Platform %s is not supported (yet)." % _os
@@ -223,6 +227,8 @@ def readgeis(input):
     dat = f1.read()
 #    dat = memmap(data_file, mode='c')
     hdulist.mmobject = dat
+    
+    errormsg = ""
 
     loc = 0
     for k in range(gcount):
@@ -230,6 +236,31 @@ def readgeis(input):
         ext_dat = ext_dat.reshape(_shape)
         if _uint16:
             ext_dat += _bzero
+        # Check to see whether there are any NaN's or infs which might indicate
+        # a byte-swapping problem, such as being written out on little-endian 
+        #   and being read in on big-endian or vice-versa.
+        if _code.find('float') >= 0 and \
+            (numpy.any(numpy.isnan(ext_dat)) or numpy.any(numpy.isinf(ext_dat))):
+            errormsg += "===================================\n"
+            errormsg += "= WARNING:                        =\n"
+            errormsg += "=  Input image:                   =\n"
+            errormsg += input+"[%d]\n"%(k+1)
+            errormsg += "=  had floating point data values =\n"
+            errormsg += "=  of NaN and/or Inf.             =\n"
+            errormsg += "===================================\n"
+        elif _code.find('int') >= 0:
+            # Check INT data for max values
+            ext_dat_frac,ext_dat_exp = numpy.frexp(ext_dat)
+            if ext_dat_exp.max() == int(_bitpix) - 1:
+                # Potential problems with byteswapping
+                errormsg += "===================================\n"
+                errormsg += "= WARNING:                        =\n"
+                errormsg += "=  Input image:                   =\n"
+                errormsg += input+"[%d]\n"%(k+1)
+                errormsg += "=  had integer data values        =\n"
+                errormsg += "=  with maximum bitvalues.        =\n"
+                errormsg += "===================================\n"
+
         ext_hdu = pyfits.ImageHDU(data=ext_dat)
 
         rec = recarray.fromstring(dat[loc+data_size:loc+group_size], formats=formats[:-1], shape=1)
@@ -256,6 +287,18 @@ def readgeis(input):
             ext_hdu.header.update('BZERO', _bzero)
 
         hdulist.append(ext_hdu)
+
+    if errormsg != "":
+        errormsg += "===================================\n"
+        errormsg += "=  This file may have been        =\n"
+        errormsg += "=  written out on a platform      =\n"
+        errormsg += "=  with a different byte-order.   =\n"
+        errormsg += "=                                 =\n"
+        errormsg += "=  Please verify that the values  =\n"
+        errormsg += "=  are correct or apply the       =\n"
+        errormsg += "=  '.byteswap()' method.          =\n"
+        errormsg += "===================================\n"
+        print errormsg
 
     f1.close()
     stsci(hdulist)

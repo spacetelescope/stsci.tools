@@ -86,46 +86,24 @@ def run(image,quiet=yes,restore=no,prepend='O'):
     _prepend = prepend
 
     #find out what the input is
-    if '.fits' in image:
-        f = pyfits.open(image)
-        if f[0].data != None:
-            errormsg = '\n\nPyDrizzle does not support waiver fits format.\n'
-            errormsg += 'Convert the input files to GEIS or multiextension FITS.\n\n'
-            raise ValueError, errormsg
-        else:
-            f.close()
-        
-    if image[-1] == 'h' and image[-4] == '.':
-        #from multidrizzle import geissupport
-        #newfilename = geissupport.convertgeis2multifits(image)
-        
-        # Check to see if there is a DQ file for the geisfile, 
-        # if so, convert it to multiextension FITS format
-        #geissupport.verifyDQfile(image)
-        
-        from pytools import readgeis
-        extn = image[image.rfind('.')+1:-1]+"h"
-        rootname = image.split('.')[0]
-        newfilename = rootname + "_" + extn + '.fits'
-        if os.path.exists(newfilename):
-            os.remove(newfilename)
-            print "! Replacing ", newfilename
-        geis = readgeis.readgeis(image)
-        geis.writeto(newfilename)
+    imgfits,imgtype = fileutil.isFits(image)
+    
+    # Check for existence of waiver FITS input, and quit if found.
+    if imgfits and imgtype != 'waiver':
+        errormsg = '\n\nPyDrizzle does not support waiver fits format.\n'
+        errormsg += 'Convert the input files to GEIS or multiextension FITS.\n\n'
+        raise ValueError, errormsg
+
+    # If a GEIS image is provided as input, create a new MEF file with 
+    # a name generated using 'buildFITSName()' and update that new MEF file.
+    if not imgfits:
+        # Create standardized name for MEF file
+        newfilename = fileutil.buildFITSName(image)
+        # Convert GEIS image to MEF file
+        newimage = fileutil.openImage(image,writefits=True,fitsname=newfilename,clobber=True)
+        del newimage
+        # Work with new file
         image = newfilename
-        
-        #convert the corresponding dq file
-        #The next code block does not belong here
-        #it may go in a possible input preprocessing
-        # step common to pydrizzle and multidrizzle 
-        dqfilename = rootname + ".c1h"
-        if os.path.exists(dqfilename):
-            newdqname = rootname + "_c1h.fits"
-            if os.path.exists(newdqname):
-                os.remove(newdqname)
-                print "! Replacing ", newdqname
-            dqgeis = readgeis.readgeis(dqfilename)
-            dqgeis.writeto(newdqname)
         
     if image.find('[') > -1:
         # We were told to only work with a specific extension
@@ -175,8 +153,9 @@ def run(image,quiet=yes,restore=no,prepend='O'):
                     _image = img[0]+'[sci,'+repr(i+1)+']'
                 else:
                     _image = img[0]+'['+repr(i+1)+']'
-
                 if not restore:
+                    if not quiet: 
+                        print 'Updating image: ',_image
                     _update(_image,idctab, _nimsets, quiet=quiet,instrument=_instrument,prepend=_prepend)
                 else:                    
                     if not quiet:

@@ -494,14 +494,31 @@ def buildFITSName(geisname):
     """ Build a new FITS filename for a GEIS input image. """
     # User wants to make a FITS copy and update it...
     _indx = geisname.rfind('.')
-    _fitsname = geisname[:_indx]+'_'+geisname[_indx+1:-1]+'f.fits'
+    _fitsname = geisname[:_indx]+'_'+geisname[_indx+1:-1]+'h.fits'
 
     return _fitsname
 
-def openImage(filename,mode='readonly',memmap=0,fitsname=None):
+def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=False,fitsname=None):
     """ Opens file and returns PyFITS object.
-        It will work on both FITS and GEIS formatted images.
+        It will work on both FITS and GEIS formatted images. 
 
+        If a GEIS image is used as input, it will convert it to a MEF object
+        and only if 'writefits = True' will write it out to a file. If 
+        'fitsname = None', the name used to write out the new MEF file 
+        will be created using 'buildFITSName()'. 
+        
+        If a waiver FITS file is provided, it will raise an Exception.
+        
+        Parameters:
+            filename  - name of input file
+            mode      - mode for opening file
+            memmap    - switch for using memory mapping
+            writefits - if True, will write out GEIS as multi-extension FITS
+                        and return handle to that opened GEIS-derived MEF file 
+            clobber   - overwrite previously written out GEIS-derived MEF file
+            fitsname  - name to use for GEIS-derived MEF file,
+                        if None and writefits==True, 
+                            will use 'buildFITSName()' to generate one
     """
     # Insure that the filename is always fully expanded
     # This will not affect filenames without paths or
@@ -511,27 +528,31 @@ def openImage(filename,mode='readonly',memmap=0,fitsname=None):
     # Extract the rootname and extension specification
     # from input image name
     _fname,_iextn = parseFilename(filename)
+        
+    # Check whether we have a FITS file and if so what type
+    isfits,fitstype = isFits(_fname)
 
-    # Parse out the filename (without extension) for the
-    # provided fitsname, if it was provided...
-    _fitsroot = None
-    if fitsname:
-        _fitsroot,_fextn = parseFilename(fitsname)
-
-    if _fname.find('.fits') > 0:
-        try:
+    if isfits:
+        if fitstype != 'waiver':
             # Open the FITS file
-            return pyfits.open(_fname,mode=mode,memmap=memmap)
-        except:
-            raise IOError("Could not open file:",_fname)
-
-    elif findFile(_fitsroot):
-        # Input was specified as a GEIS image, but a FITS copy
-        # already exists, so open it instead...
-        try:
-            return pyfits.open(_fitsroot,mode=mode,memmap=memmap)
-        except:
-            raise IOError("Could not open FITS copy:",_fitsroot)
+            fimg = pyfits.open(_fname,mode=mode,memmap=memmap)
+            return fimg    
+        else:
+                errormsg =  "\n###################################\n"
+                errormsg += "#                                 #\n"
+                errormsg += "# ERROR:                          #\n"
+                errormsg += "#  Input image:                   #\n"
+                errormsg += str(filename)+"\n"
+                errormsg += "#  is a waiver FITS image         #\n"
+                errormsg += "#                                 #\n"
+                errormsg += "#  This code does not support     #\n"
+                errormsg += "#  this file format.  Please      #\n"
+                errormsg += "#  convert this file to either    #\n"
+                errormsg += "#  GEIS format or multi extension #\n"
+                errormsg += "#  FITS format.                   #\n"
+                errormsg += "#                                 #\n"
+                errormsg += "###################################\n"
+                raise ValueError, errormsg
 
     else:
         # Input was specified as a GEIS image, but no FITS copy
@@ -542,36 +563,25 @@ def openImage(filename,mode='readonly',memmap=0,fitsname=None):
             fimg =  readgeis.readgeis(_fname)
         except:
             raise IOError("Could not open GEIS input:",_fname)
-
         # Check to see if user wanted to update GEIS header.
-        if mode != 'readonly':
-            if fitsname != None:
+        # or write out a multi-extension FITS file and return a handle to it            
+        if writefits:
                 # User wants to make a FITS copy and update it
                 # using the filename they have provided
+            if fitsname is None:
+                fitsname = buildFITSName(_fname)
 
-                # Write out GEIS image as multi-extension FITS.
-                try:
-                    fimg.writeto(_fitsroot)
-                except:
-                    print ' --ERROR CHECK-- '
-                    print '    Check whether "%s" already exists and remove it.'%_fitsroot
-                    print ' -------- '
-                    fimg.close()
-                    del fimg
-                    raise ValueError,'Problem creating FITS copy of GEIS image: %s'%_fitsroot
+            # Write out GEIS image as multi-extension FITS.
+            fexists = os.path.exists(fitsname)
+            if (fexists and clobber) or not fexists:
+                    print 'Writing out GEIS as MEF to ',fitsname
+                    fimg.writeto(fitsname)
 
-                # Now close input GEIS image, and open writable
-                # handle to output FITS image instead...
-                fimg.close()
-                del fimg
-                fimg = pyfits.open(_fitsroot,mode=mode,memmap=memmap)
-
-            else:
-                print ' --ERROR CHECK-- '
-                print '    Convert GEIS image to multi-extension FITS or'
-                print '    set "fitsname" to a new FITS filename.'
-                print ' -------- '
-                raise TypeError,'Updating GEIS image headers not supported!'
+            # Now close input GEIS image, and open writable
+            # handle to output FITS image instead...
+            fimg.close()
+            del fimg
+            fimg = pyfits.open(fitsname,mode=mode,memmap=memmap)
 
         # Return handle for use by user
         return fimg
@@ -648,7 +658,18 @@ def getExtn(fimg,extn=None):
             _extns = extn.split(',')
             # Two values given for extension:
             #    for example, 'sci,1' or 'dq,1'
-            _extn = fimg[_extns[0],int(_extns[1])]
+            try:
+                _extn = fimg[_extns[0],int(_extns[1])]
+            except KeyError:
+                _extn = None
+                for e in fimg:
+                    if e.header.has_key('extname'):
+                        if e.header['extname'].lower() == _extns[0].lower() and e.header['extver'] == int(_extns[1]):
+                            _extn = e
+                            break
+                if _extn is None:
+                    raise KeyError, 'Extension %s not found'%extn
+
         elif repr(extn).find('/') > 1:
             # We are working with GEIS group syntax
             _indx = str(extn[:extn.find('/')])
@@ -736,6 +757,8 @@ def checkFileExists(filename,directory=None):
         or specified directory. Default is current directory.
         Returns 1 if it exists, 0 if not found.
     """
+    """
+    # Original SLOW implementation
     if directory == None or directory == '': directory = '.'
     _ldir = os.listdir(directory)
 
@@ -746,7 +769,12 @@ def checkFileExists(filename,directory=None):
         if string.find(file,filename) > -1:
             _exist = 1
             break
-
+    """
+    if directory is not None:
+        fname = os.path.join(directory,filename)
+    else:
+        fname = filename
+    _exist = os.path.exists(fname)
     return _exist
 
 
@@ -792,7 +820,10 @@ def _remove(file):
             os.remove(file[:-1]+'d')
 
 def removeFile(inlist):
-    """ Utility function for deleting a list of files or a single file. """
+    """ Utility function for deleting a list of files or a single file. 
+        This function will automatically delete both files of a 
+            GEIS image, just like 'iraf.imdelete'.
+    """
     if type(inlist) != types.StringType:
     # We do have a list, so delete all filenames in list.
         # Treat like a list of full filenames
