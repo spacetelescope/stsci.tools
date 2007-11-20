@@ -89,7 +89,7 @@ def run(image,quiet=yes,restore=no,prepend='O'):
     imgfits,imgtype = fileutil.isFits(image)
     
     # Check for existence of waiver FITS input, and quit if found.
-    if imgfits and imgtype != 'waiver':
+    if imgfits and imgtype == 'waiver':
         errormsg = '\n\nPyDrizzle does not support waiver fits format.\n'
         errormsg += 'Convert the input files to GEIS or multiextension FITS.\n\n'
         raise ValueError, errormsg
