@@ -78,7 +78,7 @@ no = False
 # List of supported default file types
 # It will look for these file types by default
 # when trying to recognize input rootnames.
-EXTLIST =  ['_crj.fits','_flt.fits','_sfl.fits','_cal.fits','_raw.fits','.c0h','.hhh','.fits']
+EXTLIST =  ['_crj.fits','_flt.fits','_sfl.fits','_cal.fits','_raw.fits','.c0h','.hhh','.fits','_c0h.fits', '_c0f.fits']
 
 BLANK_ASNDICT = {'output':None,'order':[],'members':{'abshift':no,'dshift':no}}
 
@@ -135,7 +135,10 @@ def isFits(input):
     # if input is a fits file determine what kind of fits it is
     #waiver fits len(shape) == 3
     if isfits:
-        f = pyfits.open(input)
+        try:
+            f = pyfits.open(input)
+        except IOError:
+            raise
         data0 = f[0].data
         if data0 != None:
             try:
@@ -498,7 +501,7 @@ def buildFITSName(geisname):
 
     return _fitsname
 
-def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=False,fitsname=None):
+def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fitsname=None):
     """ Opens file and returns PyFITS object.
         It will work on both FITS and GEIS formatted images. 
 
@@ -529,7 +532,7 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=False,fit
     # from input image name
     _fname,_iextn = parseFilename(filename)
         
-    # Check whether we have a FITS file and if so what type
+    # Check whether we have a FITS file and if so what type    
     isfits,fitstype = isFits(_fname)
 
     if isfits:
@@ -575,7 +578,7 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=False,fit
             fexists = os.path.exists(fitsname)
             if (fexists and clobber) or not fexists:
                     print 'Writing out GEIS as MEF to ',fitsname
-                    fimg.writeto(fitsname)
+                    fimg.writeto(fitsname, clobber=clobber)
 
             # Now close input GEIS image, and open writable
             # handle to output FITS image instead...
@@ -947,8 +950,10 @@ def defaultModel():
 #### If 'tabname' == None: This should return a default, undistorted
 ####                        solution.
 #
+
 def readIDCtab (tabname, chip=1, date=None, direction='forward',
                 filter1=None,filter2=None, offtab=None):
+
     """
         Read IDCTAB, and optional OFFTAB if sepcified, and generate
         the two matrices with the geometric correction coefficients.
@@ -957,7 +962,8 @@ def readIDCtab (tabname, chip=1, date=None, direction='forward',
         If offtab is specified, dateobs also needs to be given.
 
     """
-    # Return a default geometry model if no IDCTAB filename
+  
+ # Return a default geometry model if no IDCTAB filename
     # is given.  This model will not distort the data in any way.
     if tabname == None:
         print 'Warning: No IDCTAB specified! No distortion correction will be applied.'
@@ -1155,9 +1161,12 @@ def readIDCtab (tabname, chip=1, date=None, direction='forward',
     return fx,fy,refpix,order
 
 def readOfftab(offtab, date, chip=None):
-    """ Read V2REF,V3REF from a specified offset table (OFFTAB). """
-    # Return a default geometry model if no IDCTAB filename
-    # is given.  This model will not distort the data in any way.
+
+ 
+#Read V2REF,V3REF from a specified offset table (OFFTAB). 
+# Return a default geometry model if no IDCTAB filenam  e
+# is given.  This model will not distort the data in any way.
+
     if offtab == None:
         return 0.,0.
 
@@ -1255,10 +1264,10 @@ def readOfftab(offtab, date, chip=None):
     return v2ref,v3ref,theta
 
 def readWCSCoeffs(header):
-    """
-    Read distortion coeffs from WCS header keywords and
-    populate distortion coeffs arrays.
-    """
+   
+    #Read distortion coeffs from WCS header keywords and
+    #populate distortion coeffs arrays.
+    
     # Read in order for polynomials
     _xorder = header['a_order']
     _yorder = header['b_order']
@@ -1320,7 +1329,6 @@ def readWCSCoeffs(header):
     fy[0][0] = 1.0
 
     return fx,fy,refpix,order
-
 
 def readShiftFile(filename):
     """

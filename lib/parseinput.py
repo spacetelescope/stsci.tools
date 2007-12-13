@@ -25,11 +25,11 @@ import irafglob
 from irafglob import irafglob
 
 # PyDrizzle provides the ability to read association tables ('_asn.fits', '_asc.fits')
-import pydrizzle
+#import pydrizzle
 import fileutil
 from fileutil import readAsnTable
 
-def parseinput(inputlist,outputname=None):
+def parseinput(inputlist,outputname=None, atfile=None):
     """
     FUNCTION: paseinput
     PUPOSE  : Recursively parse user input based upon the irafglob
@@ -58,7 +58,7 @@ def parseinput(inputlist,outputname=None):
     # We can use irafglob to parse the input.  If the input wasn't
     # an association table, it needs to be either a wildcard, '@' file,
     # or comma seperated list.
-    files = irafglob(inputlist, atfile=None)
+    files = irafglob(inputlist, atfile=atfile)
 
     
     # Now that we have expanded the inputlist into a python list
