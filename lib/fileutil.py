@@ -78,7 +78,7 @@ no = False
 # List of supported default file types
 # It will look for these file types by default
 # when trying to recognize input rootnames.
-EXTLIST =  ['_crj.fits','_flt.fits','_sfl.fits','_cal.fits','_raw.fits','.c0h','.hhh','.fits','_c0h.fits', '_c0f.fits']
+EXTLIST =  ['_crj.fits','_flt.fits','_sfl.fits','_cal.fits','_raw.fits','.c0h','.hhh','_c0h.fits', '_c0f.fits', '.fits']
 
 BLANK_ASNDICT = {'output':None,'order':[],'members':{'abshift':no,'dshift':no}}
 
