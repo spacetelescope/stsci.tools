@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import unittest
-import stpyfits
+import pytools.stpyfits as stpyfits
 import pyfits
 import numpy as np
 import exceptions,os,sys
