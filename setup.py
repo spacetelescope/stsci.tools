@@ -16,7 +16,7 @@ for a in args:
         sys.argv.remove(a)
 
 setup(name = "pytools",
-      version = "2.1",
+      version = "3.0",
       description = "General Use Python Tools",
       author = "Warren Hack, Christopher Hanley",
       author_email = "help@stsci.edu",
@@ -24,7 +24,7 @@ setup(name = "pytools",
       platforms = ["Linux","Solaris","Mac OS X","Win"],
       packages = ['pytools'],  
       package_dir={'pytools':'lib'},
-      scripts = ['lib/fitsdiff.py']
+      scripts = ['lib/fitsdiff.py','lib/convertwaiveredfits.py']
       )
 
 
