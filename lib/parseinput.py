@@ -27,7 +27,7 @@ from irafglob import irafglob
 # PyDrizzle provides the ability to read association tables ('_asn.fits', '_asc.fits')
 #import pydrizzle
 import fileutil
-from fileutil import readAsnTable
+from pytools.asnutil import readASNTable
 
 def parseinput(inputlist,outputname=None, atfile=None):
     """
@@ -59,7 +59,6 @@ def parseinput(inputlist,outputname=None, atfile=None):
     # an association table, it needs to be either a wildcard, '@' file,
     # or comma seperated list.
     files = irafglob(inputlist, atfile=atfile)
-
     
     # Now that we have expanded the inputlist into a python list
     # containing the list of input files, it is necessary to examine
@@ -76,7 +75,7 @@ def parseinput(inputlist,outputname=None, atfile=None):
             # The input is an association table
             try:
                 # Open the association table
-                assocdict = readAsnTable(file, None, prodonly=False)
+                assocdict = readASNTable(file, None, prodonly=False)
             except:
                 errorstr  = "###################################\n"
                 errorstr += "#                                 #\n"

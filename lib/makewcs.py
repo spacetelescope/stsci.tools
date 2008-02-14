@@ -57,12 +57,12 @@ numerixenv.check()
 #import iraf
 from math import *
 import string,types, os.path
-import pydrizzle
 import pyfits
 
-from pydrizzle import drutil,buildasn,obsgeometry
-import fileutil, wcsutil
-
+from pydrizzle import drutil
+from pydrizzle.distortion import models
+from pytools import fileutil, wcsutil, parseinput
+from pydrizzle.distortion import mutil
 import numpy as N
 
 yes = True
@@ -79,90 +79,82 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5}
 
 __version__ = '0.8.1 (31 October 2007)'
-def run(image,quiet=yes,restore=no,prepend='O'):
+def run(input,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
     
     _prepend = prepend
 
-    #find out what the input is
-    imgfits,imgtype = fileutil.isFits(image)
+    files = parseinput.parseinput(input)[0]
+    newfiles = []
+    if files == []:
+        print "No valid input files found.\n"
+        raise IOError
     
-    # Check for existence of waiver FITS input, and quit if found.
-    if imgfits and imgtype == 'waiver':
-        errormsg = '\n\nPyDrizzle does not support waiver fits format.\n'
-        errormsg += 'Convert the input files to GEIS or multiextension FITS.\n\n'
-        raise ValueError, errormsg
-
-    # If a GEIS image is provided as input, create a new MEF file with 
-    # a name generated using 'buildFITSName()' and update that new MEF file.
-    if not imgfits:
-        # Create standardized name for MEF file
-        newfilename = fileutil.buildFITSName(image)
-        # Convert GEIS image to MEF file
-        newimage = fileutil.openImage(image,writefits=True,fitsname=newfilename,clobber=True)
-        del newimage
-        # Work with new file
-        image = newfilename
+    for image in files:
+        #find out what the input is
+        imgfits,imgtype = fileutil.isFits(image)
         
-    if image.find('[') > -1:
-        # We were told to only work with a specific extension
-        if restore == no:
-            # First get the name of the IDC table
-            idctab = drutil.getIDCFile(image,keyword='idctab')[0]
-            _found = fileutil.findFile(idctab)
-            if idctab == None or idctab == '':
-                print '#\n No IDCTAB specified.  No correction can be done. Quitting...\n#\n'
-                return
-            elif not _found:
-                print '#\n IDCTAB: ',idctab,' could not be found. Quitting...\n#\n'
-                return
-            _nimsets = get_numsci(image)
-            _update(image,idctab,num_sci,quiet=quiet,prepend=_prepend)
-        else: 
-            if not quiet:
-                print 'Restoring original WCS values for',image  
-            restoreCD(image,_prepend)
-    else:
-        # Work with all extensions of all images in list    
-        _files = buildasn._findFiles(image)
+        # Check for existence of waiver FITS input, and quit if found.
+        if imgfits and imgtype == 'waiver':
+            errormsg = '\n\nPyDrizzle does not support waiver fits format.\n'
+            errormsg += 'Convert the input files to GEIS or multiextension FITS.\n\n'
+            raise ValueError, errormsg
+    
+        # If a GEIS image is provided as input, create a new MEF file with 
+        # a name generated using 'buildFITSName()' and update that new MEF file.
+        if not imgfits:
+            # Create standardized name for MEF file
+            newfilename = fileutil.buildFITSName(image)
+            # Convert GEIS image to MEF file
+            newimage = fileutil.openImage(image,writefits=True,fitsname=newfilename,clobber=True)
+            del newimage
+            # Work with new file
+            image = newfilename
+            newfiles.append(image)
+            
         if not quiet:
-            print "_files: ",_files
+            print "Input files: ",files
 
         # First get the name of the IDC table
-        idctab = drutil.getIDCFile(_files[0][0],keyword='idctab')[0]
+        #idctab = drutil.getIDCFile(_files[0][0],keyword='idctab')[0]
+        idctab = drutil.getIDCFile(image,keyword='idctab')[0]
         _found = fileutil.findFile(idctab)
         if idctab == None or idctab == '':
             print '#\n No IDCTAB specified.  No correction can be done. Quitting...\n#\n'
-            return
+            raise ValueError
         elif not _found:
             print '#\n IDCTAB: ',idctab,' could not be found. Quitting...\n#\n'
-            return
+            raise IOError 
 
-        for img in _files:
-            _phdu = img[0]+'[0]'
-            _instrument = fileutil.getKeyword(_phdu,keyword='INSTRUME')
 
-            if not NUM_PER_EXTN.has_key(_instrument):
-                raise "Instrument %s not supported yet. Exiting..."%_instrument
-                                      
-            _nimsets = get_numsci(img[0])
-            
-            for i in xrange(_nimsets):
-                if img[0].find('.fits') > 0:
-                    _image = img[0]+'[sci,'+repr(i+1)+']'
-                else:
-                    _image = img[0]+'['+repr(i+1)+']'
-                if not restore:
-                    if not quiet: 
-                        print 'Updating image: ',_image
-                    _update(_image,idctab, _nimsets, quiet=quiet,instrument=_instrument,prepend=_prepend)
-                else:                    
-                    if not quiet:
-                        print 'Restoring original WCS values for',_image  
-                    restoreCD(_image,_prepend)
+        _phdu = image + '[0]'
+        _instrument = fileutil.getKeyword(_phdu,keyword='INSTRUME')
+
+        if not NUM_PER_EXTN.has_key(_instrument):
+            raise "Instrument %s not supported yet. Exiting..."%_instrument
+                                  
+        _nimsets = get_numsci(image)
+        
+        for i in xrange(_nimsets):
+            if image.find('.fits') > 0:
+                _img = image+'[sci,'+repr(i+1)+']'
+            else:
+                _img = image+'['+repr(i+1)+']'
+            if not restore:
+                if not quiet: 
+                    print 'Updating image: ', _img
+                _update(_img,idctab, _nimsets, quiet=quiet,instrument=_instrument,prepend=_prepend)
+            else:                    
+                if not quiet:
+                    print 'Restoring original WCS values for',_img  
+                restoreCD(_img,_prepend)
+
+    if newfiles == []:
+        return files
+    else:
+        return newfiles
     
-
 def restoreCD(image,prepend):
     
     _prepend = prepend
@@ -203,8 +195,19 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
         print "-Reading IDCTAB file ",idctab
 
     # Get telescope orientation from image header
-    pvt = float(readKeyword(hdr,'PA_V3'))
-     
+    # If PA_V# is not present of header, try to get it from the spt file
+    pvt = readKeyword(hdr,'PA_V3')
+    if pvt == None:
+        sptfile = fileutil.buildNewRootname(image, extn='_spt.fits')
+        if os.path.exists(sptfile):
+            spthdr = fileutil.getHeader(sptfile)
+            pvt = readKeyword(spthdr,'PA_V3')
+    if pvt != None:
+        pvt = float(pvt)
+    else:
+        print 'PA_V3 keyword not found, WCS cannot be updated. Quitting ...'
+        raise ValueError
+    
     # Find out about instrument, detector & filters
     detector = readKeyword(hdr,'DETECTOR')
 
@@ -289,7 +292,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     # Extract the appropriate information from the IDCTAB
     #fx,fy,refpix,order=fileutil.readIDCtab(idctab,chip=chip,direction='forward',
     #            filter1=filter1,filter2=filter2,offtab=offtab,date=dateobs)
-    idcmodel = obsgeometry.IDCModel(idctab,
+    idcmodel = models.IDCModel(idctab,
                     chip=chip, direction='forward', date=dateobs,
                     filter1=filter1, filter2=filter2, offtab=offtab, binned=binned)
     fx = idcmodel.cx
@@ -324,7 +327,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
        fx,fy = idcmodel.shift(idcmodel.cx,idcmodel.cy,offsetx,offsety)
 
     # Extract the appropriate information for reference chip
-    rfx,rfy,rrefpix,rorder=fileutil.readIDCtab(idctab,chip=Nrefchip,
+    rfx,rfy,rrefpix,rorder=mutil.readIDCtab(idctab,chip=Nrefchip,
         direction='forward', filter1=filter1,filter2=filter2,offtab=offtab, 
         date=dateobs)
 
