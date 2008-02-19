@@ -216,6 +216,10 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
         filter1 = readKeyword(hdr,'FILTNAM1')
         filter2 = readKeyword(hdr,'FILTNAM2')
         mode = readKeyword(hdr,'MODE')
+        if os.path.exists(fileutil.buildNewRootname(image, extn='_c1h.fits')):
+            _dqname = fileutil.buildNewRootname(image, extn='_c1h.fits')
+            dqhdr = pyfits.getheader(_dqname,1)
+            dqext = readKeyword(dqhdr, 'EXTNAME')
         if mode == 'AREA':
             binned = 2
         Nrefchip=3
@@ -402,6 +406,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
 
     # Check to see whether we are working with GEIS or FITS input
     _fname,_iextn = fileutil.parseFilename(image)
+
     if _fname.find('.fits') < 0:
         # Input image is NOT a FITS file, so 
         #     build a FITS name for it's copy.
@@ -477,7 +482,13 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     # Store new one
     # archive=yes specifies to also write out archived WCS keywords
     # overwrite=no specifies do not overwrite any pre-existing archived keywords
+    
     New.write(fitsname=_new_name,overwrite=no,quiet=quiet,archive=yes)
+    if _dqname:
+        _dq_iextn = _iextn.replace('sci', dqext.lower())
+        _new_dqname = _dqname +'['+_dq_iextn+']'
+        dqwcs = wcsutil.WCSObject(_new_dqname)
+        dqwcs.write(fitsname=_new_dqname, wcs=New,overwrite=no,quiet=quiet, archive=yes)
     
     """ Convert distortion coefficients into SIP style
         values and write out to image (assumed to be FITS). 

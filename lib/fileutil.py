@@ -553,6 +553,17 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
             fimg =  readgeis.readgeis(_fname)
         except:
             raise IOError("Could not open GEIS input:",_fname)
+        
+        #check for the existence of a data quality file
+        _dqname = buildNewRootname(_fname, extn='.c1h')
+        dqexists = os.path.exists(_dqname)
+        if dqexists:
+            try:
+                dqfile = readgeis.readgeis(_dqname)
+                dqfitsname = buildFITSName(_dqname)
+            except:
+                print "Could not read data quality file %s" % _dqname
+        
         # Check to see if user wanted to update GEIS header.
         # or write out a multi-extension FITS file and return a handle to it            
         if writefits:
@@ -566,7 +577,9 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
             if (fexists and clobber) or not fexists:
                     print 'Writing out GEIS as MEF to ',fitsname
                     fimg.writeto(fitsname, clobber=clobber)
-
+                    if dqexists:
+                        print 'Writing out GEIS as MEF to ',dqfitsname
+                        dqfile.writeto(dqfitsname, clobber=clobber)                        
             # Now close input GEIS image, and open writable
             # handle to output FITS image instead...
             fimg.close()
