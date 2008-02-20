@@ -219,7 +219,7 @@ def getFilterNames(header,filternames=None):
     """
     # Define the keyword names for each instrument
     _keydict = {'ACS':['FILTER1','FILTER2'],'WFPC2':['FILTNAM1','FILTNAM2'],
-                'STIS':['OPT_ELEM','FILTER'], 'NICMOS':['FILTER','FILTER2']}
+                'STIS':['OPT_ELEM','FILTER'], 'NICMOS':['FILTER','FILTER2'], 'WFC3':['FILTER','FILTER2']}
 
     # Find out what instrument the input header came from, based on the
     # 'INSTRUME' keyword

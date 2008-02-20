@@ -74,9 +74,10 @@ no = False
 PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
           'SBC':[[-1.0,0.0],[0.0,1.0]],'default':[[1.0,0.0],[0.0,1.0]],
           'WFPC2':[[-1.0,0.],[0.,1.0]],'STIS':[[-1.0,0.],[0.,1.0]],
-          'NICMOS':[[-1.0,0.],[0.,1.0]]}
+          'NICMOS':[[-1.0,0.],[0.,1.0]], 'UVIS':[[1.0,0.0],[0.0,-1.0]], 
+          'IR':[[1.0,0.0],[0.0,-1.0]]  }
 
-NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5}
+NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
 __version__ = '0.8.1 (31 October 2007)'
 def run(input,quiet=yes,restore=no,prepend='O'):
@@ -132,6 +133,7 @@ def run(input,quiet=yes,restore=no,prepend='O'):
         _instrument = fileutil.getKeyword(_phdu,keyword='INSTRUME')
 
         if not NUM_PER_EXTN.has_key(_instrument):
+
             raise "Instrument %s not supported yet. Exiting..."%_instrument
                                   
         _nimsets = get_numsci(image)
@@ -144,6 +146,7 @@ def run(input,quiet=yes,restore=no,prepend='O'):
             if not restore:
                 if not quiet: 
                     print 'Updating image: ', _img
+                  
                 _update(_img,idctab, _nimsets, quiet=quiet,instrument=_instrument,prepend=_prepend)
             else:                    
                 if not quiet:
@@ -168,7 +171,7 @@ def restoreCD(image,prepend):
 def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     
     _prepend = prepend
-            
+    _dqname = None        
     # Make a copy of the header for keyword access
     # This copy includes both Primary header and 
     # extension header
@@ -226,6 +229,10 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
     elif instrument == 'NICMOS':
         filter1 = readKeyword(hdr,'FILTER')
         filter2 = None
+    elif instrument == 'WFC3':
+        filter1 = readKeyword(hdr,'FILTER')
+        filter2 = None
+        #filter2 = readKeyword(hdr,'FILTER2')
     else:
         filter1 = readKeyword(hdr,'FILTER1')
         filter2 = readKeyword(hdr,'FILTER2')
