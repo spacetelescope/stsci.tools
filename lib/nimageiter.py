@@ -155,7 +155,6 @@ def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
         nrows = computeBuffRows(imgarr,bufsize=bufsize)
 #        niter = int(imgarr.shape[0] / nrows) * nrows
         niter = computeNumberBuff(imgarr.shape[0],nrows,overlap)
-        print '[nimageiter] niter: ',niter
 
         for pix in range(0,niter+1,nrows):
             # overlap needs to be computed here
