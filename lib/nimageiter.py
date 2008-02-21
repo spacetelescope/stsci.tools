@@ -55,7 +55,8 @@ def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
 
     else:
         nrows = computeBuffRows(imgarr,bufsize=bufsize)
-        niter = int(imgarr.shape[0] / nrows) * nrows
+#        niter = int(imgarr.shape[0] / nrows) * nrows
+        niter = computeNumberBuff(imgarr.shape[0],nrows,overlap)
 
         if copy:
             # Create a cache that will contain a copy of the input
@@ -108,6 +109,14 @@ def computeBuffRows(imgarr,bufsize=BUFSIZE):
     """
     imgarr = N.asarray(imgarr)
     return int(bufsize / (imgarr.itemsize * imgarr.shape[1]))
+    
+def computeNumberBuff(rowlength, nrows, overlap):
+    """ Function to compute the number of buffer sections  
+        that will be used to read the input image given the 
+        specified overlap. 
+    """
+    overlaprows = nrows - (overlap+1)
+    return  (1 + int( (rowlength - overlaprows)/nrows))
 
 def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
     """ Return image section for each image listed on input, with
@@ -144,7 +153,9 @@ def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
 
     else:
         nrows = computeBuffRows(imgarr,bufsize=bufsize)
-        niter = int(imgarr.shape[0] / nrows) * nrows
+#        niter = int(imgarr.shape[0] / nrows) * nrows
+        niter = computeNumberBuff(imgarr.shape[0],nrows,overlap)
+        print '[nimageiter] niter: ',niter
 
         for pix in range(0,niter+1,nrows):
             # overlap needs to be computed here
