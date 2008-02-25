@@ -56,7 +56,7 @@ def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
     else:
         nrows = computeBuffRows(imgarr,bufsize=bufsize)
 #        niter = int(imgarr.shape[0] / nrows) * nrows
-        niter = computeNumberBuff(imgarr.shape[0],nrows,overlap)
+        niter = computeNumberBuff(imgarr.shape[0],nrows,overlap)*nrows
 
         if copy:
             # Create a cache that will contain a copy of the input
@@ -154,7 +154,7 @@ def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
     else:
         nrows = computeBuffRows(imgarr,bufsize=bufsize)
 #        niter = int(imgarr.shape[0] / nrows) * nrows
-        niter = computeNumberBuff(imgarr.shape[0],nrows,overlap)
+        niter = computeNumberBuff(imgarr.shape[0],nrows,overlap)*nrows
 
         for pix in range(0,niter+1,nrows):
             # overlap needs to be computed here
@@ -162,10 +162,9 @@ def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
             # convolving the returned image sections, and insures
             # that the last segment will always be returned with
             # overlap+1 rows.  
-            
             _prange = pix+nrows+overlap
             if _prange > _numrows: _prange = _numrows
-            
+
             if single:
                 yield imgarr[pix:_prange],(pix,_prange)
             else:
