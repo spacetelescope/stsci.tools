@@ -75,6 +75,7 @@ def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
             
             _prange = pix+nrows+overlap
             if _prange > _numrows: _prange = _numrows
+            if pix == _prange: break
             
             if copy:
                 if single:
@@ -164,6 +165,7 @@ def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
             # overlap+1 rows.  
             _prange = pix+nrows+overlap
             if _prange > _numrows: _prange = _numrows
+            if pix == _prange: break
 
             if single:
                 yield imgarr[pix:_prange],(pix,_prange)
