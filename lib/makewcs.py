@@ -98,10 +98,18 @@ def run(input,quiet=yes,restore=no,prepend='O'):
         
         # Check for existence of waiver FITS input, and quit if found.
         if imgfits and imgtype == 'waiver':
+            """
             errormsg = '\n\nPyDrizzle does not support waiver fits format.\n'
             errormsg += 'Convert the input files to GEIS or multiextension FITS.\n\n'
             raise ValueError, errormsg
-    
+            """
+            newfilename = fileutil.buildNewRootname(image, extn='_c0h.fits')
+            # Convert GEIS image to MEF file
+            newimage = fileutil.openImage(image,writefits=True,fitsname=newfilename,clobber=True)
+            del newimage
+            # Work with new file
+            image = newfilename
+            newfiles.append(image)
         # If a GEIS image is provided as input, create a new MEF file with 
         # a name generated using 'buildFITSName()' and update that new MEF file.
         if not imgfits:

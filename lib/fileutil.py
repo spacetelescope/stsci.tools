@@ -78,7 +78,7 @@ no = False
 # List of supported default file types
 # It will look for these file types by default
 # when trying to recognize input rootnames.
-EXTLIST =  ['_crj.fits','_flt.fits','_sfl.fits','_cal.fits','_raw.fits','.c0h','.hhh','_c0h.fits', '_c0f.fits', '.fits']
+EXTLIST =  ['_crj.fits','_flt.fits','_sfl.fits','_cal.fits','_raw.fits','.c0h','.hhh','_c0h.fits', '_c0f.fits', '_c1f.fits','.fits']
 
 BLANK_ASNDICT = {'output':None,'order':[],'members':{'abshift':no,'dshift':no}}
 
@@ -488,6 +488,8 @@ def buildFITSName(geisname):
 
     return _fitsname
 
+    
+    
 def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fitsname=None):
     """ Opens file and returns PyFITS object.
         It will work on both FITS and GEIS formatted images. 
@@ -528,22 +530,43 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
             fimg = pyfits.open(_fname,mode=mode,memmap=memmap)
             return fimg    
         else:
-                errormsg =  "\n###################################\n"
-                errormsg += "#                                 #\n"
-                errormsg += "# ERROR:                          #\n"
-                errormsg += "#  Input image:                   #\n"
-                errormsg += str(filename)+"\n"
-                errormsg += "#  is a waiver FITS image         #\n"
-                errormsg += "#                                 #\n"
-                errormsg += "#  This code does not support     #\n"
-                errormsg += "#  this file format.  Please      #\n"
-                errormsg += "#  convert this file to either    #\n"
-                errormsg += "#  GEIS format or multi extension #\n"
-                errormsg += "#  FITS format.                   #\n"
-                errormsg += "#                                 #\n"
-                errormsg += "###################################\n"
-                raise ValueError, errormsg
+            import convertwaiveredfits
+            try:
+                fimg = convertwaiveredfits.convertwaiveredfits(_fname)
+            except:
+                raise
+            #check for the existence of a data quality file
+            _dqname = buildNewRootname(_fname, extn='_c1f.fits')
+            dqexists = os.path.exists(_dqname)
+            if dqexists:
+                try:
+                    dqfile = convertwaiveredfits.convertwaiveredfits(_dqname)
+                    dqfitsname = buildNewRootname(_dqname,extn='_c1h.fits')
+                except:
+                    print "Could not read data quality file %s" % _dqname
+            if writefits:
+                # User wants to make a FITS copy and update it
+                # using the filename they have provided
+                if fitsname is None:
+                    rname = buildNewRootname(_fname)
+                    fitsname = buildNewRootname(rname,extn='_c0h.fits')
 
+                # Write out GEIS image as multi-extension FITS.
+                fexists = os.path.exists(fitsname)
+                if (fexists and clobber) or not fexists:
+                    print 'Writing out WAIVERED as MEF to ',fitsname
+                    fimg.writeto(fitsname, clobber=clobber)
+                    if dqexists:
+                        print 'Writing out WAIVERED as MEF to ',dqfitsname
+                        dqfile.writeto(dqfitsname, clobber=clobber)                        
+            # Now close input GEIS image, and open writable
+            # handle to output FITS image instead...
+            fimg.close()
+            del fimg
+            fimg = pyfits.open(fitsname,mode=mode,memmap=memmap)
+
+        # Return handle for use by user
+        return fimg
     else:
         # Input was specified as a GEIS image, but no FITS copy
         # exists.  Read it in with 'readgeis' and make a copy
