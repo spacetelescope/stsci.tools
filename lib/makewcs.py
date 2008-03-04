@@ -79,7 +79,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '0.8.1 (31 October 2007)'
+__version__ = '0.8.2dev (4 March 2008)'
 def run(input,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -139,7 +139,10 @@ def run(input,quiet=yes,restore=no,prepend='O'):
 
         _phdu = image + '[0]'
         _instrument = fileutil.getKeyword(_phdu,keyword='INSTRUME')
-
+        if _instrument == 'WFPC2':
+            Nrefchip = getNrefchip(img[0])
+        else:
+            Nrefchip=None
         if not NUM_PER_EXTN.has_key(_instrument):
 
             raise "Instrument %s not supported yet. Exiting..."%_instrument
@@ -155,7 +158,8 @@ def run(input,quiet=yes,restore=no,prepend='O'):
                 if not quiet: 
                     print 'Updating image: ', _img
                   
-                _update(_img,idctab, _nimsets, quiet=quiet,instrument=_instrument,prepend=_prepend)
+                _update(_img,idctab, _nimsets,
+quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip)
             else:                    
                 if not quiet:
                     print 'Restoring original WCS values for',_img  
@@ -176,7 +180,7 @@ def restoreCD(image,prepend):
     except: 
         print 'ERROR: Could not restore WCS keywords for %s.'%image
 
-def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
+def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=None):
     
     _prepend = prepend
     _dqname = None        
@@ -233,7 +237,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
             dqext = readKeyword(dqhdr, 'EXTNAME')
         if mode == 'AREA':
             binned = 2
-        Nrefchip=3
+        Nrefchip=nrchip
     elif instrument == 'NICMOS':
         filter1 = readKeyword(hdr,'FILTER')
         filter2 = None
@@ -301,6 +305,8 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None):
           Nrefchip = chip
     elif instrument == 'NICMOS':
         Nrefchip = readKeyword(hdr,'CAMERA')
+    elif instrument == 'WFPC2':
+        Nrefchip = nrchip
     else:
        if nimsets > 1:
           nr = Nrefchip
@@ -646,6 +652,25 @@ def shift_coeffs(cx,cy,xs,ys,norder):
     #_cys[0,0] = 0.
 
     return _cxs,_cys
+
+def getNrefchip(image,instrument='WFPC2'):
+    """
+    This handles the fact that WFPC2 subarray observations
+    may not include chip 3 which is the default reference chip for
+    full observations. Also for subarrays chip 3  may not be the third
+    extension in a MEF file. It is a kludge but this whole module is
+    one big kludge. ND
+    """
+    hdu = fileutil.openImage(image)
+    if instrument == 'WFPC2':
+        detectors = [img.header['DETECTOR'] for img in hdu[1:]]
+    try:
+        Nrefchip = detectors.index('3')
+    except ValueError:
+        Nrefchip = 1
+    hdu.close()
+    return Nrefchip
+
         
 def help():
     _help_str = """ makewcs - a task for updating an image header WCS to make
