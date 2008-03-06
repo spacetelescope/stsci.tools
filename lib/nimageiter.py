@@ -109,15 +109,23 @@ def computeBuffRows(imgarr,bufsize=BUFSIZE):
         by the bufsize.
     """
     imgarr = N.asarray(imgarr)
-    return int(bufsize / (imgarr.itemsize * imgarr.shape[1]))
+    buffrows = int(bufsize / (imgarr.itemsize * imgarr.shape[1]))
+    return buffrows
     
-def computeNumberBuff(rowlength, nrows, overlap):
+def computeNumberBuff(numrows, buffrows, overlap):
     """ Function to compute the number of buffer sections  
         that will be used to read the input image given the 
         specified overlap. 
     """
-    overlaprows = nrows - (overlap+1)
-    return  (1 + int( (rowlength - overlaprows)/nrows))
+    overlaprows = buffrows - (overlap+1)
+    rowratio = (numrows - overlaprows)/(1.0*buffrows)
+    niter = (1 + int( (numrows - overlaprows)/buffrows))
+    totalrows = niter * buffrows
+    # We need to account for the case where the number of 
+    # iterations ends up being greater than needed due to the
+    # overlap.
+    if totalrows > numrows: niter -= 1
+    return niter
 
 def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
     """ Return image section for each image listed on input, with
