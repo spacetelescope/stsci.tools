@@ -140,9 +140,10 @@ def run(input,quiet=yes,restore=no,prepend='O'):
         _phdu = image + '[0]'
         _instrument = fileutil.getKeyword(_phdu,keyword='INSTRUME')
         if _instrument == 'WFPC2':
-            Nrefchip = getNrefchip(image[0])
+            Nrefchip, Nrefext = getNrefchip(image)
         else:
-            Nrefchip=None
+            Nrefchip = None
+            Nrefext = None
         if not NUM_PER_EXTN.has_key(_instrument):
 
             raise "Instrument %s not supported yet. Exiting..."%_instrument
@@ -159,7 +160,7 @@ def run(input,quiet=yes,restore=no,prepend='O'):
                     print 'Updating image: ', _img
                   
                 _update(_img,idctab, _nimsets,
-quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip)
+quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nrefext)
             else:                    
                 if not quiet:
                     print 'Restoring original WCS values for',_img  
@@ -180,7 +181,7 @@ def restoreCD(image,prepend):
     except: 
         print 'ERROR: Could not restore WCS keywords for %s.'%image
 
-def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=None):
+def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=None, nrext=None):
     
     _prepend = prepend
     _dqname = None        
@@ -261,7 +262,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     if instrument == 'WFPC2' or instrument =='STIS' or instrument == 'NICMOS':
         parity = PARITY[instrument]
     elif PARITY.has_key(detector):
-        parity = PARITY[detector]
+       parity = PARITY[detector]
     else:
         raise 'Detector ',detector,' Not supported at this time. Exiting...'
 
@@ -270,12 +271,12 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     # as this is where
     VA_fac=1.0
     if instrument == 'ACS':
-        _va_key = readKeyword(hdr,'VAFACTOR')
-        if _va_key != None: 
-            VA_fac = float(_va_key)
+       _va_key = readKeyword(hdr,'VAFACTOR')
+       if _va_key != None: 
+          VA_fac = float(_va_key)
        
-        if not quiet:
-            print 'VA factor: ',VA_fac
+       if not quiet:
+          print 'VA factor: ',VA_fac
        
     ra_targ = float(readKeyword(hdr,'RA_TARG'))
     dec_targ = float(readKeyword(hdr,'DEC_TARG'))
@@ -300,16 +301,16 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     nr = 1
     if instrument == 'ACS' and detector == 'WFC':
         if nimsets > 1:
-            Nrefchip = 2
+          Nrefchip = 2
         else:
-            Nrefchip = chip
+          Nrefchip = chip
     elif instrument == 'NICMOS':
         Nrefchip = readKeyword(hdr,'CAMERA')
     elif instrument == 'WFPC2':
-        Nrefchip = nrchip
+        nr = nrext
     else:
-        if nimsets > 1:
-            nr = Nrefchip
+       if nimsets > 1:
+          nr = Nrefchip
 
     if not quiet:
         print "-PA_V3 : ",pvt," CHIP #",chip
@@ -349,7 +350,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
         offshifty = 0.
 
     if ltv1 != 0. or ltv2 != 0.:
-        fx,fy = idcmodel.shift(idcmodel.cx,idcmodel.cy,offsetx,offsety)
+       fx,fy = idcmodel.shift(idcmodel.cx,idcmodel.cy,offsetx,offsety)
 
     # Extract the appropriate information for reference chip
     rfx,rfy,rrefpix,rorder=mutil.readIDCtab(idctab,chip=Nrefchip,
@@ -359,7 +360,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     # Create the reference image name
     rimage = image.split('[')[0]+"[sci,%d]" % nr
     if not quiet:
-        print "Reference image: ",rimage       
+       print "Reference image: ",rimage       
  
     # Create the tangent plane WCS on which the images are defined
     # This is close to that of the reference chip
@@ -388,7 +389,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
 
     # Add the chip rotation angle
     if rrefpix['THETA']:
-        pv += rrefpix['THETA']
+       pv += rrefpix['THETA']
 
     # Set values for the rest of the reference WCS
     R.crval1=crval1
@@ -416,9 +417,9 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
 
     # Here we must include the PARITY
     if v3 == v3ref:
-        theta=0.0
+       theta=0.0
     else:
-        theta = atan2(parity[0][0]*(v2-v2ref),parity[1][1]*(v3-v3ref))
+       theta = atan2(parity[0][0]*(v2-v2ref),parity[1][1]*(v3-v3ref))
 
     if rrefpix['THETA']: theta += rrefpix['THETA']*pi/180.0
 
@@ -451,9 +452,9 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     # Account for subarray offset
     # Angle of chip relative to chip
     if refpix['THETA']:
-        dtheta = refpix['THETA'] - rrefpix['THETA']
+       dtheta = refpix['THETA'] - rrefpix['THETA']
     else:
-        dtheta = 0.0
+       dtheta = 0.0
 
     # Create a small vector, in reference image pixel scale
     # There is no parity effect here ???
@@ -664,12 +665,21 @@ def getNrefchip(image,instrument='WFPC2'):
     hdu = fileutil.openImage(image)
     if instrument == 'WFPC2':
         detectors = [img.header['DETECTOR'] for img in hdu[1:]]
+    """
     try:
-        Nrefchip = detectors.index('3')
-    except ValueError:
+        Nrefchip = detectors.index(3)
+    except:
         Nrefchip = 1
+    """
+    if 3 not in detectors:
+        Nrefchip=detectors[0]
+        Nrefext = 0
+    else:
+        Nrefchip = 3
+        Nrefext = detectors.index(3) + 1
+
     hdu.close()
-    return Nrefchip
+    return Nrefchip, Nrefext
 
         
 def help():
