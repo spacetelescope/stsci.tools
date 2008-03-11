@@ -42,7 +42,6 @@ def irafglob(inlist, atfile=None):
     else:
         #  shell globbing
         flist = glob.glob(inlist)
-    if flist ==[]:
-        raise IOError, "No valid input was found, returning an empty list\n"
+        
     return flist
 

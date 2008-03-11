@@ -219,8 +219,7 @@ class ASNTable(dict):
                 self.output = 'final'
         else:
             self.output = fu.buildNewRootname(output)
-            # Ensure that output name does not already contain
-            # _drz to avoid ending up with '_drz_drz.fits' output filenames
+            # Ensure that output name does not already contain '_drz'
             _indx = self.output.find('_drz')
             if _indx > 0:
                 self.output = self.output[:_indx]
