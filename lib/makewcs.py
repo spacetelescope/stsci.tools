@@ -74,8 +74,8 @@ no = False
 PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
           'SBC':[[-1.0,0.0],[0.0,1.0]],'default':[[1.0,0.0],[0.0,1.0]],
           'WFPC2':[[-1.0,0.],[0.,1.0]],'STIS':[[-1.0,0.],[0.,1.0]],
-          'NICMOS':[[-1.0,0.],[0.,1.0]], 'UVIS':[[1.0,0.0],[0.0,-1.0]], 
-          'IR':[[1.0,0.0],[0.0,-1.0]]  }
+          'NICMOS':[[-1.0,0.],[0.,1.0]], 'UVIS':[[-1.0,0.0],[0.0,1.0]], 
+          'IR':[[-1.0,0.0],[0.0,1.0]]  }
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
@@ -278,8 +278,8 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
        if not quiet:
           print 'VA factor: ',VA_fac
        
-    ra_targ = float(readKeyword(hdr,'RA_TARG'))
-    dec_targ = float(readKeyword(hdr,'DEC_TARG'))
+    #ra_targ = float(readKeyword(hdr,'RA_TARG'))
+    #dec_targ = float(readKeyword(hdr,'DEC_TARG'))
 
     # Get the chip number
     _c = readKeyword(hdr,'CAMERA')
