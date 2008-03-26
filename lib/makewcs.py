@@ -665,15 +665,10 @@ def getNrefchip(image,instrument='WFPC2'):
     hdu = fileutil.openImage(image)
     if instrument == 'WFPC2':
         detectors = [img.header['DETECTOR'] for img in hdu[1:]]
-    """
-    try:
-        Nrefchip = detectors.index(3)
-    except:
-        Nrefchip = 1
-    """
+
     if 3 not in detectors:
         Nrefchip=detectors[0]
-        Nrefext = 0
+        Nrefext = 1
     else:
         Nrefchip = 3
         Nrefext = detectors.index(3) + 1
