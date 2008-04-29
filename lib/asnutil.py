@@ -595,8 +595,8 @@ class ShiftFile(dict):
         common = [f.strip('#').strip() for f in flines if f.startswith('#')]
         c=[line.split(': ') for line in common]
         self.update(c)
-
-        files = [f.strip().split(' ',1) for f in flines if not f.startswith('#')]
+        
+        files = [f.strip().split(' ',1) for f in flines if not (f.startswith('#') or f.strip() == '')]
         for f in files:
             order.append(f[0])
             
@@ -613,9 +613,9 @@ class ShiftFile(dict):
             if len(f[1]) < 2:
                 raise ValueError, msg
             elif len(f[1]) == 3:
-                f[1].append(None)
+                f[1].append(0.0)
             elif len(f[1]) == 2:
-                f[1].extend([None, None])
+                f[1].extend([0.0, 1.0])
             elif len(f[1]) > 4:
                 raise ValueError, msg
             
