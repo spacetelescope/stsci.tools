@@ -380,7 +380,7 @@ class ASNTable(dict):
         rot = [self['members'][l]['rot'] for l in self['order']]       
         rot.append(0.0)
         scl = [self['members'][l]['scale'] for l in self['order']]       
-        scl.append(0.0)
+        scl.append(1.0)
         
         memname = pyfits.Column(name='MEMNAME',format=namelen_str,array=N.char.array(mname))
         memtype = pyfits.Column(name='MEMTYPE',format='14A',array=N.char.array(mtype))
@@ -502,7 +502,7 @@ class ASNMember(dict):
     """
 
     def __init__(self, xoff=0.0, yoff=0.0, rot=0.0, xshift=0.0, 
-                 yshift=0.0, scale=0.0, dshift=False, abshift=False, refimage="", shift_frame="",
+                 yshift=0.0, scale=1.0, dshift=False, abshift=False, refimage="", shift_frame="",
                  shift_units='pixels', row=0):
         
         dict.__init__(self, xoff=xoff, yoff=yoff, xshift=xshift, yshift=yshift, rot=rot, scale=scale, 
@@ -613,7 +613,7 @@ class ShiftFile(dict):
             if len(f[1]) < 2:
                 raise ValueError, msg
             elif len(f[1]) == 3:
-                f[1].append(0.0)
+                f[1].append(1.0)
             elif len(f[1]) == 2:
                 f[1].extend([0.0, 1.0])
             elif len(f[1]) > 4:
@@ -651,6 +651,3 @@ class ShiftFile(dict):
         fshifts.writelines(lines)
         fshifts.close()
         
-        
-    
- 
