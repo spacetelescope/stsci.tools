@@ -60,9 +60,8 @@ import string,types, os.path
 import pyfits
 
 from pydrizzle import drutil
-from pydrizzle.distortion import models
+from pydrizzle.distortion import models,mutil
 from pytools import fileutil, wcsutil, parseinput
-from pydrizzle.distortion import mutil
 import numpy as N
 
 yes = True
@@ -79,7 +78,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '0.8.2dev (4 March 2008)'
+__version__ = '0.8.3dev (8 May 2008)'
 def run(input,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -325,6 +324,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     fy = idcmodel.cy
     refpix = idcmodel.refpix
     order = idcmodel.norder
+
     #
     # Look for any subarray offset
     #
@@ -351,6 +351,13 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
 
     if ltv1 != 0. or ltv2 != 0.:
        fx,fy = idcmodel.shift(idcmodel.cx,idcmodel.cy,offsetx,offsety)
+
+    if hdr.has_key('WFCTDD') and hdr['WFCTDD'] == 'T':
+        # Implement time-dependent correction here
+        alpha,beta = mutil.compute_wfc_tdd_coeffs(hdr['date-obs'])      
+    else:
+        alpha= 0.0
+        beta = 0.0
 
     # Extract the appropriate information for reference chip
     rfx,rfy,rrefpix,rorder=mutil.readIDCtab(idctab,chip=Nrefchip,
@@ -402,7 +409,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     R.cd12=parity[0][0] * -sin(pv*pi/180.0)*R_scale
     R.cd21=parity[1][1] *  sin(pv*pi/180.0)*R_scale
     R.cd22=parity[1][1] *  cos(pv*pi/180.0)*R_scale
-
+        
     if not quiet:
         print "  Reference Chip Scale (arcsec/pix): ",rrefpix['PSCALE']
 
@@ -462,7 +469,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     delYX=fy[1,1]/R_scale/3600.
     delXY=fx[1,0]/R_scale/3600.
     delYY=fy[1,0]/R_scale/3600.
-
+    
     # Convert to radians
     rr=dtheta*pi/180.0
 
@@ -499,8 +506,9 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
        New.cd11 = New.cd11*VA_fac
        New.cd12 = New.cd12*VA_fac
        New.cd21 = New.cd21*VA_fac
-       New.cd22 = New.cd22*VA_fac
-
+       New.cd22 = New.cd22*VA_fac        
+        
+        
     # Store new one
     # archive=yes specifies to also write out archived WCS keywords
     # overwrite=no specifies do not overwrite any pre-existing archived keywords
@@ -545,7 +553,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
           
           _new_extn.header.update(Akey,Aval)
           _new_extn.header.update(Bkey,Bval)
-
+    
     # Update the SIP flag keywords as well
     #iraf.hedit(image,"CTYPE1","RA---TAN-SIP",verify=no,show=no)
     #iraf.hedit(image,"CTYPE2","DEC--TAN-SIP",verify=no,show=no)
@@ -557,12 +565,26 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     #iraf.hedit(image,"B_ORDER","%d" % order,add=yes,verify=no,show=no)
     _new_extn.header.update("A_ORDER",order)
     _new_extn.header.update("B_ORDER",order)
+
+    # Update header with additional keywords required for proper
+    # interpretation of SIP coefficients by PyDrizzle.
+    _new_extn.header.update("TDDALPHA",alpha)
+    _new_extn.header.update("TDDBETA",beta)
+    _new_extn.header.update("SICSPS",refpix['PSCALE'])
+    _new_extn.header.update("SICS1POS",refpix['V2REF'])
+    _new_extn.header.update("SICS2POS",refpix['V3REF'])
+    _new_extn.header.update("SICSROT",refpix['THETA'])
+    _new_extn.header.update("OCX10",fx[1][0])
+    _new_extn.header.update("OCX11",fx[1][1])
+    _new_extn.header.update("OCY10",fy[1][0])
+    _new_extn.header.update("OCY11",fy[1][1])
+    
+    
     
     # Close image now
     fimg.close()
     del fimg
     
-
 def diff_angles(a,b):
     """ Perform angle subtraction a-b taking into account
         small-angle differences across 360degree line. """
