@@ -580,7 +580,10 @@ class ShiftFile(dict):
             self.readShiftFile(filename)
 
         if not self.verifyShiftFile(): 
-            msg = "Reference image not found"
+            msg = "\nReference image not found.\n "
+            msg += "The keyword in the shift file has changed from 'reference' to 'refimage'.\n"
+            msg += "Make sure this keyword is specified as 'refimage' in %s." %filename
+            
             raise ValueError, msg
             
     def readShiftFile(self, filename):
