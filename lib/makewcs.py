@@ -129,12 +129,14 @@ def run(input,quiet=yes,restore=no,prepend='O'):
         idctab = drutil.getIDCFile(image,keyword='idctab')[0]
         _found = fileutil.findFile(idctab)
         if idctab == None or idctab == '':
-            print '#\n No IDCTAB specified.  No correction can be done. Quitting...\n#\n'
-            raise ValueError
+            print '#\n No IDCTAB specified.  No correction can be done for file %s.Quitting makewcs\n' %image
+            #raise ValueError
+            continue
         elif not _found:
-            print '#\n IDCTAB: ',idctab,' could not be found. Quitting...\n#\n'
-            raise IOError 
-
+            print '#\n IDCTAB: ',idctab,' could not be found. \n'
+            print 'WCS keywords for file %s will not be updated.\n' %image
+            #raise IOError 
+            continue
 
         _phdu = image + '[0]'
         _instrument = fileutil.getKeyword(_phdu,keyword='INSTRUME')
