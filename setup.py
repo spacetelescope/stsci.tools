@@ -15,6 +15,9 @@ for a in args:
         args.remove(a)
         sys.argv.remove(a)
 
+import version
+version.__set_svn_version__(fullInfo=False)
+
 setup(name = "pytools",
       version = "3.0",
       description = "General Use Python Tools",

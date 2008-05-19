@@ -37,9 +37,13 @@ def printVersionInfo():
                 'pyraf',
                 'multidrizzle',
                 'pydrizzle',
-                'upincd',
-                'deriv',
-                'quickDeriv'
+                'pytools',
+                'calcos',
+                'convolve',
+                'image',
+                'imagemanip',
+                'imagestats',
+                'ndimage'
                 ]
 
     # Test the list of software tasks
@@ -52,6 +56,10 @@ def printVersionInfo():
                 print "version -> ",package.__version__
             except:
                 print "__version__ attribute is not defined"
+            try:
+                print "SVN version -> ",package.__svn_version__
+            except:
+                print "__svn_version__ attribute is not defined"
             try:
                 pathName = package.__path__
             except:
