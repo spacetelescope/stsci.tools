@@ -4,21 +4,25 @@ import re
 def __set_svn_version__(path="./", fname='svn_version.py', fullInfo=False):
     info = None
     rev = __get_svn_rev__(path)
+    version_file = os.path.join(path,'lib',fname)
     #__update_version__(path,rev)
 
     if rev is None:
+        if os.path.exists(version_file) :
+            return
         revision = 'Unable to determine SVN revision'
     else:
+        if rev == 'exported' and os.path.exists(version_file) :
+            return
         revision = 'dev_' + str(rev)
 
     if fullInfo:
         info = __get_full_info__(path)
     
-    f = open(os.path.join(path,'lib',fname),'w')
+    f = open(version_file,'w')
     f.write("\n__svn_version__ = %s\n" % repr(revision))
     
     if info:
-        print info
         f.writelines("\n__full_svn_info__ = %s\n" % info )
 
     f.close()
