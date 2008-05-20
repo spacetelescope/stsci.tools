@@ -1,6 +1,12 @@
 from distutils.core import setup
 import sys, os.path
 
+# gather our subversion information and save it; quit if that is all we need
+import version
+version.__set_svn_version__(fullInfo=False)
+if "versiononly" in sys.argv[:2] :
+    sys.exit(0)
+
 if not hasattr(sys, 'version_info') or sys.version_info < (2,3,0,'alpha',0):
     raise SystemExit, "Python 2.3 or later required to build pytools."
 
@@ -15,8 +21,6 @@ for a in args:
         args.remove(a)
         sys.argv.remove(a)
 
-import version
-version.__set_svn_version__(fullInfo=False)
 
 setup(name = "pytools",
       version = "3.0",
