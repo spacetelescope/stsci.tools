@@ -1,5 +1,5 @@
 
-import math
+import math, time
 import unittest
 import numpy as N
 """ This module extends the built-in unittest capabilities to facilitate
@@ -54,6 +54,48 @@ explicitly. The modules you are testing must be visible in your sys.path.
 
 """
 
+class LogTestCase(unittest.TestCase):
+   """Override the .run() method to do some logging"""
+   def run(self, result=None):
+        if result is None: result = self.defaultTestResult()
+        result.startTest(self)
+        testMethod = getattr(self, self._testMethodName)
+        try:
+            try:
+                self.setUp()
+            except KeyboardInterrupt:
+                raise
+            except:
+                result.addError(self, self._exc_info())
+                return
+
+            ok = False
+            try:
+                testMethod()
+                ok = True
+                self.log("P")
+            except self.failureException:
+                result.addFailure(self, self._exc_info())
+                self.log("F")
+            except KeyboardInterrupt:
+                raise
+            except:
+                result.addError(self, self._exc_info())
+                self.log("E")
+
+            try:
+                self.tearDown()
+            except KeyboardInterrupt:
+                raise
+            except:
+                result.addError(self, self._exc_info())
+                ok = False
+            if ok: result.addSuccess(self)
+        finally:
+            result.stopTest(self)
+
+
+
 class FPTestCase(unittest.TestCase):
     ''' Base class to hold some functionality related to floating-point
     precision and array comparisons'''
@@ -72,6 +114,40 @@ class FPTestCase(unittest.TestCase):
         ''' Identical FP array comparison '''
         self.failUnless(N.alltrue(testarray == expected))
 
+class LogTextRunner(unittest.TextTestRunner):
+    """ Redefines the .run() method to call a .log() method on the test
+    when it is complete. """
+
+    def run(self, test):
+        "Run the given test case or test suite."
+        result = self._makeResult()
+        startTime = time.time()
+        test(result)
+        stopTime = time.time()
+        timeTaken = stopTime - startTime
+        result.printErrors()
+        self.stream.writeln(result.separator2)
+        run = result.testsRun
+        self.stream.writeln("Ran %d test%s in %.3fs" %
+                            (run, run != 1 and "s" or "", timeTaken))
+        self.stream.writeln()
+        if not result.wasSuccessful():
+            self.stream.write("FAILED (")
+            failed, errored = map(len, (result.failures, result.errors))
+            if failed:
+                self.stream.write("failures=%d" % failed)
+                test.log("F")
+            if errored:
+                if failed: self.stream.write(", ")
+                self.stream.write("errors=%d" % errored)
+                test.log("E")
+            self.stream.writeln(")")
+        else:
+            self.stream.writeln("OK")
+            test.log("P")
+            
+        return result
+
 def buildsuite(module):
     """Builds a test suite containing all tests found in the module.
     Returns the suite."""
@@ -89,4 +165,8 @@ def testall(module,verb=0):
     each test. A summary of the number of tests run, errors, and failures
     is always printed at the end."""
     result=unittest.TextTestRunner(verbosity=verb).run(buildsuite(module))
+    return result
+
+def testlog(module,verb=0):
+    result=LogTextRunner(verbosity=verb).run(buildsuite(module))
     return result
