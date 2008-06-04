@@ -119,6 +119,9 @@ class LogTestCase(unittest.TestCase):
       except AttributeError:
          pass
 
+      if status != 'P': 
+          f.write("%s:: ra_Trace=%s\n"%(name,str(self._exc_info()))) 
+	 
       f.write("END\n")
       f.close()
               
