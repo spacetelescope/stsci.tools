@@ -94,6 +94,36 @@ class LogTestCase(unittest.TestCase):
         finally:
             result.stopTest(self)
 
+   def log(self,status,name=None):
+      """Creates a log file containing the test name, status,and timestamp,
+      as well as any attributes in the tda and tra dictionaries if present.
+      Does not yet support fancy separating of multi-line items."""
+      if name is None:
+         try:
+            name=self.name
+         except AttributeError:
+            name=self.id()
+      
+      f=open(name+'.log','w')
+      f.write("%s:: Status=%s\n"%(name,status))
+      f.write("%s:: Time=%s\n"%(name,time.asctime()))
+      try:
+         for k in self.tda:
+            f.write("%s:: tda_%s=%s\n"%(name,str(k),str(self.tda[k])))
+      except AttributeError:
+         pass
+
+      try:
+         for k in self.tra:
+            f.write("%s:: tra_%s=%s\n"%(name,str(k),str(self.tra[k])))
+      except AttributeError:
+         pass
+
+      f.write("END\n")
+      f.close()
+              
+              
+      
 
 
 class FPTestCase(unittest.TestCase):
