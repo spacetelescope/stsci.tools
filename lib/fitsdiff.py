@@ -1,4 +1,4 @@
-#!/usr/stsci/pyssgdev/Python-2.5/bin/python
+#!/usr/bin/env python
 
 # $Id$
 
