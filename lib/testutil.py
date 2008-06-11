@@ -100,16 +100,17 @@ class LogTestCase(unittest.TestCase):
       Does not yet support fancy separating of multi-line items."""
       if name is None:
          try:
-            name=self.name+'.log'
+            name=self.name
          except AttributeError:
-            name=self.id()+'.log'
+            name=self.id()
       try:
-         f=open(name,'w')
+         f=open(name+'.log','w')
       except IOError, e:
          print "Error opening log file: %s"%e.strerror
          print "***No Logging Performed***"
          return
-            
+
+      f.write("%s:: Name=%s\n"%(name,name))
       f.write("%s:: Status=%s\n"%(name,status))
       f.write("%s:: Time=%s\n"%(name,time.asctime()))
       try:
