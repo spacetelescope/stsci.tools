@@ -67,6 +67,7 @@ class LogTestCase(unittest.TestCase):
                 raise
             except:
                 result.addError(self, self._exc_info())
+                self.log('E')
                 return
 
             ok = False
