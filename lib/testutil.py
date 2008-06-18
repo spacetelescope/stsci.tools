@@ -128,7 +128,7 @@ class LogTestCase(unittest.TestCase):
 
       if status == 'E': 
           f.write("%s:: tra_Trace=%s\n"%(name,str(self._exc_info()))) 
-	 
+ 
       f.write("END\n")
       f.close()
               
