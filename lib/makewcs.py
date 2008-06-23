@@ -78,7 +78,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '0.8.3dev (8 May 2008)'
+__version__ = '0.8.4dev (23 June 2008)'
 def run(input,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -572,10 +572,10 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     # interpretation of SIP coefficients by PyDrizzle.
     _new_extn.header.update("TDDALPHA",alpha)
     _new_extn.header.update("TDDBETA",beta)
-    _new_extn.header.update("SICSPS",refpix['PSCALE'])
-    _new_extn.header.update("SICS1POS",refpix['V2REF'])
-    _new_extn.header.update("SICS2POS",refpix['V3REF'])
-    _new_extn.header.update("SICSROT",refpix['THETA'])
+    _new_extn.header.update("IDCSCALE",refpix['PSCALE'])
+    _new_extn.header.update("IDCV2REF",refpix['V2REF'])
+    _new_extn.header.update("IDCV3REF",refpix['V3REF'])
+    _new_extn.header.update("IDCTHETA",refpix['THETA'])
     _new_extn.header.update("OCX10",fx[1][0])
     _new_extn.header.update("OCX11",fx[1][1])
     _new_extn.header.update("OCY10",fy[1][0])
