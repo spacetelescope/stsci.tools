@@ -58,7 +58,8 @@
 
 # Developed by Science Software Branch, STScI, USA.
 # This version needs pyfits 0.9.6.3 or later
-__version__ = "2.0 (22 August, 2006), \xa9 AURA"
+# and numpy version 1.0.4 or later
+__version__ = "2.1dev (30 June, 2008), \xa9 AURA"
 
 import numerixenv
 numerixenv.check()
@@ -66,7 +67,6 @@ numerixenv.check()
 import os, sys, string
 import pyfits
 import numpy
-from numpy import rec as recarray
 from numpy import memmap
 
 def stsci(hdulist):
@@ -123,7 +123,7 @@ def readgeis(input):
     else:
         raise "Platform %s is not supported (yet)." % _os
 
-    geis_fmt = {'REAL':'f', 'INTEGER':'i', 'LOGICAL':'i'}
+    geis_fmt = {'REAL':'f', 'INTEGER':'i', 'LOGICAL':'i','CHARACTER':'S'}
     end_card = 'END'+' '* (cardLen-3)
 
     # open input file
@@ -161,27 +161,37 @@ def readgeis(input):
     gcount = phdr['GCOUNT']
     pcount = phdr['PCOUNT']
 
-    formats = ''
+    formats = []
     bools = []
     floats = []
+    _range = range(1, pcount+1)
+    key = [phdr['PTYPE'+`j`] for j in _range]
+    comm = [phdr.ascard['PTYPE'+`j`].comment for j in _range]
+
+    # delete group parameter definition header keywords
+    _list = ['PTYPE'+`j` for j in _range] + \
+            ['PDTYPE'+`j` for j in _range] + \
+            ['PSIZE'+`j` for j in _range] + \
+            ['DATATYPE', 'PSIZE', 'GCOUNT', 'PCOUNT', 'BSCALE', 'BZERO']
 
     # Construct record array formats for the group parameters
+    # as interpreted from the Primary header file
     for i in range(1, pcount+1):
-        dtype = phdr['PDTYPE'+`i`]
-        star = dtype.find('*')
-        _type = dtype[:star]
-        _bytes = dtype[star+1:]
+        ptype = key[i-1]
+        pdtype = phdr['PDTYPE'+`i`]
+        star = pdtype.find('*')
+        _type = pdtype[:star]
+        _bytes = pdtype[star+1:]
 
         # collect boolean keywords since they need special attention later
+        
         if _type == 'LOGICAL':
             bools.append(i)
-        if dtype == 'REAL*4':
+        if pdtype == 'REAL*4':
             floats.append(i)
-        if _type[:2] == 'CH':
-            fmt = 'a' + _bytes
-        else:
-            fmt = geis_fmt[_type] + _bytes
-        formats += fmt + ','
+       
+        fmt = geis_fmt[_type] + _bytes
+        formats.append((ptype,fmt))
 
     _shape = _naxis[1:]
     _shape.reverse()
@@ -193,16 +203,6 @@ def readgeis(input):
         _bzero = 32768
     else:
         _uint16 = 0
-
-    _range = range(1, pcount+1)
-    key = [phdr['PTYPE'+`j`] for j in _range]
-    comm = [phdr.ascard['PTYPE'+`j`].comment for j in _range]
-
-    # delete group parameter definition header keywords
-    _list = ['PTYPE'+`j` for j in _range] + \
-            ['PDTYPE'+`j` for j in _range] + \
-            ['PSIZE'+`j` for j in _range] + \
-            ['DATATYPE', 'PSIZE', 'GCOUNT', 'PCOUNT', 'BSCALE', 'BZERO']
 
     # delete from the end, so it will not conflict with previous delete
     for i in range(len(phdr.ascard)-1, -1, -1):
@@ -229,7 +229,7 @@ def readgeis(input):
     hdulist.mmobject = dat
     
     errormsg = ""
-
+    
     loc = 0
     for k in range(gcount):
         ext_dat = numpy.fromstring(dat[loc:loc+data_size], dtype=_code)
@@ -263,16 +263,21 @@ def readgeis(input):
 
         ext_hdu = pyfits.ImageHDU(data=ext_dat)
 
-        rec = recarray.fromstring(dat[loc+data_size:loc+group_size], formats=formats[:-1], shape=1)
+        rec = numpy.fromstring(dat[loc+data_size:loc+group_size], dtype=formats)
+        
         loc += group_size
 
+        # Create separate PyFITS Card objects for each entry in 'rec'
         for i in range(1, pcount+1):
-            val = rec.field(i-1)[0]
+            #val = rec.field(i-1)[0]
+            val = rec[0][i-1]
+            
             if i in bools:
                 if val:
                     val = pyfits.TRUE
                 else:
                     val = pyfits.FALSE
+            
             if i in floats:
                 # use fromstring, format in Card is deprecated in pyfits 0.9
                 _str = '%-8s= %20.7G / %s' % (key[i-1], val, comm[i-1])
