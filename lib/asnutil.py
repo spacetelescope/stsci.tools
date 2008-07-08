@@ -13,7 +13,7 @@ import pyfits
 import numpy as N
 import os.path, time
 
-__version__ = '0.1 (2008-01-03)'
+__version__ = '0.1.1 (2008-07-08)'
 
 def readASNTable(fname, output=None, prodonly=True):
     """
@@ -597,6 +597,7 @@ class ShiftFile(dict):
         
         common = [f.strip('#').strip() for f in flines if f.startswith('#')]
         c=[line.split(': ') for line in common]
+        for line in c: line[1]=line[1].strip()
         self.update(c)
         
         files = [f.strip().split(' ',1) for f in flines if not (f.startswith('#') or f.strip() == '')]
