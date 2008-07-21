@@ -59,7 +59,7 @@
 # Developed by Science Software Branch, STScI, USA.
 # This version needs pyfits 0.9.6.3 or later
 # and numpy version 1.0.4 or later
-__version__ = "2.1dev (30 June, 2008), \xa9 AURA"
+__version__ = "2.1 (30 June, 2008), \xa9 AURA"
 
 import numerixenv
 numerixenv.check()

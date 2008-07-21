@@ -78,7 +78,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '0.8.4dev (23 June 2008)'
+__version__ = '0.8.4 (23 June 2008)'
 def run(input,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
