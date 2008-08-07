@@ -12,26 +12,38 @@
 # where XX is the version of pytools you expect for the install to work
 #
 
-########
+######## ######## ######## ######## ######## ######## ######## ########
 #
 # actually perform the install
 #
 
+import sys
+
 def run( pytools_version = None ) :
 
-    import pytools
+    if pytools_version :
+        # Only try to import pytools if we are asked to check for a version.
+        #
+        # ( We may have been extracted from pytools and bundled with a package.
+        # In that case, we do not want to risk finding some _other_ pytools
+        # and comparing that version. )
+        import pytools
 
-    # bug: should use distutils version comparator to perform ">" comparisons
-    if pytools_version and ( pytools.__version__ != pytools_version ) :
-        print "wrong version of pytools!"
-        print "have ",pytools.__version__ 
-        print "want ",pytools_version
-        import sys
-        sys.exit(1)
+        # bug: should use distutils version comparator to perform ">" comparisons
+        if ( pytools.__version__ != pytools_version ) :
+            print "wrong version of pytools!"
+            print "have ",pytools.__version__ 
+            print "want ",pytools_version
+            sys.exit(1)
 
     from distutils.core import setup
-
     from defsetup import setupargs, pkg
+
+    # collect our subversion information
+    __set_svn_version__()
+
+    if "versiononly" in sys.argv[:2] :
+        sys.exit(0)
 
     setup(
         name =              pkg,
@@ -44,7 +56,7 @@ def run( pytools_version = None ) :
 
 
 
-########
+######## ######## ######## ######## ######## ######## ######## ########
 #
 # This part fixes install_data to put data files in the same directory
 # with the python library files, which is where our packages want
@@ -102,7 +114,7 @@ def new_run ( self ) :
 o.run = new_run
 
 
-########
+######## ######## ######## ######## ######## ######## ######## ########
 #
 # Implements "python setup.py install --place=dir"
 #
@@ -159,5 +171,113 @@ o.place = None
 o.user_options.append( ( "place=", None, "Specify place to install" ) )
 
 
-########
+######## ######## ######## ######## ######## ######## ######## ########
+#
+# Function to collect svn version information - used to be stsci_python/version.py
+# with multiple copies in the system.
+#
+import os.path
+import re
+
+#
+# This is the entry point.  All you need to do is call this function from your
+# setup.py according to the example above.  It will create a file called
+# lib/svn_version.py ;  After that, you can
+#
+#   # find out what subversion information applies to yourpackage
+#   import yourpackage.svn_version
+#   print yourpackage.svn_version.__svn_version__
+#   print yourpackage.svn_version.__full_svn_info__
+#
+
+def __set_svn_version__(path="./", fname='svn_version.py' ):
+    #
+    # path is the package where the version information will be stored.  Default
+    # is "this package", but from a higher level package, you can specify a directory
+    # of a package to process
+    #
+    # fname is the name of the file to store the version information in.  Never change
+    # this.
+    #
+
+    if not os.path.isdir(".svn") :
+        print "NO .svn DIR"
+        # if there is no .svn directory here, there is no point in doing anything more.
+        return
+
+    info = None
+    rev = __get_svn_rev__(path)
+    version_file = os.path.join(path,'lib',fname)
+
+    # if we are unable to determine the revision, we default to leaving the
+    # revision file unchanged.  Otherwise, we fill it in with whatever
+    # we have
+
+    if rev is None:
+        if os.path.exists(version_file) :
+            return
+        revision = 'Unable to determine SVN revision'
+    else:
+        if ( rev == 'exported' or rev == 'unknown' ) and os.path.exists(version_file) :
+            return
+        revision = str(rev)
+
+    info = __get_full_info__(path)
+    
+    # now we can write the version information
+
+    f = open(version_file,'w')
+    f.write("\n__svn_version__ = %s\n" % repr(revision))
+
+    # info will be a multi-line string.  We are not using repr(info)
+    # for readability; the output of "svn info" can not contain '''
+    # unless you are doing something bad.
+    f.write("\n__full_svn_info__ = '''\n%s'''\n" % info)
+    f.close()
+
+    
+def __get_svn_rev__(path):
+    m = None
+    try:
+        # with popen3,  stderr goes into a pipe where we ignore it, 
+        # This means the user does not see errors.
+        (sin, sout, serr) = os.popen3('svnversion')
+
+        # pick up the first line of output
+        m=sout.read().strip()
+
+        # if it looks like valid svnversion output, return it
+        if m == 'exported' :
+            return m
+        if re.match('^[0-9][0-9:]*[A-Z]*$',m) :
+            return m
+
+        # if we get here, it was not valid - that probably means
+        # an error of some kind.
+    except:
+        pass
+
+    return None
+
+def __get_full_info__(path):
+    info = None
+    try:
+        # with popen3,  stderr goes into a pipe where we ignore it, 
+        # This means the user does not see errors.
+        (sin, sout, serr) = os.popen3('svn info %s' % path)
+
+        # pick up all the lines of output
+        info = [l.strip() for l in sout.readlines()]
+
+        # if no output, there was an error and we don't know anything
+        if len(info) == 0 :
+            return "unknown"
+
+        # there was output, so join it all together
+        return '\n'.join(info)
+
+    except:
+        pass
+
+    return "unknown"
 

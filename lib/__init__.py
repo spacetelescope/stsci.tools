@@ -1,8 +1,9 @@
+from __future__ import absolute_import
+
 __version__ = "3.0"
 
 #revision based svn info
 try:
-    import svn_version
-    __svn_version__ = svn_version.__svn_version__
+    from .svn_version import __svn_version__, __full_svn_info__
 except:
     __svn_version__ = 'Unable to determine SVN revision'
