@@ -1,3 +1,5 @@
+__version__ = "3.0"
+
 #revision based svn info
 try:
     import svn_version
