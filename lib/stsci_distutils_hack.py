@@ -21,6 +21,9 @@ import sys
 
 def run( pytools_version = None ) :
 
+    if not hasattr(sys, 'version_info') or sys.version_info < (2,3,0,'alpha',0):
+        raise SystemExit, "Python 2.3 or later required."
+
     if pytools_version :
         # Only try to import pytools if we are asked to check for a version.
         #
@@ -35,6 +38,7 @@ def run( pytools_version = None ) :
             print "have ",pytools.__version__ 
             print "want ",pytools_version
             sys.exit(1)
+
 
     from distutils.core import setup
     from defsetup import setupargs, pkg
