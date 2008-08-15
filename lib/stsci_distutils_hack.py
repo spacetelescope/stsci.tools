@@ -49,10 +49,20 @@ def run( pytools_version = None ) :
     if "versiononly" in sys.argv[:2] :
         sys.exit(0)
 
+    # If they have multiple packages, we have to allow them to give a list.
+    # That is the unusual case, so we let them give a string if they have a single
+    # package.
+    if isinstance(pkg,str) :
+        pkg = [ pkg ]
+
+    # If they have multiple packages, they have to specify package_dir.  Otherwise,
+    # we can create one for them.
+    if not 'package_dir' in setupargs :
+        setupargs['package_dir'] = { pkg[0] : 'lib' }
+
     setup(
-        name =              pkg,
-        packages =          [ pkg ],
-        package_dir=        { pkg : 'lib' },
+        name =              pkg[0],
+        packages =          pkg,
 
         **setupargs
 
