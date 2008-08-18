@@ -573,14 +573,18 @@ def convertwaiveredfits(waiveredObject,
 # Main Program callable from the shell
 # *****************************************************************************
 #
-if __name__ == '__main__':
 
+def main() :
     files,outputFiles,conversionFormat,verbose = _processCommandLineArgs()
 
     for f,outputfile in zip(files,outputFiles):
         convertwaiveredfits(f,outputfile,True,conversionFormat,verbose)
 
     sys.exit()
+
+
+if __name__ == '__main__':
+    main()
 
 """
 

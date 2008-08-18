@@ -666,10 +666,12 @@ def parse_path(f1, f2):
     else:
         return list1, list2
 
-#-------------------------------------------------------------------------------
-# special initialization when this is the main program
 
-if __name__ == "__main__":
+#-------------------------------------------------------------------------------
+# a main program for running fitsdiff from the command line
+
+
+def main() :
 
     import getopt
 
@@ -725,6 +727,11 @@ if __name__ == "__main__":
 
         else:
             print "Needs pair(s) of input files.  Use -h for help"
+
+
+if __name__ == "__main__":
+    main()
+
 
 """
 Copyright (C) 2003 Association of Universities for Research in Astronomy (AURA)
