@@ -78,7 +78,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '0.8.4 (23 June 2008)'
+__version__ = '0.8.5 (21 Aug 2008)'
 def run(input,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -316,17 +316,29 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     if not quiet:
         print "-PA_V3 : ",pvt," CHIP #",chip
 
+    # Determine whether to perform time-dependent correction
+    if (hdr.has_key('WFCTDD') and hdr['WFCTDD'] == 'T') or \
+        (hdr.has_key('TDDCORR') and hdr['TDDCORR'] == 'PERFORM'):
+        alpha,beta = mutil.compute_wfc_tdd_coeffs(dateobs)
+        tddcorr = True
+    else:
+        tddcorr = False
+
     # Extract the appropriate information from the IDCTAB
     #fx,fy,refpix,order=fileutil.readIDCtab(idctab,chip=chip,direction='forward',
     #            filter1=filter1,filter2=filter2,offtab=offtab,date=dateobs)
     idcmodel = models.IDCModel(idctab,
                     chip=chip, direction='forward', date=dateobs,
-                    filter1=filter1, filter2=filter2, offtab=offtab, binned=binned)
+                    filter1=filter1, filter2=filter2, offtab=offtab, binned=binned,
+                    tddcorr=False)
     fx = idcmodel.cx
     fy = idcmodel.cy
     refpix = idcmodel.refpix
     order = idcmodel.norder
-
+    
+    #if tddcorr:
+    #    alpha = refpix['TDDALPHA']
+    #    beta = refpix['TDDBETA']
     #
     # Look for any subarray offset
     #
@@ -354,17 +366,10 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     if ltv1 != 0. or ltv2 != 0.:
        fx,fy = idcmodel.shift(idcmodel.cx,idcmodel.cy,offsetx,offsety)
 
-    if hdr.has_key('WFCTDD') and hdr['WFCTDD'] == 'T':
-        # Implement time-dependent correction here
-        alpha,beta = mutil.compute_wfc_tdd_coeffs(hdr['date-obs'])      
-    else:
-        alpha= 0.0
-        beta = 0.0
-
     # Extract the appropriate information for reference chip
     rfx,rfy,rrefpix,rorder=mutil.readIDCtab(idctab,chip=Nrefchip,
         direction='forward', filter1=filter1,filter2=filter2,offtab=offtab, 
-        date=dateobs)
+        date=dateobs,tddcorr=False)
 
     # Create the reference image name
     rimage = image.split('[')[0]+"[sci,%d]" % nr
@@ -570,8 +575,6 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
 
     # Update header with additional keywords required for proper
     # interpretation of SIP coefficients by PyDrizzle.
-    _new_extn.header.update("TDDALPHA",alpha)
-    _new_extn.header.update("TDDBETA",beta)
     _new_extn.header.update("IDCSCALE",refpix['PSCALE'])
     _new_extn.header.update("IDCV2REF",refpix['V2REF'])
     _new_extn.header.update("IDCV3REF",refpix['V3REF'])
@@ -581,7 +584,11 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     _new_extn.header.update("OCY10",fy[1][0])
     _new_extn.header.update("OCY11",fy[1][1])
     
-    
+    # Report time-dependent coeffs, if computed
+    if tddcorr:
+        _new_extn.header.update("TDDALPHA",alpha)
+        _new_extn.header.update("TDDBETA",beta)
+
     
     # Close image now
     fimg.close()
