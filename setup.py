@@ -12,7 +12,10 @@ exec f in syms
 f.close()
 
 syms['__set_svn_version__']()
+syms['__set_setup_date__']()
 
+if "version" in sys.argv :
+    sys.exit(0)
 
 from distutils.core import setup
 

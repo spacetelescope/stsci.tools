@@ -16,6 +16,7 @@
 #
 # actually perform the install
 #
+# NOTE: This is not used to install pytools itself!
 
 import sys
 
@@ -46,7 +47,10 @@ def run( pytools_version = None ) :
     # collect our subversion information
     __set_svn_version__()
 
-    if "versiononly" in sys.argv[:2] :
+    # save the date when we last ran setup.py
+    __set_setup_date__()
+
+    if "version" in sys.argv :
         sys.exit(0)
 
     # If they have multiple packages, we have to allow them to give a list.
@@ -204,7 +208,7 @@ import re
 #   print yourpackage.svn_version.__full_svn_info__
 #
 
-def __set_svn_version__(path="./", fname='svn_version.py' ):
+def __set_svn_version__(path="./", fname='svn_version.py' ) :
     #
     # path is the package where the version information will be stored.  Default
     # is "this package", but from a higher level package, you can specify a directory
@@ -215,7 +219,6 @@ def __set_svn_version__(path="./", fname='svn_version.py' ):
     #
 
     if not os.path.isdir(".svn") :
-        print "NO .svn DIR"
         # if there is no .svn directory here, there is no point in doing anything more.
         return
 
@@ -241,12 +244,12 @@ def __set_svn_version__(path="./", fname='svn_version.py' ):
     # now we can write the version information
 
     f = open(version_file,'w')
-    f.write("\n__svn_version__ = %s\n" % repr(revision))
+    f.write("__svn_version__ = %s\n" % repr(revision))
 
     # info will be a multi-line string.  We are not using repr(info)
     # for readability; the output of "svn info" can not contain '''
     # unless you are doing something bad.
-    f.write("\n__full_svn_info__ = '''\n%s'''\n" % info)
+    f.write("\n__full_svn_info__ = '''\n%s'''\n\n" % info)
     f.close()
 
     
@@ -294,4 +297,29 @@ def __get_full_info__(path):
         pass
 
     return "unknown"
+
+######## ######## ######## ######## ######## ######## ######## ########
+#
+# note when we last ran setup.py -- what we really want is when the
+# software was installed, but we can use the time we ran setup.py as
+# a proxy for that.
+#
+
+def __set_setup_date__( path="./", fname='svn_version.py') :
+    import datetime
+    file = os.path.join(path,'lib',fname)
+    d = datetime.datetime.now()
+    f = open(file,"r")
+    l = [ ]
+    for line in f :
+        if line.find("# setupdate") < 0 :
+            l.append(line)
+    f.close()
+    f=open(file,"w")
+    for line in l :
+        f.write(line)
+    
+    f.write("%s # setupdate\n" % "import datetime")
+    f.write("%s # setupdate\n" % ("setupdate = "+repr(d)))
+    f.close()
 
