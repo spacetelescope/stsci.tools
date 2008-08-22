@@ -218,10 +218,6 @@ def __set_svn_version__(path="./", fname='svn_version.py' ) :
     # this.
     #
 
-    if not os.path.isdir(".svn") :
-        # if there is no .svn directory here, there is no point in doing anything more.
-        return
-
     info = None
     rev = __get_svn_rev__(path)
     version_file = os.path.join(path,'lib',fname)
@@ -309,12 +305,16 @@ def __set_setup_date__( path="./", fname='svn_version.py') :
     import datetime
     file = os.path.join(path,'lib',fname)
     d = datetime.datetime.now()
-    f = open(file,"r")
     l = [ ]
-    for line in f :
-        if line.find("# setupdate") < 0 :
-            l.append(line)
-    f.close()
+    try :
+        # we don't expect this to fail ever, but it might
+        f = open(file,"r")
+        for line in f :
+            if line.find("# setupdate") < 0 :
+                l.append(line)
+        f.close()
+    except IOError :
+        pass
     f=open(file,"w")
     for line in l :
         f.write(line)
