@@ -2,6 +2,8 @@
 # This setup.py does not follow our usual pattern, because it is
 # the setup for pytools -- it can't use pytools to install itself..
 
+import sys
+
 # We can't import this because we are not installed yet, so
 # exec it instead.  We only want it to initialize itself,
 # so we don't need to keep the symbol table.
