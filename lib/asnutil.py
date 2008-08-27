@@ -13,9 +13,9 @@ import pyfits
 import numpy as N
 import os.path, time
 
-__version__ = '0.1.1 (2008-07-08)'
+__version__ = '0.2(2008-08-27)'
 
-def readASNTable(fname, output=None, prodonly=True):
+def readASNTable(fname, output=None, prodonly=False):
     """
     Purpose
     =======
@@ -51,9 +51,8 @@ def readASNTable(fname, output=None, prodonly=True):
 
     try:
         f = pyfits.open(fu.osfn(fname))
-    except IOError:
-        print "Can't open file %s\n" % fname
-        return
+    except:
+        raise IOError, "Can't open file %s\n" % fname
     
     colnames = f[1].data.names
     try:
@@ -102,7 +101,7 @@ def readASNTable(fname, output=None, prodonly=True):
     infiles = list(d['MEMNAME'].lower())
     if not infiles:
         print "No valid input specified"
-        return
+        return None
     
     if ('XOFFSET' in colnames and d['XOFFSET'].any()) or ('YOFFSET' in colnames and d['YOFFSET'].any()):
         abshift = True
@@ -227,12 +226,17 @@ class ASNTable(dict):
         self.order = []
         if inlist != None:
             for fn in inlist:
-                self.order.append(fu.buildNewRootname(fn))
-
+                if fu.findFile(fu.buildRootname(fn)):
+                    self.order.append(fu.buildNewRootname(fn))
+                else:
+                    # This may mean corrupted asn table in which a file is listed as present
+                    # when it is missing.
+                    raise IOError,  'File %s not found.\n' %fn
         dict.__init__(self, output=self.output, order=[], members={})
         if inlist != None:
             self.input = [fu.buildRootname(f) for f in inlist]
         self.shiftfile = shiftfile
+        
     def create(self, shiftfile=None): 
         members = {}
         row = 0
@@ -268,9 +272,11 @@ class ASNTable(dict):
         else:
             for f in self.input:
                 # also here
+                
                 fname = fu.buildNewRootname(f)
                 members[fname] = ASNMember(row=row)
                 row+=1
+                
         self['members'].update(members)
         self['order']=self.order
     
