@@ -78,8 +78,8 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '0.8.5 (21 Aug 2008)'
-def run(input,quiet=yes,restore=no,prepend='O'):
+__version__ = '1.0.0 (29 Aug 2008)'
+def run(input,quiet=yes,restore=no,prepend='O',apply_tdd=False):
 
     print "+ MAKEWCS Version %s" % __version__
     
@@ -160,7 +160,7 @@ def run(input,quiet=yes,restore=no,prepend='O'):
                 if not quiet: 
                     print 'Updating image: ', _img
                   
-                _update(_img,idctab, _nimsets,
+                _update(_img,idctab, _nimsets, apply_tdd=apply_tdd,
 quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nrefext)
             else:                    
                 if not quiet:
@@ -182,7 +182,8 @@ def restoreCD(image,prepend):
     except: 
         print 'ERROR: Could not restore WCS keywords for %s.'%image
 
-def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=None, nrext=None):
+def _update(image,idctab,nimsets,apply_tdd=False,
+            quiet=None,instrument=None,prepend=None,nrchip=None, nrext=None):
     
     _prepend = prepend
     _dqname = None        
@@ -330,7 +331,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     idcmodel = models.IDCModel(idctab,
                     chip=chip, direction='forward', date=dateobs,
                     filter1=filter1, filter2=filter2, offtab=offtab, binned=binned,
-                    tddcorr=False)
+                    tddcorr=apply_tdd)
     fx = idcmodel.cx
     fy = idcmodel.cy
     refpix = idcmodel.refpix
@@ -369,7 +370,7 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     # Extract the appropriate information for reference chip
     rfx,rfy,rrefpix,rorder=mutil.readIDCtab(idctab,chip=Nrefchip,
         direction='forward', filter1=filter1,filter2=filter2,offtab=offtab, 
-        date=dateobs,tddcorr=False)
+        date=dateobs,tddcorr=apply_tdd)
 
     # Create the reference image name
     rimage = image.split('[')[0]+"[sci,%d]" % nr
@@ -564,8 +565,8 @@ def _update(image,idctab,nimsets,quiet=None,instrument=None,prepend=None,nrchip=
     # Update the SIP flag keywords as well
     #iraf.hedit(image,"CTYPE1","RA---TAN-SIP",verify=no,show=no)
     #iraf.hedit(image,"CTYPE2","DEC--TAN-SIP",verify=no,show=no)
-    #fimg[_extn].header.update("CTYPE1","RA---TAN-SIP")
-    #fimg[_extn].header.update("CTYPE2","DEC--TAN-SIP")
+    _new_extn.header.update("CTYPE1","RA---TAN-SIP")
+    _new_extn.header.update("CTYPE2","DEC--TAN-SIP")
 
     # Finally we also need the order
     #iraf.hedit(image,"A_ORDER","%d" % order,add=yes,verify=no,show=no)
@@ -729,6 +730,8 @@ def help():
         quiet   - turns off ALL reporting messages: 'yes' or 'no'(default)
         restore - restore WCS for all input images to defaults if possible:
                     'yes' or 'no'(default) 
+        apply_tdd - applies the time-dependent skew terms to the SIP coefficients
+                    written out to the header: 'yes' or True or, 'no' or False (default).
     Usage:
         --> import makewcs
         --> makewcs.run('raw') # This will update all _raw files in directory
