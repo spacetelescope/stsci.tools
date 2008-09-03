@@ -78,8 +78,8 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '1.0.0 (29 Aug 2008)'
-def run(input,quiet=yes,restore=no,prepend='O',apply_tdd=False):
+__version__ = '1.1.0 (2 Sept 2008)'
+def run(input,quiet=yes,restore=no,prepend='O'):
 
     print "+ MAKEWCS Version %s" % __version__
     
@@ -160,8 +160,14 @@ def run(input,quiet=yes,restore=no,prepend='O',apply_tdd=False):
                 if not quiet: 
                     print 'Updating image: ', _img
                   
-                _update(_img,idctab, _nimsets, apply_tdd=apply_tdd,
+                tdd_corr = _update(_img,idctab, _nimsets, apply_tdd=False,
 quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nrefext)
+                if tdd_corr:
+                    print 'Applying time-dependent distortion corrections...'
+                    tdd_corr = _update(_img,idctab, _nimsets, apply_tdd=True,
+quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nrefext)
+                    
+                    
             else:                    
                 if not quiet:
                     print 'Restoring original WCS values for',_img  
@@ -201,11 +207,6 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     dateobs = readKeyword(hdr,'DATE-OBS')
     if not quiet:
         print "OFFTAB, DATE-OBS: ",offtab,dateobs
-
-    # Get the original image WCS
-    Old=wcsutil.WCSObject(image,prefix=_prepend)
-    # Reset the WCS keywords to original archived values.
-    Old.restore()
     
     print "-Updating image ",image
 
@@ -318,13 +319,12 @@ def _update(image,idctab,nimsets,apply_tdd=False,
         print "-PA_V3 : ",pvt," CHIP #",chip
 
     # Determine whether to perform time-dependent correction
-    if (hdr.has_key('WFCTDD') and hdr['WFCTDD'] == 'T') or \
-        (hdr.has_key('TDDCORR') and hdr['TDDCORR'] == 'PERFORM'):
+    if apply_tdd:
         alpha,beta = mutil.compute_wfc_tdd_coeffs(dateobs)
-        tddcorr = True
     else:
-        tddcorr = False
-
+        alpha = 0.0
+        beta = 0.0
+        
     # Extract the appropriate information from the IDCTAB
     #fx,fy,refpix,order=fileutil.readIDCtab(idctab,chip=chip,direction='forward',
     #            filter1=filter1,filter2=filter2,offtab=offtab,date=dateobs)
@@ -336,7 +336,15 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     fy = idcmodel.cy
     refpix = idcmodel.refpix
     order = idcmodel.norder
-    
+
+    # Get the original image WCS
+    Old=wcsutil.WCSObject(image,prefix=_prepend)
+    if apply_tdd:
+        Old.archive(prepend='S',overwrite=True)
+    # Reset the WCS keywords to original archived values.
+    Old.restore()
+ 
+   
     #if tddcorr:
     #    alpha = refpix['TDDALPHA']
     #    beta = refpix['TDDBETA']
@@ -586,14 +594,23 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     _new_extn.header.update("OCY11",fy[1][1])
     
     # Report time-dependent coeffs, if computed
-    if tddcorr:
+    if apply_tdd:
         _new_extn.header.update("TDDALPHA",alpha)
         _new_extn.header.update("TDDBETA",beta)
 
-    
+    if ((hdr.has_key('WFCTDD') and hdr['WFCTDD'] == 'T') or \
+        (hdr.has_key('TDDCORR') and hdr['TDDCORR'] == 'PERFORM')) \
+        and not apply_tdd:
+        tdd_corr = True
+    else:
+        if fimg[0].header.has_key('TDDCORR') and apply_tdd:
+            fimg[0].header['TDDCORR'] = 'COMPLETE'
+        tdd_corr = False
     # Close image now
     fimg.close()
     del fimg
+    
+    return tdd_corr
     
 def diff_angles(a,b):
     """ Perform angle subtraction a-b taking into account
