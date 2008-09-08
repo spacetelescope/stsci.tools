@@ -353,7 +353,7 @@ class ASNTable(dict):
             warningmsg =  "\n#########################################\n"
             warningmsg += "#                                       #\n"
             warningmsg += "# WARNING:                              #\n"
-            warningmsg += "#  The exisiting assocation table,      #\n"
+            warningmsg += "#  The existing association table,      #\n"
             warningmsg += "           " + str(outfile) + '\n'
             warningmsg += "#  is being replaced.                   #\n"
             warningmsg += "#                                       #\n"
