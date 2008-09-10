@@ -172,7 +172,13 @@ quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nr
                 if not quiet:
                     print 'Restoring original WCS values for',_img  
                 restoreCD(_img,_prepend)
-
+        
+        fimg = fileutil.openImage(image,mode='update')
+        print 'Updating TDDCORR in :',image
+        if fimg[0].header.has_key('TDDCORR') and fimg[0].header['TDDCORR'] == 'PERFORM':
+            fimg[0].header['TDDCORR'] = 'COMPLETE'
+        fimg.close()
+        
     if newfiles == []:
         return files
     else:
@@ -603,8 +609,6 @@ def _update(image,idctab,nimsets,apply_tdd=False,
         and not apply_tdd:
         tdd_corr = True
     else:
-        if fimg[0].header.has_key('TDDCORR') and apply_tdd:
-            fimg[0].header['TDDCORR'] = 'COMPLETE'
         tdd_corr = False
     # Close image now
     fimg.close()
