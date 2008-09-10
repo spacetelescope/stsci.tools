@@ -174,7 +174,6 @@ quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nr
                 restoreCD(_img,_prepend)
         
         fimg = fileutil.openImage(image,mode='update')
-        print 'Updating TDDCORR in :',image
         if fimg[0].header.has_key('TDDCORR') and fimg[0].header['TDDCORR'] == 'PERFORM':
             fimg[0].header['TDDCORR'] = 'COMPLETE'
         fimg.close()
