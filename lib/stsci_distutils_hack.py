@@ -254,7 +254,8 @@ def __get_svn_rev__(path):
     try:
         # with popen3,  stderr goes into a pipe where we ignore it, 
         # This means the user does not see errors.
-        (sin, sout, serr) = os.popen3('svnversion')
+        cmd = 'svnversion '+path
+        (sin, sout, serr) = os.popen3(cmd)
 
         # pick up the first line of output
         m=sout.read().strip()
