@@ -530,7 +530,7 @@ class ShiftFile(dict):
 
     """
     
-    def __init__(self,filename="", form='absolute', frame=None, units='pixels', 
+    def __init__(self,filename="", form='delta', frame=None, units='pixels', 
                  order=None, refimage=None, **kw):
         """
         Purpose
@@ -571,7 +571,7 @@ class ShiftFile(dict):
         `**d`:      dictionary
                     keys: file names
                     values: a list:  [Xsh, Ysh, Rot, Scale]
-                    The keys must match the files in the oder parameter.
+                    The keys must match the files in the order parameter.
                     
         :raise ValueError: If reference file can't be found
         """
@@ -603,6 +603,13 @@ class ShiftFile(dict):
         
         common = [f.strip('#').strip() for f in flines if f.startswith('#')]
         c=[line.split(': ') for line in common]
+        
+        # Remove any line comments in the shift file - lines starting with '#'
+        # but not part of the common block.
+        for l in c:
+            if l[0] not in ['frame', 'refimage', 'form', 'units']:
+                c.remove(l)
+
         for line in c: line[1]=line[1].strip()
         self.update(c)
         
