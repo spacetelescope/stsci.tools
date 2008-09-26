@@ -173,10 +173,10 @@ quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nr
                     print 'Restoring original WCS values for',_img  
                 restoreCD(_img,_prepend)
         
-        fimg = fileutil.openImage(image,mode='update')
-        if fimg[0].header.has_key('TDDCORR') and fimg[0].header['TDDCORR'] == 'PERFORM':
-            fimg[0].header['TDDCORR'] = 'COMPLETE'
-        fimg.close()
+        #fimg = fileutil.openImage(image,mode='update')
+        #if fimg[0].header.has_key('TDDCORR') and fimg[0].header['TDDCORR'] == 'PERFORM':
+        #    fimg[0].header['TDDCORR'] = 'COMPLETE'
+        #fimg.close()
         
     if newfiles == []:
         return files
