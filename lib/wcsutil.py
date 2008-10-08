@@ -313,6 +313,7 @@ class WCSObject:
             self.new = yes
             for key in self.wcsdef.keys():
                 self.__dict__[key] = self.wcsdef[key]
+            
             if shape != None:
                 # ... and update with user values.
                 self.naxis1 = int(shape[0])
@@ -409,7 +410,10 @@ class WCSObject:
 
     def set_pscale(self):
         """ Compute the pixel scale based on active WCS values. """
-        self.pscale = self.compute_pscale(self.cd11,self.cd21)
+        if self.new:
+            self.pscale = 1.0
+        else:
+            self.pscale = self.compute_pscale(self.cd11,self.cd21)
 
     def compute_pscale(self,cd11,cd21):
         """ Compute the pixel scale based on active WCS values. """
