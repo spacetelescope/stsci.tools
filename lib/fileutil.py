@@ -67,7 +67,6 @@ import time as _time
 # define INDEF, yes, no, EOF, Verbose, userIrafHome
 
 try:
-    import pyraf
     from pyraf import iraf
 except:
     iraf = None
