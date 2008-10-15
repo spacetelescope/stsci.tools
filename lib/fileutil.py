@@ -67,7 +67,8 @@ import time as _time
 # define INDEF, yes, no, EOF, Verbose, userIrafHome
 
 try:
-    import iraf
+    import pyraf
+    from pyraf import iraf
 except:
     iraf = None
 
@@ -281,8 +282,7 @@ def buildNewRootname(filename,extn=None,extlist=None):
     return filename[:_indx]+extn
 
 def buildRootname(filename,ext=None):
-    """
-    Built a new rootname for an existing file and given extension.
+    """ Built a new rootname for an existing file and given extension.
     Any user supplied extensions to use for searching for file
     need to be provided as a list of extensions.
 
@@ -422,7 +422,6 @@ def getHeader(filename,handle=None):
         header, for this filename specification.
     """
     _fname,_extn = parseFilename(filename)
-
     # Allow the user to provide an already opened PyFITS object
     # to derive the header from...
     #
@@ -666,7 +665,9 @@ def getExtn(fimg,extn=None):
     """ Returns the PyFITS extension corresponding to
         extension specified in filename.
         Defaults to returning the first extension with
-        data or the primary extension, if none have data.
+            data or the primary extension, if none have data.
+        If a non-existent extension has been specified, 
+            it raises a KeyError exception.
     """
     # If no extension is provided, search for first extension
     # in FITS file with data associated with it.
@@ -693,8 +694,6 @@ def getExtn(fimg,extn=None):
                         if e.header['extname'].lower() == _extns[0].lower() and e.header['extver'] == int(_extns[1]):
                             _extn = e
                             break
-                if _extn is None:
-                    raise KeyError, 'Extension %s not found'%extn
 
         elif repr(extn).find('/') > 1:
             # We are working with GEIS group syntax
@@ -707,11 +706,31 @@ def getExtn(fimg,extn=None):
                 _nextn = int(extn)
             else:
                 # We only have EXTNAME specified...
-                _nextn = extn
-            _extn = fimg[_nextn]
+                _nextn = None
+                if extn.lower() == 'primary':
+                    _nextn = 0
+                else:
+                    i = 1
+                    for hdu in fimg[1:]:
+                        if extn.lower() == hdu.header['extname'].lower():
+                            print 
+                            _nextn = i
+                            i += 1
+                            break
+
+            if _nextn < len(fimg):
+                _extn = fimg[_nextn]
+            else:
+                _extn = None
+
         else:
             # Only integer extension number given, or default of 0 is used.
-            _extn = fimg[int(extn)]
+            if int(extn) < len(fimg):
+                _extn = fimg[int(extn)]
+            else:
+                _extn = None
+    if _extn is None:
+        raise KeyError, 'Extension %s not found'%extn
 
     return _extn
 #
