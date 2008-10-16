@@ -709,13 +709,14 @@ def getExtn(fimg,extn=None):
                 if extn.lower() == 'primary':
                     _nextn = 0
                 else:
-                    i = 1
-                    for hdu in fimg[1:]:
-                        if extn.lower() == hdu.header['extname'].lower():
+                    i = 0
+                    for hdu in fimg:
+                        isimg = isinstance(hdu,pyfits.ImageHDU)
+                        if isimg and extn.lower() == hdu.header['extname'].lower():
                             print 
                             _nextn = i
-                            i += 1
                             break
+                        i += 1
 
             if _nextn < len(fimg):
                 _extn = fimg[_nextn]
@@ -730,7 +731,6 @@ def getExtn(fimg,extn=None):
                 _extn = None
     if _extn is None:
         raise KeyError, 'Extension %s not found'%extn
-
     return _extn
 #
 #Revision History:
