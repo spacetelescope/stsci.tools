@@ -59,7 +59,7 @@ DEFAULT_PREFIX = 'O'
 
 
 
-__version__ = '1.2.0 (06-Aug-2008)'
+__version__ = '1.2.1 (17-Oct-2008)'
 
 def help():
     print 'wcsutil Version '+str(__version__)+':\n'
@@ -422,7 +422,16 @@ class WCSObject:
     def get_orient(self):
         """ Return the computed orientation based on CD matrix. """
         return RADTODEG(N.arctan2(self.cd12,self.cd22))
+    
+    def set_orient(self):
+        """ Return the computed orientation based on CD matrix. """
+        self.orient = RADTODEG(N.arctan2(self.cd12,self.cd22))
 
+    def update(self):
+        """ Update computed values of WCS based on current CD matrix."""
+        self.set_pscale()
+        self.set_orient()
+        
     def updateWCS(self, pixel_scale=None, orient=None,refpos=None,refval=None,size=None):
         """
         Create a new CD Matrix from the absolute pixel scale
@@ -492,6 +501,10 @@ class WCSObject:
             self.cd21 = self.cd12
             self.cd22 = -self.cd11
 
+        # Now make sure that all derived values are really up-to-date based 
+        # on these changes
+        self.update()
+
     def scale_WCS(self,pixel_scale,retain=True):
         ''' Scale the WCS to a new pixel_scale. The 'retain' parameter
         [default value: True] controls whether or not to retain the original 
@@ -518,7 +531,9 @@ class WCSObject:
             self.cd21 = self.cd12
             self.cd22 = -self.cd11
             
-        self.set_pscale()
+        # Now make sure that all derived values are really up-to-date based 
+        # on these changes
+        self.update()
         
     def xy2rd(self,pos):
         """
@@ -701,7 +716,8 @@ class WCSObject:
         self.cd21 = _cd21n
         self.cd22 = _cd22n
         #self.pscale = _new_pscale
-        self.set_pscale()
+
+        self.update()
 
     def write(self,fitsname=None,wcs=None,archive=True,overwrite=False,quiet=True):
         """ 
@@ -723,6 +739,9 @@ class WCSObject:
         in order to be in sync with the science (_c0h.fits) file.
         
         """
+        ## Start by making sure all derived values are in sync with CD matrix
+        self.update()
+        
         image = self.rootname
         _fitsname = fitsname
 
@@ -766,7 +785,7 @@ class WCSObject:
             if key != 'WCSCDATE':
                 self.__dict__[self.wcstrans[key]] = self.orig_wcs[self.backup[key]]
 
-        self.set_pscale()
+        self.update()
 
     def archive(self,prepend=None,overwrite=no,quiet=yes):
         """ Create backup copies of the WCS keywords with the given prepended
@@ -1046,6 +1065,7 @@ class WCSObject:
             return copy.deepcopy(self)
         else:
             return copy.copy(self)
+        
     def help(self):
         """ Prints out help message."""
         print 'wcsutil Version '+str(__version__)+':\n'
