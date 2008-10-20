@@ -196,6 +196,7 @@ def restoreCD(image,prepend):
 def _update(image,idctab,nimsets,apply_tdd=False,
             quiet=None,instrument=None,prepend=None,nrchip=None, nrext=None):
     
+    tdd_xyref = {1: [2048, 3072], 2:[2048, 1024]}
     _prepend = prepend
     _dqname = None        
     # Make a copy of the header for keyword access
@@ -324,8 +325,12 @@ def _update(image,idctab,nimsets,apply_tdd=False,
         print "-PA_V3 : ",pvt," CHIP #",chip
 
     # Determine whether to perform time-dependent correction
+    # Construct matrices neded to correct the zero points for TDD
     if apply_tdd:
         alpha,beta = mutil.compute_wfc_tdd_coeffs(dateobs)
+        tdd = N.array([[beta, alpha], [alpha, -beta]])
+        mrotp = fileutil.buildRotMatrix(2.234529)/2048.
+        
     else:
         alpha = 0.0
         beta = 0.0
@@ -344,15 +349,13 @@ def _update(image,idctab,nimsets,apply_tdd=False,
 
     # Get the original image WCS
     Old=wcsutil.WCSObject(image,prefix=_prepend)
+    """
     if apply_tdd:
         Old.archive(prepend='S',overwrite=True)
+    """
     # Reset the WCS keywords to original archived values.
     Old.restore()
  
-   
-    #if tddcorr:
-    #    alpha = refpix['TDDALPHA']
-    #    beta = refpix['TDDBETA']
     #
     # Look for any subarray offset
     #
@@ -408,16 +411,34 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     rref = (rrefpix['XREF']+ltvoffx, rrefpix['YREF']+ltvoffy)
     
     crval1,crval2=R.xy2rd(rref)
-
+    
+    if apply_tdd:
+        # Correct zero points for TDD
+        rxy0 = N.array([[tdd_xyref[Nrefchip][0]-2048.],[ tdd_xyref[Nrefchip][1]-2048.]])
+        xy0 = N.array([[tdd_xyref[chip][0]-2048.], [tdd_xyref[chip][1]-2048.]])
+        rv23_corr = N.dot(mrotp,N.dot(tdd,rxy0))
+        v23_corr = N.dot(mrotp,N.dot(tdd,xy0))
+    else:
+        rv23_corr = N.array([[0],[0]])
+        v23_corr = N.array([[0],[0]])
     # Convert the PA_V3 orientation to the orientation at the aperture
     # This is for the reference chip only - we use this for the
     # reference tangent plane definition
     # It has the same orientation as the reference chip
-    pv = wcsutil.troll(pvt,dec,rrefpix['V2REF'],rrefpix['V3REF'])
+    
+    v2ref = rrefpix['V2REF'] +  rv23_corr[0][0]*0.05
+    v3ref = rrefpix['V3REF'] - rv23_corr[1][0]*0.05
+    v2 = refpix['V2REF'] + v23_corr[0][0]*0.05
+    v3 = refpix['V3REF'] - v23_corr[1][0] *0.05
+
+    
+
+    pv = wcsutil.troll(pvt,dec,v2ref,v3ref)
 
     # Add the chip rotation angle
     if rrefpix['THETA']:
-       pv += rrefpix['THETA']
+        pv += rrefpix['THETA']
+       
 
     # Set values for the rest of the reference WCS
     R.crval1=crval1
@@ -436,11 +457,7 @@ def _update(image,idctab,nimsets,apply_tdd=False,
 
     # Offset and angle in V2/V3 from reference chip to
     # new chip(s) - converted to reference image pixels
-    v2=refpix['V2REF']
-    v3=refpix['V3REF']
-    v2ref=rrefpix['V2REF']
-    v3ref=rrefpix['V3REF']
-
+    
     off = sqrt((v2-v2ref)**2 + (v3-v3ref)**2)/(R_scale*3600.0)
 
     # Here we must include the PARITY
@@ -453,7 +470,7 @@ def _update(image,idctab,nimsets,apply_tdd=False,
 
     dX=(off*sin(theta)) + offshiftx
     dY=(off*cos(theta)) + offshifty
-
+    
     # Check to see whether we are working with GEIS or FITS input
     _fname,_iextn = fileutil.parseFilename(image)
 
@@ -490,7 +507,7 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     delYX=fy[1,1]/R_scale/3600.
     delXY=fx[1,0]/R_scale/3600.
     delYY=fy[1,0]/R_scale/3600.
-    
+
     # Convert to radians
     rr=dtheta*pi/180.0
 
@@ -543,7 +560,7 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     
     """ Convert distortion coefficients into SIP style
         values and write out to image (assumed to be FITS). 
-    """   
+    """  
     #First the CD matrix:
     f = refpix['PSCALE']/3600.0
     a = fx[1,1]/3600.0
@@ -557,47 +574,49 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     _new_root,_nextn = fileutil.parseFilename(_new_name)
     _new_extn = fileutil.getExtn(fimg,_nextn)
     
-    # Transform the higher-order coefficients
-    for n in range(order+1):
-      for m in range(order+1):
-        if n >= m and n>=2:
+    if apply_tdd == False:
+        # Transform the higher-order coefficients
+        for n in range(order+1):
+          for m in range(order+1):
+            if n >= m and n>=2:
 
-          # Form SIP-style keyword names
-          Akey="A_%d_%d" % (m,n-m)
-          Bkey="B_%d_%d" % (m,n-m)
+              # Form SIP-style keyword names
+              Akey="A_%d_%d" % (m,n-m)
+              Bkey="B_%d_%d" % (m,n-m)
 
-          # Assign them values
-          #Aval=string.upper("%13.9e" % (f*(d*fx[n,m]-b*fy[n,m])/det))
-          #Bval=string.upper("%13.9e" % (f*(a*fy[n,m]-c*fx[n,m])/det))
-          Aval= f*(d*fx[n,m]-b*fy[n,m])/det
-          Bval= f*(a*fy[n,m]-c*fx[n,m])/det
-          
-          _new_extn.header.update(Akey,Aval)
-          _new_extn.header.update(Bkey,Bval)
-    
-    # Update the SIP flag keywords as well
-    #iraf.hedit(image,"CTYPE1","RA---TAN-SIP",verify=no,show=no)
-    #iraf.hedit(image,"CTYPE2","DEC--TAN-SIP",verify=no,show=no)
-    _new_extn.header.update("CTYPE1","RA---TAN-SIP")
-    _new_extn.header.update("CTYPE2","DEC--TAN-SIP")
+              # Assign them values
+              #Aval=string.upper("%13.9e" % (f*(d*fx[n,m]-b*fy[n,m])/det))
+              #Bval=string.upper("%13.9e" % (f*(a*fy[n,m]-c*fx[n,m])/det))
+              Aval= f*(d*fx[n,m]-b*fy[n,m])/det
+              Bval= f*(a*fy[n,m]-c*fx[n,m])/det
+              
+              _new_extn.header.update(Akey,Aval)
+              _new_extn.header.update(Bkey,Bval)
+        
+        # Update the SIP flag keywords as well
+        #iraf.hedit(image,"CTYPE1","RA---TAN-SIP",verify=no,show=no)
+        #iraf.hedit(image,"CTYPE2","DEC--TAN-SIP",verify=no,show=no)
+        _new_extn.header.update("CTYPE1","RA---TAN-SIP")
+        _new_extn.header.update("CTYPE2","DEC--TAN-SIP")
 
-    # Finally we also need the order
-    #iraf.hedit(image,"A_ORDER","%d" % order,add=yes,verify=no,show=no)
-    #iraf.hedit(image,"B_ORDER","%d" % order,add=yes,verify=no,show=no)
-    _new_extn.header.update("A_ORDER",order)
-    _new_extn.header.update("B_ORDER",order)
+        # Finally we also need the order
+        #iraf.hedit(image,"A_ORDER","%d" % order,add=yes,verify=no,show=no)
+        #iraf.hedit(image,"B_ORDER","%d" % order,add=yes,verify=no,show=no)
+        _new_extn.header.update("A_ORDER",order)
+        _new_extn.header.update("B_ORDER",order)
 
-    # Update header with additional keywords required for proper
-    # interpretation of SIP coefficients by PyDrizzle.
-    _new_extn.header.update("IDCSCALE",refpix['PSCALE'])
-    _new_extn.header.update("IDCV2REF",refpix['V2REF'])
-    _new_extn.header.update("IDCV3REF",refpix['V3REF'])
-    _new_extn.header.update("IDCTHETA",refpix['THETA'])
-    _new_extn.header.update("OCX10",fx[1][0])
-    _new_extn.header.update("OCX11",fx[1][1])
-    _new_extn.header.update("OCY10",fy[1][0])
-    _new_extn.header.update("OCY11",fy[1][1])
-    
+        # Update header with additional keywords required for proper
+        # interpretation of SIP coefficients by PyDrizzle.
+        
+        _new_extn.header.update("IDCSCALE",refpix['PSCALE'])
+        _new_extn.header.update("IDCV2REF",refpix['V2REF'])
+        _new_extn.header.update("IDCV3REF",refpix['V3REF'])
+        _new_extn.header.update("IDCTHETA",refpix['THETA'])
+        _new_extn.header.update("OCX10",fx[1][0])
+        _new_extn.header.update("OCX11",fx[1][1])
+        _new_extn.header.update("OCY10",fy[1][0])
+        _new_extn.header.update("OCY11",fy[1][1])
+        
     # Report time-dependent coeffs, if computed
     if apply_tdd:
         _new_extn.header.update("TDDALPHA",alpha)
