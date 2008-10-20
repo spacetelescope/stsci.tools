@@ -26,6 +26,6 @@ from defsetup import setupargs, pkg
 setup(
     name =              pkg,
     packages =          [ pkg ],
-    package_dir=        { pkg : 'lib' },
+    package_dir =       { pkg : 'lib' },
     **setupargs
     )
