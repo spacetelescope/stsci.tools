@@ -64,7 +64,7 @@ def __set_svn_version__(path="./", fname='svn_version.py', fullInfo=False):
             return
         revision = 'Unable to determine SVN revision'
     else:
-        if ( rev == 'exported' or rev == 'unknown' ) and os.path.exists(version_file) :
+        if ( rev == 'exported' or rev == 'unknown' ) and os.path.exists(version_file):
             return
         revision = str(rev)
 
