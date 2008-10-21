@@ -574,48 +574,48 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     _new_root,_nextn = fileutil.parseFilename(_new_name)
     _new_extn = fileutil.getExtn(fimg,_nextn)
     
-    if apply_tdd == False:
-        # Transform the higher-order coefficients
-        for n in range(order+1):
-          for m in range(order+1):
-            if n >= m and n>=2:
+    
+    # Transform the higher-order coefficients
+    for n in range(order+1):
+      for m in range(order+1):
+        if n >= m and n>=2:
 
-              # Form SIP-style keyword names
-              Akey="A_%d_%d" % (m,n-m)
-              Bkey="B_%d_%d" % (m,n-m)
+          # Form SIP-style keyword names
+          Akey="A_%d_%d" % (m,n-m)
+          Bkey="B_%d_%d" % (m,n-m)
 
-              # Assign them values
-              #Aval=string.upper("%13.9e" % (f*(d*fx[n,m]-b*fy[n,m])/det))
-              #Bval=string.upper("%13.9e" % (f*(a*fy[n,m]-c*fx[n,m])/det))
-              Aval= f*(d*fx[n,m]-b*fy[n,m])/det
-              Bval= f*(a*fy[n,m]-c*fx[n,m])/det
-              
-              _new_extn.header.update(Akey,Aval)
-              _new_extn.header.update(Bkey,Bval)
-        
-        # Update the SIP flag keywords as well
-        #iraf.hedit(image,"CTYPE1","RA---TAN-SIP",verify=no,show=no)
-        #iraf.hedit(image,"CTYPE2","DEC--TAN-SIP",verify=no,show=no)
-        _new_extn.header.update("CTYPE1","RA---TAN-SIP")
-        _new_extn.header.update("CTYPE2","DEC--TAN-SIP")
+          # Assign them values
+          #Aval=string.upper("%13.9e" % (f*(d*fx[n,m]-b*fy[n,m])/det))
+          #Bval=string.upper("%13.9e" % (f*(a*fy[n,m]-c*fx[n,m])/det))
+          Aval= f*(d*fx[n,m]-b*fy[n,m])/det
+          Bval= f*(a*fy[n,m]-c*fx[n,m])/det
 
-        # Finally we also need the order
-        #iraf.hedit(image,"A_ORDER","%d" % order,add=yes,verify=no,show=no)
-        #iraf.hedit(image,"B_ORDER","%d" % order,add=yes,verify=no,show=no)
-        _new_extn.header.update("A_ORDER",order)
-        _new_extn.header.update("B_ORDER",order)
+          _new_extn.header.update(Akey,Aval)
+          _new_extn.header.update(Bkey,Bval)
 
-        # Update header with additional keywords required for proper
-        # interpretation of SIP coefficients by PyDrizzle.
-        
-        _new_extn.header.update("IDCSCALE",refpix['PSCALE'])
-        _new_extn.header.update("IDCV2REF",refpix['V2REF'])
-        _new_extn.header.update("IDCV3REF",refpix['V3REF'])
-        _new_extn.header.update("IDCTHETA",refpix['THETA'])
-        _new_extn.header.update("OCX10",fx[1][0])
-        _new_extn.header.update("OCX11",fx[1][1])
-        _new_extn.header.update("OCY10",fy[1][0])
-        _new_extn.header.update("OCY11",fy[1][1])
+    # Update the SIP flag keywords as well
+    #iraf.hedit(image,"CTYPE1","RA---TAN-SIP",verify=no,show=no)
+    #iraf.hedit(image,"CTYPE2","DEC--TAN-SIP",verify=no,show=no)
+    _new_extn.header.update("CTYPE1","RA---TAN-SIP")
+    _new_extn.header.update("CTYPE2","DEC--TAN-SIP")
+
+    # Finally we also need the order
+    #iraf.hedit(image,"A_ORDER","%d" % order,add=yes,verify=no,show=no)
+    #iraf.hedit(image,"B_ORDER","%d" % order,add=yes,verify=no,show=no)
+    _new_extn.header.update("A_ORDER",order)
+    _new_extn.header.update("B_ORDER",order)
+
+    # Update header with additional keywords required for proper
+    # interpretation of SIP coefficients by PyDrizzle.
+
+    _new_extn.header.update("IDCSCALE",refpix['PSCALE'])
+    _new_extn.header.update("IDCV2REF",refpix['V2REF'])
+    _new_extn.header.update("IDCV3REF",refpix['V3REF'])
+    _new_extn.header.update("IDCTHETA",refpix['THETA'])
+    _new_extn.header.update("OCX10",fx[1][0])
+    _new_extn.header.update("OCX11",fx[1][1])
+    _new_extn.header.update("OCY10",fy[1][0])
+    _new_extn.header.update("OCY11",fy[1][1])
         
     # Report time-dependent coeffs, if computed
     if apply_tdd:
