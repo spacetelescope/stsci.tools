@@ -78,8 +78,8 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '1.1.0 (2 Sept 2008)'
-def run(input,quiet=yes,restore=no,prepend='O'):
+__version__ = '1.1.0 (22 Oct 2008)'
+def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
 
     print "+ MAKEWCS Version %s" % __version__
     
@@ -148,7 +148,8 @@ def run(input,quiet=yes,restore=no,prepend='O'):
         if not NUM_PER_EXTN.has_key(_instrument):
 
             raise "Instrument %s not supported yet. Exiting..."%_instrument
-                                  
+        
+        _detector = fileutil.getKeyword(_phdu, keyword='DETECTOR')                          
         _nimsets = get_numsci(image)
         
         for i in xrange(_nimsets):
@@ -160,12 +161,12 @@ def run(input,quiet=yes,restore=no,prepend='O'):
                 if not quiet: 
                     print 'Updating image: ', _img
                   
-                tdd_corr = _update(_img,idctab, _nimsets, apply_tdd=False,
+                _update(_img,idctab, _nimsets, apply_tdd=False,
 quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nrefext)
-                if tdd_corr:
+                if _instrument == 'ACS' and _detector == 'WFC' and tddcorr:
                     print 'Applying time-dependent distortion corrections...'
-                    tdd_corr = _update(_img,idctab, _nimsets, apply_tdd=True,
-quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nrefext)
+                    _update(_img,idctab, _nimsets, apply_tdd=True, \
+                    quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nrefext)
                     
                     
             else:                    
@@ -349,10 +350,7 @@ def _update(image,idctab,nimsets,apply_tdd=False,
 
     # Get the original image WCS
     Old=wcsutil.WCSObject(image,prefix=_prepend)
-    """
-    if apply_tdd:
-        Old.archive(prepend='S',overwrite=True)
-    """
+    
     # Reset the WCS keywords to original archived values.
     Old.restore()
  
@@ -421,6 +419,7 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     else:
         rv23_corr = N.array([[0],[0]])
         v23_corr = N.array([[0],[0]])
+        
     # Convert the PA_V3 orientation to the orientation at the aperture
     # This is for the reference chip only - we use this for the
     # reference tangent plane definition
@@ -618,21 +617,16 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     _new_extn.header.update("OCY11",fy[1][1])
         
     # Report time-dependent coeffs, if computed
-    if apply_tdd:
+   
+    if instrument == 'ACS' and detector == 'WFC':
         _new_extn.header.update("TDDALPHA",alpha)
         _new_extn.header.update("TDDBETA",beta)
 
-    if ((hdr.has_key('WFCTDD') and hdr['WFCTDD'] == 'T') or \
-        (hdr.has_key('TDDCORR') and hdr['TDDCORR'] == 'PERFORM')) \
-        and not apply_tdd:
-        tdd_corr = True
-    else:
-        tdd_corr = False
+    
     # Close image now
     fimg.close()
     del fimg
     
-    return tdd_corr
     
 def diff_angles(a,b):
     """ Perform angle subtraction a-b taking into account
