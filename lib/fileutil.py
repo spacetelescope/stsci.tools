@@ -780,7 +780,7 @@ def findFile(input):
                         _extver = 1
                 f = openImage(_root)
                 f.close()
-                if _extnum:
+                if _extnum is not None:
                     if _extnum < len(f):
                         found = yes
                         del f
