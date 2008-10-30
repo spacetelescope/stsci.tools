@@ -78,7 +78,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '1.1.0 (22 Oct 2008)'
+__version__ = '1.1.1 (30 Oct 2008)'
 def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -424,13 +424,11 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     # This is for the reference chip only - we use this for the
     # reference tangent plane definition
     # It has the same orientation as the reference chip
-    
-    v2ref = rrefpix['V2REF'] +  rv23_corr[0][0]*0.05
-    v3ref = rrefpix['V3REF'] - rv23_corr[1][0]*0.05
-    v2 = refpix['V2REF'] + v23_corr[0][0]*0.05
-    v3 = refpix['V3REF'] - v23_corr[1][0] *0.05
-
-    
+    tddscale = (R.pscale/fx[1][1])*0.05
+    v2ref = rrefpix['V2REF'] +  rv23_corr[0][0]*tddscale
+    v3ref = rrefpix['V3REF'] - rv23_corr[1][0]*tddscale
+    v2 = refpix['V2REF'] + v23_corr[0][0]*tddscale
+    v3 = refpix['V3REF'] - v23_corr[1][0] *tddscale    
 
     pv = wcsutil.troll(pvt,dec,v2ref,v3ref)
 
@@ -615,6 +613,8 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     _new_extn.header.update("OCX11",fx[1][1])
     _new_extn.header.update("OCY10",fy[1][0])
     _new_extn.header.update("OCY11",fy[1][1])
+    _new_extn.header.update("TDDXOFF",rv23_corr[0][0] - v23_corr[0][0])
+    _new_extn.header.update("TDDYOFF",-(rv23_corr[1][0] - v23_corr[1][0]))
         
     # Report time-dependent coeffs, if computed
    
