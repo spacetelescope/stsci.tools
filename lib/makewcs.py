@@ -412,10 +412,11 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     
     if apply_tdd:
         # Correct zero points for TDD
+        tddscale = (R.pscale/fx[1][1])
         rxy0 = N.array([[tdd_xyref[Nrefchip][0]-2048.],[ tdd_xyref[Nrefchip][1]-2048.]])
         xy0 = N.array([[tdd_xyref[chip][0]-2048.], [tdd_xyref[chip][1]-2048.]])
-        rv23_corr = N.dot(mrotp,N.dot(tdd,rxy0))
-        v23_corr = N.dot(mrotp,N.dot(tdd,xy0))
+        rv23_corr = N.dot(mrotp,N.dot(tdd,rxy0))*tddscale
+        v23_corr = N.dot(mrotp,N.dot(tdd,xy0))*tddscale
     else:
         rv23_corr = N.array([[0],[0]])
         v23_corr = N.array([[0],[0]])
@@ -424,11 +425,10 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     # This is for the reference chip only - we use this for the
     # reference tangent plane definition
     # It has the same orientation as the reference chip
-    tddscale = (R.pscale/fx[1][1])*0.05
-    v2ref = rrefpix['V2REF'] +  rv23_corr[0][0]*tddscale
-    v3ref = rrefpix['V3REF'] - rv23_corr[1][0]*tddscale
-    v2 = refpix['V2REF'] + v23_corr[0][0]*tddscale
-    v3 = refpix['V3REF'] - v23_corr[1][0] *tddscale    
+    v2ref = rrefpix['V2REF'] +  rv23_corr[0][0]*0.05
+    v3ref = rrefpix['V3REF'] - rv23_corr[1][0]*0.05
+    v2 = refpix['V2REF'] + v23_corr[0][0]*0.05
+    v3 = refpix['V3REF'] - v23_corr[1][0] *0.05    
 
     pv = wcsutil.troll(pvt,dec,v2ref,v3ref)
 
@@ -613,8 +613,8 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     _new_extn.header.update("OCX11",fx[1][1])
     _new_extn.header.update("OCY10",fy[1][0])
     _new_extn.header.update("OCY11",fy[1][1])
-    _new_extn.header.update("TDDXOFF",rv23_corr[0][0] - v23_corr[0][0])
-    _new_extn.header.update("TDDYOFF",-(rv23_corr[1][0] - v23_corr[1][0]))
+    #_new_extn.header.update("TDDXOFF",rv23_corr[0][0] - v23_corr[0][0])
+    #_new_extn.header.update("TDDYOFF",-(rv23_corr[1][0] - v23_corr[1][0]))
         
     # Report time-dependent coeffs, if computed
    
