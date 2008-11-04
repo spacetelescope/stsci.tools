@@ -58,18 +58,13 @@ import numerixenv
 numerixenv.check()
 
 import pyfits, readgeis
-import string,os,types,shutil,copy, re
+import string,os,types,shutil,copy, re, sys
 import calendar
 import numpy as N
 import time as _time
 
 # Environment variable handling - based on iraffunctions.py
 # define INDEF, yes, no, EOF, Verbose, userIrafHome
-
-try:
-    from pyraf import iraf
-except:
-    iraf = None
 
 # Set up IRAF-compatible Boolean values    
 yes = True
@@ -82,7 +77,7 @@ EXTLIST =  ['_crj.fits','_flt.fits','_sfl.fits','_cal.fits','_raw.fits','.c0h','
 
 BLANK_ASNDICT = {'output':None,'order':[],'members':{'abshift':no,'dshift':no}}
 
-__version__ = '1.3.1 (06-Apr-2007)'
+__version__ = '1.3.2 (04-Nov-2008)'
 
 def help():
     print __doc__
@@ -1045,6 +1040,13 @@ def untranslateName(s):
 
 def envget(var,default=None):
     """Get value of IRAF or OS environment variable"""
+    if 'pyraf' in sys.modules:
+        #ONLY if pyraf is already loaded, import iraf into the namespace
+        from pyraf import iraf
+    else: 
+        # else set iraf to None so it knows to not use iraf's environment
+        iraf = None
+    
     try:
         if iraf:
             return iraf.envget(var)
@@ -1096,6 +1098,13 @@ def osfn(filename):
 
 def defvar(varname):
     """Returns true if CL variable is defined"""
+    if 'pyraf' in sys.modules:
+        #ONLY if pyraf is already loaded, import iraf into the namespace
+        from pyraf import iraf
+    else: 
+        # else set iraf to None so it knows to not use iraf's environment
+        iraf = None
+
     if iraf:
         _irafdef = iraf.envget(varname)
     else:
