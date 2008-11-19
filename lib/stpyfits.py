@@ -438,10 +438,10 @@ def _assignSt_pyfitsClassExtensionsKeywordDict(keywords):
 # This will allow for support of the STScI specific features provided in 
 # stpyfits.
 #
-def open(name, mode="copyonwrite", memmap=0, classExtensions={}):
+def open(name, mode="copyonwrite", memmap=0, classExtensions={}, uint16=0):
 
     _assignSt_pyfitsClassExtensions(classExtensions)
-    hduList = pyfits.open(name, mode, memmap, classExtensions)
+    hduList = pyfits.open(name, mode, memmap, classExtensions, uint16)
 
     return hduList
 
