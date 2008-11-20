@@ -78,7 +78,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '1.1.1 (30 Oct 2008)'
+__version__ = '1.1.1 (20 Nov 2008)'
 def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -555,8 +555,6 @@ def _update(image,idctab,nimsets,apply_tdd=False,
        New.cd22 = New.cd22*VA_fac        
         
     New_cdmat = N.array([[New.cd11,New.cd12],[New.cd21,New.cd22]])
-    if apply_tdd:
-        print N.dot(N.linalg.inv(R_cdmat),New_cdmat)
 
     # Store new one
     # archive=yes specifies to also write out archived WCS keywords
@@ -566,7 +564,6 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     if _dqname:
         _dq_iextn = _iextn.replace('sci', dqext.lower())
         _new_dqname = _dqname +'['+_dq_iextn+']'
-        print 'DQ Name: ',_dqname, 'New DQ name: ',_new_dqname
         dqwcs = wcsutil.WCSObject(_new_dqname)
         dqwcs.write(fitsname=_new_dqname, wcs=New,overwrite=no,quiet=quiet, archive=yes)
     
@@ -628,8 +625,8 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     _new_extn.header.update("OCX11",fx[1][1])
     _new_extn.header.update("OCY10",fy[1][0])
     _new_extn.header.update("OCY11",fy[1][1])
-    _new_extn.header.update("TDDXOFF",rv23_corr[0][0] - v23_corr[0][0])
-    _new_extn.header.update("TDDYOFF",-(rv23_corr[1][0] - v23_corr[1][0]))
+    #_new_extn.header.update("TDDXOFF",rv23_corr[0][0] - v23_corr[0][0])
+    #_new_extn.header.update("TDDYOFF",-(rv23_corr[1][0] - v23_corr[1][0]))
         
     # Report time-dependent coeffs, if computed
     if instrument == 'ACS' and detector == 'WFC':
