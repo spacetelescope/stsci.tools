@@ -162,13 +162,21 @@ def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
                     print 'Updating image: ', _img
                   
                 _update(_img,idctab, _nimsets, apply_tdd=False,
-quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nrefext)
-                if _instrument == 'ACS' and _detector == 'WFC' and tddcorr:
-                    print 'Applying time-dependent distortion corrections...'
-                    _update(_img,idctab, _nimsets, apply_tdd=True, \
-                    quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nrefext)
-                    
-                    
+                        quiet=quiet,instrument=_instrument,prepend=_prepend, 
+                        nrchip=Nrefchip, nrext = Nrefext)
+                if _instrument == 'ACS' and _detector == 'WFC':
+                    tddswitch = fileutil.getKeyword(_phdu,keyword='TDDCORR')
+                    # This logic requires that TDDCORR be in the primary header 
+                    # and set to PERFORM in order to turn this on at all. It can
+                    # be turned off by setting either tddcorr=False or setting
+                    # the keyword to anything but PERFORM or by deleting the 
+                    # keyword altogether. PyDrizzle will rely simply on the 
+                    # values of alpha and beta as computed here to apply the 
+                    # correction to the coefficients.
+                    if (tddcorr and tddswitch == 'PERFORM'):
+                        print 'Applying time-dependent distortion corrections...'
+                        _update(_img,idctab, _nimsets, apply_tdd=True, \
+                        quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nrefext)
             else:                    
                 if not quiet:
                     print 'Restoring original WCS values for',_img  
@@ -449,6 +457,9 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     R.cd21=parity[1][1] *  sin(pv*pi/180.0)*R_scale
     R.cd22=parity[1][1] *  cos(pv*pi/180.0)*R_scale
         
+    ##print R
+    R_cdmat = N.array([[R.cd11,R.cd12],[R.cd21,R.cd22]])
+    
     if not quiet:
         print "  Reference Chip Scale (arcsec/pix): ",rrefpix['PSCALE']
 
@@ -490,7 +501,7 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     New.crval1,New.crval2=R.xy2rd((dX,dY))
     New.crpix1=refpix['XREF'] + ltvoffx
     New.crpix2=refpix['YREF'] + ltvoffy
-
+    
     # Account for subarray offset
     # Angle of chip relative to chip
     if refpix['THETA']:
@@ -543,15 +554,19 @@ def _update(image,idctab,nimsets,apply_tdd=False,
        New.cd21 = New.cd21*VA_fac
        New.cd22 = New.cd22*VA_fac        
         
-        
+    New_cdmat = N.array([[New.cd11,New.cd12],[New.cd21,New.cd22]])
+    if apply_tdd:
+        print N.dot(N.linalg.inv(R_cdmat),New_cdmat)
+
     # Store new one
     # archive=yes specifies to also write out archived WCS keywords
     # overwrite=no specifies do not overwrite any pre-existing archived keywords
-    
+        
     New.write(fitsname=_new_name,overwrite=no,quiet=quiet,archive=yes)
     if _dqname:
         _dq_iextn = _iextn.replace('sci', dqext.lower())
         _new_dqname = _dqname +'['+_dq_iextn+']'
+        print 'DQ Name: ',_dqname, 'New DQ name: ',_new_dqname
         dqwcs = wcsutil.WCSObject(_new_dqname)
         dqwcs.write(fitsname=_new_dqname, wcs=New,overwrite=no,quiet=quiet, archive=yes)
     
@@ -613,11 +628,10 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     _new_extn.header.update("OCX11",fx[1][1])
     _new_extn.header.update("OCY10",fy[1][0])
     _new_extn.header.update("OCY11",fy[1][1])
-    #_new_extn.header.update("TDDXOFF",rv23_corr[0][0] - v23_corr[0][0])
-    #_new_extn.header.update("TDDYOFF",-(rv23_corr[1][0] - v23_corr[1][0]))
+    _new_extn.header.update("TDDXOFF",rv23_corr[0][0] - v23_corr[0][0])
+    _new_extn.header.update("TDDYOFF",-(rv23_corr[1][0] - v23_corr[1][0]))
         
     # Report time-dependent coeffs, if computed
-   
     if instrument == 'ACS' and detector == 'WFC':
         _new_extn.header.update("TDDALPHA",alpha)
         _new_extn.header.update("TDDBETA",beta)
