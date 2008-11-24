@@ -12,6 +12,26 @@
 # where XX is the version of pytools you expect for the install to work
 #
 
+"""
+Special handling for stsci_python package installation.
+
+stsci_python is distributed as a single package, but it contains
+packages that are also distributed separately.  When we use this
+module to install our package, we can use the exact same definition
+file to control the setup.py of the individual package _and_ the
+setup.py of stsci_python.
+
+This module also preserves revision control data in the installed
+or distributed files.
+
+If you are not a developer at STScI, this module is probably not of
+much interest to you.
+
+"""
+
+__docformat__ = 'restructuredtext'
+
+
 ######## ######## ######## ######## ######## ######## ######## ########
 #
 # actually perform the install
@@ -21,6 +41,19 @@
 import sys
 
 def run( pytools_version = None ) :
+    """
+    Perform a stsci_python install based on the information in defsetup.py
+
+    * gather our subversion revision number and the install time
+
+    * perform the install
+
+    usage: 
+
+        import pytools.stsci_distutils_hack
+        pytools.stsci_distutils_hack.run(pytools_version = "3.0")
+
+    """
 
     if not hasattr(sys, 'version_info') or sys.version_info < (2,3,0,'alpha',0):
         raise SystemExit, "Python 2.3 or later required."
@@ -104,6 +137,11 @@ o =  distutils.command.install_data.install_data
 o.old_run = o.run
 
 def new_run ( self ) :
+        """
+        Hack for distutils to cause install_data to be in the same directory
+        as the python library files.  Our packages expect this.
+        """
+
         # We want our data files in the directory with the library files
         install_cmd = self.get_finalized_command('install')
         self.install_dir = getattr(install_cmd, 'install_lib')
@@ -135,6 +173,10 @@ o.run = new_run
 ######## ######## ######## ######## ######## ######## ######## ########
 #
 # Implements "python setup.py install --place=dir"
+# 
+# *********
+# ********* we don't actually document or use this
+# *********
 #
 # This replaces --local from earlier stsci_python releases.  The
 # flag is different because it doesn't quite do the same thing.
