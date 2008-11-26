@@ -40,15 +40,18 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
 
     def getParList(self, docopy=True):
         """ Return a list of parameter objects.  docopy is ignored as the
-        returned value is always a copy. """
+        returned value is not a copy. """
         return self.__paramList
 
     def getDefaultParList(self): return self.__paramList # !!! unfinished
 
     def getFilename(self): return self.filename
 
-#   def setParam(self, *args, **kw):
-#   def saveParList(self, *args, **kw):
+    def setParam(self, *args, **kw):
+        print "UNFINISHED: ConfigPars.setParam()"
+
+    def saveParList(self, *args, **kw):
+        print "UNFINISHED: ConfigPars.saveParList()"
 
     def run(self, *args, **kw):
         """ This is meant to be overridden by a subclass. """
