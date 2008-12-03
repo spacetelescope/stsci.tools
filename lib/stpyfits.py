@@ -552,6 +552,36 @@ def getval(filename, key, *ext, **extkeys):
 getval.__doc__ = pyfits.getval.__doc__
 
 #
+# Reimplement the setval convenience function to allow it to pass a dictionary
+# containing classes and their corresponding reimplementations.  The
+# reimplemented classes will be constructed instead of the original classes.
+# This will allow for support of the STScI specific features provided in
+# stpyfits.
+#
+def setval(filename, key, value="", comment=None, before=None, after=None,
+           savecomment=False, *ext, **extkeys):
+    
+    _assignSt_pyfitsClassExtensionsKeywordDict(extkeys)
+    pyfits.setval(filename, key, value, comment, before, after,
+                  savecomment, *ext, **extkeys)
+
+setval.__doc__ = pyfits.setval.__doc__
+
+#
+# Reimplement the delval convenience function to allow it to pass a dictionary
+# containing classes and their corresponding reimplementations.  The
+# reimplemented classes will be constructed instead of the original classes.
+# This will allow for support of the STScI specific features provided in
+# stpyfits.
+#
+def delval(filename, key, *ext, **extkeys):
+    
+    _assignSt_pyfitsClassExtensionsKeywordDict(extkeys)
+    pyfits.delval(filename, key, *ext, **extkeys)
+
+delval.__doc__ = pyfits.delval.__doc__
+
+#
 # Restrict what can be imported using from stpyfits import *
 #
 _locals = locals().keys()
