@@ -36,7 +36,7 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
         self.__taskName = os.path.splitext(os.path.basename(cfgFileName))[0]
 
         # get the initial param list out of the ConfigObj dict
-        self.__paramList = self.getParamsFromConfigDict(self) # start w/ us
+        self.__paramList = self.getParamsFromConfigDict(self, '') # start w/ us
 
         # May have to add this odd last one for the sake of the GUI
         if self._forUseWithEpar:
@@ -85,7 +85,7 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
         """ This is meant to be overridden by a subclass. """
         pass
 
-    def getParamsFromConfigDict(self, cfgObj):
+    def getParamsFromConfigDict(self, cfgObj, scopePrefix):
         """ Walk the ConfigObj dict pulling out IRAF-like parameters into a
         list. Since this operates on a dict this can be called recursively."""
         retval = []
@@ -104,7 +104,7 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
                     prevPar.set(prevPar.get('p_prompt')+'\n\n'+key,
                                 field='p_prompt', check=0)
                 # a logical grouping (append its params)
-                retval = retval + self.getParamsFromConfigDict(val) # recurse
+                retval = retval + self.getParamsFromConfigDict(val, key) # recurse
             else:
                 # a param
                 fields = []
@@ -140,5 +140,6 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
                         dscrp = dscrp[1:]
                 fields.append(dscrp)
                 par = basicpar.basicParFactory(fields, True) # !!! parScope
+                par.setScope(scopePrefix)
                 retval.append(par)
         return retval
