@@ -15,7 +15,11 @@ import basicpar, taskpars, vtor_checks
 class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
     """ This represents a task's dict of ConfigObj parameters. """
 
-    def __init__(self, cfgFileName):
+    def __init__(self, cfgFileName, forUseWithEpar=True):
+
+        self._forUseWithEpar = forUseWithEpar
+
+        # Set up ConfigObj stuff
         cfgSpecPath = cfgFileName+'spc' # ! assumption during development
         assert os.path.isfile(cfgFileName), "Config file not found: "+ \
                cfgFileName
@@ -23,7 +27,7 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
                "Matching configspec not found!  Expected: "+cfgSpecPath
         configobj.ConfigObj.__init__(self, cfgFileName, configspec=cfgSpecPath)
 
-        # Validate it for now
+        # Validate it here for now
         vtor = validate.Validator(vtor_checks.FUNC_DICT)
         ans = self.validate(vtor, preserve_errors=True)
         assert ans == True, "Validation ERRORS: "+str(ans)
@@ -34,11 +38,15 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
         # get the initial param list out of the ConfigObj dict
         self.__paramList = self.getParamsFromConfigDict(self) # start w/ us
 
+        # May have to add this odd last one for the sake of the GUI
+        if self._forUseWithEpar:
+            self.__paramList.append(basicpar.IrafParS(['$nargs','s','h','N']))
+
     def getName(self): return self.__taskName
 
     def getPkgname(self):  return '' # subclasses override w/ a sensible value
 
-    def getParList(self, docopy=True):
+    def getParList(self, docopy=False):
         """ Return a list of parameter objects.  docopy is ignored as the
         returned value is not a copy. """
         return self.__paramList
@@ -66,8 +74,9 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
             absDir = os.path.dirname(absFileName)
             if not os.path.isdir(absDir): os.makedirs(absDir)
             fh = open(absFileName,'w')
-        retval = str(len(self.__paramList)) + " parameters written to " + \
-                 absFileName
+        numpars = len(self.__paramList)
+        if self._forUseWithEpar: numpars -= 1
+        retval = str(numpars) + " parameters written to " + absFileName
         self.write(fh) # delegate to ConfigObj
         fh.close()
         return retval
@@ -130,6 +139,6 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
                     while len(dscrp)>0 and dscrp[0] in (' ','#'):
                         dscrp = dscrp[1:]
                 fields.append(dscrp)
-                par = basicpar.basicParFactory(fields, True)
+                par = basicpar.basicParFactory(fields, True) # !!! parScope
                 retval.append(par)
         return retval
