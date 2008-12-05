@@ -48,10 +48,29 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
     def getFilename(self): return self.filename
 
     def setParam(self, *args, **kw):
-        print "UNFINISHED: ConfigPars.setParam()"
+        print "UNFINISHED: ConfigPars.setParam(), "+repr(args)+", "+str(kw)
 
     def saveParList(self, *args, **kw):
-        print "UNFINISHED: ConfigPars.saveParList()"
+        """Write parameter data to filename (string or filehandle)"""
+        if 'filename' in kw:
+            filename = kw['filename']
+        if not filename:
+            filename = self.getFilename()
+        if not filename:
+            raise ValueError("No filename specified to save parameters")
+
+        if hasattr(filename,'write'):
+            fh = filename
+        else:
+            absFileName = os.path.expanduser(filename)
+            absDir = os.path.dirname(absFileName)
+            if not os.path.isdir(absDir): os.makedirs(absDir)
+            fh = open(absFileName,'w')
+        retval = str(len(self.__paramList)) + " parameters written to " + \
+                 absFileName
+        self.write(fh) # delegate to ConfigObj
+        fh.close()
+        return retval
 
     def run(self, *args, **kw):
         """ This is meant to be overridden by a subclass. """
