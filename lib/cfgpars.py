@@ -30,13 +30,18 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
         # Validate it here for now
         vtor = validate.Validator(vtor_checks.FUNC_DICT)
         ans = self.validate(vtor, preserve_errors=True)
-        assert ans == True, "Validation ERRORS: "+str(ans)
+        if ans != True:
+            flatStr = "All values are invalid!"
+            if ans != False:
+                flatStr = str(configobj.flatten_errors(self, ans))
+            raise RuntimeError("Validation errors in : "+cfgFileName+" \n "+ \
+                               flatStr)
 
         # could also get task and pkg name from keywords inside file ... 
         self.__taskName = os.path.splitext(os.path.basename(cfgFileName))[0]
 
         # get the initial param list out of the ConfigObj dict
-        self.__paramList = self.getParamsFromConfigDict(self, '') # start w/ us
+        self.__paramList = self.getParamsFromConfigDict(self) # start w/ us
 
         # May have to add this odd last one for the sake of the GUI
         if self._forUseWithEpar:
@@ -56,7 +61,26 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
     def getFilename(self): return self.filename
 
     def setParam(self, *args, **kw):
-        print "UNFINISHED: ConfigPars.setParam(), "+repr(args)+", "+str(kw)
+        # Find the ConfigObj entry
+        # Update the __paramList.
+        scope = ''
+        if 'scope' in kw:
+            scope = kw['scope']
+        name = args[0]
+        val = args[1]
+        theDict = self
+        if len(scope):
+            theDict = theDict[scope]
+        assert name in theDict, "KeyError: "+scope+'.'+name
+        # !!! Need to validate this answer !!!
+        theDict[name] = val
+
+        # ! NOTE ! This design needs work.  Right now there are two copies
+        # of the data:  the ConfigObj dict, and the __paramList ...
+        # This update probably really slows things down:
+        self.__paramList = self.getParamsFromConfigDict(self)
+        if self._forUseWithEpar:
+            self.__paramList.append(basicpar.IrafParS(['$nargs','s','h','N']))
 
     def saveParList(self, *args, **kw):
         """Write parameter data to filename (string or filehandle)"""
@@ -85,7 +109,7 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
         """ This is meant to be overridden by a subclass. """
         pass
 
-    def getParamsFromConfigDict(self, cfgObj, scopePrefix):
+    def getParamsFromConfigDict(self, cfgObj, scopePrefix=''):
         """ Walk the ConfigObj dict pulling out IRAF-like parameters into a
         list. Since this operates on a dict this can be called recursively."""
         retval = []
