@@ -28,8 +28,8 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
         configobj.ConfigObj.__init__(self, cfgFileName, configspec=cfgSpecPath)
 
         # Validate it here for now
-        vtor = validate.Validator(vtor_checks.FUNC_DICT)
-        ans = self.validate(vtor, preserve_errors=True)
+        self._vtor = validate.Validator(vtor_checks.FUNC_DICT)
+        ans = self.validate(self._vtor, preserve_errors=True)
         if ans != True:
             flatStr = "All values are invalid!"
             if ans != False:
@@ -64,16 +64,30 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
         # Find the ConfigObj entry
         # Update the __paramList.
         scope = ''
-        if 'scope' in kw:
-            scope = kw['scope']
+        if 'scope' in kw: scope = kw['scope']
+        skipCheck = False
+        if 'skipCheck' in kw: skipCheck = kw['skipCheck']
         name = args[0]
         val = args[1]
         theDict = self
         if len(scope):
-            theDict = theDict[scope]
+            theDict = theDict[scope] # ! only goes one level deep - enhance !
         assert name in theDict, "KeyError: "+scope+'.'+name
-        # !!! Need to validate this answer !!!
+
+        # Set the value, even if invalid.  It needs to be set before
+        # the validation step (next).
         theDict[name] = val
+
+        # If need be, check the proposed value.  Ideally, we'd like to
+        # (somehow elgantly) only validate this one item. For now, the 
+        # shortcut is to only validate this section.
+        if not skipCheck:
+            ans=self.validate(self._vtor,preserve_errors=True,section=theDict)
+            if ans != True:
+                flatStr = "All values are invalid!"
+                if ans != False:
+                    flatStr = str(configobj.flatten_errors(self, ans))
+                raise RuntimeError("Validation error: "+flatStr)
 
         # ! NOTE ! This design needs work.  Right now there are two copies
         # of the data:  the ConfigObj dict, and the __paramList ...
