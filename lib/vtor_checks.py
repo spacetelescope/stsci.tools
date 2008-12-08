@@ -79,7 +79,7 @@ def float_check_kw(val, *args, **kw):
 def float_or_none_check_kw(val, *args, **kw):
     if OVCDBG: print "float_or_none_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw)
     vtor = validate.Validator()
-    if val==None: return None # only diff from float_check_kw
+    if val in (None, '', 'None'): return None # only diff from float_check_kw
     checkFuncStr = "float"+str(tuple(args))
     checkFuncStr = addKwdArgsToSig(checkFuncStr, separateKeywords(kw)[0])
     if OVCDBG: print "CFS: "+checkFuncStr+'\n'
