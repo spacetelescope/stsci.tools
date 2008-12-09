@@ -1,6 +1,6 @@
 """ Contains the ConfigPars class and any related functionality.
 
-$Id: cfgpars.py 1 2008-11-14 21:40:16Z sontag $
+$Id$
 """
 
 import os, sys

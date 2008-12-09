@@ -4,7 +4,7 @@
     functions.  We over-ride them so that we may add our own special keywords
     to them in the config_spec.
 
-$Id: vtor_checks.py 945 2008-11-14 21:40:16Z sontag $
+$Id$
 """
 
 import configobj, validate

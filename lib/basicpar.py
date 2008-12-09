@@ -1,7 +1,7 @@
 """basicpar.py -- General base class for parameter objects.  Broken out
                   from PyRAF's IrafPar class.
 
-$Id: basicpar.py 1 2008-11-04 15:45:32Z sontag $
+$Id$
 """
 
 import re, sys

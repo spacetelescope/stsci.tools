@@ -17,7 +17,7 @@
 
    Enumerated lists - Menubutton/Menu widget
 
-$Id: eparoption.py 941 2008-11-07 21:10:42Z sontag $
+$Id$
 
 M.D. De La Pena, 1999 August 05
 """
