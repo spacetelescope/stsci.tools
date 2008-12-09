@@ -44,7 +44,7 @@ MAXLIST  =  15
 MAXLINES = 100
 XSHIFT   = 110
 
-class EparOption:
+class EparOption(object):
 
     """EparOption base class
 
