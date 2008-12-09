@@ -1,8 +1,8 @@
-"""module 'epar.py' -- main module for generating the epar task editor
+"""module 'editpar.py' -- main module for generating the EPAR task editor
 
-$Id: epar.py 925 2008-09-18 14:45:15Z sontag $
+$Id$
 
-Taken from pyraf.epar, originally signed "M.D. De La Pena, 2000 Feb. 4"
+Taken from pyraf.epar.py, originally signed "M.D. De La Pena, 2000 Feb. 4"
 """
 #System level modules
 from Tkinter import _default_root
