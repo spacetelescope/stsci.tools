@@ -6,6 +6,9 @@ from tkSimpleDialog import Dialog
 # with one of these, replace all uses of his one with that.  This currently
 # only allows single selection.
 #
+"""
+$Id$
+"""
 
 class ListSingleSelectDialog(Dialog):
 

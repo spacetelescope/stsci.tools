@@ -16,6 +16,9 @@
 #       F = AlertDialog(widget, message)
 #       action = F.Show()
 ####
+"""
+$Id$
+"""
 
 import string
 from dialog import *

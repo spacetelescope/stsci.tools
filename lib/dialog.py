@@ -4,6 +4,9 @@
 #       Purpose
 #       Base class for many dialog box classes.
 ####
+"""
+$Id$
+"""
 
 from Tkinter import *
 

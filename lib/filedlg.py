@@ -17,6 +17,9 @@
 #               file_name = F.GetFileName()
 #               F.DialogCleanup()
 ####
+"""
+$Id$
+"""
 
 import os, commands
 import alert
