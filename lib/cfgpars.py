@@ -61,8 +61,7 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
     def getFilename(self): return self.filename
 
     def setParam(self, *args, **kw):
-        # Find the ConfigObj entry
-        # Update the __paramList.
+        """ Find the ConfigObj entry.  Update the __paramList. """
         scope = ''
         if 'scope' in kw: scope = kw['scope']
         skipCheck = False
@@ -72,14 +71,14 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
         theDict = self
         if len(scope):
             theDict = theDict[scope] # ! only goes one level deep - enhance !
-        assert name in theDict, "KeyError: "+scope+'.'+name
+        assert name in theDict, "KeyError: "+scope+'.'+name+" unfound"
 
         # Set the value, even if invalid.  It needs to be set before
         # the validation step (next).
         theDict[name] = val
 
         # If need be, check the proposed value.  Ideally, we'd like to
-        # (somehow elgantly) only validate this one item. For now, the 
+        # (somehow elgantly) only check this one item. For now, the 
         # shortcut is to only validate this section.
         if not skipCheck:
             ans=self.validate(self._vtor,preserve_errors=True,section=theDict)
@@ -181,3 +180,53 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
                 par.setScope(scopePrefix)
                 retval.append(par)
         return retval
+
+
+    def canPerformValidation(self):
+        """ Override this so we can do our own validation. tryValue() will
+            be called as a result. """
+        return True
+
+
+    def tryValue(self, name, val, scope=''):
+        """ For the given item name (and scope), we are being asked to try
+            the given value to see if it would pass validation.  We are not
+            to set it, but just try it.  We return a tuple:
+            If it fails, we return: (False,  the last known valid value).
+            On success, we return: (True, None). """
+
+        # SIMILARITY BETWEEN THIS AND setParam() SHOULD BE CONSOLIDATED!
+
+        theDict = self
+        if len(scope):
+            theDict = theDict[scope] # ! only goes one level deep - enhance !
+        assert name in theDict, "KeyError: "+scope+'.'+name+" unfound"
+
+        # Set the value, even if invalid.  It needs to be set before
+        # the validation step (next).
+        oldVal = theDict[name]
+        if oldVal == val: return None # save time (assume oldVal is valid)
+        theDict[name] = val
+
+        # Check the proposed value.  Ideally, we'd like to
+        # (somehow elgantly) only check this one item. For now, the 
+        # shortcut is to only validate this section.
+        ans=self.validate(self._vtor,preserve_errors=True,section=theDict)
+
+        # No matter what ans is, immediately return the item to its original
+        # value since we are only checking the value here - not setting.
+        theDict[name] = oldVal
+
+        # Now see what the validation check said
+        errStr = ''
+        if ans != True:
+            flatStr = "All values are invalid!"
+            if ans != False:
+                flatStr = str(configobj.flatten_errors(self, ans))
+            errStr = "Validation error: "+flatStr # for now this info is unused
+
+        # Done
+        if len(errStr): return (False, oldVal) # was an error
+        else:           return (True, None)    # val is OK
+
+
