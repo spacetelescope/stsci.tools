@@ -1,6 +1,6 @@
 """ Contains the TaskPars class and any related functions.
 
-$Id: taskpars.py 1 2008-11-04 15:45:32Z sontag $
+$Id$
 """
 
 class TaskPars:
@@ -46,4 +46,4 @@ class TaskPars:
         """ Returns bool.  If True, expect tryValue() to be called next. """
         return False
 
-    # also, eparam, lParam, tParam, dParam ?
+    # also, eparam, lParam, tParam, dParam, tryValue ? 
