@@ -9,7 +9,7 @@ untranslateName Undo Python conversion of CL parameter or variable name
 tkread          Read n bytes from file while running Tk mainloop
 tkreadline     Read a line from file while running Tk mainloop
 
-$Id: irafutils.py 678 2005-07-01 21:19:43Z perry $
+$Id$
 
 R. White, 1999 Jul 16
 """

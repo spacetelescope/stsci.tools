@@ -21,7 +21,7 @@ isinstance(o,IrafTask).  Including it here decouples the other classes
 from the module that actually implements IrafTask, greatly reducing the
 need for mutual imports of modules by one another.
 
-$Id: irafglobals.py 784 2007-04-05 14:16:52Z rij $
+$Id$
 
 Taken from pyraf.irafglobals, originally signed "R. White, 2000 Jan 5"
 """

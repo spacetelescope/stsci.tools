@@ -18,7 +18,7 @@ The getall(key) method returns a list of all the matching values,
 containing a single entry for unambiguous matches and multiple entries
 for ambiguous matches.
 
-$Id: minmatch.py 678 2005-07-01 21:19:43Z perry $
+$Id$
 
 R. White, 2000 January 28
 """
