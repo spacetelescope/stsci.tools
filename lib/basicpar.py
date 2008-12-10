@@ -228,6 +228,7 @@ _IrafPar_attr_dict = {
         "choiceDict" : None,
         "prompt" : None,
         "flags" : 0,
+        "scope" : None,
         }
 
 # flag bits tell whether value has been changed and
@@ -254,6 +255,7 @@ class IrafPar:
         self.name   = fields[0]
         self.type   = fields[1]
         self.mode   = fields[2]
+        self.scope  = None # simple default; may be unused
         #
         # put fields into appropriate attributes
         #
