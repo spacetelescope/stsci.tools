@@ -205,7 +205,7 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
         # Set the value, even if invalid.  It needs to be set before
         # the validation step (next).
         oldVal = theDict[name]
-        if oldVal == val: return None # save time (assume oldVal is valid)
+        if oldVal == val: return (True, None) # assume oldVal is valid
         theDict[name] = val
 
         # Check the proposed value.  Ideally, we'd like to
