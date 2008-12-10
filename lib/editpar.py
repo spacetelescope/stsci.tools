@@ -916,8 +916,6 @@ class EditParDialog(object):
         if self.checkSetSaveEntries(doSave=True, filename=fname, comment=mstr):
             raise Exception("Unexpected bad entries for: "+self.taskName)
 
-        print "Saved "+self.taskName+" parameter values to: "+fname
-        
         # Notify irafpar that there is a new special-purpose file on the scene
         irafpar.newSpecialParFile(self.taskName, self.pkgName, fname)
 
