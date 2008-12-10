@@ -60,14 +60,8 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
 
     def getFilename(self): return self.filename
 
-    def setParam(self, *args, **kw):
+    def setParam(self, name, val, scope='', check=1):
         """ Find the ConfigObj entry.  Update the __paramList. """
-        scope = ''
-        if 'scope' in kw: scope = kw['scope']
-        skipCheck = False
-        if 'skipCheck' in kw: skipCheck = kw['skipCheck']
-        name = args[0]
-        val = args[1]
         theDict = self
         if len(scope):
             theDict = theDict[scope] # ! only goes one level deep - enhance !
@@ -80,7 +74,7 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
         # If need be, check the proposed value.  Ideally, we'd like to
         # (somehow elgantly) only check this one item. For now, the 
         # shortcut is to only validate this section.
-        if not skipCheck:
+        if check:
             ans=self.validate(self._vtor,preserve_errors=True,section=theDict)
             if ans != True:
                 flatStr = "All values are invalid!"

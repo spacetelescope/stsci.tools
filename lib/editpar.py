@@ -1179,10 +1179,9 @@ class EditParDialog(object):
                 # Update the task parameter (also does the conversion
                 # from string)
                 self._taskParsObj.setParam(par.name, value, scope=par.scope,
-                                           skipCheck=True)
-                # !!! these are API changes to setParam - upd/test pyraf side!!!
+                                           check=0)
 
-        # Save results to the given file # !!! (there are changes here)
+        # Save results to the given file
         if doSave and not self._skipParSave_Hook():
             rv=self._taskParsObj.saveParList(filename=filename, comment=comment)
             print rv

@@ -27,7 +27,8 @@ class TaskPars:
         raise RuntimeError("Bug: class TaskPars is not to be used directly")
 
     def setParam(self, *args, **kw):
-        """ Allows one to set the value of a single parameter. """
+        """ Allows one to set the value of a single parameter.
+            Initial signature is setParam(name, value, scope='', check=1) """
         raise RuntimeError("Bug: class TaskPars is not to be used directly")
 
     def getFilename(self, *args, **kw):
