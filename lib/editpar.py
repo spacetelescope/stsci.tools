@@ -200,8 +200,8 @@ class EditParDialog(object):
         # Get default parameter values for unlearn
         self.getDefaultParamList()
 
-        # !!! refactor this so non-PyRAF users can use it !!!
-        self._areAnyToLoad = False
+        # See if there are any other applicable parameters files to open
+        self._areAnyToLoad = self._showOpenButton()
 
         # Create the root window as required, but hide it
         self.parent = parent
@@ -418,6 +418,11 @@ class EditParDialog(object):
         # run the mainloop
         if not self.isChild:
             self.top.mainloop()
+
+    def _showOpenButton(self):
+        """ Should we show the "Open..." button?  This hook is useful to
+            subclasses. """
+        return False
 
     def _setTaskParsObj(self, theTask):
         """ This method, meant to be overridden by subclasses, generates the
@@ -664,7 +669,7 @@ class EditParDialog(object):
                                 relief=RAISED, command=self.pfopen)
             buttonOpen.pack(side=LEFT, padx=5, pady=7)
             buttonOpen.bind("<Enter>", self.printOpenInfo)
-            # separate this button rom the others - it's unusual
+            # separate this button from the others - it's unusual
             strut = Label(box, text="")
             strut.pack(side=LEFT, padx=20)
 
