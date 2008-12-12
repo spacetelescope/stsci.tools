@@ -181,8 +181,10 @@ def epar(theTask, parent=None, isChild=0):
 
 
 class EditParDialog(object):
+
     def __init__(self, theTask, parent=None, isChild=0,
-                 title="PyTools Parameter Editor", childList=None):
+                 title="PyTools Parameter Editor", childList=None,
+                 resourceDir=''):
 
         # Call our (or a subclass's) _setTaskParsObj() method
         self._setTaskParsObj(theTask)
@@ -250,10 +252,11 @@ class EditParDialog(object):
                 # User's startup directory
                 self.top.option_readfile(os.path.join(userWorkingHome,optfile))
             except TclError:
-                # PyRAF default
-# !!!inhertize! self.top.option_readfile(os.path.join(pyrafDir,optfile))
-# !!!           self.top.option_readfile(os.path.join(os.environ['HOME'],optfile))
-                print "Could not read epar.optionDB"
+                try:
+                    # App default
+                    self.top.option_readfile(os.path.join(resourceDir,optfile))
+                except TclError:
+                    print "Could not read: "+optfile
 
         # Create an empty list to hold child dialogs
         # *** Not a good way, REDESIGN with Mediator!
@@ -537,7 +540,6 @@ class EditParDialog(object):
             self.entryNo[i] = eparoption.eparOptionFactory(master, statusBar,
                                   self.paramList[i], self.defaultParamList[i],
                                   self.doScroll, self.fieldWidths, None)
-                                  # !!! this skips some subclass-specific stuff
 
 
     # Method to print the package and task names and to set up the menu
@@ -549,10 +551,9 @@ class EditParDialog(object):
         helpbox = Frame(topbox, bg=self.bkgColor)
 
         # Set up the information strings
-# !!!   if isinstance(self._taskParsObj, irafpar.IrafParList):
         if not pkgName or len(pkgName) < 1:
             # label for a parameter list is just filename
-            packString = " Filename = " + taskName
+            packString = " Task = " + taskName
             Label(textbox, text=packString, bg=self.bkgColor).pack(side=TOP,
                   anchor=W)
         else:
@@ -712,7 +713,7 @@ class EditParDialog(object):
         box.pack(fill=X, expand=FALSE)
 
 
-    # Determine which method of displaying the IRAF help pages was
+    # Determine which method of displaying the help pages was
     # chosen by the user.  WINDOW displays in a task generated scrollable
     # window.  BROWSER invokes the STSDAS HTML help pages and displays
     # in a browser.
@@ -734,11 +735,11 @@ class EditParDialog(object):
 
     def printHelpViewInfo(self, event):
         self.top.status.config(text =
-             " Choice of display for the IRAF help page: a window or a browser")
+             " Choice of display for the help page: a window or a browser")
 
     def printHelpInfo(self, event):
         self.top.status.config(text =
-             " Display the IRAF help page")
+             " Display the help page")
 
     def printUnlearnInfo(self, event):
         self.top.status.config(text =
@@ -1042,7 +1043,7 @@ class EditParDialog(object):
         return result
 
     # Set up the help dialog (browser)
-    def helpBrowser(self, helpString, title="IRAF Help Browser"):
+    def helpBrowser(self, helpString, title="Epar Help Browser"):
 
         # Generate a new Toplevel window for the browser
         # hb = Toplevel(self.top, bg="SlateGray3")
