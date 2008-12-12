@@ -548,7 +548,7 @@ class EditParDialog(object):
 
 
     # Method to print the package and task names and to set up the menu
-    # button for the choice of the display for the IRAF help page
+    # button for the choice of the display for the task help page
     def printNames(self, top, taskName, pkgName):
 
         topbox = Frame(top, bg=self.bkgColor)
@@ -835,36 +835,10 @@ class EditParDialog(object):
     # OPEN: load parameter settings from a user-specified file
     def pfopen(self, event=None):
         """ Load the parameter settings from a user-specified file.  Any
-        changes here must be coordinated with the corresponding tpar pfopen
+        changes here should be coordinated with the corresponding tpar pfopen
         function. """
 
-        flist = irafpar.getSpecialVersionFiles(self.taskName, self.pkgName)
-        if len(flist) <= 0:
-            msg = "No special-purpose parameter files found for "+self.taskName
-            showwarning(message=msg, title='File not found')
-            return
-
-        fname = None
-        if len(flist) == 1:
-            if askokcancel("Confirm",
-                           "One special-purpose parameter file found.\n"+ \
-                           "Load file?\n\n"+flist[0]):
-                fname = flist[0]
-        else: # >1 file, need a select dialog
-            flist.sort()
-            ld = listdlg.ListSingleSelectDialog("Select Parameter File",
-                         "Select which parameter file to load for "+ \
-                         self.pkgName+"."+self.taskName, flist, self.top)
-            fname = ld.getresult() # will be None or a string fname
-
-        # check-point
-        if fname == None: return
-
-        # Now load it: "Loading "+self.taskName+" param values from: "+fname
-        newParList = irafpar.IrafParList(self.taskName, fname)
-
-        # Set the GUI entries to these values (let the user Save after)
-        self.setAllEntriesFromParList(newParList)
+        print "UNFINISHED..." # !!!
 
 
     # SAVE AS: save the parameter settings to a user-specified file
@@ -875,10 +849,9 @@ class EditParDialog(object):
 
         # The user wishes to save to a different name
         # (could use Tkinter's FileDialog, but this one is prettier)
-        filt = '*.par'
-#!!!    upx = iraf.envget("uparm_aux","")
+        filt = '*.cfg' # ! note this hard-coded specific to config files !
         if 'UPARM_AUX' in os.environ: upx = os.environ['UPARM_AUX']
-        if len(upx) > 0:  filt = upx+"/*.par"
+        if len(upx) > 0:  filt = upx+"/*.cfg"
         fd = filedlg.SaveFileDialog(self.top, "Save Parameter File As", filt)
         if fd.Show() != 1:
             fd.DialogCleanup()
@@ -890,19 +863,6 @@ class EditParDialog(object):
         # invalid entries were encountered
         if self.checkSetSaveChildren():
             return
-
-        # Notify them that pset children will not be saved as part of 
-        # their special version
-        pars = []
-        for par in self.paramList:
-            if par.type == "pset": pars.append(par.name)
-        if len(pars):
-            msg = "If you have made any changes to the PSET "+ \
-                  "values for:\n\n"
-            for p in pars: msg += "\t\t"+p+"\n"
-            msg = msg+"\nthose changes will NOT be explicitly saved to:"+ \
-                  '\n\n"'+fname+'"'
-            showwarning(message=msg, title='PSET Save-As Not Yet Supported')
 
         # Verify all the entries (without save), keeping track of the invalid
         # entries which have been reset to their original input values
@@ -921,9 +881,6 @@ class EditParDialog(object):
         mstr = "TASKMETA: task="+self.taskName+" package="+self.pkgName
         if self.checkSetSaveEntries(doSave=True, filename=fname, comment=mstr):
             raise Exception("Unexpected bad entries for: "+self.taskName)
-
-        # Notify irafpar that there is a new special-purpose file on the scene
-        irafpar.newSpecialParFile(self.taskName, self.pkgName, fname)
 
 
     # EXECUTE: save the parameter settings and run the task
@@ -1004,9 +961,7 @@ class EditParDialog(object):
 
     # HTMLHELP: invoke the HTML help
     def htmlHelp(self, event=None):
-
-        # Invoke the STSDAS HTML help
-        irafhelp.help(self.taskName, html=1)
+        print "EditParDialog.htmlHelp --> UNFINISHED ..."
 
 
     # HELP: invoke help and put the page in a window
@@ -1019,7 +974,7 @@ class EditParDialog(object):
             return
         except (AttributeError, TclError):
             pass
-        # Acquire the IRAF help as a string
+        # Acquire the task help as a string
         # Need to include the package name for the task to
         # avoid name conflicts with tasks from other packages. WJH
         helpString = self.getHelpString(self.pkgName+'.'+self.taskName)
@@ -1038,14 +993,10 @@ class EditParDialog(object):
         self.eparHelpWin = self.helpBrowser(eparHelpString, title='Epar Help')
 
 
-    # Get the IRAF help in a string (RLW)
+    # Get the task help in a string
     def getHelpString(self, taskname):
-
-        fh = cStringIO.StringIO()
-        iraf.system.help(taskname, page=0, Stdout=fh, Stderr=fh)
-        result = fh.getvalue()
-        fh.close()
-        return result
+        """ Provide a task-specific help string. """
+        return self._taskParsObj.getHelpAsString()
 
     # Set up the help dialog (browser)
     def helpBrowser(self, helpString, title="Epar Help Browser"):

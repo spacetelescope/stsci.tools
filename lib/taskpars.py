@@ -47,4 +47,9 @@ class TaskPars:
         """ Returns bool.  If True, expect tryValue() to be called next. """
         return False
 
+    def getHelpAsString(self):
+        """ Meant to be overridden - return a task specific help string. """
+        return 'No help string available for task "'+self.getName()+'".\n '+ \
+               'Implement getHelpAsString() in your TaskPars sub-class.'
+
     # also, eparam, lParam, tParam, dParam, tryValue ? 
