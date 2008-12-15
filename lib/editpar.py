@@ -542,9 +542,25 @@ class EditParDialog(object):
         # Loop over the parameters to create the entries
         self.entryNo = [None] * self.numParams
         for i in range(self.numParams):
+            eparOpt = self._nonStandardEparOptionFor(self.paramList[i].type)
             self.entryNo[i] = eparoption.eparOptionFactory(master, statusBar,
                                   self.paramList[i], self.defaultParamList[i],
-                                  self.doScroll, self.fieldWidths, None)
+                                  self.doScroll, self.fieldWidths, eparOpt)
+
+
+    def _nonStandardEparOptionFor(self, paramTypeStr):
+        """ Hook to allow subclasses to employ their own GUI option type.
+            Return None or a class which derives from EparOption. """
+        return None
+
+    def _isUnpackagedTask(self):
+        """ Hook to allow subclasses to state that this is a rogue task, not
+            affiliated with a specific package, affecting its display. """
+        return self.pkgName == None or len(self.pkgName) < 1
+
+    def _getUnpackagedTaskTitle(self):
+        """ Hook to allow subclasses to give a title to this rogue task. """
+        return "Task"
 
 
     # Method to print the package and task names and to set up the menu
@@ -556,13 +572,13 @@ class EditParDialog(object):
         helpbox = Frame(topbox, bg=self.bkgColor)
 
         # Set up the information strings
-        if not pkgName or len(pkgName) < 1:
+        if self._isUnpackagedTask():
             # label for a parameter list is just filename
-            packString = " Task = " + taskName
+            packString = " "+self._getUnpackagedTaskTitle()+" = "+taskName
             Label(textbox, text=packString, bg=self.bkgColor).pack(side=TOP,
                   anchor=W)
         else:
-            # labels for Iraf task
+            # labels for task
             packString = "  Package = " + pkgName.upper()
             Label(textbox, text=packString, bg=self.bkgColor).pack(side=TOP,
                   anchor=W)
