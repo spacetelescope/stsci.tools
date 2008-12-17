@@ -152,8 +152,9 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
                     # rm spaces, extra quotes; rm kywd arg pairs
                     x = [i.strip("' ") for i in x if i.find('=')<0]
                     choicesOrMin = '|'+'|'.join(x)+'|' # IRAF format for enums
-                elif cspc and cspc.find('boolean') >= 0:
-                    dtype = 'b'
+                elif cspc and cspc.find('boolean') >= 0: dtype = 'b'
+                elif cspc and cspc.find('float') >= 0:   dtype = 'r'
+                elif cspc and cspc.find('integer') >= 0: dtype = 'i'
                 fields.append(dtype)
                 fields.append('a')
                 if type(val)==bool:
