@@ -129,7 +129,7 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
                 if len(val.keys())>0 and len(retval)>0:
                     # Here is where we sneak in the section comment
                     # This is so incredibly kludgy (as the code was), it MUST
-                    # be revamped eventually. (!!!)  This is for the epar GUI.
+                    # be revamped eventually!  This is for the epar GUI.
                     prevPar = retval[-1]
                     # Use the key (or its comment?) as the section header
                     prevPar.set(prevPar.get('p_prompt')+'\n\n'+key,
@@ -170,7 +170,7 @@ class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
                     while len(dscrp)>0 and dscrp[0] in (' ','#'):
                         dscrp = dscrp[1:]
                 fields.append(dscrp)
-                par = basicpar.basicParFactory(fields, True) # !!! parScope
+                par = basicpar.parFactory(fields, True)
                 par.setScope(scopePrefix)
                 retval.append(par)
         return retval

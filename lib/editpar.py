@@ -854,7 +854,7 @@ class EditParDialog(object):
         changes here should be coordinated with the corresponding tpar pfopen
         function. """
 
-        print "UNFINISHED..." # !!!
+        print "EditParDialog.pfopen UNFINISHED..." # !!!
 
 
     # SAVE AS: save the parameter settings to a user-specified file
