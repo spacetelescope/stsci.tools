@@ -4,7 +4,7 @@ $Id: cfgepar.py 1 2008-12-17 18:51:04Z sontag $
 """
 
 import os
-import cfgpars, editpar
+import cfgpars, editpar, filedlg
 
 
 # Starts a GUI session
@@ -45,12 +45,32 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         """ Return a string to be used as the filter arg to the save file
             dialog during Save-As. """
         filt = '*.cfg'
-        if 'UPARM_AUX' in os.environ: upx = os.environ['UPARM_AUX']
-        if len(upx) > 0:  filt = upx+"/*.cfg" 
+        if 'UPARM_AUX' in os.environ:
+            upx = os.environ['UPARM_AUX']
+            if len(upx) > 0:  filt = upx+"/*.cfg" 
         return filt
 
 
     # OPEN: load parameter settings from a user-specified file
     def pfopen(self, event=None):
         """ Load the parameter settings from a user-specified file. """
-        print "ConfigObjEparDialog.pfopen UNFINISHED..." # !!!
+
+        # could use Tkinter's FileDialog, but this one is prettier
+        fd = filedlg.PersistLoadFileDialog(self.top, "Load Config File",
+                                           self._getSaveAsFilter())
+        if fd.Show() != 1:
+            fd.DialogCleanup()
+            return
+        fname = fd.GetFileName()
+        fd.DialogCleanup()
+        if fname == None: return
+
+        # Now load it: "Loading "+self.taskName+" param values from: "+fname
+        print "Might now load "+self.taskName+" param values from: "+fname
+#       newParList = None
+        # load new C.O.Pars obj, check it, set it to be ours and call below
+        # could it be that easy?
+
+        # Set the GUI entries to these values (let the user Save after)
+#       self.setAllEntriesFromParList(newParList)
+
