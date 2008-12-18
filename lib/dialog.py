@@ -64,7 +64,14 @@ class ModalDialog(Dialog):
         import string
         self.SetupDialog()
         self.CenterDialog()
-        self.top.grab_set()
+        try:
+            self.top.grab_set() # make it modal
+        except TclError:
+            # This fails on Linux, but does it really HAVE to be modal
+            if sys.platform.lower().find('linux') >= 0:
+                pass
+            else:
+                raise
         self.top.focus()
         self.top.deiconify()
         self.top.waitvar(self.myWaitVar)
