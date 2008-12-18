@@ -103,7 +103,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         else:
             absFileName = os.path.expanduser(filename)
             absDir = os.path.dirname(absFileName)
-            if not os.path.isdir(absDir): os.makedirs(absDir)
+            if len(absDir) and not os.path.isdir(absDir): os.makedirs(absDir)
             fh = open(absFileName,'w')
         numpars = len(self.__paramList)
         if self._forUseWithEpar: numpars -= 1
