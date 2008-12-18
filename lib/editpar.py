@@ -2,24 +2,18 @@
 
 $Id$
 
-Taken from pyraf.epar.py, originally signed "M.D. De La Pena, 2000 Feb. 4"
+Taken from pyraf/lib/epar.py, originally signed "M.D. De La Pena, 2000 Feb. 4"
 """
 
 #System level modules
 from Tkinter import _default_root
 from Tkinter import *
 from tkMessageBox import askokcancel, showwarning
-import os, sys, cStringIO
+import os
 
 # pytools modules
-from irafglobals import userWorkingHome, IrafError
+from irafglobals import userWorkingHome
 import basicpar, eparoption, filedlg, listdlg
-
-# ConfigObj modules
-try:
-    import cfgpars
-except:
-    cfgpars = None # No error here; subclasses may not need
 
 # Constants
 MINVIEW     = 500
@@ -174,10 +168,6 @@ If the first parameter is selected, Shift-Tab backs up to the "Task Help"
 button, and if the last parameter is selected then Tab wraps around and selects
 the "Execute" button.
 """
-
-def epar(theTask, parent=None, isChild=0):
-
-    EditParDialog(theTask, parent, isChild)
 
 
 class EditParDialog(object):
@@ -426,20 +416,11 @@ class EditParDialog(object):
 
     def _setTaskParsObj(self, theTask):
         """ This method, meant to be overridden by subclasses, generates the
-        _taskParsObj object. theTask can be either a .cfg file name or a
-        ConfigPars object. """
+        _taskParsObj object. theTask can often be either a file name or a
+        TaskPars subclass object. """
 
-        # If this verion is being run, then we need cfgpars
-        assert cfgpars != None, "Error importing the cfgpars module"
-
-        if isinstance(theTask, cfgpars.ConfigPars):
-            self._taskParsObj = theTask
-
-        else: # it must be a filename
-            # stringify first as user may pass an object
-            assert os.path.isfile(str(theTask)), \
-                "Error finding config file for: "+str(theTask)
-            self._taskParsObj = cfgpars.ConfigPars(theTask,forUseWithEpar=True)
+        # Here we catch if this version is run by accident
+        raise RuntimeError("Bug: EditParDialog is not to be used directly")
 
 
 # A bug appeared in Python 2.3 that caused tk_focusNext and
@@ -853,8 +834,23 @@ class EditParDialog(object):
         """ Load the parameter settings from a user-specified file.  Any
         changes here should be coordinated with the corresponding tpar pfopen
         function. """
+        raise RuntimeError("Bug: EditParDialog is not to be used directly")
 
-        print "EditParDialog.pfopen UNFINISHED..." # !!!
+
+    def _getSaveAsFilter(self):
+        """ Return a string to be used as the filter arg to the save file
+            dialog during Save-As. Override for more specific behavior. """
+        return "*.*"
+
+
+    def _saveAsPreSave_Hook(self, fnameToBeUsed):
+        """ Allow a subclass any specific checks right before the save. """
+        return None
+
+
+    def _saveAsPostSave_Hook(self, fnameToBeUsed):
+        """ Allow a subclass any specific checks right after the save. """
+        return None
 
 
     # SAVE AS: save the parameter settings to a user-specified file
@@ -865,10 +861,8 @@ class EditParDialog(object):
 
         # The user wishes to save to a different name
         # (could use Tkinter's FileDialog, but this one is prettier)
-        filt = '*.cfg' # ! note this hard-coded specific to config files !
-        if 'UPARM_AUX' in os.environ: upx = os.environ['UPARM_AUX']
-        if len(upx) > 0:  filt = upx+"/*.cfg"
-        fd = filedlg.SaveFileDialog(self.top, "Save Parameter File As", filt)
+        fd = filedlg.SaveFileDialog(self.top, "Save Parameter File As",
+                                    self._getSaveAsFilter())
         if fd.Show() != 1:
             fd.DialogCleanup()
             return
@@ -879,6 +873,9 @@ class EditParDialog(object):
         # invalid entries were encountered
         if self.checkSetSaveChildren():
             return
+
+        # Run any subclass-specific steps right before the save
+        self._saveAsPreSave_Hook(fname)
 
         # Verify all the entries (without save), keeping track of the invalid
         # entries which have been reset to their original input values
@@ -897,6 +894,9 @@ class EditParDialog(object):
         mstr = "TASKMETA: task="+self.taskName+" package="+self.pkgName
         if self.checkSetSaveEntries(doSave=True, filename=fname, comment=mstr):
             raise Exception("Unexpected bad entries for: "+self.taskName)
+
+        # Run any subclass-specific steps right after the save
+        self._saveAsPostSave_Hook(fname)
 
 
     # EXECUTE: save the parameter settings and run the task
