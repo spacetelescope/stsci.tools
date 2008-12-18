@@ -1,4 +1,4 @@
-""" Contains the ConfigPars class and any related functionality.
+""" Contains the ConfigObjPars class and any related functionality.
 
 $Id$
 """
@@ -12,7 +12,7 @@ import configobj, validate
 import basicpar, taskpars, vtor_checks
 
 
-class ConfigPars(taskpars.TaskPars, configobj.ConfigObj):
+class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     """ This represents a task's dict of ConfigObj parameters. """
 
     def __init__(self, cfgFileName, forUseWithEpar=True):
