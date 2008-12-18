@@ -1340,9 +1340,9 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                 self.covar = numpy.zeros([nn, nn], numpy.float)
 
                 for i in range(n):
-                    #indices = ifree+ifree[i]*n
-                    #numpy.put(self.covar, indices, cv[:,i])
-                    numpy.put(self.covar, i, cv[:,i])
+                    indices = ifree+ifree[i]*n
+                    numpy.put(self.covar, indices, cv[:,i])
+                    #numpy.put(self.covar, i, cv[:,i])
                 ## Compute errors in parameters
                 catch_msg = 'computing parameter errors'
                 self.perror = numpy.zeros(nn, numpy.float)
