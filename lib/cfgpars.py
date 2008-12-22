@@ -15,22 +15,28 @@ import basicpar, taskpars, vtor_checks
 class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     """ This represents a task's dict of ConfigObj parameters. """
 
-    def __init__(self, cfgFileName, forUseWithEpar=True, resourceDir=''):
+    def __init__(self, cfgFileName, forUseWithEpar=True,
+                 setAllToDefaults=False, resourceDir=''):
 
         self._forUseWithEpar = forUseWithEpar
         self._resourceDir = resourceDir
 
         # Set up ConfigObj stuff
-        assert os.path.isfile(cfgFileName), "Config file not found: "+ \
-                                            cfgFileName
+        assert setAllToDefaults or os.path.isfile(cfgFileName), \
+               "Config file not found: "+cfgFileName
         cfgSpecPath = self._findAssociatedConfigSpecFile(cfgFileName)
         assert os.path.exists(cfgSpecPath), \
                "Matching configspec not found!  Expected: "+cfgSpecPath
-        configobj.ConfigObj.__init__(self, cfgFileName, configspec=cfgSpecPath)
+        if setAllToDefaults:
+            configobj.ConfigObj.__init__(self, configspec=cfgSpecPath)
+        else:
+            configobj.ConfigObj.__init__(self, cfgFileName,
+                                         configspec=cfgSpecPath)
 
         # Validate it here for now
         self._vtor = validate.Validator(vtor_checks.FUNC_DICT)
-        ans = self.validate(self._vtor, preserve_errors=True)
+        ans = self.validate(self._vtor, preserve_errors=True,
+                            copy=setAllToDefaults)
         if ans != True:
             flatStr = "All values are invalid!"
             if ans != False:
