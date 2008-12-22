@@ -3,7 +3,7 @@
 $Id: cfgepar.py 1 2008-12-17 18:51:04Z sontag $
 """
 
-import os
+import os, tkMessageBox
 import cfgpars, editpar, filedlg
 
 
@@ -66,11 +66,16 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         if fname == None: return
 
         # Now load it: "Loading "+self.taskName+" param values from: "+fname
-        print "Might now load "+self.taskName+" param values from: "+fname
-#       newParList = None
-        # load new C.O.Pars obj, check it, set it to be ours and call below
-        # could it be that easy?
+        print "Loading "+self.taskName+" param values from: "+fname
+        tmpObj = cfgpars.ConfigObjPars(fname, forUseWithEpar=True)
+
+        # check it to make sure it is a match
+# !     self._taskParsObj.isSameTaskAs(tmpObj)
 
         # Set the GUI entries to these values (let the user Save after)
-#       self.setAllEntriesFromParList(newParList)
-
+        newParList = tmpObj.getParList()
+        try:
+            self.setAllEntriesFromParList(newParList)
+        except editpar.UnfoundParamError, pe:
+            tkMessageBox.showwarning(message=pe.message, title="Error in "+\
+                                     fname)
