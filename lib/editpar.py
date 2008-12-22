@@ -169,6 +169,8 @@ button, and if the last parameter is selected then Tab wraps around and selects
 the "Execute" button.
 """
 
+class UnfoundParamError(Exception): pass
+
 
 class EditParDialog(object):
 
@@ -1088,12 +1090,44 @@ class EditParDialog(object):
     def setAllEntriesFromParList(self, aParList):
         """ Set all the parameter entry values in the GUI to the values
             in the given par list.  Note corresponding TparDisplay method. """
+
+        if len(aParList) != len(self.paramList):
+            showwarning(message="Attempting to set parameter values from a "+ \
+                        "list of different length ("+str(len(aParList))+ \
+                        ") than the number shown here ("+ \
+                        str(len(self.paramList))+").  Be aware.",
+                        title="Parameter List Length Mismatch")
+
+        # LOOP THRU GUI PAR LIST
         for i in range(self.numParams):
             par = self.paramList[i]
             if par.type == "pset":
                 continue # skip PSET's for now
             gui_entry = self.entryNo[i]
-            par.set(aParList.getValue(par.name, native=1, prompt=0))
+
+            # Set the value in self.paramList before setting it in the GUI
+            # This may be in the form of a list, or an IrafParList (getValue)
+            if isinstance(aParList, list):
+                # Since "aParList" can have them in different order and number
+                # than we do, we'll have to first find the matching param.
+                found = False
+                for newpar in aParList:
+                    if newpar.name==par.name and newpar.scope==par.scope:
+                        par.set(newpar.value) # same as .get(native=1,prompt=0)
+                        found = True
+                        break
+
+                # Now see if newpar was found in our list
+                if not found:
+                    pnm = par.name
+                    if len(par.scope): pnm = par.scope+'.'+par.name
+                    raise UnfoundParamError('Unfound Parameter! \n\n'+\
+                          'Expected parameter "'+pnm+'" for task "'+ \
+                          self._taskParsObj.getName()+'".  There may be more.')
+
+            else: # assume has getValue()
+                par.set(aParList.getValue(par.name, native=1, prompt=0))
+
             # gui holds a str, but par.value is native; conversion occurs
             gui_entry.forceValue(par.value)
 
@@ -1154,7 +1188,7 @@ class EditParDialog(object):
 
         # Save results to the given file
         if doSave and not self._skipParSave_Hook():
-            rv=self._taskParsObj.saveParList(filename=filename, comment=comment)
+            rv=self._taskParsObj.saveParList(filename=filename,comment=comment)
             print rv
 
         return self.badEntries
