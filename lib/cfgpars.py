@@ -15,14 +15,15 @@ import basicpar, taskpars, vtor_checks
 class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     """ This represents a task's dict of ConfigObj parameters. """
 
-    def __init__(self, cfgFileName, forUseWithEpar=True):
+    def __init__(self, cfgFileName, forUseWithEpar=True, resourceDir=''):
 
         self._forUseWithEpar = forUseWithEpar
+        self._resourceDir = resourceDir
 
         # Set up ConfigObj stuff
-        cfgSpecPath = cfgFileName+'spc' # ! assumption during development
         assert os.path.isfile(cfgFileName), "Config file not found: "+ \
-               cfgFileName
+                                            cfgFileName
+        cfgSpecPath = self._findAssociatedConfigSpecFile(cfgFileName)
         assert os.path.exists(cfgSpecPath), \
                "Matching configspec not found!  Expected: "+cfgSpecPath
         configobj.ConfigObj.__init__(self, cfgFileName, configspec=cfgSpecPath)
@@ -41,7 +42,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         self.__taskName = os.path.splitext(os.path.basename(cfgFileName))[0]
 
         # get the initial param list out of the ConfigObj dict
-        self.__paramList = self.getParamsFromConfigDict(self) # start w/ us
+        self.__paramList = self._getParamsFromConfigDict(self) # start w/ us
 
         # May have to add this odd last one for the sake of the GUI
         if self._forUseWithEpar:
@@ -85,7 +86,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # ! NOTE ! This design needs work.  Right now there are two copies
         # of the data:  the ConfigObj dict, and the __paramList ...
         # This update probably really slows things down:
-        self.__paramList = self.getParamsFromConfigDict(self)
+        self.__paramList = self._getParamsFromConfigDict(self)
         if self._forUseWithEpar:
             self.__paramList.append(basicpar.IrafParS(['$nargs','s','h','N']))
 
@@ -116,7 +117,37 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         """ This is meant to be overridden by a subclass. """
         pass
 
-    def getParamsFromConfigDict(self, cfgObj, scopePrefix=''):
+    def _findAssociatedConfigSpecFile(self, cfgFileName):
+        """ Given a config file, find its associated config-spec file, and
+        return the full pathname of the file. """
+
+        # Handle simplest case first - local .cfgspc file
+        retval = cfgFileName+'spc'
+        if os.path.isfile(retval): return retval
+
+        # If there is a dash or underscore in the name, look for a .cfgspc
+        # file with same "root" name
+        rootname = os.path.splitext(os.path.basename(cfgFileName))[0]
+        rootroot = rootname # just orig. trunk (eg. "driz", not "driz-updated")
+        for sep in ('_','-'):
+            idx = rootname.find(sep)
+            if idx > 0:
+                rootroot = rootname[:idx]
+                retval = os.path.dirname(cfgFileName)+'/'+rootroot+".cfgspc"
+                if os.path.isfile(retval): return retval
+
+        # As a last resort, try _resourceDir
+        retval = self._resourceDir+'/'+rootname+".cfgspc"
+        if os.path.isfile(retval): return retval
+        # and shortest version
+        retval = self._resourceDir+'/'+rootroot+".cfgspc"
+        if os.path.isfile(retval): return retval
+
+        # unfound
+        return os.path.basename(cfgfilename)+'spc' # will fail
+
+
+    def _getParamsFromConfigDict(self, cfgObj, scopePrefix=''):
         """ Walk the ConfigObj dict pulling out IRAF-like parameters into a
         list. Since this operates on a dict this can be called recursively."""
         retval = []
@@ -135,7 +166,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     prevPar.set(prevPar.get('p_prompt')+'\n\n'+key,
                                 field='p_prompt', check=0)
                 # a logical grouping (append its params)
-                retval = retval + self.getParamsFromConfigDict(val, key) # recurse
+                retval = retval + self._getParamsFromConfigDict(val, key) # recurse
             else:
                 # a param
                 fields = []
@@ -223,5 +254,3 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # Done
         if len(errStr): return (False, oldVal) # was an error
         else:           return (True, None)    # val is OK
-
-
