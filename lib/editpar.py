@@ -124,7 +124,7 @@ File menu:
     Save As...
              Save the parameters to a user-specified file.  The task is not
              executed.
-    Unlearn
+    Unlearn/Defaults
              Restore all parameters to the system default values for this
              task.  Note that individual parameters can be unlearned using the
              menu shown by right-clicking on the parameter entry.
@@ -159,7 +159,7 @@ Toolbar Buttons
 
 The Toolbar contains a set of buttons that provide shortcuts for the most
 common menu bar actions.  Their names are the same as the menu items given
-above: Execute, Save, Unlearn, Cancel, and Task Help.  The Execute button is
+above: Execute, Save, Defaults, Cancel, and Task Help.  The Execute button is
 disabled in the secondary windows used to edit Psets.
 
 Note that the toolbar buttons are accessible from the keyboard using the Tab
@@ -190,7 +190,7 @@ class EditParDialog(object):
         self.numParams = len(self.paramList) - 1
 
         # Get default parameter values for unlearn
-        self.getDefaultParamList()
+        self._setupDefaultParamList()
 
         # See if there are any other applicable parameters files to open
         self._areAnyToLoad = self._showOpenButton()
@@ -482,7 +482,7 @@ class EditParDialog(object):
             canvas.yview_scroll(sdist, "units")
         return TRUE
 
-    def getDefaultParamList(self):
+    def _setupDefaultParamList(self):
 
         # Obtain the default parameter list
         dlist = self._taskParsObj.getDefaultParList()
@@ -544,6 +544,10 @@ class EditParDialog(object):
     def _getUnpackagedTaskTitle(self):
         """ Hook to allow subclasses to give a title to this rogue task. """
         return "Task"
+
+    def _getUnlearnButtonTitle(self):
+        """ Hook to allow subclasses to use a different button title. """
+        return "Defaults"
 
 
     # Method to print the package and task names and to set up the menu
@@ -609,7 +613,8 @@ class EditParDialog(object):
         fileButton.menu.add_command(label="Save",    command=self.quit)
         if not self.isChild:
             fileButton.menu.add_command(label="Save As...", command=self.saveAs)
-        fileButton.menu.add_command(label="Unlearn", command=self.unlearn)
+        fileButton.menu.add_command(label=self._getUnlearnButtonTitle(),
+                                    command=self.unlearn)
         fileButton.menu.add_separator()
         fileButton.menu.add_command(label="Cancel", command=self.abort)
 
@@ -696,8 +701,8 @@ class EditParDialog(object):
             buttonSaveAs.bind("<Enter>", self.printSaveAsInfo)
 
         # Unlearn all the parameter settings (set back to the defaults)
-        buttonUnlearn = Button(box, text="Unlearn",
-                            relief=RAISED, command=self.unlearn)
+        buttonUnlearn = Button(box, text=self._getUnlearnButtonTitle(),
+                               relief=RAISED, command=self.unlearn)
         buttonUnlearn.pack(side=LEFT, padx=5, pady=7)
         buttonUnlearn.bind("<Enter>", self.printUnlearnInfo)
 
@@ -1121,9 +1126,9 @@ class EditParDialog(object):
                 if not found:
                     pnm = par.name
                     if len(par.scope): pnm = par.scope+'.'+par.name
-                    raise UnfoundParamError('Unfound Parameter! \n\n'+\
-                          'Expected parameter "'+pnm+'" for task "'+ \
-                          self._taskParsObj.getName()+'".  There may be more.')
+                    raise UnfoundParamError('Error - Unfound Parameter! \n\n'+\
+                      'Expected parameter "'+pnm+'" for task "'+ \
+                      self._taskParsObj.getName()+'". \nThere may be others...')
 
             else: # assume has getValue()
                 par.set(aParList.getValue(par.name, native=1, prompt=0))
