@@ -41,8 +41,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             flatStr = "All values are invalid!"
             if ans != False:
                 flatStr = str(configobj.flatten_errors(self, ans))
-            raise RuntimeError("Validation errors in : "+cfgFileName+" \n "+ \
-                               flatStr)
+            raise RuntimeError("Validation errors for: "+\
+                               os.path.splitext(cfgFileName)[0]+"\n\n"+\
+                               flatStr.replace(', (',', \n('))
 
         # could also get task and pkg name from keywords inside file ... 
         self.__taskName = os.path.splitext(os.path.basename(cfgFileName))[0]
@@ -63,7 +64,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         returned value is not a copy. """
         return self.__paramList
 
-    def getDefaultParList(self): return self.__paramList # !!! unfinished
+    def getDefaultParList(self):
+        return self.__paramList # !!! unfinished
 
     def getFilename(self): return self.filename
 
