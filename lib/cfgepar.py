@@ -78,7 +78,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             self.setAllEntriesFromParList(newParList)
         except editpar.UnfoundParamError, pe:
             tkMessageBox.showwarning(message=pe.message, title="Error in "+\
-                                     fname)
+                                     os.path.basename(fname))
 
 
     def unlearn(self, event=None):
@@ -93,14 +93,20 @@ class ConfigObjEparDialog(editpar.EditParDialog):
 
         # Create an empty onject, where every item will be set to it's default
         # value
-        tmpObj = cfgpars.ConfigObjPars(self.taskName+'.cfg',
-                                       setAllToDefaults=True,
-                                       forUseWithEpar=True)
+        try:
+            tmpObj = cfgpars.ConfigObjPars(self.taskName+'.cfg',
+                                           setAllToDefaults=True,
+                                           forUseWithEpar=True)
+        except Exception, ex:
+            msg = "Error Creating Default Object"
+            tkMessageBox.showerror(message=msg+'\n\n'+ex.message,
+                                   title="Error Creating Default Object")
+            return
 
         # Set the GUI entries to these values (let the user Save after)
         newParList = tmpObj.getParList()
         try:
             self.setAllEntriesFromParList(newParList)
         except editpar.UnfoundParamError, pe:
-            tkMessageBox.showwarning(message=pe.message, title="Error in "+\
-                                     str(tmpObj)) # !!! ?
+            tkMessageBox.showerror(message=pe.message,
+                                   title="Error Setting to Default Values")
