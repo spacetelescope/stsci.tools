@@ -411,10 +411,12 @@ class EditParDialog(object):
         if not self.isChild:
             self.top.mainloop()
 
+
     def _showOpenButton(self):
         """ Should we show the "Open..." button?  This hook is useful to
             subclasses. """
         return False
+
 
     def _setTaskParsObj(self, theTask):
         """ This method, meant to be overridden by subclasses, generates the
@@ -424,6 +426,10 @@ class EditParDialog(object):
         # Here we catch if this version is run by accident
         raise RuntimeError("Bug: EditParDialog is not to be used directly")
 
+
+    def getTaskParsObj(self):
+        """ Simple accessor.  Return the _taskParsObj object. """
+        return self._taskParsObj
 
 # A bug appeared in Python 2.3 that caused tk_focusNext and
 # tk_focusPrev to fail. The follwoing two routines now will
@@ -482,6 +488,7 @@ class EditParDialog(object):
             canvas.yview_scroll(sdist, "units")
         return TRUE
 
+
     def _setupDefaultParamList(self):
 
         # Obtain the default parameter list
@@ -503,6 +510,7 @@ class EditParDialog(object):
             raise ValueError("Mismatch between default, current par lists"
                 " for task %s (try unlearn)" % self.taskName)
         self.defaultParamList = dsort
+
 
     # Method to create the parameter entries
     def makeEntries(self, master, statusBar):
@@ -536,14 +544,17 @@ class EditParDialog(object):
             Return None or a class which derives from EparOption. """
         return None
 
+
     def _isUnpackagedTask(self):
         """ Hook to allow subclasses to state that this is a rogue task, not
             affiliated with a specific package, affecting its display. """
         return self.pkgName == None or len(self.pkgName) < 1
 
+
     def _getUnpackagedTaskTitle(self):
         """ Hook to allow subclasses to give a title to this rogue task. """
         return "Task"
+
 
     def _getUnlearnButtonTitle(self):
         """ Hook to allow subclasses to use a different button title. """
