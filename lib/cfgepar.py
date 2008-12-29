@@ -10,7 +10,8 @@ import cfgpars, editpar, filedlg
 # Starts a GUI session
 def epar(theTask, parent=None, isChild=0):
 
-    ConfigObjEparDialog(theTask, parent, isChild)
+    dlg = ConfigObjEparDialog(theTask, parent, isChild)
+    return dlg.getTaskParsObj()
 
 
 # Main class
@@ -34,11 +35,11 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         if isinstance(theTask, cfgpars.ConfigObjPars):
             self._taskParsObj = theTask
 
-        else: # it must be a filename
-            # stringify first as user may pass an object
-            assert os.path.isfile(str(theTask)), \
-                "Error finding config file for: "+str(theTask)
+        elif os.path.isfile(str(theTask)):
             self._taskParsObj=cfgpars.ConfigObjPars(theTask,forUseWithEpar=True)
+
+        else: # it must be a package name to load
+            self._taskParsObj = cfgpars.findObjFor(theTask,forUseWithEpar=True)
 
 
     def _getSaveAsFilter(self):
