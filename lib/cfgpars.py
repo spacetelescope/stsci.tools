@@ -3,13 +3,36 @@
 $Id$
 """
 
-import os, sys
+import glob, os, sys
 
 # ConfigObj modules
 import configobj, validate
 
 # Local modules
 import basicpar, taskpars, vtor_checks
+
+
+def findObjFor(pkgName, forUseWithEpar):
+    """ Locate the appropriate ConfigObjPars (or subclass) within the given
+        package. """
+    try:
+        thePkg = __import__(str(pkgName))
+    except:
+        raise RuntimeError("Unfound package or config file for: "+\
+                           str(pkgName))
+
+    # So it was a package name - make/get a ConfigObjPars out of it
+    if hasattr(thePkg, 'getConfigObjPars'):
+        return thePkg.getConfigObjPars() # use their ConfigObjPars subclass
+
+    else: # otherwise, cobble together a stand-in;  find the .cfg file
+        path = os.path.dirname(thePkg.__file__)
+        flist  = glob.glob(path+"/cfg/*.cfg")
+        flist += glob.glob(path+"/config/*.cfg")  # !! do we need all these?
+        flist += glob.glob(path+"/pars/*.cfg")    # trim down when mdriz is
+        flist += glob.glob(path+"/*.cfg")         # finalized and stable
+        assert len(flist) > 0, "Unfound .cfg file for package: "+pkgName
+        return ConfigObjPars(flist[0], forUseWithEpar=True)
 
 
 class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
@@ -152,7 +175,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         if os.path.isfile(retval): return retval
 
         # unfound
-        return os.path.basename(cfgfilename)+'spc' # will fail
+        return os.path.basename(cfgFileName)+'spc' # will fail
 
 
     def _getParamsFromConfigDict(self, cfgObj, scopePrefix=''):
