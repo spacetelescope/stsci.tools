@@ -8,9 +8,28 @@ $Id$
 """
 
 import configobj, validate
+import irafutils
 
 STANDARD_KEYS = ['min', 'max', 'missing', 'default']
 OVCDBG = False
+
+
+def sigStrToKwArgsDict(checkFuncSig):
+    """ Take a check function signature (string), and parse it to get a dict
+        of the keyword args and their values. """
+    p1 = checkFuncSig.find('(')
+    p2 = checkFuncSig.find(')', p1)
+    assert p1 > 0 and p2 > 0 and p2 > p1, "Invalid signature: "+checkFuncSig
+    argParts = checkFuncSig[p1+1:p2].split(',')
+    argParts = [x.strip() for x in argParts]
+    retval = {}
+    for argPair in argParts:
+        argSpl = argPair.split('=')
+        if len(argSpl) > 1:
+            retval[argSpl[0]] = irafutils.stripQuotes(argSpl[1])
+        else:
+            retval[argSpl[0]] = None
+    return retval
 
 
 def separateKeywords(kwArgsDict):
