@@ -1,6 +1,6 @@
 """ Main module for the ConfigObj version of the EPAR task editor
 
-$Id: cfgepar.py 1 2008-12-17 18:51:04Z sontag $
+$Id$
 """
 
 import os, tkMessageBox
@@ -71,7 +71,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         tmpObj = cfgpars.ConfigObjPars(fname, forUseWithEpar=True)
 
         # check it to make sure it is a match
-# !     self._taskParsObj.isSameTaskAs(tmpObj)
+# !     if self._taskParsObj.isSameTaskAs(tmpObj): ...
 
         # Set the GUI entries to these values (let the user Save after)
         newParList = tmpObj.getParList()
