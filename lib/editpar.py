@@ -534,14 +534,24 @@ class EditParDialog(object):
         self.entryNo = [None] * self.numParams
         for i in range(self.numParams):
             eparOpt = self._nonStandardEparOptionFor(self.paramList[i].type)
+            cbo = self._defineEditedCallbackObjectFor(self.paramList[i].scope,
+                                                      self.paramList[i].name)
             self.entryNo[i] = eparoption.eparOptionFactory(master, statusBar,
                                   self.paramList[i], self.defaultParamList[i],
-                                  self.doScroll, self.fieldWidths, eparOpt)
+                                  self.doScroll, self.fieldWidths,
+                                  plugIn=eparOpt, editedCallbackObj=cbo)
 
 
     def _nonStandardEparOptionFor(self, paramTypeStr):
         """ Hook to allow subclasses to employ their own GUI option type.
             Return None or a class which derives from EparOption. """
+        return None
+
+
+    def _defineEditedCallbackObjectFor(self, parScope, parName):
+        """ Hook to allow subclasses to set their own callback-containing
+            object to be used when a given option/parameter is edited.
+            See notes in EparOption. """
         return None
 
 
