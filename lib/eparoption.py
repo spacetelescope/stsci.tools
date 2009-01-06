@@ -83,6 +83,7 @@ class EparOption(object):
         self.value = self.paramInfo.get(field = "p_filename", native = 0,
                      prompt = 0)
         self.previousValue = self.value
+        self._editedCallbackObj = None
 
         # Generate the input label
         if (self.paramInfo.get(field = "p_mode") == "h"):
@@ -219,10 +220,17 @@ class EparOption(object):
     # Parameter change also sets the isChanged flag.
     def entryCheck(self, event = None):
 
+        # Make sure the input is legal
         value = self.choice.get()
         try:
+            lastSaved = self.previousValue
             if value != self.previousValue:
                 self.paramInfo.set(value)
+            # fire any applicable triggers, whether value has changed or not
+            if self._editedCallbackObj:
+                self._editedCallbackObj.edited(self.paramInfo.scope,
+                                               self.paramInfo.name,
+                                               lastSaved, value)
             return None
         except ValueError, exceptionInfo:
             # Reset the entry to the previous (presumably valid) value
@@ -305,6 +313,12 @@ class EparOption(object):
         defaultValue = self.defaultParamInfo.get(field = "p_filename",
                             native = 0, prompt = 0)
         self.choice.set(defaultValue)
+
+    def setEditedCallbackObj(self, ecbo):
+        """ Sets a callback object to be triggred when this option/parameter
+            is edited.  The object is expected to have an "edited()" method
+            which takes args as shown where it is called in entryCheck(). """
+        self._editedCallbackObj = ecbo
 
 
 class EnumEparOption(EparOption):
@@ -511,32 +525,12 @@ class NumberEparOption(EparOption):
         self.entry.pack(side = LEFT)
 
     # Check the validity of the entry
-    # Note that doing this using the parameter set method
-    # automatically checks max, min, special value (INDEF,
-    # parameter indirection), etc.
-
+    # Note that doing this using the parameter set method automatically
+    # checks max, min, special value (INDEF, parameter indirection), etc.
     def entryCheck(self, event = None):
-
-        # Ensure any INDEF entry is uppercase
+        """ Ensure any INDEF entry is uppercase, before base class behavior """
         self.choice.set(self.choice.get().upper())
-
-        # Make sure the input is legal
-        value = self.choice.get()
-        try:
-            if value != self.previousValue:
-                self.paramInfo.set(value)
-            return None
-        except ValueError, e:
-            # Reset the entry to the previous (presumably valid) value
-            self.choice.set(self.previousValue)
-            errorMsg = str(e)
-            self.status.bell()
-            if (event != None):
-                self.status.config(text = errorMsg)
-            # highlight the text again and terminate processing so
-            # focus stays in this widget
-            self.focusIn(event)
-            return "break"
+        return EparOption.entryCheck(self, event)
 
 
 # EparOption values for non-string types
@@ -549,7 +543,8 @@ _eparOptionDict = { "b": BooleanEparOption,
                   }
 
 def eparOptionFactory(master, statusBar, param, defaultParam,
-                      doScroll, fieldWidths, plugIn):
+                      doScroll, fieldWidths,
+                      plugIn=None, editedCallbackObj=None):
 
     """Return EparOption item of appropriate type for the parameter param"""
 
@@ -566,5 +561,6 @@ def eparOptionFactory(master, statusBar, param, defaultParam,
         eparOption = _eparOptionDict.get(param.type, StringEparOption)
 
     # Create it
-    return eparOption(master, statusBar, param, defaultParam,
-                      doScroll, fieldWidths)
+    eo = eparOption(master,statusBar,param,defaultParam,doScroll,fieldWidths)
+    eo.setEditedCallbackObj(editedCallbackObj)
+    return eo
