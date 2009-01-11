@@ -84,6 +84,7 @@ class EparOption(object):
                      prompt = 0)
         self.previousValue = self.value
         self._editedCallbackObj = None
+        self._lastWidgetEditedVal = None
 
         # Generate the input label
         if (self.paramInfo.get(field = "p_mode") == "h"):
@@ -223,14 +224,10 @@ class EparOption(object):
         # Make sure the input is legal
         value = self.choice.get()
         try:
-            lastSaved = self.previousValue
             if value != self.previousValue:
                 self.paramInfo.set(value)
             # fire any applicable triggers, whether value has changed or not
-            if self._editedCallbackObj:
-                self._editedCallbackObj.edited(self.paramInfo.scope,
-                                               self.paramInfo.name,
-                                               lastSaved, value)
+            self.widgetEdited()
             return None
         except ValueError, exceptionInfo:
             # Reset the entry to the previous (presumably valid) value
@@ -244,9 +241,35 @@ class EparOption(object):
             self.focusIn(event)
             return "break"
 
+
+    def widgetEdited(self, event=None, val=None):
+        """ A general method for firing any applicable triggers when
+            a value has been set.  This is meant to be easily callable from any
+            part of this class (or its subclasses), so that it can be called
+            as soon as need be (immed. on click?).  This *should* be able to
+            be called multiple times, itself handling the removal of
+            duplicate successive calls. """
+
+        # be as lightweight as possible if obj doesn't care about this stuff
+        if not self._editedCallbackObj: return
+        # get the current value
+        curVal = val # take this first, if it is given
+        if curVal == None:
+            curVal = self.choice.get()
+        # see if this is a duplicate successive call for the same value
+        if curVal == self._lastWidgetEditedVal: return
+        # pull trigger
+        self._editedCallbackObj.edited(self.paramInfo.scope,
+                                       self.paramInfo.name,
+                                       self.previousValue, curVal)
+        # for our duplicate checker
+        self._lastWidgetEditedVal = curVal
+
+
     def focus_set(self, event=None):
         """Set focus to input widget"""
         self.entry.focus_set()
+
 
     # Generate the the input widget as appropriate to the parameter datatype
     def makeInputWidget(self):
@@ -472,16 +495,28 @@ class BooleanEparOption(EparOption):
         self.rbno.bind('<Button-3>', self.popupChoices)
         self.rbyes.bind('<Button-3>', self.popupChoices)
 
+        # Regular selection - allow immediate trigger/check
+        self.rbyes.bind('<Button-1>', self.widgetEditedYes)
+        self.rbno.bind('<Button-1>', self.widgetEditedNo)
+
     def trace(self, *args):
         self.entry.focus_set()
+
+    # Only needed over widgetEdited because the Yes isn't set yet
+    def widgetEditedYes(self, event=None): self.widgetEdited(val="yes")
+
+    # Only needed over widgetEdited because the No isn't set yet
+    def widgetEditedNo(self, event=None): self.widgetEdited(val="no")
 
     def set(self, event=None):
         """Set value to Yes"""
         self.rbyes.select()
+        self.widgetEdited()
 
     def unset(self, event=None):
         """Set value to No"""
         self.rbno.select()
+        self.widgetEdited()
 
     def toggle(self, event=None):
         """Toggle value between Yes and No"""
@@ -489,6 +524,7 @@ class BooleanEparOption(EparOption):
             self.rbno.select()
         else:
             self.rbyes.select()
+        self.widgetEdited()
 
 class StringEparOption(EparOption):
 
