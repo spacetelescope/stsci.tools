@@ -6,7 +6,7 @@ Taken from pyraf/lib/epar.py, originally signed "M.D. De La Pena, 2000 Feb. 4"
 """
 
 #System level modules
-from Tkinter import _default_root
+from Tkinter import  _default_root
 from Tkinter import *
 from tkMessageBox import askokcancel, showwarning
 import os
@@ -150,7 +150,7 @@ Help menu:
              Display help on the IRAF task whose parameters are being edited.
              By default the help pops up in a new window, but the help can also
              be displayed in a web browser by modifying the Options.
-    Epar Help
+    Editor Help
              Display this help.
 
 
@@ -197,7 +197,7 @@ class EditParDialog(object):
 
         # Create the root window as required, but hide it
         self.parent = parent
-        if (self.parent == None):
+        if self.parent == None:
             global _default_root
             if _default_root is None:
                 import Tkinter
@@ -674,7 +674,7 @@ class EditParDialog(object):
         button.pack(side=RIGHT, padx=2)
         button.menu = Menu(button, tearoff=0)
         button.menu.add_command(label="Task Help", command=self.setHelpViewer)
-        button.menu.add_command(label="Epar Help", command=self.eparHelp)
+        button.menu.add_command(label="Editor Help", command=self.eparHelp)
         button["menu"] = button.menu
         return button
 
@@ -1034,7 +1034,8 @@ class EditParDialog(object):
             return
         except (AttributeError, TclError):
             pass
-        self.eparHelpWin = self.helpBrowser(eparHelpString, title='Epar Help')
+        self.eparHelpWin = self.helpBrowser(eparHelpString,
+                                            title='Parameter Editor Help')
 
 
     # Get the task help in a string
@@ -1043,7 +1044,7 @@ class EditParDialog(object):
         return self._taskParsObj.getHelpAsString()
 
     # Set up the help dialog (browser)
-    def helpBrowser(self, helpString, title="Epar Help Browser"):
+    def helpBrowser(self, helpString, title="Parameter Editor Help Browser"):
 
         # Generate a new Toplevel window for the browser
         # hb = Toplevel(self.top, bg="SlateGray3")
