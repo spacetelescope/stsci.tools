@@ -28,6 +28,32 @@ class ConfigObjEparDialog(editpar.EditParDialog):
     def _showOpenButton(self): return True
 
 
+    # Employ an edited callback for a given item?
+    def _defineEditedCallbackObjectFor(self, parScope, parName):
+        """ Override to allow us to use an edited callback. """
+
+        # We know that the _taskParsObj is a ConfigObjPars
+        triggerStr = self._taskParsObj.getTriggerStr(parScope, parName)
+
+        # Some items will have a trigger, but likely most won't
+        if triggerStr:
+            return self
+        else:
+            return None
+
+
+    def edited(self, scope, name, lastSavedVal, newVal):
+        """ This is the callback function invoked when an item is edited.
+            This is only called for those items which were previously
+            specified to use this mechanism.  We do not turn this on for
+            all items because the performance might be prohibitive. """
+        # the print line is a stand-in
+        triggerStr = self._taskParsObj.getTriggerStr(scope, name)
+        print scope+"."+name+", on disk: "+lastSavedVal+", now: "+newVal
+#             ", trigger: "+triggerStr
+    
+
+    # a main function
     def _setTaskParsObj(self, theTask):
         """ Overridden version for ConfigObj. theTask can be either
             a .cfg file name or a ConfigObjPars object. """
@@ -50,6 +76,21 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             upx = os.environ['UPARM_AUX']
             if len(upx) > 0:  filt = upx+"/*.cfg" 
         return filt
+
+
+    def runTask(self):
+        """ Override the base class version so that we can exit the Tkinter
+            loop, since in this stand-alone version of the parameter editor
+            we were spawned from the command line (no background CLI). """
+        # If destroy() is not called, the symptom would be that GUI tasks,
+        # when finished executing, would leave the process in a hung-like state
+        try:
+            from Tkinter import  _default_root
+            if _default_root: _default_root.destroy()
+        except:
+            pass
+        # Now simply defer to base class
+        editpar.EditParDialog.runTask(self)
 
 
     # OPEN: load parameter settings from a user-specified file
