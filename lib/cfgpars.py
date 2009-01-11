@@ -43,6 +43,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
         self._forUseWithEpar = forUseWithEpar
         self._resourceDir = resourceDir
+        self._triggers = None
 
         # Set up ConfigObj stuff
         assert setAllToDefaults or os.path.isfile(cfgFileName), \
@@ -72,7 +73,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         self.__taskName = os.path.splitext(os.path.basename(cfgFileName))[0]
 
         # get the initial param list out of the ConfigObj dict
-        self.__paramList = self._getParamsFromConfigDict(self) # start w/ us
+        self.__paramList = self._getParamsFromConfigDict(self,
+                                collectTriggers=True)
 
         # May have to add this odd last one for the sake of the GUI
         if self._forUseWithEpar:
@@ -178,10 +180,15 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         return os.path.basename(cfgFileName)+'spc' # will fail
 
 
-    def _getParamsFromConfigDict(self, cfgObj, scopePrefix=''):
+    def _getParamsFromConfigDict(self, cfgObj, scopePrefix='',
+                                 collectTriggers=False):
         """ Walk the ConfigObj dict pulling out IRAF-like parameters into a
         list. Since this operates on a dict this can be called recursively."""
+        # init
         retval = []
+        if collectTriggers and len(scopePrefix) < 1:
+            self._triggers = {}
+        # start walking
         for key in cfgObj:
             val = cfgObj[key]
             if key.startswith('_') and key.endswith('_'):
@@ -197,7 +204,10 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     prevPar.set(prevPar.get('p_prompt')+'\n\n'+key,
                                 field='p_prompt', check=0)
                 # a logical grouping (append its params)
-                retval = retval + self._getParamsFromConfigDict(val, key) # recurse
+                pfx = scopePrefix+'.'+key
+                pfx = pfx.strip('.')
+                retval = retval + self._getParamsFromConfigDict(val, pfx,
+                                       collectTriggers) # recurse
             else:
                 # a param
                 fields = []
@@ -236,7 +246,21 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 par = basicpar.parFactory(fields, True)
                 par.setScope(scopePrefix)
                 retval.append(par)
+                # check for triggers
+                if cspc and cspc.find('trigger')>0:
+                    self._triggers[scopePrefix+'.'+key] = cspc
+
         return retval
+
+
+    def getTriggerStr(self, parScope, parName):
+        """ For a given item (scope + name), return the string (or None) of
+        it's associated trigger, if one exists. """
+        fullName = parScope+'.'+parName
+        if fullName in self._triggers:
+            return self._triggers[fullName]
+        else:
+            return None
 
 
     def canPerformValidation(self):
