@@ -84,7 +84,7 @@ class EparOption(object):
                      prompt = 0)
         self.previousValue = self.value
         self._editedCallbackObj = None
-        self._lastWidgetEditedVal = None
+        self._lastWidgetEditedVal = self.value
 
         # Generate the input label
         if (self.paramInfo.get(field = "p_mode") == "h"):
