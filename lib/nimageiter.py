@@ -56,7 +56,8 @@ def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
     else:
         nrows = computeBuffRows(imgarr,bufsize=bufsize)
 #        niter = int(imgarr.shape[0] / nrows) * nrows
-        niter = computeNumberBuff(imgarr.shape[0],nrows,overlap)*nrows
+        nbuff,nrows = computeNumberBuff(imgarr.shape[0],nrows,overlap)
+        niter = nbuff*nrows
 
         if copy:
             # Create a cache that will contain a copy of the input
@@ -117,15 +118,33 @@ def computeNumberBuff(numrows, buffrows, overlap):
         that will be used to read the input image given the 
         specified overlap. 
     """
-    overlaprows = buffrows - (overlap+1)
-    rowratio = (numrows - overlaprows)/(1.0*buffrows)
-    niter = (1 + int( (numrows - overlaprows)/buffrows))
-    totalrows = niter * buffrows
+    nbuff = _computeNbuff(numrows, buffrows, overlap)
+    niter = 1 + int(nbuff)
+    totalrows = niter * (buffrows - overlap)
     # We need to account for the case where the number of 
     # iterations ends up being greater than needed due to the
     # overlap.
-    if totalrows > numrows: niter -= 1
-    return niter
+    #if totalrows > numrows: niter -= 1
+    fracbuff = (nbuff - int(nbuff))*buffrows
+    if fracbuff < overlap+1:
+        good = False
+        while not good:
+            buffrows -= 1
+            nbuff = _computeNbuff(numrows, buffrows, overlap)
+            niter = 1 + int(nbuff)
+            totalrows = niter * (buffrows - overlap)
+            fracbuff = (nbuff - int(nbuff))*buffrows
+            if fracbuff > overlap + 1:
+                good = True
+
+    return niter,buffrows
+
+def _computeNbuff(numrows,buffrows,overlap):
+
+    overlaprows = buffrows - overlap
+    rowratio = (numrows - overlaprows)/(1.0*buffrows)
+    nbuff = (numrows - overlaprows+1)/(1.0*overlaprows)
+    return nbuff
 
 def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
     """ Return image section for each image listed on input, with
@@ -163,18 +182,18 @@ def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
     else:
         nrows = computeBuffRows(imgarr,bufsize=bufsize)
 #        niter = int(imgarr.shape[0] / nrows) * nrows
-        niter = computeNumberBuff(imgarr.shape[0],nrows,overlap)*nrows
-
-        for pix in range(0,niter+1,nrows):
+        nbuff,nrows = computeNumberBuff(imgarr.shape[0],nrows,overlap)
+        niter = nbuff * nrows
+        
+        for pix in range(0,niter+1,nrows-overlap):
             # overlap needs to be computed here
             # This allows the user to avoid edge effects when
             # convolving the returned image sections, and insures
             # that the last segment will always be returned with
             # overlap+1 rows.  
-            _prange = pix+nrows+overlap
+            _prange = pix+nrows
             if _prange > _numrows: _prange = _numrows
             if pix == _prange: break
-
             if single:
                 yield imgarr[pix:_prange],(pix,_prange)
             else:
