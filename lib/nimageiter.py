@@ -120,7 +120,7 @@ def computeNumberBuff(numrows, buffrows, overlap):
     """
     nbuff = _computeNbuff(numrows, buffrows, overlap)
     niter = 1 + int(nbuff)
-    totalrows = niter * (buffrows - overlap)
+    totalrows = niter * buffrows
     # We need to account for the case where the number of 
     # iterations ends up being greater than needed due to the
     # overlap.
@@ -129,14 +129,17 @@ def computeNumberBuff(numrows, buffrows, overlap):
     if fracbuff < overlap+1:
         good = False
         while not good:
-            buffrows -= 1
-            nbuff = _computeNbuff(numrows, buffrows, overlap)
-            niter = 1 + int(nbuff)
-            totalrows = niter * (buffrows - overlap)
-            fracbuff = (nbuff - int(nbuff))*buffrows
-            if fracbuff > overlap + 1:
+            if buffrows > overlap+1:
+                buffrows -= 1
+                
+                nbuff = _computeNbuff(numrows, buffrows, overlap)
+                niter = 1 + int(nbuff)
+                totalrows = niter * (buffrows - overlap)
+                fracbuff = (nbuff - int(nbuff))*buffrows
+                if fracbuff > overlap + 1:
+                    good = True
+            else:
                 good = True
-
     return niter,buffrows
 
 def _computeNbuff(numrows,buffrows,overlap):
@@ -193,7 +196,7 @@ def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
             # overlap+1 rows.  
             _prange = pix+nrows
             if _prange > _numrows: _prange = _numrows
-            if pix == _prange: break
+            if pix >= _prange: break
             if single:
                 yield imgarr[pix:_prange],(pix,_prange)
             else:
