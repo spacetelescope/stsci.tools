@@ -126,7 +126,7 @@ def computeNumberBuff(numrows, buffrows, overlap):
     # overlap.
     #if totalrows > numrows: niter -= 1
     fracbuff = (nbuff - int(nbuff))*buffrows
-    if fracbuff < overlap+1:
+    if fracbuff < overlap+1 and nbuff > 1:
         good = False
         while not good:
             if buffrows > overlap+1:
@@ -144,9 +144,12 @@ def computeNumberBuff(numrows, buffrows, overlap):
 
 def _computeNbuff(numrows,buffrows,overlap):
 
-    overlaprows = buffrows - overlap
-    rowratio = (numrows - overlaprows)/(1.0*buffrows)
-    nbuff = (numrows - overlaprows+1)/(1.0*overlaprows)
+    if buffrows > numrows: 
+        nbuff = 1
+    else:
+        overlaprows = buffrows - overlap
+        rowratio = (numrows - overlaprows)/(1.0*buffrows)
+        nbuff = (numrows - overlaprows+1)/(1.0*overlaprows)
     return nbuff
 
 def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
