@@ -3,6 +3,7 @@
 printCols       Print elements of list in cols columns
 stripQuotes     Strip single or double quotes off string and remove embedded
                 quote pairs
+csvSplit        Split comma-separated fields in strings (cover bug in csv mod)
 removeEscapes   Remove escaped quotes & newlines from strings
 translateName   Convert CL parameter or variable name to Python-acceptable name
 untranslateName Undo Python conversion of CL parameter or variable name
@@ -56,6 +57,181 @@ def stripQuotes(value):
         # replace '' with '
         value = re.sub(_re_singleq2, "'", value)
     return value
+
+def csvSplit(line, delim=',', allowEol=True):
+    """ Take a string as input (e.g. a line in a csv text file), and break
+    it into tokens separated by commas while ignoring commas embedded inside
+    quoted sections.  This is exactly what the 'csv' module is meant for, so
+    we *should* be using it, save that it has two bugs (described next) which
+    limit our use of it.  When these bugs are fixed, this function should be
+    forsaken in favor of direct use of the csv module (or similar).
+
+    The basic use case is to split a function signature string, so for:
+        afunc(arg1='str1', arg2='str, with, embedded, commas', arg3=7)
+    we want a 3 element sequence:
+        ["arg1='str1'", "arg2='str, with, embedded, commas'", "arg3=7"]
+
+    but:
+    >>> import csv
+    >>> y = "arg1='str1', arg2='str, with, embedded, commas', arg3=7"
+    >>> rdr = csv.reader( (y,), dialect='excel', quotechar="'", skipinitialspace=True)
+    >>> l = rdr.next(); print len(l), str(l)
+    6 ["arg1='str1'", "arg2='str", 'with', 'embedded', "commas'", "arg3=7"]
+
+    which we can see is not correct - we wanted 3 tokens.  This occurs in 
+    Python 2.5.2 and 2.6.  It seems to be due to the text at the start of each
+    token ("arg1=") i.e. because the quote isn't for the whole token.  If we
+    were to remove the names of the args and the equal signs, it works:
+
+    >>> x = "'str1', 'str, with, embedded, commas', 7"
+    >>> rdr = csv.reader( (x,), dialect='excel', quotechar="'", skipinitialspace=True)
+    >>> l = rdr.next(); print len(l), str(l)
+    3 ['str1', 'str, with, embedded, commas', '7']
+
+    But even this usage is delicate - when we turn off skipinitialspace, it
+    fails:
+
+    >>> x = "'str1', 'str, with, embedded, commas', 7"
+    >>> rdr = csv.reader( (x,), dialect='excel', quotechar="'")
+    >>> l = rdr.next(); print len(l), str(l)
+    6 ['str1', " 'str", ' with', ' embedded', " commas'", ' 7']
+
+    So, for now, we'll roll our own.
+    """
+    # Algorithm:  read chars left to right, go from delimiter to delimiter,
+    # but as soon as a single/double/triple quote is hit, scan forward
+    # (ignoring all else) until its matching end-quote is found.
+    # For now, we will not specially handle escaped quotes.
+    tokens = []
+    ldl = len(delim)
+    keepOnRollin = line != None and len(line) > 0
+    while keepOnRollin:
+        tok = _getCharsUntil(line, delim, True, allowEol=allowEol)
+        # len of token should always be > 0 because it includes end delimiter
+        # except on last token
+        if len(tok) > 0:
+            # append it, but without the delimiter
+            if tok[-ldl:] == delim:
+                tokens.append(tok[:-ldl])
+            else:
+                tokens.append(tok) # tok goes to EOL - has no delimiter
+                keepOnRollin = False
+            line = line[len(tok):]
+        else:
+            # This is the case of the empty end token
+            tokens.append('')
+            keepOnRollin = False
+    return tokens
+
+# We'll often need to search a string for 3 possible characters.  We could
+# loop and check each one ourselves; we could do 3 separate find() calls;
+# or we could do a compiled re.search().  For VERY long strings (hundreds
+# of thousands of chars), it turns out that find() is so fast and that
+# re (even compiled) has enough overhead, that 3 find's is the same or
+# slightly faster than one re.search with three chars in the re expr.
+# Of course, both methods are much faster than an explicit loop.
+# Since these strings will be short, the fastest method is re.search()
+_re_sq = re.compile(r"'")
+_re_dq = re.compile(r'"')
+_re_comma_sq_dq = re.compile('[,\'"]')
+
+def _getCharsUntil(buf, stopChar, branchForQuotes, allowEol):
+
+    # Sanity checks
+    if buf is None: return None
+    if len(buf) <= 0: return ''
+
+    # Search chars left-to-right looking for stopChar
+    sought = (stopChar,)
+    theRe = None
+    if branchForQuotes:
+        sought = (stopChar,"'",'"') # see later, we'll handle '"""' too
+        if stopChar == ',': theRe = _re_comma_sq_dq # pre-compiled common case
+    else:
+        if stopChar == '"': theRe = _re_dq # pre-compiled common case
+        if stopChar == "'": theRe = _re_sq # pre-compiled common case
+
+    if theRe == None:
+        theRe = re.compile('['+''.join(sought)+']')
+
+    mo = theRe.search(buf)
+
+    # No match found; stop
+    if mo == None:
+        if not stopChar in ('"', "'"):
+            # this is a primary search, not a branch into quoted text
+            return buf # searched until we hit the EOL, must be last token
+        else:
+            # this is a branch into a quoted string - do we allow EOL here?
+            if allowEol:
+                return buf
+            else:
+                raise ValueError('Unfound end-quote, buffer: '+buf)
+
+    # The expected match was found. Stop.
+    if mo.group() == stopChar:
+        return buf[:1 + mo.start()] # return token plus stopChar at end
+
+    # Should not get to this point unless in a branch-for-quotes situation.
+    assert branchForQuotes,"Programming error! shouldnt be here w/out branching"
+
+    # Quotes were found.
+    # There are two kinds, but double quotes could be the start of
+    # triple double-quotes. (""") So get the substring to create the token.
+    #
+    #    token = preQuote+quotedPart+postQuote (e.g.: "abc'-hi,ya-'xyz")
+    #
+    preQuote = buf[:mo.start()]
+    if mo.group() == "'":
+        quotedPart = "'"+_getCharsUntil(buf[1+mo.start():],"'",False,allowEol)
+    else:
+        # first double quote (are there 3 in a row?)
+        idx = mo.start()
+        if len(buf) > idx+2 and '"""' == buf[idx:idx+3]:
+            # We ARE in a triple-quote sub-string
+            end_t_q = buf[idx+3:].find('"""')
+            if end_t_q < 0:
+                # hit end of line before finding end quote
+                if allowEol:
+                    quotedPart = buf[idx:]
+                else:
+                    raise ValueError('Unfound triple end-quote, buffer: '+buf)
+            else:
+                quotedPart = buf[idx:idx+3+end_t_q+1]
+        else:
+            quotedPart = '"'+_getCharsUntil(buf[1+mo.start():],'"',False,allowEol)
+    lenSoFar = len(preQuote)+len(quotedPart)
+    if lenSoFar < len(buf):
+        # now get back to looking for end delimiter
+        postQuote = _getCharsUntil(buf[lenSoFar:], stopChar,
+                                   branchForQuotes, allowEol)
+        return preQuote+quotedPart+postQuote
+    else:
+        return buf # at end
+
+def testCsvSplit(quiet=True):
+    # test cases ( input-string, len(output-list), repr(output-list) )
+    cases = ( \
+(None,                0, "[]"),
+('',                  0, "[]"),
+(' ',                 1, "[' ']"),
+('a',                 1, "['a']"),
+(',',                 2, "['', '']"),
+(',a',                2, "['', 'a']"),
+('a,',                2, "['a', '']"),
+(',a,',               3, "['', 'a', '']"),
+("abc'-hi,ya-'xyz",   1, """["abc'-hi,ya-'xyz"]"""),
+('abc"double-quote,eg"xy,z',    2, """['abc"double-quote,eg"xy', 'z']"""),
+('abc"""triple-quote,eg"""xyz', 1, '[\'abc"""triple-quote,eg"""xyz\']'),
+("'s1', 'has, comma', z",       3, """["'s1'", " 'has, comma'", ' z']"""),
+("a='s1', b='has,comma,s', c",  3, """["a='s1'", " b='has,comma,s'", ' c']"""),
+    )
+    for c in cases:
+        if not quiet: print "Testing: "+repr(c[0])
+        ll = csvSplit(c[0], ',', True)
+        assert len(ll) == c[1] and repr(ll) == c[2], \
+           "For case: "+repr(c[0])+" expected:\n"+c[2]+"\nbut got:\n"+repr(ll)
+    return True
 
 def removeEscapes(value, quoted=0):
 
