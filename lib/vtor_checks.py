@@ -20,7 +20,7 @@ def sigStrToKwArgsDict(checkFuncSig):
     p1 = checkFuncSig.find('(')
     p2 = checkFuncSig.find(')', p1)
     assert p1 > 0 and p2 > 0 and p2 > p1, "Invalid signature: "+checkFuncSig
-    argParts = checkFuncSig[p1+1:p2].split(',')
+    argParts = irafutils.csvSplit(checkFuncSig[p1+1:p2], ',', True)
     argParts = [x.strip() for x in argParts]
     retval = {}
     for argPair in argParts:
