@@ -9,7 +9,7 @@ import glob, os, sys
 import configobj, validate
 
 # Local modules
-import basicpar, taskpars, vtor_checks
+import basicpar, irafutils, taskpars, vtor_checks
 
 
 def findObjFor(pkgName, forUseWithEpar):
@@ -74,7 +74,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
         # get the initial param list out of the ConfigObj dict
         self.__paramList = self._getParamsFromConfigDict(self,
-                                collectTriggers=True)
+                                collectTriggers=True) #,dumpCfgspcTo=sys.stdout)
 
         # May have to add this odd last one for the sake of the GUI
         if self._forUseWithEpar:
@@ -181,7 +181,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
 
     def _getParamsFromConfigDict(self, cfgObj, scopePrefix='',
-                                 collectTriggers=False):
+                                 collectTriggers=False, dumpCfgspcTo=None):
         """ Walk the ConfigObj dict pulling out IRAF-like parameters into a
         list. Since this operates on a dict this can be called recursively."""
         # init
@@ -203,11 +203,13 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     # Use the key (or its comment?) as the section header
                     prevPar.set(prevPar.get('p_prompt')+'\n\n'+key,
                                 field='p_prompt', check=0)
+                if dumpCfgspcTo:
+                    dumpCfgspcTo.write('\n['+key+']\n')
                 # a logical grouping (append its params)
                 pfx = scopePrefix+'.'+key
                 pfx = pfx.strip('.')
                 retval = retval + self._getParamsFromConfigDict(val, pfx,
-                                       collectTriggers) # recurse
+                                       collectTriggers, dumpCfgspcTo) # recurse
             else:
                 # a param
                 fields = []
@@ -253,15 +255,25 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 if len(dscrp1) > 0:
                     dscrp = dscrp0
                     if dscrp0 != dscrp1: # allow override if different
-                        dscrp = dscrp1+' (!*!)'
-                        print 'Par "'+key+'", overriden description: '+dscrp1
+                        dscrp = dscrp1+' (*)'
+                        print 'Description of "'+key+'" overriden with: '+ \
+                              repr(dscrp1)
                     fields.append(dscrp)
                 else:
                     # set the field for the GUI
                     fields.append(dscrp0)
                     # ALSO set it in the dict so it is written to file later
                     cfgObj.inline_comments[key] = '# '+dscrp0
-
+                # This little section, while never intended to be used during
+                # normal operation, could save a lot of manual work.
+                if dumpCfgspcTo:
+                    junk = cspc
+                    junk = key+' = '+junk.strip()
+                    if junk.find(' comment=')<0:
+                        junk = junk[:-1]+", comment="+ \
+                               repr(irafutils.stripQuotes(dscrp1.strip()))+")"
+                    dumpCfgspcTo.write(junk+'\n')
+                # Create the par
                 par = basicpar.parFactory(fields, True)
                 par.setScope(scopePrefix)
                 retval.append(par)
