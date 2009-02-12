@@ -216,7 +216,12 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 dtype = 's'
                 cspc = None
                 if key in cfgObj.configspec: cspc = cfgObj.configspec[key]
-                if cspc and cspc.find('option') >= 0:
+                chk_func_name = ''
+                chk_args_dict = {}
+                if cspc:
+                    chk_func_name = cspc[:cspc.find('(')]
+                    chk_args_dict = vtor_checks.sigStrToKwArgsDict(cspc)
+                if chk_func_name.find('option') >= 0:
                     dtype = 's'
                     # convert the choices string to a list (to weed out kwds)
                     x = cspc[cspc.find('(')+1:-1] # just the options() args
@@ -224,9 +229,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     # rm spaces, extra quotes; rm kywd arg pairs
                     x = [i.strip("' ") for i in x if i.find('=')<0]
                     choicesOrMin = '|'+'|'.join(x)+'|' # IRAF format for enums
-                elif cspc and cspc.find('boolean') >= 0: dtype = 'b'
-                elif cspc and cspc.find('float') >= 0:   dtype = 'r'
-                elif cspc and cspc.find('integer') >= 0: dtype = 'i'
+                elif chk_func_name.find('boolean') >= 0: dtype = 'b'
+                elif chk_func_name.find('float') >= 0:   dtype = 'r'
+                elif chk_func_name.find('integer') >= 0: dtype = 'i'
                 fields.append(dtype)
                 fields.append('a')
                 if type(val)==bool:
@@ -236,13 +241,27 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     fields.append(val)
                 fields.append(choicesOrMin)
                 fields.append(None)
-                dscrp = cfgObj.inline_comments[key]
-                if dscrp==None:
-                    dscrp = ''
+                # Primarily use description from .cfgspc file (0). But, allow
+                # overrides from .cfg file (1) if different.
+                dscrp0 = chk_args_dict.get('comment','').strip() # ok if missing
+                dscrp1 = cfgObj.inline_comments[key]
+                if dscrp1==None: dscrp1 = ''
+                while len(dscrp1)>0 and dscrp1[0] in (' ','#'):
+                    dscrp1 = dscrp1[1:] # .cfg file comments start with '#'
+                dscrp1 = dscrp1.strip()
+                # Now, decide what to do/say about the descriptions
+                if len(dscrp1) > 0:
+                    dscrp = dscrp0
+                    if dscrp0 != dscrp1: # allow override if different
+                        dscrp = dscrp1+' (!*!)'
+                        print 'Par "'+key+'", overriden description: '+dscrp1
+                    fields.append(dscrp)
                 else:
-                    while len(dscrp)>0 and dscrp[0] in (' ','#'):
-                        dscrp = dscrp[1:]
-                fields.append(dscrp)
+                    # set the field for the GUI
+                    fields.append(dscrp0)
+                    # ALSO set it in the dict so it is written to file later
+                    cfgObj.inline_comments[key] = '# '+dscrp0
+
                 par = basicpar.parFactory(fields, True)
                 par.setScope(scopePrefix)
                 retval.append(par)
