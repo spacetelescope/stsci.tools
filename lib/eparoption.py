@@ -43,6 +43,7 @@ except:
 MAXLIST  =  15
 MAXLINES = 100
 XSHIFT   = 110
+DSCRPTN_FLAG = ' (***)'
 
 class EparOption(object):
 
@@ -108,7 +109,6 @@ class EparOption(object):
         infoLines   = ""
         blankLineNo = MAXLINES
         if (nlines > 1):
-
             # Keep all the lines of text before the blank line for the prompt
             for i in range(1, nlines):
                 ntokens = string.split(lines[i])
@@ -117,11 +117,17 @@ class EparOption(object):
                 else:
                     blankLineNo = i
                     break
+        self._flaggedDescription = False
+        if promptLines.endswith(DSCRPTN_FLAG):
+            promptLines = promptLines[:-len(DSCRPTN_FLAG)]
+            self._flaggedDescription = True
+        fgColor = "black"
+        if self._flaggedDescription: fgColor = "red"
 
         # Generate the prompt label
-        self.promptLabel = Label(self.master.frame, anchor = W,
-                                 text = promptLines, width = self.promptWidth)
-        self.promptLabel.pack(side = RIGHT, fill = X, expand = TRUE)
+        self.promptLabel = Label(self.master.frame, anchor=W, fg=fgColor,
+                                 text=promptLines, width=self.promptWidth)
+        self.promptLabel.pack(side=RIGHT, fill=X, expand=TRUE)
 
         # Default is none of items on popup menu are activated
         # These can be changed by the makeInputWidget method to customize
