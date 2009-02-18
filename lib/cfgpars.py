@@ -9,7 +9,7 @@ import glob, os, sys
 import configobj, validate
 
 # Local modules
-import basicpar, irafutils, taskpars, vtor_checks
+import basicpar, eparoption, irafutils, taskpars, vtor_checks
 
 
 def findObjFor(pkgName, forUseWithEpar):
@@ -118,7 +118,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
         # ! NOTE ! This design needs work.  Right now there are two copies
         # of the data:  the ConfigObj dict, and the __paramList ...
-        # This update probably really slows things down:
+        # Since this step is done for each parameter, this update probably
+        # really slows things down.
         self.__paramList = self._getParamsFromConfigDict(self)
         if self._forUseWithEpar:
             self.__paramList.append(basicpar.IrafParS(['$nargs','s','h','N']))
@@ -255,9 +256,10 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 if len(dscrp1) > 0:
                     dscrp = dscrp0
                     if dscrp0 != dscrp1: # allow override if different
-                        dscrp = dscrp1+' (*)'
-                        print 'Description of "'+key+'" overriden with: '+ \
-                              repr(dscrp1)
+                        dscrp = dscrp1+eparoption.DSCRPTN_FLAG # flag it
+                        if collectTriggers: # if first time through
+                            print 'Description of "'+key+'" overridden; was: '+\
+                                  repr(dscrp0)
                     fields.append(dscrp)
                 else:
                     # set the field for the GUI
