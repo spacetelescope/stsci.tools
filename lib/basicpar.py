@@ -515,7 +515,12 @@ class IrafPar:
         try:
             return self._getField(field, native=1)
         except SyntaxError, e:
-            raise AttributeError(str(e))
+            if field in _IrafPar_attr_dict:
+                # handle odd-ball case of new code accessing par's new
+                # attr (e.g. scope), with old-code-cached version of par
+                return _IrafPar_attr_dict[field] # return unused default
+            else:
+                raise AttributeError(str(e))
 
     def __setattr__(self,attr,value):
         # don't allow any new parameters to be added
