@@ -182,6 +182,7 @@ class EditParDialog(object):
         self._setTaskParsObj(theTask)
 
         # Now go back and ensure we have the full taskname
+        self.guiName = title
         self.taskName = self._taskParsObj.getName()
         self.pkgName = self._taskParsObj.getPkgname()
         self.paramList = self._taskParsObj.getParList(docopy=1)
@@ -229,9 +230,9 @@ class EditParDialog(object):
         # Generate the top epar window
         self.top = top = Toplevel(self.parent, bg=self.bkgColor, visual="best")
         if len(self.pkgName):
-            self.top.title('%s:  %s.%s' % (title, self.pkgName, self.taskName))
+            self.updateTitle(self.pkgName+"."+self.taskName)
         else:
-            self.top.title('%s:  %s' % (title, self.taskName))
+            self.updateTitle(self.taskName)
         self.top.iconname(self.iconLabel)
 
         # Read in the epar options database file
@@ -409,12 +410,23 @@ class EditParDialog(object):
 
         # run the mainloop
         if not self.isChild:
+            self._preMainLoop()
             self.top.mainloop()
+            self._postMainLoop()
+
+
+    def _preMainLoop(self):
+        """ Hook for subclasses override if wished. """
+        return
+
+
+    def _postMainLoop(self):
+        """ Hook for subclasses override if wished. """
+        return
 
 
     def _showOpenButton(self):
-        """ Should we show the "Open..." button?  This hook is useful to
-            subclasses. """
+        """ Should we show the "Open..." button?  Subclasses override. """
         return False
 
 
@@ -425,6 +437,10 @@ class EditParDialog(object):
 
         # Here we catch if this version is run by accident
         raise RuntimeError("Bug: EditParDialog is not to be used directly")
+
+
+    def updateTitle(self, atitle):
+        self.top.title('%s:  %s' % (self.guiName, atitle))
 
 
     def getTaskParsObj(self):
