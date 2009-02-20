@@ -54,7 +54,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         if setAllToDefaults:
             configobj.ConfigObj.__init__(self, configspec=cfgSpecPath)
         else:
-            configobj.ConfigObj.__init__(self, cfgFileName,
+            configobj.ConfigObj.__init__(self, os.path.abspath(cfgFileName),
                                          configspec=cfgSpecPath)
 
         # Validate it here for now
@@ -69,7 +69,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                                os.path.splitext(cfgFileName)[0]+"\n\n"+\
                                flatStr.replace(', (',', \n('))
 
-        # could also get task and pkg name from keywords inside file ... 
+        # could also get task and pkg name from keywords inside file ...  !!!
         self.__taskName = os.path.splitext(os.path.basename(cfgFileName))[0]
 
         # get the initial param list out of the ConfigObj dict
@@ -135,6 +135,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
         if hasattr(filename,'write'):
             fh = filename
+            absFileName = os.path.abspath(fh.name)
         else:
             absFileName = os.path.expanduser(filename)
             absDir = os.path.dirname(absFileName)
@@ -145,6 +146,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         retval = str(numpars) + " parameters written to " + absFileName
         self.write(fh) # delegate to ConfigObj
         fh.close()
+        self.filename = absFileName # reset our own ConfigObj filename attr
         return retval
 
     def run(self, *args, **kw):
@@ -258,8 +260,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     if dscrp0 != dscrp1: # allow override if different
                         dscrp = dscrp1+eparoption.DSCRPTN_FLAG # flag it
                         if collectTriggers: # if first time through
-                            print 'Description of "'+key+'" overridden; was: '+\
-                                  repr(dscrp0)
+                            print 'Description of "'+key+'" overridden; '+\
+                                  'from:\n'+repr(dscrp0)+', to:\n'+repr(dscrp1)
                     fields.append(dscrp)
                 else:
                     # set the field for the GUI
