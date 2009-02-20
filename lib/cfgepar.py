@@ -18,11 +18,19 @@ def epar(theTask, parent=None, isChild=0):
 class ConfigObjEparDialog(editpar.EditParDialog):
 
     def __init__(self, theTask, parent=None, isChild=0,
-                 title="Config Parameter Editor", childList=None):
+                 title="TEAL", childList=None):
 
         # Init base - calls _setTaskParsObj(), sets self.taskName, etc
         editpar.EditParDialog.__init__(self, theTask, parent, isChild,
                                        title, childList, resourceDir='')
+        # We don't return from this until the GUI is closed
+
+
+    def _preMainLoop(self):
+        """ Override so that we can do som things right before activating. """
+        # Put the fname in the title. EditParDialog doesn't do this by default
+        self.updateTitle(self._taskParsObj.filename)
+
 
     # Always allow the Open button ?
     def _showOpenButton(self): return True
@@ -49,11 +57,14 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             all items because the performance might be prohibitive. """
         # the print line is a stand-in
         triggerStr = self._taskParsObj.getTriggerStr(scope, name)
-        print scope+"."+name+", on disk: "+lastSavedVal+", now: "+newVal
-#             ", trigger: "+triggerStr
+        # call triggers in a general way, not directly here # !!!
+        if triggerStr.find('_section_switch_')>=0:
+            state = str(newVal).lower() in ('on','yes','true')
+            self._toggleSectionActiveState(scope, state, (name,))
+        else:
+            print "val: "+newVal+", trigger: "+triggerStr
     
 
-    # a main function
     def _setTaskParsObj(self, theTask):
         """ Overridden version for ConfigObj. theTask can be either
             a .cfg file name or a ConfigObjPars object. """
@@ -121,6 +132,10 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         except editpar.UnfoundParamError, pe:
             tkMessageBox.showwarning(message=pe.message, title="Error in "+\
                                      os.path.basename(fname))
+
+        # This new fname is our current context
+        self.updateTitle(fname)
+        self._taskParsObj.filename = fname # !! maybe try setCurrentContext() ?
 
 
     def unlearn(self, event=None):
