@@ -623,37 +623,34 @@ def parseFilename(filename):
         _extn = None
     return _fname,_extn
 
-def parseExtn(extn):
-    """ Convert full extension specification into a EXTVER ID.
-        Input 'extn' assumed to be of the form: 'sci,1' or '1'.
-        This will always returns an integer, and default to 1.
+def parseExtn(extn=None):
+    """ 
+    Parse a string representing a qualified fits extension name as in the
+    output of parseFilename and return a tuple (str(extname), int(extver)),
+    which can be passed to pyfits functions using the 'ext' kw. 
+    Default return is the first extension in a fits file. 
+    >>>parseExtn('sci,2')
+    ('sci', 2)
+    >>>parseExtn('2')
+    ('', 2)
+    >>>parseExtn('sci')
+    ('sci', 1)
     """
-    # If extn is None, return a default of 1
     if not extn:
-        return 1
-
-    if repr(extn).find(',') > 1:
-        _extn = int(extn.split(',')[1])
-        # Two values given for extension:
-        #    for example, 'sci,1' or 'dq,1'
-    elif repr(extn).find('/') > 1:
-        # We are working with GEIS group syntax
-        _indx = str(extn[:extn.find('/')])
-        _extn = int(_indx)
-    elif type(extn) == types.StringType:
-        # Only one extension value specified...
-        if extn.isdigit():
-            # We only have EXTNAME specified...
-            _extn = int(extn)
-        else:
-            # Only extension name given,
-            # so default of 1 is returned.
-            _extn = 1
+        return ('', 1)
+    
+    try:
+        lext = extn.split(',')
+    except:
+        return ('', 1)
+    
+    if len(lext) == 1 and lext[0].isdigit():
+        return ("", int(lext[0]))
+    elif len(lext) == 2:
+        return (lext[0], int(lext[1]))
     else:
-        # Only integer extension number given, so return it.
-        _extn = int(extn)
+        return (lext[0], 1)
 
-    return _extn
 
 def getExtn(fimg,extn=None):
     """ Returns the PyFITS extension corresponding to
