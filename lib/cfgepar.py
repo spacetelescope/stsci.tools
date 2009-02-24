@@ -8,10 +8,13 @@ import cfgpars, editpar, filedlg
 
 
 # Starts a GUI session
-def epar(theTask, parent=None, isChild=0):
+def epar(theTask, parent=None, isChild=0, loadOnly=False):
 
-    dlg = ConfigObjEparDialog(theTask, parent, isChild)
-    return dlg.getTaskParsObj()
+    if loadOnly:
+        return cfgpars.getObjectFromTaskArg(theTask)
+    else:
+        dlg = ConfigObjEparDialog(theTask, parent, isChild)
+        return dlg.getTaskParsObj()
 
 
 # Main class
@@ -68,15 +71,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
     def _setTaskParsObj(self, theTask):
         """ Overridden version for ConfigObj. theTask can be either
             a .cfg file name or a ConfigObjPars object. """
-
-        if isinstance(theTask, cfgpars.ConfigObjPars):
-            self._taskParsObj = theTask
-
-        elif os.path.isfile(str(theTask)):
-            self._taskParsObj=cfgpars.ConfigObjPars(theTask,forUseWithEpar=True)
-
-        else: # it must be a package name to load
-            self._taskParsObj = cfgpars.findObjFor(theTask,forUseWithEpar=True)
+        self._taskParsObj = cfgpars.getObjectFromTaskArg(theTask)
 
 
     def _getSaveAsFilter(self):
@@ -120,7 +115,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
 
         # Now load it: "Loading "+self.taskName+" param values from: "+fname
         print "Loading "+self.taskName+" param values from: "+fname
-        tmpObj = cfgpars.ConfigObjPars(fname, forUseWithEpar=True)
+        tmpObj = cfgpars.ConfigObjPars(fname)
 
         # check it to make sure it is a match
 # !     if self._taskParsObj.isSameTaskAs(tmpObj): ...
@@ -152,8 +147,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # value
         try:
             tmpObj = cfgpars.ConfigObjPars(self.taskName+'.cfg',
-                                           setAllToDefaults=True,
-                                           forUseWithEpar=True)
+                                           setAllToDefaults=True)
         except Exception, ex:
             msg = "Error Creating Default Object"
             tkMessageBox.showerror(message=msg+'\n\n'+ex.message,
