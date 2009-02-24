@@ -12,7 +12,31 @@ import configobj, validate
 import basicpar, eparoption, irafutils, taskpars, vtor_checks
 
 
-def findObjFor(pkgName, forUseWithEpar):
+def getObjectFromTaskArg(theTask):
+    """ Take the arg (usually called theTask), which can be either a subclass
+    of ConfigObjPars, or a string package name, or a .cfg filename - no matter
+    what it is - take it and return a ConfigObjPars object. """
+
+    # Already in the form we need (instance of us or of subclass)
+    if isinstance(theTask, ConfigObjPars):
+        # If it is an existing object, make sure it's internal param list is
+        # up to date with it's ConfigObj dict, since the user may have manually
+        # edited the dict before calling us.
+        theTask.syncParamList()
+        # Note - some validation is done here in IrafPar creation, but it is
+        # not the same validation done by the ConfigObj s/w (no check funcs).
+        # Do we want to do that too here?
+        return theTask
+
+    # For example, a .cfg file
+    if os.path.isfile(str(theTask)):
+        return ConfigObjPars(theTask)
+
+    # Else it must be a package name to load
+    return findObjFor(theTask)
+
+
+def findObjFor(pkgName):
     """ Locate the appropriate ConfigObjPars (or subclass) within the given
         package. """
     try:
@@ -32,7 +56,7 @@ def findObjFor(pkgName, forUseWithEpar):
         flist += glob.glob(path+"/pars/*.cfg")    # trim down when mdriz is
         flist += glob.glob(path+"/*.cfg")         # finalized and stable
         assert len(flist) > 0, "Unfound .cfg file for package: "+pkgName
-        return ConfigObjPars(flist[0], forUseWithEpar=True)
+        return ConfigObjPars(flist[0])
 
 
 class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
@@ -73,12 +97,18 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         self.__taskName = os.path.splitext(os.path.basename(cfgFileName))[0]
 
         # get the initial param list out of the ConfigObj dict
+        self.syncParamList()
+
+
+    def syncParamList(self):
+        """ Set or reset the internal __paramList from the dict's contents. """
+        # See the note in setParam about this design needing to change...
         self.__paramList = self._getParamsFromConfigDict(self,
                                 collectTriggers=True) #,dumpCfgspcTo=sys.stdout)
-
-        # May have to add this odd last one for the sake of the GUI
+        # Have to add this odd last one for the sake of the GUI (still?)
         if self._forUseWithEpar:
             self.__paramList.append(basicpar.IrafParS(['$nargs','s','h','N']))
+
 
     def getName(self): return self.__taskName
 
