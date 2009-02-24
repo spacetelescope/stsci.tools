@@ -146,7 +146,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # Create an empty onject, where every item will be set to it's default
         # value
         try:
-            tmpObj = cfgpars.ConfigObjPars(self.taskName+'.cfg',
+            tmpObj = cfgpars.ConfigObjPars(self._taskParsObj.filename,
                                            setAllToDefaults=True)
         except Exception, ex:
             msg = "Error Creating Default Object"
