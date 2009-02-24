@@ -36,6 +36,22 @@ def getObjectFromTaskArg(theTask):
     return findObjFor(theTask)
 
 
+def getEmbeddedKeyVal(cfgFileName, kwdName, defaultVal=None):
+    """ Read a config file and pull out the value of a given keyword. """
+    # Assume this is a ConfigObj file.  Use that s/w to quickly read it and
+    # put it in dict format.  Assume kwd is at top level (not in a section).
+    junkObj = configobj.ConfigObj(cfgFileName) # no configspec needed here
+    if kwdName in junkObj:
+        retval = junkObj[kwdName]
+        del junkObj
+        return retval
+    # Not found
+    if defaultVal:
+        del junkObj
+        return defaultVal
+    else:
+        raise KeyError('Unfound item: "'+kwdName+'" in: '+cfgFileName)
+
 def findObjFor(pkgName):
     """ Locate the appropriate ConfigObjPars (or subclass) within the given
         package. """
@@ -49,14 +65,23 @@ def findObjFor(pkgName):
     if hasattr(thePkg, 'getConfigObjPars'):
         return thePkg.getConfigObjPars() # use their ConfigObjPars subclass
 
-    else: # otherwise, cobble together a stand-in;  find the .cfg file
-        path = os.path.dirname(thePkg.__file__)
-        flist  = glob.glob(path+"/cfg/*.cfg")
-        flist += glob.glob(path+"/config/*.cfg")  # !! do we need all these?
-        flist += glob.glob(path+"/pars/*.cfg")    # trim down when mdriz is
-        flist += glob.glob(path+"/*.cfg")         # finalized and stable
-        assert len(flist) > 0, "Unfound .cfg file for package: "+pkgName
-        return ConfigObjPars(flist[0])
+    # Otherwise we'll create a stand-in instance; first find the .cfg file
+    path = os.path.dirname(thePkg.__file__)
+    flist  = glob.glob(path+"/cfg/*.cfg")
+    flist += glob.glob(path+"/config/*.cfg")  # !! do we need all these?
+    flist += glob.glob(path+"/pars/*.cfg")    # trim down when mdriz is
+    flist += glob.glob(path+"/*.cfg")         # finalized and stable
+    assert len(flist) > 0, "Unfound .cfg file for package: "+pkgName
+    # Now go through these and find the first one for the assumed task name
+    # The task name for 'BigBlackBox.drizzle' would be 'drizzle'
+    assumedTaskName = pkgName.split(".")[-1]
+    flist.sort()
+    for f in flist:
+        itsTask = getEmbeddedKeyVal(f, '_task_name_', '')
+        if itsTask == assumedTaskName:
+            return ConfigObjPars(f)
+    raise RuntimeError('No .cfg files found in package: "'+pkgName+ \
+                       '" for task: "'+assumedTaskName+'"')
 
 
 class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
@@ -72,6 +97,21 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # Set up ConfigObj stuff
         assert setAllToDefaults or os.path.isfile(cfgFileName), \
                "Config file not found: "+cfgFileName
+        self.__taskName = ''
+        if setAllToDefaults:
+            # they may not have given us a real file name here since they
+            # just want defaults (in .cfgspc) so don't be too picky about
+            # finding and reading the file.
+            possible = os.path.splitext(os.path.basename(cfgFileName))[0]
+            if os.path.isfile(cfgFileName):
+                self.__taskName = getEmbeddedKeyVal(cfgFileName, '_task_name_',
+                                                    possible)
+            else:
+                self.__taskName = possible
+        else:
+            # this is the real deal, expect a real file name
+            self.__taskName = getEmbeddedKeyVal(cfgFileName, '_task_name_')
+
         cfgSpecPath = self._findAssociatedConfigSpecFile(cfgFileName)
         assert os.path.exists(cfgSpecPath), \
                "Matching configspec not found!  Expected: "+cfgSpecPath
@@ -92,9 +132,6 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             raise RuntimeError("Validation errors for: "+\
                                os.path.splitext(cfgFileName)[0]+"\n\n"+\
                                flatStr.replace(', (',', \n('))
-
-        # could also get task and pkg name from keywords inside file ...  !!!
-        self.__taskName = os.path.splitext(os.path.basename(cfgFileName))[0]
 
         # get the initial param list out of the ConfigObj dict
         self.syncParamList()
@@ -187,30 +224,19 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         """ Given a config file, find its associated config-spec file, and
         return the full pathname of the file. """
 
-        # Handle simplest case first - local .cfgspc file
-        retval = cfgFileName+'spc'
+        # Handle simplest 2 cases first: co-located or local .cfgspc file
+        retval = "."+os.sep+self.__taskName+".cfgspc"
         if os.path.isfile(retval): return retval
 
-        # If there is a dash or underscore in the name, look for a .cfgspc
-        # file with same "root" name
-        rootname = os.path.splitext(os.path.basename(cfgFileName))[0]
-        rootroot = rootname # just orig. trunk (eg. "driz", not "driz-updated")
-        for sep in ('_','-'):
-            idx = rootname.find(sep)
-            if idx > 0:
-                rootroot = rootname[:idx]
-                retval = os.path.dirname(cfgFileName)+'/'+rootroot+".cfgspc"
-                if os.path.isfile(retval): return retval
-
-        # As a last resort, try _resourceDir
-        retval = self._resourceDir+'/'+rootname+".cfgspc"
+        retval = os.path.dirname(cfgFileName)+os.sep+self.__taskName+".cfgspc"
         if os.path.isfile(retval): return retval
-        # and shortest version
-        retval = self._resourceDir+'/'+rootroot+".cfgspc"
+
+        # Also try _resourceDir
+        retval = self._resourceDir+os.sep+self.__taskName+".cfgspc"
         if os.path.isfile(retval): return retval
 
         # unfound
-        return os.path.basename(cfgFileName)+'spc' # will fail
+        raise RuntimeError("Unfound config-spec file: "+self.__taskName+".cfgspc")
 
 
     def _getParamsFromConfigDict(self, cfgObj, scopePrefix='',
