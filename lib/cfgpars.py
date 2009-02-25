@@ -79,7 +79,7 @@ def findObjFor(pkgName):
     for f in flist:
         itsTask = getEmbeddedKeyVal(f, '_task_name_', '')
         if itsTask == assumedTaskName:
-            return ConfigObjPars(f)
+            return ConfigObjPars(f, findFuncsUnder=thePkg)
     raise RuntimeError('No .cfg files found in package: "'+pkgName+ \
                        '" for task: "'+assumedTaskName+'"')
 
@@ -88,7 +88,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     """ This represents a task's dict of ConfigObj parameters. """
 
     def __init__(self, cfgFileName, forUseWithEpar=True,
-                 setAllToDefaults=False, resourceDir=''):
+                 setAllToDefaults=False, resourceDir='',
+                 findFuncsUnder=None):
 
         self._forUseWithEpar = forUseWithEpar
         self._resourceDir = resourceDir
@@ -135,6 +136,15 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
         # get the initial param list out of the ConfigObj dict
         self.syncParamList()
+
+        # see if we are using a package with it's own run() function
+        self._runFunc = None
+        self._helpFunc = None
+        if findFuncsUnder != None:
+            if hasattr(findFuncsUnder, 'run'):
+                self._runFunc = findFuncsUnder.run
+            if hasattr(findFuncsUnder, 'getHelpAsString'):
+                self._helpFunc = findFuncsUnder.getHelpAsString
 
 
     def syncParamList(self):
@@ -217,8 +227,27 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         return retval
 
     def run(self, *args, **kw):
-        """ This is meant to be overridden by a subclass. """
-        pass
+        """ This may be overridden by a subclass. """
+        if self._runFunc != None:
+            # remove the two args sent by EditParDialog which we do not use
+            if 'mode' in kw: kw.pop('mode')
+            if '_save' in kw: kw.pop('_save')
+            return self._runFunc(self, *args, **kw)
+        else:
+            raise RuntimeError('No way to run task "'+self.__taskName+ \
+                '". You must either override the "run" method in your '+ \
+                'ConfigObjPars subclass, or you must supply a "run" '+ \
+                'function in your package.')
+
+    def getHelpAsString(self):
+        """ This may be overridden by a subclass. """
+        if self._helpFunc != None:
+            return self._helpFunc()
+        else:
+            return 'No help string found for task "'+self.__taskName+ \
+                '". You must either override the getHelpAsString method in '+ \
+                'your ConfigObjPars subclass, or you must supply such a '+ \
+                'function in your package.'
 
     def _findAssociatedConfigSpecFile(self, cfgFileName):
         """ Given a config file, find its associated config-spec file, and
