@@ -9,12 +9,14 @@ import cfgpars, editpar, filedlg
 
 # Starts a GUI session
 def epar(theTask, parent=None, isChild=0, loadOnly=False):
-
     if loadOnly:
         return cfgpars.getObjectFromTaskArg(theTask)
     else:
         dlg = ConfigObjEparDialog(theTask, parent, isChild)
-        return dlg.getTaskParsObj()
+        if dlg.canceled():
+            return None
+        else:
+            return dlg.getTaskParsObj()
 
 
 # Main class
@@ -30,9 +32,14 @@ class ConfigObjEparDialog(editpar.EditParDialog):
 
 
     def _preMainLoop(self):
-        """ Override so that we can do som things right before activating. """
+        """ Override so that we can do some things right before activating. """
         # Put the fname in the title. EditParDialog doesn't do this by default
         self.updateTitle(self._taskParsObj.filename)
+
+
+    def _saveAsPostSave_Hook(self, fnameToBeUsed):
+        """ Override this so we can update the title bar. """
+        self.updateTitle(self._taskParsObj.filename) # _taskParsObj is correct
 
 
     # Always allow the Open button ?
