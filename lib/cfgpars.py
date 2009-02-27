@@ -346,7 +346,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                         dscrp = dscrp1+eparoption.DSCRPTN_FLAG # flag it
                         if collectTriggers: # if first time through
                             print 'Description of "'+key+'" overridden; '+\
-                                  'from:\n'+repr(dscrp0)+', to:\n'+repr(dscrp1)
+                             'from:\n\t'+repr(dscrp0)+', to:\n\t'+repr(dscrp1)
                     fields.append(dscrp)
                 else:
                     # set the field for the GUI
