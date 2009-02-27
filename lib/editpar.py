@@ -182,7 +182,8 @@ class EditParDialog(object):
         self._setTaskParsObj(theTask)
 
         # Now go back and ensure we have the full taskname
-        self.guiName = title
+        self._canceled = False
+        self._guiName = title
         self.taskName = self._taskParsObj.getName()
         self.pkgName = self._taskParsObj.getPkgname()
         self.paramList = self._taskParsObj.getParList(docopy=1)
@@ -416,12 +417,12 @@ class EditParDialog(object):
 
 
     def _preMainLoop(self):
-        """ Hook for subclasses override if wished. """
+        """ Hook for subclasses to override if wished. """
         return
 
 
     def _postMainLoop(self):
-        """ Hook for subclasses override if wished. """
+        """ Hook for subclasses to override if wished. """
         return
 
 
@@ -440,7 +441,7 @@ class EditParDialog(object):
 
 
     def updateTitle(self, atitle):
-        self.top.title('%s:  %s' % (self.guiName, atitle))
+        self.top.title('%s:  %s' % (self._guiName, atitle))
 
 
     def getTaskParsObj(self):
@@ -1017,10 +1018,12 @@ class EditParDialog(object):
         self.top.focus_set()
         self.top.withdraw()
 
+        # Note that they canceled
+        self._canceled = True
+
         # Do not destroy the window, just hide it for now.
         # This is so EXECUTE will not get an error - properly use Mediator.
         #self.top.destroy()
-
         if not self.isChild:
             self.top.destroy()
             self.top.quit()
@@ -1055,6 +1058,7 @@ class EditParDialog(object):
         helpString = self.getHelpString(self.pkgName+'.'+self.taskName)
         self.irafHelpWin = self.helpBrowser(helpString)
 
+
     # EPAR HELP: invoke help and put the epar help page in a window
     def eparHelp(self, event=None):
 
@@ -1069,10 +1073,16 @@ class EditParDialog(object):
                                             title='Parameter Editor Help')
 
 
+    def canceled(self):
+        """ Did the user click Cancel? (or close us via the window manager) """
+        return self._canceled
+
+
     # Get the task help in a string
     def getHelpString(self, taskname):
         """ Provide a task-specific help string. """
         return self._taskParsObj.getHelpAsString()
+
 
     # Set up the help dialog (browser)
     def helpBrowser(self, helpString, title="Parameter Editor Help Browser"):
