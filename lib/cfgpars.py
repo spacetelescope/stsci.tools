@@ -56,7 +56,10 @@ def findObjFor(pkgName):
     """ Locate the appropriate ConfigObjPars (or subclass) within the given
         package. """
     try:
-        thePkg = __import__(str(pkgName))
+        fl = []
+        if pkgName.find('.') > 0:
+            fl = [ pkgName[:pkgName.rfind('.')], ]
+        thePkg = __import__(str(pkgName), fromlist=fl)
     except:
         raise RuntimeError("Unfound package or config file for: "+\
                            str(pkgName))
