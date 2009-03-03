@@ -78,7 +78,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '1.1.1 (20 Nov 2008)'
+__version__ = '1.1.2 (4 Mar 2009)'
 def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -173,7 +173,7 @@ def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
                     # keyword altogether. PyDrizzle will rely simply on the 
                     # values of alpha and beta as computed here to apply the 
                     # correction to the coefficients.
-                    if (tddcorr and tddswitch == 'PERFORM'):
+                    if (tddcorr and tddswitch != 'OMIT'):
                         print 'Applying time-dependent distortion corrections...'
                         _update(_img,idctab, _nimsets, apply_tdd=True, \
                         quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nrefext)
