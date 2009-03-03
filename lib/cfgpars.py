@@ -6,7 +6,7 @@ $Id$
 import glob, os, sys
 
 # ConfigObj modules
-import configobj, validate
+from pytools import configobj, validate
 
 # Local modules
 import basicpar, eparoption, irafutils, taskpars, vtor_checks
@@ -22,7 +22,7 @@ def getObjectFromTaskArg(theTask):
         # If it is an existing object, make sure it's internal param list is
         # up to date with it's ConfigObj dict, since the user may have manually
         # edited the dict before calling us.
-        theTask.syncParamList()
+        theTask.syncParamList(False)
         # Note - some validation is done here in IrafPar creation, but it is
         # not the same validation done by the ConfigObj s/w (no check funcs).
         # Do we want to do that too here?
@@ -138,7 +138,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                                flatStr.replace(', (',', \n('))
 
         # get the initial param list out of the ConfigObj dict
-        self.syncParamList()
+        self.syncParamList(True)
 
         # see if we are using a package with it's own run() function
         self._runFunc = None
@@ -150,11 +150,12 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 self._helpFunc = findFuncsUnder.getHelpAsString
 
 
-    def syncParamList(self):
+    def syncParamList(self, firstTime):
         """ Set or reset the internal __paramList from the dict's contents. """
         # See the note in setParam about this design needing to change...
         self.__paramList = self._getParamsFromConfigDict(self,
-                                collectTriggers=True) #,dumpCfgspcTo=sys.stdout)
+                                collectTriggers=firstTime)
+                                # dumpCfgspcTo=sys.stdout)
         # Have to add this odd last one for the sake of the GUI (still?)
         if self._forUseWithEpar:
             self.__paramList.append(basicpar.IrafParS(['$nargs','s','h','N']))
@@ -225,6 +226,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         if self._forUseWithEpar: numpars -= 1
         retval = str(numpars) + " parameters written to " + absFileName
         self.write(fh) # delegate to ConfigObj
+        fh.write('\n')
         fh.close()
         self.filename = absFileName # reset our own ConfigObj filename attr
         return retval
