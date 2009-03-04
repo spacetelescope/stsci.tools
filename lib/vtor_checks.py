@@ -86,6 +86,16 @@ def integer_check_kw(val, *args, **kw):
     return vtor.check(checkFuncStr, val)
 
 
+def integer_or_none_check_kw(val, *args, **kw):
+    if OVCDBG: print "integer_or_none_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw)
+    if val in (None, '', 'None'): return None # only diff from non-None ver
+    vtor = validate.Validator()
+    checkFuncStr = "integer"+str(tuple(args))
+    checkFuncStr = addKwdArgsToSig(checkFuncStr, separateKeywords(kw)[0])
+    if OVCDBG: print "CFS: "+checkFuncStr+'\n'
+    return vtor.check(checkFuncStr, val)
+
+
 def float_check_kw(val, *args, **kw):
     if OVCDBG: print "float_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw)
     vtor = validate.Validator()
@@ -97,8 +107,8 @@ def float_check_kw(val, *args, **kw):
 
 def float_or_none_check_kw(val, *args, **kw):
     if OVCDBG: print "float_or_none_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw)
+    if val in (None, '', 'None'): return None # only diff from non-None ver
     vtor = validate.Validator()
-    if val in (None, '', 'None'): return None # only diff from float_check_kw
     checkFuncStr = "float"+str(tuple(args))
     checkFuncStr = addKwdArgsToSig(checkFuncStr, separateKeywords(kw)[0])
     if OVCDBG: print "CFS: "+checkFuncStr+'\n'
@@ -114,9 +124,10 @@ def string_check_kw(val, *args, **kw):
     return vtor.check(checkFuncStr, val)
 
 
-FUNC_DICT = {'boolean_kw':       boolean_check_kw,
-             'option_kw':        option_check_kw,
-             'integer_kw':       integer_check_kw,
-             'float_kw':         float_check_kw,
-             'float_or_none_kw': float_or_none_check_kw,
-             'string_kw':        string_check_kw }
+FUNC_DICT = {'boolean_kw':         boolean_check_kw,
+             'option_kw':          option_check_kw,
+             'integer_kw':         integer_check_kw,
+             'integer_or_none_kw': integer_or_none_check_kw,
+             'float_kw':           float_check_kw,
+             'float_or_none_kw':   float_or_none_check_kw,
+             'string_kw':          string_check_kw }
