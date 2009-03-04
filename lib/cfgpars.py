@@ -175,6 +175,11 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
     def getFilename(self): return self.filename
 
+    def isSameTaskAs(self, aCfgObjPrs):
+        """ Return True if the passed in object is for the same task as
+        we are. """
+        return aCfgObjPrs.getName() == self.getName()
+
     def setParam(self, name, val, scope='', check=1):
         """ Find the ConfigObj entry.  Update the __paramList. """
         theDict = self
