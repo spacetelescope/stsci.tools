@@ -186,6 +186,12 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # the validation step (next).
         theDict[name] = val
 
+        # For booleans, make sure the value is an actual boolean.  This is
+        # only necessary because BooleanEparOption uses strings, eg. 'yes','no'
+        if theDict.configspec[name].find('boolean_kw')>=0:
+            if not isinstance(val, bool):
+                theDict[name] = str(val).lower() in ('1','on','yes','true')
+
         # If need be, check the proposed value.  Ideally, we'd like to
         # (somehow elgantly) only check this one item. For now, the 
         # shortcut is to only validate this section.
