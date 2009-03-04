@@ -118,14 +118,19 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             return
         fname = fd.GetFileName()
         fd.DialogCleanup()
-        if fname == None: return
+        if fname == None: return # canceled
 
-        # Now load it: "Loading "+self.taskName+" param values from: "+fname
-        print "Loading "+self.taskName+" param values from: "+fname
+        # load it into a tmp object
         tmpObj = cfgpars.ConfigObjPars(fname)
 
         # check it to make sure it is a match
-# !     if self._taskParsObj.isSameTaskAs(tmpObj): ...
+        if not self._taskParsObj.isSameTaskAs(tmpObj):
+            msg = 'The current task is "'+self._taskParsObj.getName()+ \
+                  '", but the selected file is for task "'+tmpObj.getName()+ \
+                  '".  This file was not loaded.'
+            tkMessageBox.showerror(message=msg,
+                title="Error in "+os.path.basename(fname))
+            return
 
         # Set the GUI entries to these values (let the user Save after)
         newParList = tmpObj.getParList()
@@ -147,7 +152,6 @@ class ConfigObjEparDialog(editpar.EditParDialog):
     def _setToDefaults(self):
         """ Load the default parameter settings into the GUI. """
 
-        # Now load it: "Loading "+self.taskName+" param values from: "+fname
         print "Loading default "+self.taskName+" param values"
 
         # Create an empty onject, where every item will be set to it's default
