@@ -230,10 +230,10 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             fh = open(absFileName,'w')
         numpars = len(self.__paramList)
         if self._forUseWithEpar: numpars -= 1
-        retval = str(numpars) + " parameters written to " + absFileName
+        if not self.final_comment: self.final_comment = [''] # force \n at EOF
         self.write(fh) # delegate to ConfigObj
-        fh.write('\n')
         fh.close()
+        retval = str(numpars) + " parameters written to " + absFileName
         self.filename = absFileName # reset our own ConfigObj filename attr
         return retval
 
