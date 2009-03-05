@@ -70,6 +70,7 @@ def findObjFor(pkgName):
 
     # Otherwise we'll create a stand-in instance; first find the .cfg file
     path = os.path.dirname(thePkg.__file__)
+    if len(path) < 1: path = '.'
     flist  = glob.glob(path+"/cfg/*.cfg")
     flist += glob.glob(path+"/config/*.cfg")  # !! do we need all these?
     flist += glob.glob(path+"/pars/*.cfg")    # trim down when mdriz is
@@ -261,9 +262,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             return self._helpFunc()
         else:
             return 'No help string found for task "'+self.__taskName+ \
-                '". You must either override the getHelpAsString method in '+ \
-                'your ConfigObjPars subclass, or you must supply such a '+ \
-                'function in your package.'
+                '".  \n\nYou must either override the getHelpAsString '+ \
+                'method in your ConfigObjPars subclass, \n'+ \
+                'or you must supply such a function in your package.'
 
     def _findAssociatedConfigSpecFile(self, cfgFileName):
         """ Given a config file, find its associated config-spec file, and
