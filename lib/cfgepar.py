@@ -91,21 +91,6 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         return filt
 
 
-    def runTask(self):
-        """ Override the base class version so that we can exit the Tkinter
-            loop, since in this stand-alone version of the parameter editor
-            we were spawned from the command line (no background CLI). """
-        # If destroy() is not called, the symptom would be that GUI tasks,
-        # when finished executing, would leave the process in a hung-like state
-        try:
-            from Tkinter import  _default_root
-            if _default_root: _default_root.destroy()
-        except:
-            pass
-        # Now simply defer to base class
-        editpar.EditParDialog.runTask(self)
-
-
     # OPEN: load parameter settings from a user-specified file
     def pfopen(self, event=None):
         """ Load the parameter settings from a user-specified file. """
