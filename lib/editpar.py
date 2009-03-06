@@ -839,14 +839,14 @@ class EditParDialog(object):
                 "%15s %10s %10s\n" % (badEntriesList[i][0], \
                 badEntriesList[i][1], badEntriesList[i][2])
 
-        badEntriesString = badEntriesString + "\nOK to continue using"\
-            " the reset\nvalues or cancel to re-enter\nvalues?\n"
+        badEntriesString = badEntriesString + '\n"OK" to continue using'+ \
+            ' the reset\nvalues or "Cancel" to re-enter\nvalues?\n'
 
         # Invoke the modal message dialog
         return (askokcancel("Notice", badEntriesString))
 
 
-    # QUIT: save the parameter settings and exit epar
+    # SAVE/QUIT: save the parameter settings and exit epar
     def quit(self, event=None):
 
         # first save the child parameters, aborting save if
@@ -1211,16 +1211,18 @@ class EditParDialog(object):
     def checkSetSaveEntries(self, doSave=True, filename=None, comment=None):
 
         self.badEntries = []
+        asNative = self._taskParsObj.knowAsNative()
 
         # Loop over the parameters to obtain the modified information
         for i in range(self.numParams):
 
-            par = self.paramList[i]
-            entry = self.entryNo[i]
+            par = self.paramList[i] # IrafPar or subclass
+            entry = self.entryNo[i] # EparOption or subclass
             # Cannot change an entry if it is a PSET, just skip
             if par.type == "pset":
                 continue
 
+            # get current state of par in the gui
             value = entry.choice.get()
 
             # Set new values for changed parameters - a bit tricky,
@@ -1230,41 +1232,58 @@ class EditParDialog(object):
             # only need to check the isChanged flag.
             if par.isChanged() or value != entry.previousValue:
 
-                # Verify the value is valid. If it is invalid,
+                # CHECK: Verify the value is valid. If it is invalid,
                 # the value will be converted to its original valid value.
                 # Maintain a list of the reset values for user notification.
                 # Always call entryCheck, no matter what type of _taskParsObj,
                 # since entryCheck can do some basic type checking.
+                failed = False
                 if entry.entryCheck():
                     self.badEntries.append([entry.name, value,
                                            entry.choice.get()])
+                    failed = True
                 # See if we need to do a more serious validity check
                 elif self._taskParsObj.canPerformValidation():
-                    valOK, instead = self._taskParsObj.tryValue(entry.name,
-                                                       value, scope=par.scope)
-                    if not valOK:
-                        self.badEntries.append([entry.name, value, instead])
-                        entry.choice.set(instead)
+                    # if we are planning to save in native type, test that way
+                    if asNative:
+                        try:
+                            value = entry.convertToNative(value)
+                        except:
+                            prev = entry.previousValue
+                            self.badEntries.append([entry.name, value, prev])
+                            entry.choice.set(prev)
+                            failed = True
+                    # now try the val in it's validator
+                    if not failed:
+                        valOK, prev = self._taskParsObj.tryValue(entry.name,
+                                                        value, scope=par.scope)
+                        if not valOK:
+                            self.badEntries.append([entry.name,str(value),prev])
+                            entry.choice.set(prev)
+                            failed = True
 
                 # get value again in case it changed - this version IS valid
                 value = entry.choice.get()
+                if asNative: value = entry.convertToNative(value)
 
-                # Update the task parameter (also does the conversion
+                # SET: Update the task parameter (also does the conversion
                 # from string)
                 self._taskParsObj.setParam(par.name, value, scope=par.scope,
                                            check=0)
 
-        # Save results to the given file
+        # SAVE: Save results to the given file
         if doSave and not self._skipParSave_Hook():
             rv=self._taskParsObj.saveParList(filename=filename,comment=comment)
             print rv
 
         return self.badEntries
 
+
     def _skipParSave_Hook(self):
         """ A hook for subclasses.  Return true if the saveParList call should
             be skipped during a "Save" operation. """
         return False # default, do nothing different - save during a save
+
 
     def checkSetSaveChildren(self, doSave=True):
         """Check, then set, then save the parameter settings for
