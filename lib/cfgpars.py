@@ -192,17 +192,11 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # the validation step (next).
         theDict[name] = val
 
-        # For booleans, make sure the value is an actual boolean.  This is
-        # only necessary because BooleanEparOption uses strings, eg. 'yes','no'
-        if theDict.configspec[name].find('boolean_kw')>=0:
-            if not isinstance(val, bool):
-                theDict[name] = str(val).lower() in ('1','on','yes','true')
-
         # If need be, check the proposed value.  Ideally, we'd like to
-        # (somehow elgantly) only check this one item. For now, the 
+        # (somehow elegantly) only check this one item. For now, the best
         # shortcut is to only validate this section.
         if check:
-            ans=self.validate(self._vtor,preserve_errors=True,section=theDict)
+            ans=self.validate(self._vtor, preserve_errors=True, section=theDict)
             if ans != True:
                 flatStr = "All values are invalid!"
                 if ans != False:
@@ -406,6 +400,11 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         return True
 
 
+    def knowAsNative(self):
+        """ Override so we can keep native types in the internal dict. """
+        return True
+
+
     def tryValue(self, name, val, scope=''):
         """ For the given item name (and scope), we are being asked to try
             the given value to see if it would pass validation.  We are not
@@ -427,9 +426,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         theDict[name] = val
 
         # Check the proposed value.  Ideally, we'd like to
-        # (somehow elgantly) only check this one item. For now, the 
+        # (somehow elegantly) only check this one item. For now, the best
         # shortcut is to only validate this section.
-        ans=self.validate(self._vtor,preserve_errors=True,section=theDict)
+        ans=self.validate(self._vtor, preserve_errors=True, section=theDict)
 
         # No matter what ans is, immediately return the item to its original
         # value since we are only checking the value here - not setting.
