@@ -47,6 +47,12 @@ class TaskPars:
         """ Returns bool.  If True, expect tryValue() to be called next. """
         return False
 
+    def knowAsNative(self):
+        """ Returns bool.  Return true if the class prefers in-memory objects
+        to keep (know) their parameter values in native format instead of as
+        strings. """
+        return False
+
     def getHelpAsString(self):
         """ Meant to be overridden - return a task specific help string. """
         return 'No help string available for task "'+self.getName()+'".\n '+ \
