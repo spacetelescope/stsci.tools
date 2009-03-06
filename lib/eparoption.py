@@ -45,6 +45,7 @@ MAXLINES = 100
 XSHIFT   = 110
 DSCRPTN_FLAG = ' (***)'
 
+
 class EparOption(object):
 
     """EparOption base class
@@ -184,6 +185,12 @@ class EparOption(object):
                                                anchor = W)
             self.master.infoText.label.pack(side = LEFT)
             self.master.infoText.pack(side = TOP, anchor = W)
+
+
+    def convertToNative(self, aVal):
+        """ The basic type is natively a string. """
+        if aVal == None: return None
+        return str(aVal)
 
     def focusOut(self, event=None):
         """Clear selection (if text is selected in this widget)"""
@@ -451,6 +458,13 @@ class EnumEparOption(EparOption):
 
 class BooleanEparOption(EparOption):
 
+    def convertToNative(self, aVal):
+        """ Convert to native bool; interpret certain strings. """
+        if aVal == None: return None
+        if isinstance(aVal, bool): return aVal
+        # otherwise interpret strings
+        return str(aVal).lower() in ('1','on','yes','true')
+
     def makeInputWidget(self):
 
         self.unlearnEnabled = NORMAL
@@ -549,6 +563,11 @@ class StringEparOption(EparOption):
 
 class NumberEparOption(EparOption):
 
+    def convertToNative(self, aVal):
+        """ Natively as an int. """
+        if aVal in (None, '', 'None'): return None
+        return int(aVal)
+
     def notNull(self, value):
         vsplit = value.split()
         return vsplit.count("INDEF") != len(vsplit)
@@ -574,13 +593,22 @@ class NumberEparOption(EparOption):
         self.choice.set(self.choice.get().upper())
         return EparOption.entryCheck(self, event)
 
+# numeric widget class specific to floats
+
+class FloatEparOption(NumberEparOption):
+
+    def convertToNative(self, aVal):
+        """ Natively as a float. """
+        if aVal in (None, '', 'None'): return None
+        return float(aVal)
+
 
 # EparOption values for non-string types
 _eparOptionDict = { "b": BooleanEparOption,
-                    "r": NumberEparOption,
-                    "d": NumberEparOption,
+                    "r": FloatEparOption,
+                    "d": FloatEparOption,
                     "i": NumberEparOption,
-                    "ar": NumberEparOption,
+                    "ar": FloatEparOption,
                     "ai": NumberEparOption,
                   }
 
