@@ -71,10 +71,8 @@ def findObjFor(pkgName):
     # Otherwise we'll create a stand-in instance; first find the .cfg file
     path = os.path.dirname(thePkg.__file__)
     if len(path) < 1: path = '.'
-    flist  = glob.glob(path+"/cfg/*.cfg")
-    flist += glob.glob(path+"/config/*.cfg")  # !! do we need all these?
-    flist += glob.glob(path+"/pars/*.cfg")    # trim down when mdriz is
-    flist += glob.glob(path+"/*.cfg")         # finalized and stable
+    flist = glob.glob(path+"/pars/*.cfg")
+    flist += glob.glob(path+"/*.cfg")
     assert len(flist) > 0, "Unfound .cfg file for package: "+pkgName
     # Now go through these and find the first one for the assumed task name
     # The task name for 'BigBlackBox.drizzle' would be 'drizzle'
