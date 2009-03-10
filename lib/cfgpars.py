@@ -124,7 +124,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             configobj.ConfigObj.__init__(self, os.path.abspath(cfgFileName),
                                          configspec=cfgSpecPath)
 
-        # Validate it here for now
+        # Validate it here.  We can't skip this step even if we are just
+        # setting all to defaults, since this sets the values.
         self._vtor = validate.Validator(vtor_checks.FUNC_DICT)
         ans = self.validate(self._vtor, preserve_errors=True,
                             copy=setAllToDefaults)
@@ -170,7 +171,16 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         return self.__paramList
 
     def getDefaultParList(self):
-        return self.__paramList # !!! unfinished
+        """ Return a par list just like ours, but with all default values. """
+        return self.__paramList
+        # The code below (create a new set-to-dflts obj) is correct, but it
+        # adds some time to startup, and it's not clear that this is even
+        # used.  Clicking "Defaults" in the GUI does not call this.  This
+        # only seems to be used in individual widget pop-up menus which may
+        # not even work now.  So we'll simply return __paramList until we
+        # are sure we even need this functionality to be correct.
+#       tmpObj = ConfigObjPars(self.filename, setAllToDefaults=True)
+#       return tmpObj.getParList()
 
     def getFilename(self): return self.filename
 
