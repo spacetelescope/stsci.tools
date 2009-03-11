@@ -31,6 +31,13 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # We don't return from this until the GUI is closed
 
 
+    def _overrideMasterSettings(self):
+        """ Override so that we can run in a different mode. """
+        self._useSimpleAutoClose  = False
+        self._saveAndCloseOnExec  = False # !!! get from tealrc
+        self._showExtraHelpButton = False
+
+
     def _preMainLoop(self):
         """ Override so that we can do some things right before activating. """
         # Put the fname in the title. EditParDialog doesn't do this by default
