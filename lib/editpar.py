@@ -197,6 +197,16 @@ class EditParDialog(object):
         # See if there are any other applicable parameters files to open
         self._areAnyToLoad = self._showOpenButton()
 
+        # Set all default master GUI settings, then
+        # Allow subclasses to override any master GUI settings
+        self._useSimpleAutoClose  = False # certain buttons close GUI also
+        self._saveAndCloseOnExec  = False
+        self._showExtraHelpButton = False
+        self._unpackagedTaskTitle = "Task"
+        self._defaultsButtonTitle = "Defaults"
+        #
+        self._overrideMasterSettings() # give the subclass a chance to disagree
+
         # Create the root window as required, but hide it
         self.parent = parent
         if self.parent == None:
@@ -416,6 +426,11 @@ class EditParDialog(object):
             self._postMainLoop()
 
 
+    def _overrideMasterSettings(self):
+        """ Hook for subclasses to override some attributes if wished. """
+        return
+
+
     def _preMainLoop(self):
         """ Hook for subclasses to override if wished. """
         return
@@ -578,16 +593,6 @@ class EditParDialog(object):
         return self.pkgName == None or len(self.pkgName) < 1
 
 
-    def _getUnpackagedTaskTitle(self):
-        """ Hook to allow subclasses to give a title to this rogue task. """
-        return "Task"
-
-
-    def _getUnlearnButtonTitle(self):
-        """ Hook to allow subclasses to use a different button title. """
-        return "Defaults"
-
-
     def _toggleSectionActiveState(self, sectionName, state, skipList):
         """ Make an entire section (minus skipList items) either active or 
             inactive.  sectionName is the same as the param's scope. """
@@ -614,7 +619,7 @@ class EditParDialog(object):
         # Set up the information strings
         if self._isUnpackagedTask():
             # label for a parameter list is just filename
-            packString = " "+self._getUnpackagedTaskTitle()+" = "+taskName
+            packString = " "+self._unpackagedTaskTitle+" = "+taskName
             Label(textbox, text=packString, bg=self.bkgColor).pack(side=TOP,
                   anchor=W)
         else:
@@ -663,10 +668,10 @@ class EditParDialog(object):
         if self.isChild:
             fileButton.menu.entryconfigure(0, state=DISABLED)
 
-        fileButton.menu.add_command(label="Save",    command=self.save_quit)
+        fileButton.menu.add_command(label="Save & Quit",command=self.save_quit)
         if not self.isChild:
             fileButton.menu.add_command(label="Save As...", command=self.saveAs)
-        fileButton.menu.add_command(label=self._getUnlearnButtonTitle(),
+        fileButton.menu.add_command(label=self._defaultsButtonTitle,
                                     command=self.unlearn)
         fileButton.menu.add_separator()
         fileButton.menu.add_command(label="Cancel", command=self.abort)
@@ -741,7 +746,7 @@ class EditParDialog(object):
             buttonExecute.configure(state=DISABLED)
 
         # Save the parameter settings and exit from epar
-        buttonQuit = Button(box, text="Save",
+        buttonQuit = Button(box, text="Save & Quit",
                             relief=RAISED, command=self.save_quit)
         buttonQuit.pack(side=LEFT, padx=5, pady=7)
         buttonQuit.bind("<Enter>", self.printQuitInfo)
@@ -754,7 +759,7 @@ class EditParDialog(object):
             buttonSaveAs.bind("<Enter>", self.printSaveAsInfo)
 
         # Unlearn all the parameter settings (set back to the defaults)
-        buttonUnlearn = Button(box, text=self._getUnlearnButtonTitle(),
+        buttonUnlearn = Button(box, text=self._defaultsButtonTitle,
                                relief=RAISED, command=self.unlearn)
         buttonUnlearn.pack(side=LEFT, padx=5, pady=7)
         buttonUnlearn.bind("<Enter>", self.printUnlearnInfo)
