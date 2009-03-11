@@ -514,10 +514,10 @@ class EditParDialog(object):
             # whoops, lengths don't match
             raise ValueError("Mismatch between default, current par lists"
                 " for task %s (try unlearn)" % self.taskName)
+        # convert it to a dict
         dict = {}
         for par in dlist:
             dict[par.name] = par
-
         # Build default list sorted into same order as current list
         try:
             dsort = []
@@ -663,7 +663,7 @@ class EditParDialog(object):
         if self.isChild:
             fileButton.menu.entryconfigure(0, state=DISABLED)
 
-        fileButton.menu.add_command(label="Save",    command=self.quit)
+        fileButton.menu.add_command(label="Save",    command=self.save_quit)
         if not self.isChild:
             fileButton.menu.add_command(label="Save As...", command=self.saveAs)
         fileButton.menu.add_command(label=self._getUnlearnButtonTitle(),
@@ -742,7 +742,7 @@ class EditParDialog(object):
 
         # Save the parameter settings and exit from epar
         buttonQuit = Button(box, text="Save",
-                            relief=RAISED, command=self.quit)
+                            relief=RAISED, command=self.save_quit)
         buttonQuit.pack(side=LEFT, padx=5, pady=7)
         buttonQuit.bind("<Enter>", self.printQuitInfo)
 
@@ -847,7 +847,7 @@ class EditParDialog(object):
 
 
     # SAVE/QUIT: save the parameter settings and exit epar
-    def quit(self, event=None):
+    def save_quit(self, event=None):
 
         # first save the child parameters, aborting save if
         # invalid entries were encountered
