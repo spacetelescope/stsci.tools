@@ -13,7 +13,7 @@ import os
 
 # pytools modules
 from irafglobals import userWorkingHome
-import basicpar, eparoption, filedlg, listdlg
+import basicpar, eparoption, filedlg, listdlg, taskpars
 
 # Constants
 MINVIEW     = 500
@@ -21,6 +21,7 @@ MINPARAMS   = 25
 INPUTWIDTH  = 10
 VALUEWIDTH  = 21
 PROMPTWIDTH = 55
+DFT_OPT_FILE = "epar.optionDB"
 
 # Use these values for startup geometry ***for now***
 # PARENT is the main editor window
@@ -187,6 +188,7 @@ class EditParDialog(object):
         self.taskName = self._taskParsObj.getName()
         self.pkgName = self._taskParsObj.getPkgname()
         self.paramList = self._taskParsObj.getParList(docopy=1)
+        self._rcDir = resourceDir
 
         # Ignore the last parameter which is $nargs
         self.numParams = len(self.paramList) - 1
@@ -202,8 +204,10 @@ class EditParDialog(object):
         self._useSimpleAutoClose  = False # certain buttons close GUI also
         self._saveAndCloseOnExec  = False
         self._showExtraHelpButton = False
+        self._showHelpInBrowser   = False
         self._unpackagedTaskTitle = "Task"
         self._defaultsButtonTitle = "Defaults"
+        self._optFile             = DFT_OPT_FILE
         #
         self._overrideMasterSettings() # give the subclass a chance to disagree
 
@@ -246,21 +250,25 @@ class EditParDialog(object):
             self.updateTitle(self.taskName)
         self.top.iconname(self.iconLabel)
 
-        # Read in the epar options database file
-        optfile = "epar.optionDB"
+        # Read in the tk options database file
         try:
             # User's current directory
-            self.top.option_readfile(os.path.join(os.curdir,optfile))
+            self.top.option_readfile(os.path.join(os.curdir, self._optFile))
         except TclError:
             try:
                 # User's startup directory
-                self.top.option_readfile(os.path.join(userWorkingHome,optfile))
+                self.top.option_readfile(os.path.join(userWorkingHome,
+                                                      self._optFile))
             except TclError:
                 try:
                     # App default
-                    self.top.option_readfile(os.path.join(resourceDir,optfile))
+                    self.top.option_readfile(os.path.join(self._rcDir,
+                                                          self._optFile))
                 except TclError:
-                    print "Could not read: "+optfile
+                    if self._optFile != DFT_OPT_FILE:
+                        pass
+                    else:
+                        raise
 
         # Create an empty list to hold child dialogs
         # *** Not a good way, REDESIGN with Mediator!
@@ -453,6 +461,11 @@ class EditParDialog(object):
 
         # Here we catch if this version is run by accident
         raise RuntimeError("Bug: EditParDialog is not to be used directly")
+
+
+    def _saveGuiSettings(self):
+        """ Hook for subclasses to save off GUI settings somewhere. """
+        return # skip this by default
 
 
     def updateTitle(self, atitle):
@@ -668,7 +681,10 @@ class EditParDialog(object):
         if self.isChild:
             fileButton.menu.entryconfigure(0, state=DISABLED)
 
-        fileButton.menu.add_command(label="Save & Quit",command=self.save_quit)
+        saqlbl ="Save"
+        if self._useSimpleAutoClose: saqlbl += " & Quit"
+        fileButton.menu.add_command(label=saqlbl,
+                                    command=self.saveAndQuit)
         if not self.isChild:
             fileButton.menu.add_command(label="Save As...", command=self.saveAs)
         fileButton.menu.add_command(label=self._defaultsButtonTitle,
@@ -686,7 +702,10 @@ class EditParDialog(object):
 
         # Set up the menu for the HELP viewing choice
         self.helpChoice = StringVar()
-        self.helpChoice.set("WINDOW")
+        if self._showHelpInBrowser:
+            self.helpChoice.set("BROWSER")
+        else:
+            self.helpChoice.set("WINDOW")
 
         optionButton = Menubutton(menubar, text="Options")
         optionButton.pack(side=LEFT, padx=2)
@@ -746,17 +765,11 @@ class EditParDialog(object):
             buttonExecute.configure(state=DISABLED)
 
         # Save the parameter settings and exit from epar
-        buttonQuit = Button(box, text="Save & Quit",
-                            relief=RAISED, command=self.save_quit)
-        buttonQuit.pack(side=LEFT, padx=5, pady=7)
-        buttonQuit.bind("<Enter>", self.printQuitInfo)
-
-        # Save all the current parameter settings to a separate file
-        if not self.isChild:
-            buttonSaveAs = Button(box, text="Save As...",
-                                  relief=RAISED, command=self.saveAs)
-            buttonSaveAs.pack(side=LEFT, padx=5, pady=7)
-            buttonSaveAs.bind("<Enter>", self.printSaveAsInfo)
+        saqlbl ="Save"
+        if self._useSimpleAutoClose: saqlbl += " & Quit"
+        btn = Button(box, text=saqlbl, relief=RAISED, command=self.saveAndQuit)
+        btn.pack(side=LEFT, padx=5, pady=7)
+        btn.bind("<Enter>", self.printQuitInfo)
 
         # Unlearn all the parameter settings (set back to the defaults)
         buttonUnlearn = Button(box, text=self._defaultsButtonTitle,
@@ -788,8 +801,10 @@ class EditParDialog(object):
 
         value = self.helpChoice.get()
         if value == "WINDOW":
+            self._showHelpInBrowser = False
             self.help()
         else:
+            self._showHelpInBrowser = True
             self.htmlHelp()
 
 
@@ -852,7 +867,7 @@ class EditParDialog(object):
 
 
     # SAVE/QUIT: save the parameter settings and exit epar
-    def save_quit(self, event=None):
+    def saveAndQuit(self, event=None):
 
         # first save the child parameters, aborting save if
         # invalid entries were encountered
@@ -869,16 +884,19 @@ class EditParDialog(object):
                           self.taskName)
             if not ansOKCANCEL:
                 return
+        # If there were no invalid entries or the user says OK, continue...
 
-        # If there were no invalid entries or the user says OK
+        # Save any GUI settings we care about.  This is a good time to do so
+        # even if the window isn't closing.
+        self._saveGuiSettings()
+
+        # Done saving.  Only close the window if we are running in that mode.
+        if not self._useSimpleAutoClose:
+            return
 
         # Remove the main epar window
         self.top.focus_set()
         self.top.withdraw()
-
-        # Do not destroy the window, just hide it for now.
-        # This is so EXECUTE will not get an error - properly use Mediator.
-        #self.top.destroy()
 
         # If not a child window, quit the entire session
         if not self.isChild:
@@ -984,7 +1002,10 @@ class EditParDialog(object):
             if not ansOKCANCEL:
                 return
 
-        # If there were no invalid entries or the user says OK
+        # If there were no invalid entries or the user said OK
+
+        # Save any GUI settings we care about since window is closing
+        self._saveGuiSettings()
 
         # Remove the main epar window
         self.top.focus_set()
@@ -1277,17 +1298,18 @@ class EditParDialog(object):
                                            check=0)
 
         # SAVE: Save results to the given file
-        if doSave and not self._skipParSave_Hook():
-            rv=self._taskParsObj.saveParList(filename=filename,comment=comment)
-            print rv
+        if doSave:
+            out = self._doActualSave(filename, comment)
+            if len(out): print out
 
         return self.badEntries
 
 
-    def _skipParSave_Hook(self):
-        """ A hook for subclasses.  Return true if the saveParList call should
-            be skipped during a "Save" operation. """
-        return False # default, do nothing different - save during a save
+    def _doActualSave(self, filename, comment):
+        """ Here we call the method on the _taskParsObj to do the actual
+        save.  Return a string result to be printed to the screen. """
+        rv = self._taskParsObj.saveParList(filename=filename, comment=comment)
+        return rv
 
 
     def checkSetSaveChildren(self, doSave=True):
@@ -1325,4 +1347,8 @@ class EditParDialog(object):
         # Use the run method of the IrafTask class
         # Set mode='h' so it does not prompt for parameters (like IRAF epar)
         # Also turn on parameter saving
-        self._taskParsObj.run(mode='h', _save=1)
+        try:
+            self._taskParsObj.run(mode='h', _save=1)
+        except taskpars.NoExecError, nee:  # catch only this, let all else thru
+            showwarning(message="No way found to run task\n\n"+\
+                        nee.message, title="Can Not Run Task")

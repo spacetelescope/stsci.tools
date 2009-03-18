@@ -3,8 +3,9 @@
 $Id$
 """
 
-import os, tkMessageBox
+import configobj, os, tkMessageBox
 import cfgpars, editpar, filedlg
+from cfgpars import APP_NAME
 
 
 # Starts a GUI session
@@ -23,19 +24,23 @@ def epar(theTask, parent=None, isChild=0, loadOnly=False):
 class ConfigObjEparDialog(editpar.EditParDialog):
 
     def __init__(self, theTask, parent=None, isChild=0,
-                 title="TEAL", childList=None):
+                 title=APP_NAME, childList=None):
 
         # Init base - calls _setTaskParsObj(), sets self.taskName, etc
         editpar.EditParDialog.__init__(self, theTask, parent, isChild,
-                                       title, childList, resourceDir='')
+                                       title, childList,
+                                       resourceDir=cfgpars.getAppDir())
         # We don't return from this until the GUI is closed
 
 
     def _overrideMasterSettings(self):
         """ Override so that we can run in a different mode. """
-        self._useSimpleAutoClose  = False
-        self._saveAndCloseOnExec  = False # !!! get from tealrc
+        cod = self._getGuiSettings()
+        self._useSimpleAutoClose  = False # is a fundamental issue here
         self._showExtraHelpButton = False
+        self._saveAndCloseOnExec  = cod.get('saveAndCloseOnExec', False)
+        self._showHelpInBrowser   = cod.get('showHelpInBrowser', False)
+        self._optFile             = APP_NAME.lower()+".optionDB"
 
 
     def _preMainLoop(self):
@@ -44,7 +49,28 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self.updateTitle(self._taskParsObj.filename)
 
 
-    def _saveAsPostSave_Hook(self, fnameToBeUsed):
+    def _doActualSave(self, filename, comment):
+        """ Override this so we can handle case of file not writable. """
+        try:
+            rv=self._taskParsObj.saveParList(filename=filename,comment=comment)
+            return rv
+        except IOError:
+            # User does not have privs to write to this file. Get name of local
+            # choice and try to use that.
+            mine = self._rcDir+os.sep+self._taskParsObj.getName()+'.cfg'
+            # Tell them the context is changing, and where we are saving
+            msg = 'Installed config file for task "'+ \
+                  self._taskParsObj.getName()+'" is unwritable. \n'+ \
+                  'Values will be saved to: \n\n\t"'+mine+'".'
+            tkMessageBox.showwarning(message=msg, title="File unwritable!")
+            # Try saving their copy
+            rv=self._taskParsObj.saveParList(filename=mine, comment=comment)
+            # Treat like a save-as
+            self._saveAsPostSave_Hook(mine)
+            return rv
+
+
+    def _saveAsPostSave_Hook(self, fnameToBeUsed_UNUSED):
         """ Override this so we can update the title bar. """
         self.updateTitle(self._taskParsObj.filename) # _taskParsObj is correct
 
@@ -138,23 +164,23 @@ class ConfigObjEparDialog(editpar.EditParDialog):
 
 
     def unlearn(self, event=None):
-        """ Override this so that we can set to deafult values our way. """
+        """ Override this so that we can set to default values our way. """
         self._setToDefaults()
+
 
     def _setToDefaults(self):
         """ Load the default parameter settings into the GUI. """
 
-        print "Loading default "+self.taskName+" param values"
-
-        # Create an empty onject, where every item will be set to it's default
-        # value
+        # Create an empty object, where every item is set to it's default value
         try:
             tmpObj = cfgpars.ConfigObjPars(self._taskParsObj.filename,
                                            setAllToDefaults=True)
+            print "Loading default "+self.taskName+" values via: "+ \
+                  os.path.basename(tmpObj._original_configspec)
         except Exception, ex:
-            msg = "Error Creating Default Object"
+            msg = "Error Determining Defaults"
             tkMessageBox.showerror(message=msg+'\n\n'+ex.message,
-                                   title="Error Creating Default Object")
+                                   title="Error Determining Defaults")
             return
 
         # Set the GUI entries to these values (let the user Save after)
@@ -164,3 +190,32 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         except editpar.UnfoundParamError, pe:
             tkMessageBox.showerror(message=pe.message,
                                    title="Error Setting to Default Values")
+
+    def _getGuiSettings(self):
+        """ Return a dict (ConfigObj) of all user settings found in rcFile. """
+        # Put the settings into a ConfigObj dict (don't use a config-spec)
+        rcFile = self._rcDir+os.sep+APP_NAME.lower()+'.cfg'
+        if os.path.exists(rcFile):
+            return configobj.ConfigObj(rcFile, unrepr=True)
+            # unrepr: for simple types, eliminates need for .cfgspc
+        else:
+            return {}
+
+
+    def _saveGuiSettings(self):
+        """ The base class doesn't implement this, so we will - save settings
+        (only GUI stuff, not task related) to a file. """
+        # Put the settings into a ConfigObj dict (don't use a config-spec)
+        rcFile = self._rcDir+os.sep+APP_NAME.lower()+'.cfg'
+        #
+        if os.path.exists(rcFile): os.remove(rcFile)
+        co = configobj.ConfigObj(rcFile)
+        self._showHelpInBrowser = self.helpChoice.get() != "WINDOW"
+        co['showHelpInBrowser']  = self._showHelpInBrowser
+        co['saveAndCloseOnExec'] = self._saveAndCloseOnExec
+        co.initial_comment = ['This file is automatically generated by '+\
+                              APP_NAME+'.  Do not edit.']
+        co.final_comment = [''] # ensure \n at EOF
+        co.unrepr = True # for simple types, eliminates need for .cfgspc
+        co.write()
+

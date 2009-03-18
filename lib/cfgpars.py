@@ -3,13 +3,29 @@
 $Id$
 """
 
-import glob, os, sys
+import glob, os, stat, sys
 
 # ConfigObj modules
-from pytools import configobj, validate
+import configobj, validate
 
 # Local modules
 import basicpar, eparoption, irafutils, taskpars, vtor_checks
+
+# Globals and useful functions
+
+APP_NAME = "TEAL"
+
+def getAppDir():
+    """ Return our application dir.  Create it if it doesn't exist. """
+    # Be sure the resource dir exists
+    theDir = os.path.expanduser('~/.')+APP_NAME.lower()
+    if not os.path.exists(theDir):
+        try:
+            os.mkdir(theDir)
+        except OSError:
+            print 'Could not create "'+theDir+'" to save GUI settings.'
+            theDir = "./"+APP_NAME.lower()
+    return theDir
 
 
 def getObjectFromTaskArg(theTask):
@@ -52,49 +68,71 @@ def getEmbeddedKeyVal(cfgFileName, kwdName, defaultVal=None):
     else:
         raise KeyError('Unfound item: "'+kwdName+'" in: '+cfgFileName)
 
-def findObjFor(pkgName):
-    """ Locate the appropriate ConfigObjPars (or subclass) within the given
-        package. """
+
+def findCfgFileForPkg(pkgName, theExt, taskName=None):
+    """ Locate the configuration files for/from/within the given package.
+    pkgName is a string python package name.  theExt is either '.cfg' or
+    '.cfgspc'. If the task name is known, it is given as taskName, otherwise
+    on is determined using the pkgName. """
+    # arg check
+    ext = theExt
+    if ext[0] != '.': ext = '.'+theExt
+    # do the import
     try:
         fl = []
         if pkgName.find('.') > 0:
             fl = [ pkgName[:pkgName.rfind('.')], ]
         thePkg = __import__(str(pkgName), fromlist=fl)
     except:
-        raise RuntimeError("Unfound package or config file for: "+\
+        raise RuntimeError("Unfound package or "+ext+" file for: "+\
                            str(pkgName))
-
-    # So it was a package name - make/get a ConfigObjPars out of it
-    if hasattr(thePkg, 'getConfigObjPars'):
-        return thePkg.getConfigObjPars() # use their ConfigObjPars subclass
-
-    # Otherwise we'll create a stand-in instance; first find the .cfg file
+    # So it was a package name - find the .cfg or .cfgspc file
     path = os.path.dirname(thePkg.__file__)
     if len(path) < 1: path = '.'
-    flist = glob.glob(path+"/pars/*.cfg")
-    flist += glob.glob(path+"/*.cfg")
-    assert len(flist) > 0, "Unfound .cfg file for package: "+pkgName
-    # Now go through these and find the first one for the assumed task name
-    # The task name for 'BigBlackBox.drizzle' would be 'drizzle'
-    assumedTaskName = pkgName.split(".")[-1]
+    flist = glob.glob(path+"/pars/*"+ext)
+    flist += glob.glob(path+"/*"+ext)
+    assert len(flist) > 0, "Unfound "+ext+" files for package: "+pkgName
+
+    # Now go through these and find the first one for the assumed or given
+    # task name.  The task name for 'BigBlackBox.drizzle' would be 'drizzle'.
+    if taskName == None:
+        taskName = pkgName.split(".")[-1]
     flist.sort()
     for f in flist:
-        itsTask = getEmbeddedKeyVal(f, '_task_name_', '')
-        if itsTask == assumedTaskName:
-            return ConfigObjPars(f, findFuncsUnder=thePkg)
-    raise RuntimeError('No .cfg files found in package: "'+pkgName+ \
-                       '" for task: "'+assumedTaskName+'"')
+        # A .cfg file gets checked for _task_name_ = val, but a .cfgspc file
+        # will have a string check function signature as the val.
+        if ext == '.cfg':
+           itsTask = getEmbeddedKeyVal(f, '_task_name_', '')
+        else: # .cfgspc
+           sigStr  = getEmbeddedKeyVal(f, '_task_name_', '')
+           # the .cfgspc file MUST have an entry for _task_name_ w/ a default
+           itsTask = vtor_checks.sigStrToKwArgsDict(sigStr)['default']
+        if itsTask == taskName:
+            # We've found the correct file in an installation area.  Return
+            # the package object and the found file.
+            return thePkg, f
+    raise RuntimeError('No valid '+ext+' files found in package: "'+pkgName+ \
+                       '" for task: "'+taskName+'"')
+
+
+def findObjFor(pkgName):
+    """ Locate the appropriate ConfigObjPars (or subclass) within the given
+        package. """
+    # Get the .cfg file
+    thePkg, theFile = findCfgFileForPkg(pkgName, '.cfg')
+    # Create a stand-in instance from this (expected to be) unwritable file.
+    return ConfigObjPars(theFile, findFuncsUnder=thePkg, forceReadOnly=True)
 
 
 class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     """ This represents a task's dict of ConfigObj parameters. """
 
     def __init__(self, cfgFileName, forUseWithEpar=True,
-                 setAllToDefaults=False, resourceDir='',
-                 findFuncsUnder=None):
+                 setAllToDefaults=False,
+                 findFuncsUnder=None, forceReadOnly=False):
 
         self._forUseWithEpar = forUseWithEpar
-        self._resourceDir = resourceDir
+        self._rcDir = getAppDir()
         self._triggers = None
 
         # Set up ConfigObj stuff
@@ -114,6 +152,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         else:
             # this is the real deal, expect a real file name
             self.__taskName = getEmbeddedKeyVal(cfgFileName, '_task_name_')
+            if forceReadOnly:
+                self._checkSetReadOnly(cfgFileName)
 
         cfgSpecPath = self._findAssociatedConfigSpecFile(cfgFileName)
         assert os.path.exists(cfgSpecPath), \
@@ -189,6 +229,18 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         we are. """
         return aCfgObjPrs.getName() == self.getName()
 
+    def _checkSetReadOnly(self, cfgFileName):
+        """ See if we have write-privileges to this file.  If we do, are we
+        are not supposed to, then fix that case. """
+        if os.access(cfgFileName, os.W_OK):
+            # We can write to this but it is supposed to be read-only. Fix it.
+            privs = os.stat(cfgFileName).st_mode
+            try:
+                os.chmod(cfgFileName, privs ^ stat.S_IWUSR)
+            except OSError:
+                # don't mind - this is just a goodwill attempt anyway
+                pass
+
     def setParam(self, name, val, scope='', check=1):
         """ Find the ConfigObj entry.  Update the __paramList. """
         theDict = self
@@ -253,7 +305,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             if '_save' in kw: kw.pop('_save')
             return self._runFunc(self, *args, **kw)
         else:
-            raise RuntimeError('No way to run task "'+self.__taskName+ \
+            raise taskpars.NoExecError('No way to run task "'+self.__taskName+\
                 '". You must either override the "run" method in your '+ \
                 'ConfigObjPars subclass, or you must supply a "run" '+ \
                 'function in your package.')
@@ -279,12 +331,19 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         retval = os.path.dirname(cfgFileName)+os.sep+self.__taskName+".cfgspc"
         if os.path.isfile(retval): return retval
 
-        # Also try _resourceDir
-        retval = self._resourceDir+os.sep+self.__taskName+".cfgspc"
+        # Also try the resource dir
+        retval = self._rcDir+os.sep+self.__taskName+".cfgspc"
         if os.path.isfile(retval): return retval
 
+        # Now try to import the taskname and see if there is a .cfgspc file
+        # in that directory
+        thePkg, theFile = findCfgFileForPkg(self.__taskName, '.cfgspc',
+                                            taskName = self.__taskName)
+        return theFile
+
         # unfound
-        raise RuntimeError("Unfound config-spec file: "+self.__taskName+".cfgspc")
+        raise RuntimeError('Unfound config-spec file for task: "'+ \
+                           self.__taskName+'"')
 
 
     def _getParamsFromConfigDict(self, cfgObj, scopePrefix='',

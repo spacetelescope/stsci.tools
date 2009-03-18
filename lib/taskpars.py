@@ -3,6 +3,8 @@
 $Id$
 """
 
+class NoExecError(Exception): pass
+
 class TaskPars:
     """ This represents a task's collection of configurable parameters.
     This class is meant to be mostly abstract, though there is some
@@ -41,7 +43,7 @@ class TaskPars:
 
     def run(self, *args, **kw):
         """ Runs the task with the known parameters. """
-        raise RuntimeError("Bug: class TaskPars is not to be used directly")
+        raise NoExecError("Bug: class TaskPars is not to be used directly")
 
     def canPerformValidation(self):
         """ Returns bool.  If True, expect tryValue() to be called next. """
