@@ -621,6 +621,7 @@ def parseFilename(filename):
     else:
         _fname = filename
         _extn = None
+    
     return _fname,_extn
 
 def parseExtn(extn=None):
@@ -673,7 +674,14 @@ def getExtn(fimg,extn=None):
     else:
         # An extension was provided, so parse it out...
         if repr(extn).find(',') > 1:
-            _extns = extn.split(',')
+            if isinstance(extn,tuple):
+                # We have a tuple possibly created by parseExtn(), so 
+                # turn it into a list for easier manipulation.
+                _extns = list(extn)
+                if '' in _extns:
+                    _extns.remove('')
+            else:
+                _extns = extn.split(',')
             # Two values given for extension:
             #    for example, 'sci,1' or 'dq,1'
             try:
