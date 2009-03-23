@@ -52,7 +52,7 @@ def getObjectFromTaskArg(theTask):
     return findObjFor(theTask)
 
 
-def getEmbeddedKeyVal(cfgFileName, kwdName, defaultVal=None):
+def getEmbeddedKeyVal(cfgFileName, kwdName, dflt=None):
     """ Read a config file and pull out the value of a given keyword. """
     # Assume this is a ConfigObj file.  Use that s/w to quickly read it and
     # put it in dict format.  Assume kwd is at top level (not in a section).
@@ -62,9 +62,9 @@ def getEmbeddedKeyVal(cfgFileName, kwdName, defaultVal=None):
         del junkObj
         return retval
     # Not found
-    if defaultVal:
+    if dflt != None:
         del junkObj
-        return defaultVal
+        return dflt
     else:
         raise KeyError('Unfound item: "'+kwdName+'" in: '+cfgFileName)
 
