@@ -177,7 +177,7 @@ class EditParDialog(object):
 
     def __init__(self, theTask, parent=None, isChild=0,
                  title="PyTools Parameter Editor", childList=None,
-                 resourceDir=''):
+                 resourceDir='.'):
 
         # Call our (or a subclass's) _setTaskParsObj() method
         self._setTaskParsObj(theTask)
@@ -195,9 +195,6 @@ class EditParDialog(object):
 
         # Get default parameter values for unlearn
         self._setupDefaultParamList()
-
-        # See if there are any other applicable parameters files to open
-        self._areAnyToLoad = self._showOpenButton()
 
         # Set all default master GUI settings, then
         # Allow subclasses to override any master GUI settings
@@ -655,6 +652,8 @@ class EditParDialog(object):
         # Generate the menus
         fileMenu = self.makeFileMenu(menubar)
 
+        openMenu = self.makeOpenMenu(menubar)
+
         # When redesigned, optionsMenu should only be on the parent
         #if not self.isChild:
         #    optionsMenu = self.makeOptionsMenu(menubar)
@@ -673,9 +672,7 @@ class EditParDialog(object):
 
         fileButton.menu = Menu(fileButton, tearoff=0)
 
-        if self._areAnyToLoad:
-            fileButton.menu.add_command(label="Open...", command=self.pfopen)
-            fileButton.menu.add_separator()
+#       fileButton.menu.add_command(label="Open...", command=self.pfopen)
 
         fileButton.menu.add_command(label="Execute", command=self.execute)
         if self.isChild:
@@ -696,6 +693,60 @@ class EditParDialog(object):
         fileButton["menu"] = fileButton.menu
 
         return fileButton
+
+    def _updateOpen(self):
+        # Get new data
+        flist = self._getOpenChoices()
+
+        # Delete old choices
+        if self._numOpenMenuItems > 0:
+            self._openMenu.delete(0, self._numOpenMenuItems-1)
+
+        # Add all new choices
+        self._numOpenMenuItems = len(flist)
+        if self._numOpenMenuItems > 0:
+            for ff in flist:
+                if ff[-3:] == '...':
+                    self._openMenu.add_separator()
+                    self._numOpenMenuItems += 1
+                self._openMenu.add_radiobutton(label=ff, command=self.pfopen,
+                                               variable=self._openMenuChoice)
+                                               # value=fname ... (same as label)
+        else:
+            showwarning(title="No Files To Open", message="No extra "+ \
+                'parameter files found for task "'+self.taskName+'".')
+
+    def _getOpenChoices(self):
+        """ Get the current list of file name choices for the Open button.
+            This is meant for subclasses to override. """
+        return []
+
+    # Method to generate an "Open" menu
+    def makeOpenMenu(self, menubar):
+
+        self._openMenuChoice = StringVar() # this is used till GUI closes
+        self._numOpenMenuItems = 1 # see dummy
+
+        openBtn = Menubutton(menubar, text='Open...')
+        openBtn.bind("<Enter>", self.printOpenInfo)
+        openBtn.pack(side=LEFT, padx=2)
+
+        openBtn.menu = Menu(openBtn, tearoff=0, postcommand=self._updateOpen)
+        openBtn.menu.bind("<Enter>", self.printOpenInfo)
+        openBtn.menu.add_radiobutton(label=' ', command=self.pfopen, # dummy
+                                     variable=self._openMenuChoice)
+                                     # value=fname ... (same as label)
+
+        if self.isChild:
+            openBtn.menu.entryconfigure(0, state=DISABLED)
+
+        # Associate the menu with the menu button
+        openBtn["menu"] = openBtn.menu
+
+        # Keep a ref for ourselves
+        self._openMenu = openBtn.menu
+
+        return openBtn
 
     # Method to generate the "Options" menu for the parent EPAR only
     def makeOptionsMenu(self, menubar):
@@ -744,21 +795,15 @@ class EditParDialog(object):
         # Button goes back to the nonactive color.
         top.bind("<Leave>", self.clearInfo)
 
-        # Allow them to load/open a file if the right kind was found
-        if self._areAnyToLoad:
-            buttonOpen = Button(box, text="Open...",
-                                relief=RAISED, command=self.pfopen)
-            buttonOpen.pack(side=LEFT, padx=5, pady=7)
-            buttonOpen.bind("<Enter>", self.printOpenInfo)
-            # separate this button from the others - it's unusual
-            strut = Label(box, text="")
-            strut.pack(side=LEFT, padx=20)
-
         # Execute the task
         buttonExecute = Button(box, text="Execute",
                                relief=RAISED, command=self.execute)
         buttonExecute.pack(side=LEFT, padx=5, pady=7)
         buttonExecute.bind("<Enter>", self.printExecuteInfo)
+        if not self._useSimpleAutoClose:
+            # separate this button from the others - it's unusual
+            strut = Label(box, text="")
+            strut.pack(side=LEFT, padx=20)
 
         # EXECUTE button is disabled for child windows
         if self.isChild:
@@ -784,12 +829,14 @@ class EditParDialog(object):
         buttonAbort.pack(side=LEFT, padx=5, pady=7)
         buttonAbort.bind("<Enter>", self.printAbortInfo)
 
-        # Generate the a Help button
-        buttonHelp = Button(box, text="Task Help",
-                            relief=RAISED, command=self.setHelpViewer)
-        buttonHelp.pack(side=RIGHT, padx=5, pady=7)
-        buttonHelp.bind("<Enter>", self.printHelpInfo)
+        # Generate the Help button
+        if self._showExtraHelpButton:
+            buttonHelp = Button(box, text="Task Help",
+                                relief=RAISED, command=self.setHelpViewer)
+            buttonHelp.pack(side=RIGHT, padx=5, pady=7)
+            buttonHelp.bind("<Enter>", self.printHelpInfo)
 
+        # Pack
         box.pack(fill=X, expand=FALSE)
 
 
@@ -914,7 +961,7 @@ class EditParDialog(object):
 
     # OPEN: load parameter settings from a user-specified file
     def pfopen(self, event=None):
-        """ Load the parameter settings from a user-specified file.  Any
+        """ Load the parameter settings from a user-specified file.  Any epar
         changes here should be coordinated with the corresponding tpar pfopen
         function. """
         raise RuntimeError("Bug: EditParDialog is not to be used directly")
@@ -1217,7 +1264,7 @@ class EditParDialog(object):
                     if len(par.scope): pnm = par.scope+'.'+par.name
                     raise UnfoundParamError('Error - Unfound Parameter! \n\n'+\
                       'Expected parameter "'+pnm+'" for task "'+ \
-                      self._taskParsObj.getName()+'". \nThere may be others...')
+                      self.taskName+'". \nThere may be others...')
 
             else: # assume has getValue()
                 par.set(aParList.getValue(par.name, native=1, prompt=0))

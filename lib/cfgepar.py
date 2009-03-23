@@ -3,7 +3,7 @@
 $Id$
 """
 
-import configobj, os, tkMessageBox
+import configobj, glob, os, tkMessageBox
 import cfgpars, editpar, filedlg
 from cfgpars import APP_NAME
 
@@ -60,9 +60,9 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             mine = self._rcDir+os.sep+self._taskParsObj.getName()+'.cfg'
             # Tell them the context is changing, and where we are saving
             msg = 'Installed config file for task "'+ \
-                  self._taskParsObj.getName()+'" is unwritable. \n'+ \
-                  'Values will be saved to: \n\n\t"'+mine+'".'
-            tkMessageBox.showwarning(message=msg, title="File unwritable!")
+                  self._taskParsObj.getName()+'" is not to be overwritten.'+ \
+                  '  Values will be saved to: \n\n\t"'+mine+'".'
+            tkMessageBox.showwarning(message=msg, title="Will not overwrite!")
             # Try saving their copy
             rv=self._taskParsObj.saveParList(filename=mine, comment=comment)
             # Treat like a save-as
@@ -118,25 +118,88 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         """ Return a string to be used as the filter arg to the save file
             dialog during Save-As. """
         filt = '*.cfg'
-        if 'UPARM_AUX' in os.environ:
-            upx = os.environ['UPARM_AUX']
+        envVarName = APP_NAME.upper()+'_CFG'
+        if envVarName in os.environ:
+            upx = os.environ[envVarName]
             if len(upx) > 0:  filt = upx+"/*.cfg" 
         return filt
+
+
+    def _getCfgFilesInDirForTask(self, aDir, aTask):
+        """ This is a specialized function which is meant only to keep the
+        same code from needlessly being much repeated in _getOpenChoices. """
+        flist = glob.glob(aDir+os.sep+'*.cfg')
+        return [f for f in flist if cfgpars.getEmbeddedKeyVal(f, \
+                                     '_task_name_', '') == aTask]
+
+
+    def _getOpenChoices(self):
+        """ Go through all possible sites to find applicable .cfg files.
+            Return as an iterable. """
+        tsk = self._taskParsObj.getName()
+        taskFiles = set()
+        dirsSoFar = [] # this helps speed this up (skip unneeded globs)
+
+        # last dir
+        aDir = os.path.dirname(self._taskParsObj.filename)
+        if len(aDir) < 1: aDir = os.curdir
+        dirsSoFar.append(aDir)
+        taskFiles.update(self._getCfgFilesInDirForTask(aDir, tsk))
+
+        # current dir
+        aDir = os.getcwd()
+        if aDir not in dirsSoFar:
+            dirsSoFar.append(aDir)
+            taskFiles.update(self._getCfgFilesInDirForTask(aDir, tsk))
+
+        # task's python pkg dir (if tsk == python pkg name)
+        try:
+            pkgf = cfgpars.findCfgFileForPkg(tsk, '.cfg', taskName=tsk)[1]
+            taskFiles.update( (pkgf,) )
+        except:
+            pass # no big deal - maybe there is no python package
+
+        # user's own resourceDir
+        aDir = self._rcDir
+        if aDir not in dirsSoFar:
+            dirsSoFar.append(aDir)
+            taskFiles.update(self._getCfgFilesInDirForTask(aDir, tsk))
+
+        # extra loc - see if they used the app's env. var
+        aDir = dirsSoFar[0] # flag to skip this if no env var found
+        envVarName = APP_NAME.upper()+'_CFG'
+        if envVarName in os.environ: aDir = os.environ[envVarName]
+        if aDir not in dirsSoFar:
+            dirsSoFar.append(aDir)
+            taskFiles.update(self._getCfgFilesInDirForTask(aDir, tsk))
+
+        # At the very end, add an option which we will later interpret to mean
+        # to open the file dialog.
+        taskFiles = list(taskFiles) # so as to keep next item at end of seq
+        taskFiles.sort()
+        taskFiles.append("Other ...")
+
+        return taskFiles
 
 
     # OPEN: load parameter settings from a user-specified file
     def pfopen(self, event=None):
         """ Load the parameter settings from a user-specified file. """
 
-        # could use Tkinter's FileDialog, but this one is prettier
-        fd = filedlg.PersistLoadFileDialog(self.top, "Load Config File",
-                                           self._getSaveAsFilter())
-        if fd.Show() != 1:
+        # Get the selected file name
+        fname = self._openMenuChoice.get()
+
+        # Also allow them to simply find any file - do not check _task_name_...
+        # (could use Tkinter's FileDialog, but this one is prettier)
+        if fname[-3:] == '...':
+            fd = filedlg.PersistLoadFileDialog(self.top, "Load Config File",
+                                               self._getSaveAsFilter())
+            if fd.Show() != 1:
+                fd.DialogCleanup()
+                return
+            fname = fd.GetFileName()
             fd.DialogCleanup()
-            return
-        fname = fd.GetFileName()
-        fd.DialogCleanup()
-        if fname == None: return # canceled
+            if fname == None: return # canceled
 
         # load it into a tmp object
         tmpObj = cfgpars.ConfigObjPars(fname)
