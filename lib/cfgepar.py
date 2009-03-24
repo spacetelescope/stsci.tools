@@ -77,10 +77,6 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self.updateTitle(self._taskParsObj.filename) # _taskParsObj is correct
 
 
-    # Always allow the Open button ?
-    def _showOpenButton(self): return True
-
-
     # Employ an edited callback for a given item?
     def _defineEditedCallbackObjectFor(self, parScope, parName):
         """ Override to allow us to use an edited callback. """
