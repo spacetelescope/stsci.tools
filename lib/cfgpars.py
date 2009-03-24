@@ -49,7 +49,7 @@ def getObjectFromTaskArg(theTask):
         return ConfigObjPars(theTask)
 
     # Else it must be a package name to load
-    return findObjFor(theTask)
+    return getParsObjForPyPkg(theTask)
 
 
 def getEmbeddedKeyVal(cfgFileName, kwdName, dflt=None):
@@ -70,7 +70,7 @@ def getEmbeddedKeyVal(cfgFileName, kwdName, dflt=None):
 
 
 def findCfgFileForPkg(pkgName, theExt, taskName=None):
-    """ Locate the configuration files for/from/within the given package.
+    """ Locate the configuration files for/from/within a given python package.
     pkgName is a string python package name.  theExt is either '.cfg' or
     '.cfgspc'. If the task name is known, it is given as taskName, otherwise
     on is determined using the pkgName. """
@@ -115,13 +115,38 @@ def findCfgFileForPkg(pkgName, theExt, taskName=None):
                        '" for task: "'+taskName+'"')
 
 
-def findObjFor(pkgName):
+def getCfgFilesInDirForTask(aDir, aTask):
+    """ This is a specialized function which is meant only to keep the
+        same code from needlessly being much repeated throughout this
+        application.  This must be kept as fast and as light as possible. """
+    flist = glob.glob(aDir+os.sep+'*.cfg')
+    return [f for f in flist if \
+            getEmbeddedKeyVal(f, '_task_name_', '') == aTask]
+
+
+def getParsObjForPyPkg(pkgName):
     """ Locate the appropriate ConfigObjPars (or subclass) within the given
         package. """
-    # Get the .cfg file
+    # Get the python package and it's .cfg file
     thePkg, theFile = findCfgFileForPkg(pkgName, '.cfg')
-    # Create a stand-in instance from this (expected to be) unwritable file.
-    return ConfigObjPars(theFile, findFuncsUnder=thePkg, forceReadOnly=True)
+    # See if the user has any of their own local .cfg files for this task
+    noLocals = True
+    tname = getEmbeddedKeyVal(theFile, '_task_name_')
+    flist = getCfgFilesInDirForTask(getAppDir(), tname)
+    if len(flist) > 0:
+        noLocals = False
+        if len(flist) == 1: # can skip file times sort
+            theFile = flist[0]
+        else:
+            # There are a few different versions.  In the absence of
+            # requirements to the contrary, just take the latest.  Set up a
+            # list of tuples of (mtime, fname) so we can sort by mtime.
+            ftups = [ (os.stat(f)[stat.ST_MTIME], f) for f in flist]
+            ftups.sort()
+            theFile = ftups[-1][1]
+    # Create a stand-in instance from this file.  Force a read-only situation
+    # if we are dealing with the installed (expected to be) unwritable file.
+    return ConfigObjPars(theFile,findFuncsUnder=thePkg,forceReadOnly=noLocals)
 
 
 class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):

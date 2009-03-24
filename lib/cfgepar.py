@@ -123,14 +123,6 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         return filt
 
 
-    def _getCfgFilesInDirForTask(self, aDir, aTask):
-        """ This is a specialized function which is meant only to keep the
-        same code from needlessly being much repeated in _getOpenChoices. """
-        flist = glob.glob(aDir+os.sep+'*.cfg')
-        return [f for f in flist if cfgpars.getEmbeddedKeyVal(f, \
-                                     '_task_name_', '') == aTask]
-
-
     def _getOpenChoices(self):
         """ Go through all possible sites to find applicable .cfg files.
             Return as an iterable. """
@@ -142,13 +134,13 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         aDir = os.path.dirname(self._taskParsObj.filename)
         if len(aDir) < 1: aDir = os.curdir
         dirsSoFar.append(aDir)
-        taskFiles.update(self._getCfgFilesInDirForTask(aDir, tsk))
+        taskFiles.update(cfgpars.getCfgFilesInDirForTask(aDir, tsk))
 
         # current dir
         aDir = os.getcwd()
         if aDir not in dirsSoFar:
             dirsSoFar.append(aDir)
-            taskFiles.update(self._getCfgFilesInDirForTask(aDir, tsk))
+            taskFiles.update(cfgpars.getCfgFilesInDirForTask(aDir, tsk))
 
         # task's python pkg dir (if tsk == python pkg name)
         try:
@@ -161,7 +153,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         aDir = self._rcDir
         if aDir not in dirsSoFar:
             dirsSoFar.append(aDir)
-            taskFiles.update(self._getCfgFilesInDirForTask(aDir, tsk))
+            taskFiles.update(cfgpars.getCfgFilesInDirForTask(aDir, tsk))
 
         # extra loc - see if they used the app's env. var
         aDir = dirsSoFar[0] # flag to skip this if no env var found
@@ -169,7 +161,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         if envVarName in os.environ: aDir = os.environ[envVarName]
         if aDir not in dirsSoFar:
             dirsSoFar.append(aDir)
-            taskFiles.update(self._getCfgFilesInDirForTask(aDir, tsk))
+            taskFiles.update(cfgpars.getCfgFilesInDirForTask(aDir, tsk))
 
         # At the very end, add an option which we will later interpret to mean
         # to open the file dialog.
