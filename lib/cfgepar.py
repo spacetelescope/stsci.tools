@@ -49,15 +49,17 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self.updateTitle(self._taskParsObj.filename)
 
 
-    def _doActualSave(self, filename, comment):
+    def _doActualSave(self, fname, comment):
         """ Override this so we can handle case of file not writable. """
         try:
-            rv=self._taskParsObj.saveParList(filename=filename,comment=comment)
+            rv=self._taskParsObj.saveParList(filename=fname,comment=comment)
             return rv
         except IOError:
             # User does not have privs to write to this file. Get name of local
             # choice and try to use that.
-            mine = self._rcDir+os.sep+self._taskParsObj.getName()+'.cfg'
+            if not fname:
+                fname = self._taskParsObj.filename
+            mine = self._rcDir+os.sep+os.path.basename(fname)
             # Tell them the context is changing, and where we are saving
             msg = 'Installed config file for task "'+ \
                   self._taskParsObj.getName()+'" is not to be overwritten.'+ \
