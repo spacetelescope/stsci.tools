@@ -448,7 +448,7 @@ class EditParDialog(object):
 
     def _showOpenButton(self):
         """ Should we show the "Open..." button?  Subclasses override. """
-        return False
+        return True
 
 
     def _setTaskParsObj(self, theTask):
@@ -652,7 +652,8 @@ class EditParDialog(object):
         # Generate the menus
         fileMenu = self.makeFileMenu(menubar)
 
-        openMenu = self.makeOpenMenu(menubar)
+        if self._showOpenButton():
+            openMenu = self.makeOpenMenu(menubar)
 
         # When redesigned, optionsMenu should only be on the parent
         #if not self.isChild:
@@ -1353,10 +1354,10 @@ class EditParDialog(object):
         return self.badEntries
 
 
-    def _doActualSave(self, filename, comment):
+    def _doActualSave(self, fname, comment):
         """ Here we call the method on the _taskParsObj to do the actual
         save.  Return a string result to be printed to the screen. """
-        rv = self._taskParsObj.saveParList(filename=filename, comment=comment)
+        rv = self._taskParsObj.saveParList(filename=fname, comment=comment)
         return rv
 
 
