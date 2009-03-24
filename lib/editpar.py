@@ -711,7 +711,8 @@ class EditParDialog(object):
                     self._numOpenMenuItems += 1
                 self._openMenu.add_radiobutton(label=ff, command=self.pfopen,
                                                variable=self._openMenuChoice)
-                                               # value=fname ... (same as label)
+                                               # value=ff) ... (same as label)
+            self._openMenuChoice.set(0) # so nothing has check mark next to it
         else:
             showwarning(title="No Files To Open", message="No extra "+ \
                 'parameter files found for task "'+self.taskName+'".')
