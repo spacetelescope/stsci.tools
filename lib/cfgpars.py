@@ -341,9 +341,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             return self._helpFunc()
         else:
             return 'No help string found for task "'+self.__taskName+ \
-                '".  \n\nYou must either override the getHelpAsString '+ \
-                'method in your ConfigObjPars subclass, \n'+ \
-                'or you must supply such a function in your package.'
+            '".  \n\nThe developer must either override the '+\
+            'getHelpAsString() method in their ConfigObjPars \n'+ \
+            'subclass, or they must supply such a function in their package.'
 
     def _findAssociatedConfigSpecFile(self, cfgFileName):
         """ Given a config file, find its associated config-spec file, and

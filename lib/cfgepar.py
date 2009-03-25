@@ -36,6 +36,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
     def _overrideMasterSettings(self):
         """ Override so that we can run in a different mode. """
         cod = self._getGuiSettings()
+        self._appName             = APP_NAME
         self._useSimpleAutoClose  = False # is a fundamental issue here
         self._showExtraHelpButton = False
         self._saveAndCloseOnExec  = cod.get('saveAndCloseOnExec', False)

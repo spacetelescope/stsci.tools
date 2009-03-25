@@ -198,6 +198,7 @@ class EditParDialog(object):
 
         # Set all default master GUI settings, then
         # Allow subclasses to override any master GUI settings
+        self._appName             = "Par Editor"
         self._useSimpleAutoClose  = False # certain buttons close GUI also
         self._saveAndCloseOnExec  = False
         self._showExtraHelpButton = False
@@ -777,13 +778,21 @@ class EditParDialog(object):
 
         return optionButton
 
+    def capTaskName(self):
+        """ Return task name with first letter capitalized. """
+        return self.taskName[:1].upper() + self.taskName[1:]
+
     def makeHelpMenu(self, menubar):
 
         button = Menubutton(menubar, text='Help')
+        button.bind("<Enter>", self.printHelpInfo)
         button.pack(side=RIGHT, padx=2)
         button.menu = Menu(button, tearoff=0)
-        button.menu.add_command(label="Task Help", command=self.setHelpViewer)
-        button.menu.add_command(label="Editor Help", command=self.eparHelp)
+        button.menu.bind("<Enter>", self.printHelpInfo)
+        button.menu.add_command(label=self.capTaskName()+" Help",
+                                command=self.setHelpViewer)
+        button.menu.add_command(label=self._appName+" Help",
+                                command=self.eparHelp)
         button["menu"] = button.menu
         return button
 
@@ -816,7 +825,7 @@ class EditParDialog(object):
         if self._useSimpleAutoClose: saqlbl += " & Quit"
         btn = Button(box, text=saqlbl, relief=RAISED, command=self.saveAndQuit)
         btn.pack(side=LEFT, padx=5, pady=7)
-        btn.bind("<Enter>", self.printQuitInfo)
+        btn.bind("<Enter>", self.printSaveQuitInfo)
 
         # Unlearn all the parameter settings (set back to the defaults)
         buttonUnlearn = Button(box, text=self._defaultsButtonTitle,
@@ -833,7 +842,7 @@ class EditParDialog(object):
 
         # Generate the Help button
         if self._showExtraHelpButton:
-            buttonHelp = Button(box, text="Task Help",
+            buttonHelp = Button(box, text=self.capTaskName()+" Help",
                                 relief=RAISED, command=self.setHelpViewer)
             buttonHelp.pack(side=RIGHT, padx=5, pady=7)
             buttonHelp.bind("<Enter>", self.printHelpInfo)
@@ -874,11 +883,15 @@ class EditParDialog(object):
 
     def printUnlearnInfo(self, event):
         self.top.status.config(text =
-             " Set all parameter values to system default settings")
+             " Set all parameter values to their default settings")
 
-    def printQuitInfo(self, event):
-        self.top.status.config(text =
-             " Save the current entries and exit this edit session")
+    def printSaveQuitInfo(self, event):
+        if self._useSimpleAutoClose:
+            self.top.status.config(text =
+                " Save the current entries and exit this edit session")
+        else:
+            self.top.status.config(text =
+                " Save the current entries to "+self._taskParsObj.getFilename())
 
     def printSaveAsInfo(self, event):
         self.top.status.config(text =
@@ -886,14 +899,18 @@ class EditParDialog(object):
 
     def printOpenInfo(self, event):
         self.top.status.config(text =
-             " Load parameter values from a user-specified file")
+             " Load and edit parameter values from a user-specified file")
 
     def printAbortInfo(self, event):
         self.top.status.config(text=" Abort this edit session")
 
     def printExecuteInfo(self, event):
-        self.top.status.config(text =
-             " Execute the task and exit this edit session")
+        if self._saveAndCloseOnExec:
+            self.top.status.config(text =
+                " Execute the task, and save and exit this edit session")
+        else:
+            self.top.status.config(text =
+                " Execute the task; this window will remain open")
 
 
     # Process invalid input values and invoke a query dialog
