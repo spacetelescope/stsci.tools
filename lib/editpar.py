@@ -8,7 +8,7 @@ Taken from pyraf/lib/epar.py, originally signed "M.D. De La Pena, 2000 Feb. 4"
 #System level modules
 from Tkinter import  _default_root
 from Tkinter import *
-from tkMessageBox import askokcancel, showwarning
+from tkMessageBox import askokcancel, askyesno, showwarning
 import os
 
 # pytools modules
@@ -200,7 +200,8 @@ class EditParDialog(object):
         # Allow subclasses to override any master GUI settings
         self._appName             = "Par Editor"
         self._useSimpleAutoClose  = False # certain buttons close GUI also
-        self._saveAndCloseOnExec  = False
+        self._showSaveCloseOnExec = True
+        self._saveAndCloseOnExec  = True
         self._showExtraHelpButton = False
         self._showHelpInBrowser   = False
         self._unpackagedTaskTitle = "Task"
@@ -683,12 +684,15 @@ class EditParDialog(object):
         saqlbl ="Save"
         if self._useSimpleAutoClose: saqlbl += " & Quit"
         fileButton.menu.add_command(label=saqlbl,
-                                    command=self.saveAndQuit)
+                                    command=self.saveAndClose)
         if not self.isChild:
             fileButton.menu.add_command(label="Save As...", command=self.saveAs)
+        fileButton.menu.add_separator()
         fileButton.menu.add_command(label=self._defaultsButtonTitle,
                                     command=self.unlearn)
         fileButton.menu.add_separator()
+        if not self._useSimpleAutoClose:
+            fileButton.menu.add_command(label="Close", command=self.closeGui)
         fileButton.menu.add_command(label="Cancel", command=self.abort)
 
         # Associate the menu with the menu button
@@ -736,7 +740,7 @@ class EditParDialog(object):
 
         openBtn.menu = Menu(openBtn, tearoff=0, postcommand=self._updateOpen)
         openBtn.menu.bind("<Enter>", self.printOpenInfo)
-        openBtn.menu.add_radiobutton(label=' ', command=self.pfopen, # dummy
+        openBtn.menu.add_radiobutton(label=' ', # dummy, no command
                                      variable=self._openMenuChoice)
                                      # value=fname ... (same as label)
 
@@ -754,24 +758,32 @@ class EditParDialog(object):
     # Method to generate the "Options" menu for the parent EPAR only
     def makeOptionsMenu(self, menubar):
 
-        # Set up the menu for the HELP viewing choice
-        self.helpChoice = StringVar()
+        # Set up the menu for the various choices they have
+        self._helpChoice = StringVar()
         if self._showHelpInBrowser:
-            self.helpChoice.set("BROWSER")
+            self._helpChoice.set("BROWSER")
         else:
-            self.helpChoice.set("WINDOW")
+            self._helpChoice.set("WINDOW")
+
+        if self._showSaveCloseOnExec:
+            self._execChoice = IntVar()
+            self._execChoice.set(int(self._saveAndCloseOnExec))
 
         optionButton = Menubutton(menubar, text="Options")
         optionButton.pack(side=LEFT, padx=2)
-
         optionButton.menu = Menu(optionButton, tearoff=0)
-
         optionButton.menu.add_radiobutton(label="Display Task Help in a Window",
-                                          value="WINDOW",
-                                          variable=self.helpChoice)
+                                     value="WINDOW", command=self.setHelpWin,
+                                     variable=self._helpChoice)
         optionButton.menu.add_radiobutton(label="Display Task Help in a Browser",
-                                          value="BROWSER",
-                                          variable=self.helpChoice)
+                                     value="BROWSER", command=self.setHelpWin,
+                                     variable=self._helpChoice)
+
+        if self._showSaveCloseOnExec:
+            optionButton.menu.add_separator()
+            optionButton.menu.add_checkbutton(label="Save and Close on Execute",
+                                              command=self.setExecOpt,
+                                              variable=self._execChoice)
 
         # Associate the menu with the menu button
         optionButton["menu"] = optionButton.menu
@@ -790,7 +802,7 @@ class EditParDialog(object):
         button.menu = Menu(button, tearoff=0)
         button.menu.bind("<Enter>", self.printHelpInfo)
         button.menu.add_command(label=self.capTaskName()+" Help",
-                                command=self.setHelpViewer)
+                                command=self.showTaskHelp)
         button.menu.add_command(label=self._appName+" Help",
                                 command=self.eparHelp)
         button["menu"] = button.menu
@@ -823,18 +835,27 @@ class EditParDialog(object):
         # Save the parameter settings and exit from epar
         saqlbl ="Save"
         if self._useSimpleAutoClose: saqlbl += " & Quit"
-        btn = Button(box, text=saqlbl, relief=RAISED, command=self.saveAndQuit)
+        btn = Button(box, text=saqlbl, relief=RAISED, command=self.saveAndClose)
         btn.pack(side=LEFT, padx=5, pady=7)
         btn.bind("<Enter>", self.printSaveQuitInfo)
 
         # Unlearn all the parameter settings (set back to the defaults)
         buttonUnlearn = Button(box, text=self._defaultsButtonTitle,
                                relief=RAISED, command=self.unlearn)
-        buttonUnlearn.pack(side=LEFT, padx=5, pady=7)
+        if self._showExtraHelpButton:
+            buttonUnlearn.pack(side=LEFT, padx=5, pady=7)
+        else:
+            buttonUnlearn.pack(side=RIGHT, padx=5, pady=7)
         buttonUnlearn.bind("<Enter>", self.printUnlearnInfo)
 
-        # Abort this edit session.  Currently, if an UNLEARN has already
-        # been done, the UNLEARN is kept.
+
+        # Buttons to close versus abort this edit session.
+        if not self._useSimpleAutoClose:
+            buttonClose = Button(box, text="Close",
+                                  relief=RAISED, command=self.closeGui)
+            buttonClose.pack(side=LEFT, padx=5, pady=7)
+            buttonClose.bind("<Enter>", self.printCloseInfo)
+
         buttonAbort = Button(box, text="Cancel",
                               relief=RAISED, command=self.abort)
         buttonAbort.pack(side=LEFT, padx=5, pady=7)
@@ -843,7 +864,7 @@ class EditParDialog(object):
         # Generate the Help button
         if self._showExtraHelpButton:
             buttonHelp = Button(box, text=self.capTaskName()+" Help",
-                                relief=RAISED, command=self.setHelpViewer)
+                                relief=RAISED, command=self.showTaskHelp)
             buttonHelp.pack(side=RIGHT, padx=5, pady=7)
             buttonHelp.bind("<Enter>", self.printHelpInfo)
 
@@ -851,19 +872,22 @@ class EditParDialog(object):
         box.pack(fill=X, expand=FALSE)
 
 
+    def setExecOpt(self, event=None):
+        self._saveAndCloseOnExec = bool(self._execChoice.get())
+
+
     # Determine which method of displaying the help pages was
     # chosen by the user.  WINDOW displays in a task generated scrollable
-    # window.  BROWSER invokes the STSDAS HTML help pages and displays
+    # window.  BROWSER invokes the task's HTML help pages and displays
     # in a browser.
-    def setHelpViewer(self, event=None):
+    def setHelpWin(self, event=None):
+        self._showHelpInBrowser = bool(self._helpChoice.get() == "BROWSER")
 
-        value = self.helpChoice.get()
-        if value == "WINDOW":
-            self._showHelpInBrowser = False
-            self.help()
-        else:
-            self._showHelpInBrowser = True
+    def showTaskHelp(self, event=None):
+        if self._showHelpInBrowser:
             self.htmlHelp()
+        else:
+            self.help()
 
 
     #
@@ -901,8 +925,11 @@ class EditParDialog(object):
         self.top.status.config(text =
              " Load and edit parameter values from a user-specified file")
 
+    def printCloseInfo(self, event):
+        self.top.status.config(text=" Close this edit session.  Save first?")
+
     def printAbortInfo(self, event):
-        self.top.status.config(text=" Abort this edit session")
+        self.top.status.config(text=" Abort this edit session, discarding any unsaved changes.")
 
     def printExecuteInfo(self, event):
         if self._saveAndCloseOnExec:
@@ -932,24 +959,44 @@ class EditParDialog(object):
         return (askokcancel("Notice", badEntriesString))
 
 
+    def hasUnsavedChanges(self):
+        """ This needs to be overridden by a subclass.  In the meantime, just
+            default (on the safe side) to everything being ready-to-save. """
+        return True
+
+
+    def closeGui(self, event=None):
+        self.saveAndClose(askBeforeSave=True, forceClose=True)
+
+
     # SAVE/QUIT: save the parameter settings and exit epar
-    def saveAndQuit(self, event=None):
+    def saveAndClose(self, event=None, askBeforeSave=False, forceClose=False):
+
+        # First, see if we can/should skip the save
+        doTheSave = True
+        if askBeforeSave:
+            if self.hasUnsavedChanges():
+                doTheSave = askyesno('Save?', 'Save before closing?')
+            else: # no unsaved changes, so no need to save OR even to prompt
+                doTheSave = False # no need to save OR prompt
 
         # first save the child parameters, aborting save if
         # invalid entries were encountered
-        if self.checkSetSaveChildren():
+        if doTheSave and self.checkSetSaveChildren():
             return
 
         # Save all the entries and verify them, keeping track of the
         # invalid entries which have been reset to their original input values
-        self.badEntriesList = self.checkSetSaveEntries()
+        self.badEntriesList = None
+        if doTheSave:
+            self.badEntriesList = self.checkSetSaveEntries()
 
         # If there were invalid entries, prepare the message dialog
-        if (self.badEntriesList):
+        if self.badEntriesList:
             ansOKCANCEL = self.processBadEntries(self.badEntriesList,
                           self.taskName)
-            if not ansOKCANCEL:
-                return
+            if not ansOKCANCEL: return
+
         # If there were no invalid entries or the user says OK, continue...
 
         # Save any GUI settings we care about.  This is a good time to do so
@@ -957,7 +1004,7 @@ class EditParDialog(object):
         self._saveGuiSettings()
 
         # Done saving.  Only close the window if we are running in that mode.
-        if not self._useSimpleAutoClose:
+        if not (self._useSimpleAutoClose or forceClose):
             return
 
         # Remove the main epar window
@@ -1031,11 +1078,10 @@ class EditParDialog(object):
         self.badEntriesList = self.checkSetSaveEntries(doSave=False)
 
         # If there were invalid entries, prepare the message dialog
-        if (self.badEntriesList):
+        if self.badEntriesList:
             ansOKCANCEL = self.processBadEntries(self.badEntriesList,
                           self.taskName)
-            if not ansOKCANCEL:
-                return
+            if not ansOKCANCEL: return
 
         # If there were no invalid entries or the user says OK, finally
         # save to their stated file.  Since we have already processed the
@@ -1056,17 +1102,28 @@ class EditParDialog(object):
         if self.checkSetSaveChildren():
             return
 
+        # If we are only executing (no save and close) do so here and return
+        if not self._saveAndCloseOnExec:
+            # First check the parameter values
+            self.badEntriesList = self.checkSetSaveEntries(doSave=False)
+            # If there were invalid entries, show the message dialog
+            if self.badEntriesList:
+                ansOKCANCEL = self.processBadEntries(self.badEntriesList,
+                              self.taskName)
+                if not ansOKCANCEL: return
+            print "\nTask %s is running...\n" % self.taskName
+            self.runTask()
+            return
+
         # Now save the parameter values of the parent
         self.badEntriesList = self.checkSetSaveEntries()
 
         # If there were invalid entries in the parent epar dialog, prepare
         # the message dialog
-        ansOKCANCEL = FALSE
-        if (self.badEntriesList):
+        if self.badEntriesList:
             ansOKCANCEL = self.processBadEntries(self.badEntriesList,
                           self.taskName)
-            if not ansOKCANCEL:
-                return
+            if not ansOKCANCEL: return
 
         # If there were no invalid entries or the user said OK
 
@@ -1394,7 +1451,7 @@ class EditParDialog(object):
         for n in range (len(self.top.childList)-1, -1, -1):
             self.badEntriesList = self.top.childList[n]. \
                                   checkSetSaveEntries(doSave=doSave)
-            if (self.badEntriesList):
+            if self.badEntriesList:
                 ansOKCANCEL = self.processBadEntries(self.badEntriesList,
                               self.top.childList[n].taskName)
                 if not ansOKCANCEL:
