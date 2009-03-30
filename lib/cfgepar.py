@@ -39,7 +39,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self._appName             = APP_NAME
         self._useSimpleAutoClose  = False # is a fundamental issue here
         self._showExtraHelpButton = False
-        self._saveAndCloseOnExec  = cod.get('saveAndCloseOnExec', False)
+        self._saveAndCloseOnExec  = cod.get('saveAndCloseOnExec', True)
         self._showHelpInBrowser   = cod.get('showHelpInBrowser', False)
         self._optFile             = APP_NAME.lower()+".optionDB"
 
