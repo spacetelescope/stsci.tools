@@ -1000,7 +1000,7 @@ class EditParDialog(object):
         # If there were no invalid entries or the user says OK, continue...
 
         # Save any GUI settings we care about.  This is a good time to do so
-        # even if the window isn't closing.
+        # even if the window isn't closing, but especially if it is.
         self._saveGuiSettings()
 
         # Done saving.  Only close the window if we are running in that mode.
@@ -1057,8 +1057,8 @@ class EditParDialog(object):
 
         # The user wishes to save to a different name
         # (could use Tkinter's FileDialog, but this one is prettier)
-        fd = filedlg.SaveFileDialog(self.top, "Save Parameter File As",
-                                    self._getSaveAsFilter())
+        fd = filedlg.PersistSaveFileDialog(self.top, "Save Parameter File As",
+                                           self._getSaveAsFilter())
         if fd.Show() != 1:
             fd.DialogCleanup()
             return

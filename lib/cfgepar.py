@@ -116,7 +116,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
     def _getSaveAsFilter(self):
         """ Return a string to be used as the filter arg to the save file
             dialog during Save-As. """
-        filt = '*.cfg'
+        filt = os.path.dirname(self._taskParsObj.filename)+'/*.cfg'
         envVarName = APP_NAME.upper()+'_CFG'
         if envVarName in os.environ:
             upx = os.environ[envVarName]
@@ -271,4 +271,3 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         co.final_comment = [''] # ensure \n at EOF
         co.unrepr = True # for simple types, eliminates need for .cfgspc
         co.write()
-
