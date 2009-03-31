@@ -54,7 +54,8 @@ class EparOption(object):
     # Chosen option
     choiceClass = StringVar
 
-    def __init__(self, master, statusBar, paramInfo, defaultParamInfo, doScroll, fieldWidths):
+    def __init__(self, master, statusBar, paramInfo, defaultParamInfo,
+                 doScroll, fieldWidths, defaultsVerb):
 
         # Connect to the information/status Label
         self.status = statusBar
@@ -69,6 +70,7 @@ class EparOption(object):
         self.master.frame = Frame(self.master)
         self.paramInfo    = paramInfo
         self.defaultParamInfo = defaultParamInfo
+        self.defaultsVerb = defaultsVerb
         self.inputWidth   = fieldWidths.get('inputWidth')
         self.valueWidth   = fieldWidths.get('valueWidth')
         self.promptWidth  = fieldWidths.get('promptWidth')
@@ -153,7 +155,10 @@ class EparOption(object):
             pass
 
         # Bind the right button to a popup menu of choices
-        self.entry.bind('<Button-3>', self.popupChoices)
+        if USING_X:
+            self.entry.bind('<Button-3>', self.popupChoices)
+        else:
+            self.entry.bind('<Button-2>', self.popupChoices)
 
         # Pack the parameter entry Frame
         self.master.frame.pack(side = TOP, ipady = 1)
@@ -295,14 +300,15 @@ class EparOption(object):
             return
 
         self.menu = Menu(self.entry, tearoff = 0)
-        self.menu.add_command(label   = "File Browser",
-                              state   = self.browserEnabled,
-                              command = self.fileBrowser)
-        self.menu.add_separator()
+        if self.browserEnabled != DISABLED:
+            self.menu.add_command(label   = "File Browser",
+                                  state   = self.browserEnabled,
+                                  command = self.fileBrowser)
+            self.menu.add_separator()
         self.menu.add_command(label   = "Clear",
                               state   = self.clearEnabled,
                               command = self.clearEntry)
-        self.menu.add_command(label   = "Unlearn",
+        self.menu.add_command(label   = self.defaultsVerb,
                               state   = self.unlearnEnabled,
                               command = self.unlearnValue)
 
@@ -506,8 +512,12 @@ class BooleanEparOption(EparOption):
         self.choice.trace("w", self.trace)
 
         # Right-click menu is bound to individual widgets too
-        self.rbno.bind('<Button-3>', self.popupChoices)
-        self.rbyes.bind('<Button-3>', self.popupChoices)
+        if USING_X:
+            self.rbno.bind('<Button-3>', self.popupChoices)
+            self.rbyes.bind('<Button-3>', self.popupChoices)
+        else:
+            self.rbno.bind('<Button-2>', self.popupChoices)
+            self.rbyes.bind('<Button-2>', self.popupChoices)
 
         # Regular selection - allow immediate trigger/check
         self.rbyes.bind('<Button-1>', self.widgetEditedYes)
@@ -608,7 +618,8 @@ _eparOptionDict = { "b": BooleanEparOption,
 
 def eparOptionFactory(master, statusBar, param, defaultParam,
                       doScroll, fieldWidths,
-                      plugIn=None, editedCallbackObj=None):
+                      plugIn=None, editedCallbackObj=None,
+                      defaultsVerb="Default"):
 
     """Return EparOption item of appropriate type for the parameter param"""
 
@@ -625,6 +636,7 @@ def eparOptionFactory(master, statusBar, param, defaultParam,
         eparOption = _eparOptionDict.get(param.type, StringEparOption)
 
     # Create it
-    eo = eparOption(master,statusBar,param,defaultParam,doScroll,fieldWidths)
+    eo = eparOption(master, statusBar, param, defaultParam, doScroll,
+                    fieldWidths, defaultsVerb)
     eo.setEditedCallbackObj(editedCallbackObj)
     return eo

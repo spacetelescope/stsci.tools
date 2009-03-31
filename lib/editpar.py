@@ -576,6 +576,8 @@ class EditParDialog(object):
 
         # Loop over the parameters to create the entries
         self.entryNo = [None] * self.numParams
+        dfltsVerb = self._defaultsButtonTitle
+        if dfltsVerb[-1]=='s': dfltsVerb = dfltsVerb[:-1]
         for i in range(self.numParams):
             eparOpt = self._nonStandardEparOptionFor(self.paramList[i].type)
             cbo = self._defineEditedCallbackObjectFor(self.paramList[i].scope,
@@ -583,7 +585,8 @@ class EditParDialog(object):
             self.entryNo[i] = eparoption.eparOptionFactory(master, statusBar,
                                   self.paramList[i], self.defaultParamList[i],
                                   self.doScroll, self.fieldWidths,
-                                  plugIn=eparOpt, editedCallbackObj=cbo)
+                                  plugIn=eparOpt, editedCallbackObj=cbo,
+                                  defaultsVerb=dfltsVerb)
 
 
     def _nonStandardEparOptionFor(self, paramTypeStr):
