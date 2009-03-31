@@ -31,13 +31,7 @@ import FileDialog, tkFileDialog
 import filedlg
 
 # Are we using X?
-try: # don't want wutil to be a hard req't, as it is loc'd in pyraf
-    import wutil
-    USING_X = wutil.WUTIL_USING_X
-    del wutil
-except:
-    USING_X = sys.platform != 'darwin'
-
+USING_X = sys.platform != 'darwin'
 
 # Constants
 MAXLIST  =  15
