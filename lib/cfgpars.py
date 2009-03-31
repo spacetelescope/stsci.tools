@@ -237,15 +237,12 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
     def getDefaultParList(self):
         """ Return a par list just like ours, but with all default values. """
-        return self.__paramList
         # The code below (create a new set-to-dflts obj) is correct, but it
-        # adds some time to startup, and it's not clear that this is even
-        # used.  Clicking "Defaults" in the GUI does not call this.  This
-        # only seems to be used in individual widget pop-up menus which may
-        # not even work now.  So we'll simply return __paramList until we
-        # are sure we even need this functionality to be correct.
-#       tmpObj = ConfigObjPars(self.filename, setAllToDefaults=True)
-#       return tmpObj.getParList()
+        # adds a tenth of a second to startup.  It's not clear how much this
+        # is used.  Clicking "Defaults" in the GUI does not call this.  This
+        # data is only used in the individual widget pop-up menus.
+        tmpObj = ConfigObjPars(self.filename, setAllToDefaults=True)
+        return tmpObj.getParList()
 
     def getFilename(self): return self.filename
 
