@@ -307,15 +307,17 @@ class EditParDialog(object):
         # panel is reduced - not the information frame.
         self.top.status = Label(self.top, text="", relief=SUNKEN,
                                 borderwidth=1, anchor=W, bg=self._frmeColor)
-        self.top.status.pack(side=BOTTOM, fill=X, padx=0, pady=3,
-                             ipady=3)
+        self.top.status.pack(side=BOTTOM, fill=X, padx=0, pady=3, ipady=3)
 
         # Set up a Frame to hold a scrollable Canvas
-        self.top.f = frame = Frame(self.top, relief=RIDGE, borderwidth=1)
+        self.top.f = frame = Frame(self.top, relief=RIDGE, borderwidth=1,
+                                   bg=self._entsColor)
 
         # Overlay a Canvas which will hold a Frame
         self.top.f.canvas = canvas = Canvas(self.top.f, width=100, height=100,
-            takefocus=FALSE, bg=self._entsColor)
+            takefocus=FALSE, bg=self._entsColor,
+            highlightbackground=self._entsColor)
+#           highlightcolor="black" # black must be the default, since it is blk
 
         # Always build the scrollbar, even if number of parameters is small,
         # to allow window to be resized.
