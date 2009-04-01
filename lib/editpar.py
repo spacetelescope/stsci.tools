@@ -724,7 +724,8 @@ class EditParDialog(object):
                     self._openMenu.add_separator()
                     self._numOpenMenuItems += 1
                 self._openMenu.add_radiobutton(label=ff, command=self.pfopen,
-                                               variable=self._openMenuChoice)
+                                               variable=self._openMenuChoice,
+                                               indicatoron=0)
                                                # value=ff) ... (same as label)
             self._openMenuChoice.set(0) # so nothing has check mark next to it
         else:
