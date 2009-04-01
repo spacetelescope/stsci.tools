@@ -299,7 +299,7 @@ class EditParDialog(object):
         self.buttonBox(self.top)
 
         # Insert a spacer between the static text and the buttons
-        Frame(self.top, bg=self._bboxColor, height=15).pack(side=TOP, fill=X)
+        Frame(self.top, bg=self._entsColor, height=15).pack(side=TOP, fill=X)
 
         # Set up an information Frame at the bottom of the EPAR window
         # RESIZING is currently disabled.
