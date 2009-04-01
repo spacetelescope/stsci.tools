@@ -489,15 +489,16 @@ class BooleanEparOption(EparOption):
                            width     = self.valueWidth,
                            takefocus = 1,
                            highlightthickness = 1,
-                           bg=self.bkgColor)
-
+                           bg=self.bkgColor,
+                           highlightbackground=self.bkgColor)
         self.rbyes = Radiobutton(self.entry, text = "Yes",
                                  variable    = self.choice,
                                  value       = "yes",
                                  anchor      = W,
                                  takefocus   = 0,
                                  underline   = 0,
-                                 bg = self.bkgColor)
+                                 bg = self.bkgColor,
+                                 highlightbackground=self.bkgColor)
         self.rbyes.pack(side = LEFT, ipadx = self.padWidth)
         self.rbno  = Radiobutton(self.entry, text = "No",
                                  variable    = self.choice,
@@ -505,7 +506,8 @@ class BooleanEparOption(EparOption):
                                  anchor      = W,
                                  takefocus   = 0,
                                  underline   = 0,
-                                 bg = self.bkgColor)
+                                 bg = self.bkgColor,
+                                 highlightbackground=self.bkgColor)
         self.rbno.pack(side = RIGHT, ipadx = self.padWidth)
         self.entry.pack(side = LEFT)
 
