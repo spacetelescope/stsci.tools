@@ -55,7 +55,7 @@ class EparOption(object):
     choiceClass = StringVar
 
     def __init__(self, master, statusBar, paramInfo, defaultParamInfo,
-                 doScroll, fieldWidths, defaultsVerb):
+                 doScroll, fieldWidths, defaultsVerb, bg):
 
         # Connect to the information/status Label
         self.status = statusBar
@@ -67,7 +67,8 @@ class EparOption(object):
 
         # A new Frame is created for each parameter entry
         self.master       = master
-        self.master.frame = Frame(self.master)
+        self.bkgColor     = bg
+        self.master.frame = Frame(self.master, bg=self.bkgColor)
         self.paramInfo    = paramInfo
         self.defaultParamInfo = defaultParamInfo
         self.defaultsVerb = defaultsVerb
@@ -88,11 +89,11 @@ class EparOption(object):
         if (self.paramInfo.get(field = "p_mode") == "h"):
             self.inputLabel = Label(self.master.frame, anchor = W,
                                     text  = "(" + self.name + ")",
-                                    width = self.inputWidth)
+                                    width = self.inputWidth, bg=self.bkgColor)
         else:
             self.inputLabel = Label(self.master.frame, anchor = W,
                                     text  = self.name,
-                                    width = self.inputWidth)
+                                    width = self.inputWidth, bg=self.bkgColor)
         self.inputLabel.pack(side = LEFT, fill = X, expand = TRUE)
 
         # Get the prompt string and determine if special handling is needed
@@ -123,7 +124,8 @@ class EparOption(object):
 
         # Generate the prompt label
         self.promptLabel = Label(self.master.frame, anchor=W, fg=fgColor,
-                                 text=promptLines, width=self.promptWidth)
+                                 text=promptLines, width=self.promptWidth,
+                                 bg=self.bkgColor)
         self.promptLabel.pack(side=RIGHT, fill=X, expand=TRUE)
 
         # Default is none of items on popup menu are activated
@@ -181,7 +183,8 @@ class EparOption(object):
             # Assign the informational text to the label and pack
             self.master.infoText.label = Label(self.master.infoText,
                                                text = infoLines,
-                                               anchor = W)
+                                               anchor = W,
+                                               bg = self.bkgColor)
             self.master.infoText.label.pack(side = LEFT)
             self.master.infoText.pack(side = TOP, anchor = W)
 
@@ -382,9 +385,11 @@ class EnumEparOption(EparOption):
                                  textvariable = self.choice,      # var to sync
                                  indicatoron  = 1,
                                  takefocus    = 1,
-                                 highlightthickness = 1)
+                                 highlightthickness = 1,
+                                 bg=self.bkgColor)
 
-        self.entry.menu = Menu(self.entry, tearoff=0, postcommand=self.postcmd)
+        self.entry.menu = Menu(self.entry, tearoff=0, postcommand=self.postcmd,
+                               bg=self.bkgColor)
 
         # Generate the dictionary of shortcuts using first letter,
         # second if first not available, etc.
@@ -483,21 +488,24 @@ class BooleanEparOption(EparOption):
                            relief    = FLAT,
                            width     = self.valueWidth,
                            takefocus = 1,
-                           highlightthickness = 1)
+                           highlightthickness = 1,
+                           bg=self.bkgColor)
 
         self.rbyes = Radiobutton(self.entry, text = "Yes",
                                  variable    = self.choice,
                                  value       = "yes",
                                  anchor      = W,
                                  takefocus   = 0,
-                                 underline   = 0)
+                                 underline   = 0,
+                                 bg = self.bkgColor)
         self.rbyes.pack(side = LEFT, ipadx = self.padWidth)
         self.rbno  = Radiobutton(self.entry, text = "No",
                                  variable    = self.choice,
                                  value       = "no",
                                  anchor      = W,
                                  takefocus   = 0,
-                                 underline   = 0)
+                                 underline   = 0,
+                                 bg = self.bkgColor)
         self.rbno.pack(side = RIGHT, ipadx = self.padWidth)
         self.entry.pack(side = LEFT)
 
@@ -560,7 +568,7 @@ class StringEparOption(EparOption):
 
         self.choice.set(self.value)
         self.entry = Entry(self.master.frame, width = self.valueWidth,
-                     textvariable = self.choice)
+                     textvariable = self.choice) # , bg=self.bkgColor)
         self.entry.pack(side = LEFT, fill = X, expand = TRUE)
 
 # widget class that works for numbers and arrays of numbers
@@ -586,7 +594,7 @@ class NumberEparOption(EparOption):
 
         self.choice.set(self.value)
         self.entry = Entry(self.master.frame, width = self.valueWidth,
-                     textvariable = self.choice)
+                           textvariable = self.choice) #, bg=self.bkgColor)
         self.entry.pack(side = LEFT)
 
     # Check the validity of the entry
@@ -619,7 +627,7 @@ _eparOptionDict = { "b": BooleanEparOption,
 def eparOptionFactory(master, statusBar, param, defaultParam,
                       doScroll, fieldWidths,
                       plugIn=None, editedCallbackObj=None,
-                      defaultsVerb="Default"):
+                      defaultsVerb="Default", bg=None):
 
     """Return EparOption item of appropriate type for the parameter param"""
 
@@ -637,6 +645,6 @@ def eparOptionFactory(master, statusBar, param, defaultParam,
 
     # Create it
     eo = eparOption(master, statusBar, param, defaultParam, doScroll,
-                    fieldWidths, defaultsVerb)
+                    fieldWidths, defaultsVerb, bg)
     eo.setEditedCallbackObj(editedCallbackObj)
     return eo

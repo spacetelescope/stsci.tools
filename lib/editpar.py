@@ -225,14 +225,18 @@ class EditParDialog(object):
         # Track whether this is a parent or child window
         self.isChild = isChild
 
-        # Set up a color for the background to differeniate parent and child
+        # Set up a color for each of the backgrounds
         if self.isChild:
         #    self.bkgColor = "LightSteelBlue"
             self.iconLabel = "EPAR Child"
         else:
         #    self.bkgColor = "SlateGray3"
             self.iconLabel = "EPAR Parent"
-        self.bkgColor = None
+        # prmdrss teal: #00ffaa, pure cyan (teal) #00ffff
+        self.bkgColor = None # "#008888"
+        self.taskColor = None
+        self.bboxColor = None # "DarkGrey"
+        self.entsColor = None # "DarkGrey"
 
         # help windows do not exist yet
         self.irafHelpWin = None
@@ -282,26 +286,26 @@ class EditParDialog(object):
         self.makeMenuBar(self.top)
 
         # Create a spacer
-        Frame(self.top, bg=self.bkgColor, height=10).pack(side=TOP, fill=X)
+        Frame(self.top, bg=self.taskColor, height=10).pack(side=TOP, fill=X)
 
         # Print the package and task names
         self.printNames(self.top, self.taskName, self.pkgName)
 
         # Insert a spacer between the static text and the buttons
-        Frame(self.top, bg=self.bkgColor, height=15).pack(side=TOP, fill=X)
+        Frame(self.top, bg=self.taskColor, height=15).pack(side=TOP, fill=X)
 
         # Set control buttons at the top of the frame
         self.buttonBox(self.top)
 
         # Insert a spacer between the static text and the buttons
-        Frame(self.top, bg=self.bkgColor, height=15).pack(side=TOP, fill=X)
+        Frame(self.top, bg=self.bboxColor, height=15).pack(side=TOP, fill=X)
 
         # Set up an information Frame at the bottom of the EPAR window
         # RESIZING is currently disabled.
         # Do this here so when resizing to a smaller sizes, the parameter
         # panel is reduced - not the information frame.
         self.top.status = Label(self.top, text="", relief=SUNKEN,
-                           borderwidth=1, anchor=W)
+                                borderwidth=1, anchor=W, bg=self.bkgColor)
         self.top.status.pack(side=BOTTOM, fill=X, padx=0, pady=3,
                              ipady=3)
 
@@ -310,7 +314,7 @@ class EditParDialog(object):
 
         # Overlay a Canvas which will hold a Frame
         self.top.f.canvas = canvas = Canvas(self.top.f, width=100, height=100,
-            takefocus=FALSE)
+            takefocus=FALSE, bg=self.entsColor)
 
         # Always build the scrollbar, even if number of parameters is small,
         # to allow window to be resized.
@@ -318,7 +322,7 @@ class EditParDialog(object):
         # Attach a vertical Scrollbar to the Frame/Canvas
         self.top.f.vscroll = Scrollbar(self.top.f, orient=VERTICAL,
              width=11, relief=SUNKEN, activerelief=RAISED,
-             takefocus=FALSE)
+             takefocus=FALSE, bg=self.entsColor)
         canvas['yscrollcommand'] = self.top.f.vscroll.set
         self.top.f.vscroll['command'] = canvas.yview
 
@@ -348,7 +352,7 @@ class EditParDialog(object):
         self.top.f.pack(side=TOP, expand=TRUE, fill=BOTH)
 
         # Define a Frame to contain the parameter information
-        canvas.entries = Frame(canvas)
+        canvas.entries = Frame(canvas, bg=self.entsColor)
 
         # Generate the window to hold the Frame which sits on the Canvas
         cWindow = canvas.create_window(0, 0,
@@ -356,7 +360,7 @@ class EditParDialog(object):
                            window=canvas.entries)
 
         # Insert a spacer between the Canvas and the information frame
-        Frame(self.top, bg=self.bkgColor, height=4).pack(side=TOP, fill=X)
+        Frame(self.top, bg=self.entsColor, height=4).pack(side=TOP, fill=X)
 
         # The parent has the control, unless there are children
         # Fix the geometry of where the windows first appear on the screen
@@ -586,7 +590,7 @@ class EditParDialog(object):
                                   self.paramList[i], self.defaultParamList[i],
                                   self.doScroll, self.fieldWidths,
                                   plugIn=eparOpt, editedCallbackObj=cbo,
-                                  defaultsVerb=dfltsVerb)
+                                  defaultsVerb=dfltsVerb, bg=self.entsColor)
 
 
     def _nonStandardEparOptionFor(self, paramTypeStr):
@@ -627,24 +631,24 @@ class EditParDialog(object):
     # button for the choice of the display for the task help page
     def printNames(self, top, taskName, pkgName):
 
-        topbox = Frame(top, bg=self.bkgColor)
-        textbox = Frame(topbox, bg=self.bkgColor)
-        helpbox = Frame(topbox, bg=self.bkgColor)
+        topbox = Frame(top, bg=self.taskColor)
+        textbox = Frame(topbox, bg=self.taskColor)
+#       helpbox = Frame(topbox, bg=self.taskColor)
 
         # Set up the information strings
         if self._isUnpackagedTask():
             # label for a parameter list is just filename
             packString = " "+self._unpackagedTaskTitle+" = "+taskName
-            Label(textbox, text=packString, bg=self.bkgColor).pack(side=TOP,
+            Label(textbox, text=packString, bg=self.taskColor).pack(side=TOP,
                   anchor=W)
         else:
             # labels for task
             packString = "  Package = " + pkgName.upper()
-            Label(textbox, text=packString, bg=self.bkgColor).pack(side=TOP,
+            Label(textbox, text=packString, bg=self.taskColor).pack(side=TOP,
                   anchor=W)
 
             taskString = "       Task = " + taskName.upper()
-            Label(textbox, text=taskString, bg=self.bkgColor).pack(side=TOP,
+            Label(textbox, text=taskString, bg=self.taskColor).pack(side=TOP,
                   anchor=W)
         textbox.pack(side=LEFT, anchor=W)
         topbox.pack(side=TOP, expand=FALSE, fill=X)
@@ -652,7 +656,7 @@ class EditParDialog(object):
     # Method to set up the parent menu bar
     def makeMenuBar(self, top):
 
-        menubar = Frame(top, bd=1, relief=GROOVE)
+        menubar = Frame(top, bd=1, relief=GROOVE, bg=self.bkgColor)
 
         # Generate the menus
         fileMenu = self.makeFileMenu(menubar)
@@ -673,7 +677,7 @@ class EditParDialog(object):
     # Method to generate a "File" menu
     def makeFileMenu(self, menubar):
 
-        fileButton = Menubutton(menubar, text='File')
+        fileButton = Menubutton(menubar, text='File', bg=self.bkgColor)
         fileButton.pack(side=LEFT, padx=2)
 
         fileButton.menu = Menu(fileButton, tearoff=0)
@@ -737,7 +741,7 @@ class EditParDialog(object):
         self._openMenuChoice = StringVar() # this is used till GUI closes
         self._numOpenMenuItems = 1 # see dummy
 
-        openBtn = Menubutton(menubar, text='Open...')
+        openBtn = Menubutton(menubar, text='Open...', bg=self.bkgColor)
         openBtn.bind("<Enter>", self.printOpenInfo)
         openBtn.pack(side=LEFT, padx=2)
 
@@ -772,7 +776,7 @@ class EditParDialog(object):
             self._execChoice = IntVar()
             self._execChoice.set(int(self._saveAndCloseOnExec))
 
-        optionButton = Menubutton(menubar, text="Options")
+        optionButton = Menubutton(menubar, text="Options", bg=self.bkgColor)
         optionButton.pack(side=LEFT, padx=2)
         optionButton.menu = Menu(optionButton, tearoff=0)
         optionButton.menu.add_radiobutton(label="Display Task Help in a Window",
@@ -799,7 +803,7 @@ class EditParDialog(object):
 
     def makeHelpMenu(self, menubar):
 
-        button = Menubutton(menubar, text='Help')
+        button = Menubutton(menubar, text='Help', bg=self.bkgColor)
         button.bind("<Enter>", self.printHelpInfo)
         button.pack(side=RIGHT, padx=2)
         button.menu = Menu(button, tearoff=0)
@@ -815,20 +819,20 @@ class EditParDialog(object):
     # Create the buttons in an order for good navigation
     def buttonBox(self, top):
 
-        box = Frame(top, bg=self.bkgColor, bd=1, relief=SUNKEN)
+        box = Frame(top, bg=self.bboxColor, bd=1, relief=SUNKEN)
 
         # When the Button is exited, the information clears, and the
         # Button goes back to the nonactive color.
         top.bind("<Leave>", self.clearInfo)
 
         # Execute the task
-        buttonExecute = Button(box, text="Execute",
+        buttonExecute = Button(box, text="Execute", bg=self.bboxColor,
                                relief=RAISED, command=self.execute)
         buttonExecute.pack(side=LEFT, padx=5, pady=7)
         buttonExecute.bind("<Enter>", self.printExecuteInfo)
         if not self._useSimpleAutoClose:
             # separate this button from the others - it's unusual
-            strut = Label(box, text="")
+            strut = Label(box, text="", bg=self.bboxColor)
             strut.pack(side=LEFT, padx=20)
 
         # EXECUTE button is disabled for child windows
@@ -838,13 +842,15 @@ class EditParDialog(object):
         # Save the parameter settings and exit from epar
         saqlbl ="Save"
         if self._useSimpleAutoClose: saqlbl += " & Quit"
-        btn = Button(box, text=saqlbl, relief=RAISED, command=self.saveAndClose)
+        btn = Button(box, text=saqlbl, relief=RAISED, command=self.saveAndClose,
+                     bg=self.bboxColor)
         btn.pack(side=LEFT, padx=5, pady=7)
         btn.bind("<Enter>", self.printSaveQuitInfo)
 
         # Unlearn all the parameter settings (set back to the defaults)
         buttonUnlearn = Button(box, text=self._defaultsButtonTitle,
-                               relief=RAISED, command=self.unlearn)
+                               relief=RAISED, command=self.unlearn,
+                               bg=self.bboxColor)
         if self._showExtraHelpButton:
             buttonUnlearn.pack(side=LEFT, padx=5, pady=7)
         else:
@@ -855,11 +861,12 @@ class EditParDialog(object):
         # Buttons to close versus abort this edit session.
         if not self._useSimpleAutoClose:
             buttonClose = Button(box, text="Close",
-                                  relief=RAISED, command=self.closeGui)
+                                  relief=RAISED, command=self.closeGui,
+                                  bg=self.bboxColor)
             buttonClose.pack(side=LEFT, padx=5, pady=7)
             buttonClose.bind("<Enter>", self.printCloseInfo)
 
-        buttonAbort = Button(box, text="Cancel",
+        buttonAbort = Button(box, text="Cancel", bg=self.bboxColor,
                               relief=RAISED, command=self.abort)
         buttonAbort.pack(side=LEFT, padx=5, pady=7)
         buttonAbort.bind("<Enter>", self.printAbortInfo)
@@ -867,7 +874,8 @@ class EditParDialog(object):
         # Generate the Help button
         if self._showExtraHelpButton:
             buttonHelp = Button(box, text=self.capTaskName()+" Help",
-                                relief=RAISED, command=self.showTaskHelp)
+                                relief=RAISED, command=self.showTaskHelp,
+                                bg=self.bboxColor)
             buttonHelp.pack(side=RIGHT, padx=5, pady=7)
             buttonHelp.bind("<Enter>", self.printHelpInfo)
 
