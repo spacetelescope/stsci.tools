@@ -234,7 +234,7 @@ class EparOption(object):
     # If valid, changes the value of the parameter (note that this
     # is a copy, so change is not permanent until save)
     # Parameter change also sets the isChanged flag.
-    def entryCheck(self, event = None):
+    def entryCheck(self, event = None, repair = True):
 
         # Make sure the input is legal
         value = self.choice.get()
@@ -246,10 +246,11 @@ class EparOption(object):
             return None
         except ValueError, exceptionInfo:
             # Reset the entry to the previous (presumably valid) value
-            self.choice.set(self.previousValue)
+            if repair:
+                self.choice.set(self.previousValue)
+                self.status.bell()
             errorMsg = str(exceptionInfo)
-            self.status.bell()
-            if (event != None):
+            if event != None:
                 self.status.config(text = errorMsg)
             # highlight the text again and terminate processing so
             # focus stays in this widget
@@ -602,10 +603,10 @@ class NumberEparOption(EparOption):
     # Check the validity of the entry
     # Note that doing this using the parameter set method automatically
     # checks max, min, special value (INDEF, parameter indirection), etc.
-    def entryCheck(self, event = None):
+    def entryCheck(self, event = None, repair = True):
         """ Ensure any INDEF entry is uppercase, before base class behavior """
         self.choice.set(self.choice.get().upper())
-        return EparOption.entryCheck(self, event)
+        return EparOption.entryCheck(self, event, repair = repair)
 
 # numeric widget class specific to floats
 
