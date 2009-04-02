@@ -64,10 +64,10 @@ class ConfigObjEparDialog(editpar.EditParDialog):
 
 
     def _doActualSave(self, fname, comment):
-        """ Override this so we can handle case of file not writable. """
+        """ Override this so we can handle case of file not writable, as
+            well as to make our _lastSavedState copy. """
         try:
             rv=self._taskParsObj.saveParList(filename=fname,comment=comment)
-            return rv
         except IOError:
             # User does not have privs to write to this file. Get name of local
             # choice and try to use that.
@@ -79,17 +79,44 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                   self._taskParsObj.getName()+'" is not to be overwritten.'+ \
                   '  Values will be saved to: \n\n\t"'+mine+'".'
             tkMessageBox.showwarning(message=msg, title="Will not overwrite!")
-            # Try saving their copy
+            # Try saving to their local copy
             rv=self._taskParsObj.saveParList(filename=mine, comment=comment)
             # Treat like a save-as
             self._saveAsPostSave_Hook(mine)
-            return rv
+
+        # Before returning, make a copy so we know what was last saved.
+        # The dict() method returns a deep-copy dict of the keyvals.
+        self._lastSavedState = self._taskParsObj.dict()
+        return rv
 
 
     def _saveAsPostSave_Hook(self, fnameToBeUsed_UNUSED):
         """ Override this so we can update the title bar. """
         self.updateTitle(self._taskParsObj.filename) # _taskParsObj is correct
 
+
+    def hasUnsavedChanges(self):
+        """ Determine if there are any edits in the GUI that have not yet been
+        saved (e.g. to a file). """
+        
+        # Sanity check - this case shouldn't occur
+        assert self._lastSavedState != None, \
+               "BUG: Please report this as it should never occur."
+
+        # Force the current GUI values into our model in memory, but don't
+        # change anything.  Don't save to file, don't even convert bad
+        # values to their previous state in the gui.  Note that this can
+        # leave the GUI in a half-saved state, but since we are about to exit
+        # this is OK.  We only want prompting to occur if they decide to save.
+        badList = self.checkSetSaveEntries(doSave=False, fleeOnBadVals=True,
+                                           allowGuiChanges=False)
+        if badList:
+            return True
+
+        # Then compare our data to the last known saved state.  MAKE SURE
+        # the LHS is the actual dict (and not 'self') to invoke the dict
+        # comparison only.
+        return self._lastSavedState != self._taskParsObj
 
     # Employ an edited callback for a given item?
     def _defineEditedCallbackObjectFor(self, parScope, parName):
@@ -123,7 +150,11 @@ class ConfigObjEparDialog(editpar.EditParDialog):
     def _setTaskParsObj(self, theTask):
         """ Overridden version for ConfigObj. theTask can be either
             a .cfg file name or a ConfigObjPars object. """
+        # Create the ConfigObjPars obj
         self._taskParsObj = cfgpars.getObjectFromTaskArg(theTask)
+        # Immediately make a copy of it's un-tampered internal dict.
+        # The dict() method returns a deep-copy dict of the keyvals.
+        self._lastSavedState = self._taskParsObj.dict()
 
 
     def _getSaveAsFilter(self):
@@ -229,6 +260,11 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self.updateTitle(fname)
         self._taskParsObj.filename = fname # !! maybe try setCurrentContext() ?
 
+        # Since we are in a new context (and have made no changes yet), make
+        # a copy so we know what the last state was.
+        # The dict() method returns a deep-copy dict of the keyvals.
+        self._lastSavedState = self._taskParsObj.dict()
+
 
     def unlearn(self, event=None):
         """ Override this so that we can set to default values our way. """
@@ -242,8 +278,8 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         try:
             tmpObj = cfgpars.ConfigObjPars(self._taskParsObj.filename,
                                            setAllToDefaults=True)
-            print "Loading default "+self.taskName+" values via: "+ \
-                  os.path.basename(tmpObj._original_configspec)
+            self.showStatus("Loading default "+self.taskName+" values via: "+ \
+                 os.path.basename(tmpObj._original_configspec), keep=2)
         except Exception, ex:
             msg = "Error Determining Defaults"
             tkMessageBox.showerror(message=msg+'\n\n'+ex.message,
