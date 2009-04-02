@@ -9,7 +9,7 @@ Taken from pyraf/lib/epar.py, originally signed "M.D. De La Pena, 2000 Feb. 4"
 from Tkinter import  _default_root
 from Tkinter import *
 from tkMessageBox import askokcancel, askyesno, showwarning
-import os
+import os, time
 
 # pytools modules
 from irafglobals import userWorkingHome
@@ -182,13 +182,14 @@ class EditParDialog(object):
         # Call our (or a subclass's) _setTaskParsObj() method
         self._setTaskParsObj(theTask)
 
-        # Now go back and ensure we have the full taskname
+        # Now go back and ensure we have the full taskname; set up other items
         self._canceled = False
         self._guiName = title
         self.taskName = self._taskParsObj.getName()
         self.pkgName = self._taskParsObj.getPkgname()
         self.paramList = self._taskParsObj.getParList(docopy=1)
         self._rcDir = resourceDir
+        self._leaveStatusMsgUntil = 0
 
         # Ignore the last parameter which is $nargs
         self.numParams = len(self.paramList) - 1
@@ -915,49 +916,42 @@ class EditParDialog(object):
     #
 
     def clearInfo(self, event):
-        self.top.status.config(text="")
+        self.showStatus("")
 
     def printHelpViewInfo(self, event):
-        self.top.status.config(text =
-             " Choice of display for the help page: a window or a browser")
+        self.showStatus(
+            " Choice of display for the help page: a window or a browser")
 
     def printHelpInfo(self, event):
-        self.top.status.config(text =
-             " Display the help page")
+        self.showStatus(" Display the help page")
 
     def printUnlearnInfo(self, event):
-        self.top.status.config(text =
-             " Set all parameter values to their default settings")
+        self.showStatus(" Set all parameter values to their default settings")
 
     def printSaveQuitInfo(self, event):
         if self._useSimpleAutoClose:
-            self.top.status.config(text =
-                " Save the current entries and exit this edit session")
+            self.showStatus(" Save current entries and exit this edit session")
         else:
-            self.top.status.config(text =
-                " Save the current entries to "+self._taskParsObj.getFilename())
+            self.showStatus(" Save the current entries to "+ \
+                            self._taskParsObj.getFilename())
 
     def printSaveAsInfo(self, event):
-        self.top.status.config(text =
-             " Save the current entries to a user-specified file")
+        self.showStatus(" Save the current entries to a user-specified file")
 
     def printOpenInfo(self, event):
-        self.top.status.config(text =
-             " Load and edit parameter values from a user-specified file")
+        self.showStatus(" Load and edit parameter values from a user-specified file")
 
     def printCloseInfo(self, event):
-        self.top.status.config(text=" Close this edit session.  Save first?")
+        self.showStatus(" Close this edit session.  Save first?")
 
     def printAbortInfo(self, event):
-        self.top.status.config(text=" Abort this edit session, discarding any unsaved changes.")
+        self.showStatus(" Abort this edit session, discarding any unsaved changes.")
 
     def printExecuteInfo(self, event):
         if self._saveAndCloseOnExec:
-            self.top.status.config(text =
-                " Execute the task, and save and exit this edit session")
+            self.showStatus(" Execute the task, and save and exit this edit session")
         else:
-            self.top.status.config(text =
-                " Execute the task; this window will remain open")
+            self.showStatus(" Execute the task; this window will remain open")
 
 
     # Process invalid input values and invoke a query dialog
@@ -980,8 +974,10 @@ class EditParDialog(object):
 
 
     def hasUnsavedChanges(self):
-        """ This needs to be overridden by a subclass.  In the meantime, just
-            default (on the safe side) to everything being ready-to-save. """
+        """ Determine if there are any edits in the GUI that have not yet been
+        saved (e.g. to a file).  This needs to be overridden by a subclass.
+        In the meantime, just default (on the safe side) to everything being
+        ready-to-save. """
         return True
 
 
@@ -1131,7 +1127,7 @@ class EditParDialog(object):
                 ansOKCANCEL = self.processBadEntries(self.badEntriesList,
                               self.taskName)
                 if not ansOKCANCEL: return
-            print "\nTask %s is running...\n" % self.taskName
+            self.showStatus("Task "+self.taskName+" is running...", keep=2)
             self.runTask()
             return
 
@@ -1155,7 +1151,7 @@ class EditParDialog(object):
         self.top.withdraw()
         self.top.destroy()
 
-        print "\nTask %s is running...\n" % self.taskName
+        print "\nTask "+self.taskName+" is running...\n"
 
         # Run the task
         try:
@@ -1377,7 +1373,8 @@ class EditParDialog(object):
 
 
     # Read, save, and validate the entries
-    def checkSetSaveEntries(self, doSave=True, filename=None, comment=None):
+    def checkSetSaveEntries(self, doSave=True, filename=None, comment=None,
+                            fleeOnBadVals=False, allowGuiChanges=True):
 
         self.badEntries = []
         asNative = self._taskParsObj.knowAsNative()
@@ -1401,16 +1398,17 @@ class EditParDialog(object):
             # only need to check the isChanged flag.
             if par.isChanged() or value != entry.previousValue:
 
-                # CHECK: Verify the value is valid. If it is invalid,
+                # CHECK: Verify the value. If its invalid (and allowGuiChanges),
                 # the value will be converted to its original valid value.
                 # Maintain a list of the reset values for user notification.
                 # Always call entryCheck, no matter what type of _taskParsObj,
                 # since entryCheck can do some basic type checking.
                 failed = False
-                if entry.entryCheck():
+                if entry.entryCheck(repair=allowGuiChanges):
+                    failed = True
                     self.badEntries.append([entry.name, value,
                                            entry.choice.get()])
-                    failed = True
+                    if fleeOnBadVals: return self.badEntries
                 # See if we need to do a more serious validity check
                 elif self._taskParsObj.canPerformValidation():
                     # if we are planning to save in native type, test that way
@@ -1418,18 +1416,20 @@ class EditParDialog(object):
                         try:
                             value = entry.convertToNative(value)
                         except:
+                            failed = True
                             prev = entry.previousValue
                             self.badEntries.append([entry.name, value, prev])
-                            entry.choice.set(prev)
-                            failed = True
+                            if fleeOnBadVals: return self.badEntries
+                            if allowGuiChanges: entry.choice.set(prev)
                     # now try the val in it's validator
                     if not failed:
                         valOK, prev = self._taskParsObj.tryValue(entry.name,
                                                         value, scope=par.scope)
                         if not valOK:
-                            self.badEntries.append([entry.name,str(value),prev])
-                            entry.choice.set(prev)
                             failed = True
+                            self.badEntries.append([entry.name,str(value),prev])
+                            if fleeOnBadVals: return self.badEntries
+                            if allowGuiChanges: entry.choice.set(prev)
 
                 # get value again in case it changed - this version IS valid
                 value = entry.choice.get()
@@ -1443,7 +1443,9 @@ class EditParDialog(object):
         # SAVE: Save results to the given file
         if doSave:
             out = self._doActualSave(filename, comment)
-            if len(out): print out
+            if len(out):
+                # Keep user informed on saves
+                self.showStatus(out, keep=2)
 
         return self.badEntries
 
@@ -1483,6 +1485,19 @@ class EditParDialog(object):
             del self.top.childList[n]
         # all windows saved successfully
         return
+
+    def showStatus(self, msg, keep=0):
+        """ Show the given status string, but not until any given delay from
+            the previous message has expired. keep is a time (secs) to force
+            the message to remain without being overwritten or cleared. """
+        now = time.time()
+        if now >= self._leaveStatusMsgUntil:
+            # print the status out
+            self.top.status.config(text = msg)
+            # reset our delay flag
+            self._leaveStatusMsgUntil = 0
+            if keep > 0:
+                self._leaveStatusMsgUntil = now + keep
 
     # Run the task
     def runTask(self):
