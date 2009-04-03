@@ -360,6 +360,16 @@ class EparOption(object):
             which takes args as shown where it is called in entryCheck(). """
         self._editedCallbackObj = ecbo
 
+    def setActiveState(self, active):
+        """ Use this to enable or disable (grey out) a parameter. """
+        try:
+            if active:
+                self.entry.configure(state=NORMAL)
+            else:
+                self.entry.configure(state=DISABLED)
+        except TclError:
+            pass # for now, some items don't set "-state"
+
 
 class EnumEparOption(EparOption):
 

@@ -622,13 +622,7 @@ class EditParDialog(object):
         for i in range(self.numParams):
             if self.paramList[i].scope == sectionName and \
                not self.paramList[i].name in skipList:
-                try:
-                    if state:
-                        self.entryNo[i].entry.configure(state=NORMAL)
-                    else:
-                        self.entryNo[i].entry.configure(state=DISABLED)
-                except TclError:
-                    pass # for now, some items don't set "-state"
+                self.entryNo[i].setActiveState(state)
 
 
     # Method to print the package and task names and to set up the menu
