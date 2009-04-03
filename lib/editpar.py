@@ -955,7 +955,7 @@ class EditParDialog(object):
 
 
     # Process invalid input values and invoke a query dialog
-    def processBadEntries(self, badEntriesList, taskname):
+    def processBadEntries(self, badEntriesList, taskname, canCancel=True):
 
         badEntriesString = "Task " + taskname.upper() + " --\n" \
             "Invalid values have been entered.\n\n" \
@@ -966,11 +966,18 @@ class EditParDialog(object):
                 "%15s %10s %10s\n" % (badEntriesList[i][0], \
                 badEntriesList[i][1], badEntriesList[i][2])
 
-        badEntriesString = badEntriesString + '\n"OK" to continue using'+ \
-            ' the reset\nvalues or "Cancel" to re-enter\nvalues?\n'
+        if canCancel:
+            badEntriesString += '\n"OK" to continue using'+ \
+            ' the reset values, or "Cancel" to re-enter values?\n'
+        else:
+            badEntriesString += \
+            "\n All invalid values will return to their 'Reset Value'.\n"
 
         # Invoke the modal message dialog
-        return (askokcancel("Notice", badEntriesString))
+        if canCancel:
+            return askokcancel("Notice", badEntriesString)
+        else:
+            return showwarning("Notice", badEntriesString)
 
 
     def hasUnsavedChanges(self):
@@ -1320,9 +1327,12 @@ class EditParDialog(object):
         return 1
 
 
-    def setAllEntriesFromParList(self, aParList):
+    def setAllEntriesFromParList(self, aParList, updateModel=False):
         """ Set all the parameter entry values in the GUI to the values
-            in the given par list.  Note corresponding TparDisplay method. """
+            in the given par list. If 'updateModel' is True, the internal
+            param list will be updated to the new values as well as the GUI
+            entries (slower and not always necessary). Note the
+            corresponding TparDisplay method. """
 
         if len(aParList) != len(self.paramList):
             showwarning(message="Attempting to set parameter values from a "+ \
@@ -1363,6 +1373,15 @@ class EditParDialog(object):
 
             # gui holds a str, but par.value is native; conversion occurs
             gui_entry.forceValue(par.value)
+
+        if updateModel:
+            # Update the model values via checkSetSaveEntries
+            self.badEntriesList = self.checkSetSaveEntries(doSave=False)
+
+            # If there were invalid entries, prepare the message dialog
+            if self.badEntriesList:
+                self.processBadEntries(self.badEntriesList,
+                                       self.taskName, canCancel=False)
 
 
     def unlearnAllEntries(self, master):
