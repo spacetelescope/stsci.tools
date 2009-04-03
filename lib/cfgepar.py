@@ -251,7 +251,9 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # Set the GUI entries to these values (let the user Save after)
         newParList = tmpObj.getParList()
         try:
-            self.setAllEntriesFromParList(newParList)
+            self.setAllEntriesFromParList(newParList, updateModel=True)
+                # go ahead and updateModel, even though it will take longer,
+                # we need it updated for the copy of the dict we make below
         except editpar.UnfoundParamError, pe:
             tkMessageBox.showwarning(message=pe.message, title="Error in "+\
                                      os.path.basename(fname))
@@ -289,7 +291,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # Set the GUI entries to these values (let the user Save after)
         newParList = tmpObj.getParList()
         try:
-            self.setAllEntriesFromParList(newParList)
+            self.setAllEntriesFromParList(newParList) # needn't updateModel yet
         except editpar.UnfoundParamError, pe:
             tkMessageBox.showerror(message=pe.message,
                                    title="Error Setting to Default Values")
