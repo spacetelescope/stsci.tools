@@ -1013,6 +1013,8 @@ class EditParDialog(object):
         self.badEntriesList = None
         if doTheSave:
             self.badEntriesList = self.checkSetSaveEntries()
+            # Note, there is a BUG here - if they hit Cancel, the save to
+            # file has occurred anyway (they may not care) - need to refactor.
 
         # If there were invalid entries, prepare the message dialog
         if self.badEntriesList:
@@ -1457,14 +1459,13 @@ class EditParDialog(object):
                 # SET: Update the task parameter (also does the conversion
                 # from string)
                 self._taskParsObj.setParam(par.name, value, scope=par.scope,
-                                           check=0)
+                                           check=0, idxHint=i)
 
         # SAVE: Save results to the given file
         if doSave:
             out = self._doActualSave(filename, comment)
             if len(out):
-                # Keep user informed on saves
-                self.showStatus(out, keep=2)
+                self.showStatus(out, keep=2) # inform user on saves
 
         return self.badEntries
 

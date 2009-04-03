@@ -263,7 +263,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 # don't mind - this is just a goodwill attempt anyway
                 pass
 
-    def setParam(self, name, val, scope='', check=1):
+    def setParam(self, name, val, scope='', check=1, idxHint=None):
         """ Find the ConfigObj entry.  Update the __paramList. """
         theDict = self
         if len(scope):
@@ -285,13 +285,13 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     flatStr = str(configobj.flatten_errors(self, ans))
                 raise RuntimeError("Validation error: "+flatStr)
 
-        # ! NOTE ! This design needs work.  Right now there are two copies
+        # Note - this design needs work.  Right now there are two copies
         # of the data:  the ConfigObj dict, and the __paramList ...
-        # Since this step is done for each parameter, this update probably
-        # really slows things down.
-        self.__paramList = self._getParamsFromConfigDict(self)
-        if self._forUseWithEpar:
-            self.__paramList.append(basicpar.IrafParS(['$nargs','s','h','N']))
+        # We rely on the idxHint arg so we don't have to search the __paramList
+        # every time this is called, which could really slows things down.
+        assert idxHint != None, "ConfigObjPars relies on a valid idxHint"
+        assert name == self.__paramList[idxHint].name, "Programming error"
+        self.__paramList[idxHint].set(val)
 
     def saveParList(self, *args, **kw):
         """Write parameter data to filename (string or filehandle)"""
