@@ -362,13 +362,11 @@ class EparOption(object):
 
     def setActiveState(self, active):
         """ Use this to enable or disable (grey out) a parameter. """
-        try:
-            if active:
-                self.entry.configure(state=NORMAL)
-            else:
-                self.entry.configure(state=DISABLED)
-        except TclError:
-            pass # for now, some items don't set "-state"
+        st = DISABLED
+        if active: st = NORMAL
+        self.entry.configure(state=st)
+        self.inputLabel.configure(state=st)
+        self.promptLabel.configure(state=st)
 
 
 class EnumEparOption(EparOption):
@@ -471,6 +469,13 @@ class EnumEparOption(EparOption):
             # initial null value may not be in list
             pass
 
+#   def setActiveState(self, active):
+#       [...]
+#       for i in range(len(self.paramInfo.choice)):  # this doesn't seem to 
+#           self.entry.menu.entryconfig(i, state=st) # make the menu text grey
+#       [...]
+
+
 
 class BooleanEparOption(EparOption):
 
@@ -570,6 +575,15 @@ class BooleanEparOption(EparOption):
         else:
             self.rbyes.select()
         self.widgetEdited()
+
+    def setActiveState(self, active):
+        st = DISABLED
+        if active: st = NORMAL
+        self.rbyes.configure(state=st)
+        self.rbno.configure(state=st)
+        self.inputLabel.configure(state=st)
+        self.promptLabel.configure(state=st)
+
 
 class StringEparOption(EparOption):
 
