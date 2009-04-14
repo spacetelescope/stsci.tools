@@ -8,8 +8,146 @@ import cfgpars, editpar, filedlg
 from cfgpars import APP_NAME
 
 
+# tool help
+tealHelpString = """\
+The TEAL (Task Editor And Launcher) GUI is used to edit task parameters in a
+parameter-dependent way.  After editing, it allows the user to launch
+(execute) the task.  It also allows the user to view task help in a separate
+window that remains accessible while the parameters are being edited.
+
+
+Editing Parameters
+--------------------
+
+Parameter values are modified using various GUI widgets that depend on the
+parameter properties.  It is possible to edit parameters using either the mouse
+or the keyboard.  Most parameters have a context-dependent menu accessible via
+right-clicking that enables resetting the parameter (restoring its value to
+the task default), clearing the value, or even activating a file browser that
+allows a filename to be selected and entered into the parameter field.  Some
+items on the right-click pop-up menu may be disabled depending on the parameter
+type (e.g. the file browser cannot be used for numeric parameters.)
+
+The mouse-editing behavior should be intuitive, so the notes below focus on
+keyboard-editing.  When the editor starts, the first parameter is selected.  To
+select another parameter, use the Tab key (Shift-Tab to go backwards) or Return
+to move the focus from item to item. The Up and Down arrow keys also move
+between fields.  The toolbar buttons can also be selected with Tab.  Use the
+space bar to "push" buttons or activate menus.
+
+Enumerated Parameters
+        Parameters that have a list of choices use a drop-down menu.  The space
+        bar causes the menu to appear; once it is present, the up/down arrow
+        keys can be used to select different items.  Items in the list have
+        accelerators (underlined, generally the first letter) that can be typed
+        to jump directly to that item.  When editing is complete, hit Return or
+        Tab to accept the changes, or type Escape to close the menu without
+        changing the current parameter value.
+
+Boolean Parameters
+        Boolean parameters appear as Yes/No radio buttons.  Hitting the space
+        bar toggles the setting, while 'y' and 'n' can be typed to select the
+        desired value.
+
+Text Entry Fields
+        Strings, integers, floats, etc. appear as text-entry fields.  Values
+        are verified to to be legal before being stored in the parameter. If an
+        an attempt is made to set a parameter to an illegal value, the program
+        beeps and a warning message appears in the status bar at the bottom of
+        the window.
+
+        To see the value of a string that is longer than the entry widget,
+        either use the left mouse button to do a slow "scroll" through the
+        entry or use the middle mouse button to "pull" the value in the entry
+        back and forth quickly.  In either case, just click in the entry widget
+        with the mouse and then drag to the left or right.  If there is a
+        selection highlighted, the middle mouse button may paste it in when
+        clicked.  It may be necessary to click once with the left mouse
+        button to undo the selection before using the middle button.
+
+        You can also use the left and right arrow keys to scroll through the
+        selection.  Control-A jumps to the beginning of the entry, and
+        Control-E jumps to the end of the entry.
+
+
+The Menu Bar
+--------------
+
+File menu:
+    Execute
+             Start the task running with the currently edited parameter values.
+             If the Option "Save and Close on Execute" is set, this will save
+             all the parameters and close the editor window.
+    Save
+             Save the parameters to the file named in the title bar.  This
+             does not close the editor window, nor does it execute the task.
+    Save As...
+             Save the parameters to a user-specified file.  This does not
+             close the editor window, nor does it execute the task.
+    Defaults
+             Reset all parameters to the system default values for this
+             task.  Note that individual parameters can be reset using the
+             menu shown by right-clicking on the parameter entry.
+    Close
+             Close the parameter editor.  If there are unsaved changes, the
+             user is prompted to save them.  Either way, this action returns
+             to the calling routine a Python dict of the currently selected
+             parameter values.
+    Cancel
+             Cancel the editing session by exiting the parameter editor.  All
+             recent changes that were made to the parameters are lost (going
+             back until the last Save or Save As).  This action returns
+             a Python None to the calling routine.
+
+Open... menu:
+     Load and edit parameters from any applicable file found for the current
+     task.  This changes the current file being edited (see the name listed
+     in the title bar) to the one selected to be opened.  If no such files
+     are found, this menu is not shown.
+
+Options menu:
+    Display Task Help in a Window
+             Help on the task is available through the Help menu.  If this
+             option is selected, the help text is displayed in a pop-up window.
+             This is the default behavior.
+    Display Task Help in a Browser
+             If this option is selected, instead of a pop-up window, help is
+             displayed in the user's web browser.  This requires access to
+             the internet and is a somewhat experimental feature.  Any HTML
+             version of the task's help need to be provided by the task.
+    Save and Close on Execute
+             If this option is selected, the parameter editing window will be
+             closed right before task execution as if the Close button had
+             been clicked.  This is the default behavior.  For short-running
+             tasks, it may be interesting to leave TEAL open and continue to
+             execute while tweaking certain parameter values.
+
+Help menu:
+    Task Help
+             Display help on the task whose parameters are being edited.
+             By default the help pops up in a new window, but the help can also
+             be displayed in a web browser by modifying the Options.
+    EPAR Help
+             Display this help.
+
+
+Toolbar Buttons
+-----------------
+
+The Toolbar contains a set of buttons that provide shortcuts for the most
+common menu bar actions.  Their names are the same as the menu items given
+above: Execute, Save, Close, Cancel, and Defaults.
+
+Note that the toolbar buttons are accessible from the keyboard using the Tab
+and Shift-Tab keys.  They are located in sequence before the first parameter.
+If the first parameter is selected, Shift-Tab backs up to the "Task Help"
+button, and if the last parameter is selected then Tab wraps around and selects
+the "Execute" button.
+"""
+
+
 # Starts a GUI session
-def epar(theTask, parent=None, isChild=0, loadOnly=False):
+def teal(theTask, parent=None, isChild=0, loadOnly=False):
     if loadOnly:
         return cfgpars.getObjectFromTaskArg(theTask)
     else:
@@ -40,6 +178,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
 
         # our own GUI setup
         self._appName             = APP_NAME
+        self._appHelpString       = tealHelpString
         self._useSimpleAutoClose  = False # is a fundamental issue here
         self._showExtraHelpButton = False
         self._saveAndCloseOnExec  = cod.get('saveAndCloseOnExec', True)
@@ -47,7 +186,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self._optFile             = APP_NAME.lower()+".optionDB"
 
         # our own colors
-        # prmdrss teal: #00ffaa, pure cyan (teal) #00ffff
+        # prmdrss teal: #00ffaa, pure cyan (teal) #00ffff (darker) #008080
         # "#aaaaee" is a darker but good blue, but "#bbbbff" pops
         ltblu = "#ccccff" # light blue
         drktl = "#008888" # darkish teal
@@ -117,6 +256,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # the LHS is the actual dict (and not 'self') to invoke the dict
         # comparison only.
         return self._lastSavedState != self._taskParsObj
+
 
     # Employ an edited callback for a given item?
     def _defineEditedCallbackObjectFor(self, parScope, parName):
