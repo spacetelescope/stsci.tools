@@ -467,8 +467,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 par.setScope(scopePrefix)
                 retval.append(par)
                 # check for triggers
-                if cspc and cspc.find('trigger')>0:
-                    self._triggers[scopePrefix+'.'+key] = cspc
+                trg = chk_args_dict.get('trigger', None)
+                if trg != None:
+                    self._triggers[scopePrefix+'.'+key] = trg
 
         return retval
 
@@ -477,10 +478,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         """ For a given item (scope + name), return the string (or None) of
         it's associated trigger, if one exists. """
         fullName = parScope+'.'+parName
-        if fullName in self._triggers:
-            return self._triggers[fullName]
-        else:
-            return None
+        return self._triggers.get(fullName) # returns None if unfound
 
 
     def canPerformValidation(self):

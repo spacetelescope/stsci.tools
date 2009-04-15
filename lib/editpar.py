@@ -296,7 +296,7 @@ class EditParDialog(object):
         self.top.protocol("WM_DELETE_WINDOW", self.abort)
 
         # Set focus to first parameter
-        self.entryNo[0].focus_set()
+        self.setViewAtTop()
 
         # Enable interactive resizing in height
         self.top.resizable(width=FALSE, height=TRUE)
@@ -305,6 +305,11 @@ class EditParDialog(object):
         width = self.top.winfo_width()
         height = self.top.winfo_height() + height - viewHeight
         self.top.maxsize(width=width, height=height)
+
+        # Trigger all widgets one time before starting in case they have
+        # values which would run a trigger
+        for i in range(self.numParams):
+            self.entryNo[i].widgetEdited()
 
         # run the mainloop
         if not self.isChild:
@@ -349,6 +354,20 @@ class EditParDialog(object):
 
     def updateTitle(self, atitle):
         self.top.title('%s:  %s' % (self._guiName, atitle))
+
+
+    def freshenFocus(self):
+        """ Did something which requires a new look.  Move scrollbar up.
+            This often needs to be delayed a bit however, to let other
+            events in the queue through first. """
+        self.top.update_idletasks()
+        self.top.after(10, self.setViewAtTop)
+
+
+    def setViewAtTop(self):
+        self.entryNo[0].focus_set()
+        self.top.f.canvas.xview_moveto(0.0)
+        self.top.f.canvas.yview_moveto(0.0)
 
 
     def getTaskParsObj(self):
@@ -1075,6 +1094,7 @@ class EditParDialog(object):
 
         # Reset the values of the parameters
         self.unlearnAllEntries(self.top.f.canvas.entries)
+        self.freshenFocus()
 
 
     # HTMLHELP: invoke the HTML help

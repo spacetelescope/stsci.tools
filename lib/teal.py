@@ -280,11 +280,11 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # the print line is a stand-in
         triggerStr = self._taskParsObj.getTriggerStr(scope, name)
         # call triggers in a general way, not directly here # !!!
-        if triggerStr.find('_section_switch_')>=0:
+        if triggerStr == '_section_switch_':
             state = str(newVal).lower() in ('on','yes','true')
             self._toggleSectionActiveState(scope, state, (name,))
         else:
-            print "val: "+newVal+", trigger: "+triggerStr
+            print name+" --> "+triggerStr
     
 
     def _setTaskParsObj(self, theTask):
@@ -401,6 +401,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # This new fname is our current context
         self.updateTitle(fname)
         self._taskParsObj.filename = fname # !! maybe try setCurrentContext() ?
+        self.freshenFocus()
 
         # Since we are in a new context (and have made no changes yet), make
         # a copy so we know what the last state was.
@@ -411,6 +412,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
     def unlearn(self, event=None):
         """ Override this so that we can set to default values our way. """
         self._setToDefaults()
+        self.freshenFocus()
 
 
     def _setToDefaults(self):
