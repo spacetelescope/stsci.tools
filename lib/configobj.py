@@ -875,10 +875,8 @@ class Section(dict):
         
         See  the encode and decode methods for examples, including functions.
         
-        .. caution::
-        
-            You can use ``walk`` to transform the names of members of a section
-            but you mustn't add or delete members.
+	    caution: You can use ``walk`` to transform the names of
+	    members of a section but you mustn't add or delete members.
         
         >>> config = '''[XXXXsection]
         ... XXXXkey = XXXXvalue'''.splitlines()
