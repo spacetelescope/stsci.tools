@@ -172,67 +172,6 @@ o.run = new_run
 
 ######## ######## ######## ######## ######## ######## ######## ########
 #
-# Implements "python setup.py install --place=dir"
-# 
-# *********
-# ********* we don't actually document or use this
-# *********
-#
-# This replaces --local from earlier stsci_python releases.  The
-# flag is different because it doesn't quite do the same thing.
-#
-# --place=$dir means that
-#   scripts go into $dir/bin
-#   python code goes into $dir/lib
-#
-# This is a less complicated structure than you get from --prefix and --home.
-
-import distutils.command.install
-
-# same trick as smart_install_data used: save the old run() method and
-# insert our own run method ahead of it
-
-o = distutils.command.install.install
-o.old_finalize_unix  = o.finalize_unix
-o.old_finalize_other = o.finalize_other
-
-# INSTALL_SCHEMES are effectively a list of where to put different kinds
-# of files.  It exists so you can have complex structures like what 
-# --prefix does.  We want a simpler one, so here it is.
-distutils.command.install.INSTALL_SCHEMES['unix_place'] = {
-        'purelib': '$base/lib',
-        'platlib': '$base/lib',
-        'headers': '$base/include',
-        'scripts': '$base/bin',
-        'data'   : '$base/lib',
-    }
-
-
-def new_finalize_unix(self) :
-    # this is handled just like --home, but with a different scheme name
-    # see finalize_unix() in distutils/command/install.py
-    if self.place :
-        self.install_base = self.install_platbase = self.place
-        self.select_scheme("unix_place")
-        return
-    self.old_finalize_unix()
-
-def new_finalize_other(self) :
-    # need to think about what to do for windows
-    # (distutils says that macs come through here, but macs use finalize_unix)
-    self.old_finalize_unix()
-
-o.finalize_unix  = new_finalize_unix
-o.finalize_other = new_finalize_other
-
-# to make a new option "--foo", you need to create a variable named
-# "foo" in the object and add an entry to user_options[]
-o.place = None
-o.user_options.append( ( "place=", None, "Specify place to install" ) )
-
-
-######## ######## ######## ######## ######## ######## ######## ########
-#
 # Function to collect svn version information - used to be stsci_python/version.py
 # with multiple copies in the system.
 #
