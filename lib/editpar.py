@@ -968,11 +968,13 @@ class EditParDialog(object):
         # The user wishes to save to a different name
         # (could use Tkinter's FileDialog, but this one is prettier)
         fd = filedlg.PersistSaveFileDialog(self.top, "Save Parameter File As",
-                                           self._getSaveAsFilter())
+                                           self._getSaveAsFilter(),
+                                           showWProt=True)
         if fd.Show() != 1:
             fd.DialogCleanup()
             return
         fname = fd.GetFileName()
+        doChmod = fd.GetWriteProtectChoice()
         fd.DialogCleanup()
 
         # First check the child parameters, aborting save if
@@ -997,7 +999,8 @@ class EditParDialog(object):
         # save to their stated file.  Since we have already processed the
         # bad entries, there should be none returned.
         mstr = "TASKMETA: task="+self.taskName+" package="+self.pkgName
-        if self.checkSetSaveEntries(doSave=True, filename=fname, comment=mstr):
+        if self.checkSetSaveEntries(doSave=True, filename=fname,
+                                    comment=mstr, set_ro=doChmod):
             raise Exception("Unexpected bad entries for: "+self.taskName)
 
         # Run any subclass-specific steps right after the save
@@ -1281,7 +1284,8 @@ class EditParDialog(object):
 
     # Read, save, and validate the entries
     def checkSetSaveEntries(self, doSave=True, filename=None, comment=None,
-                            fleeOnBadVals=False, allowGuiChanges=True):
+                            fleeOnBadVals=False, allowGuiChanges=True,
+                            set_ro=False):
 
         self.badEntries = []
         asNative = self._taskParsObj.knowAsNative()
@@ -1349,18 +1353,19 @@ class EditParDialog(object):
 
         # SAVE: Save results to the given file
         if doSave:
-            out = self._doActualSave(filename, comment)
+            out = self._doActualSave(filename, comment, set_ro=set_ro)
             if len(out):
                 self.showStatus(out, keep=2) # inform user on saves
 
         return self.badEntries
 
 
-    def _doActualSave(self, fname, comment):
+    def _doActualSave(self, fname, comment, set_ro=False):
         """ Here we call the method on the _taskParsObj to do the actual
         save.  Return a string result to be printed to the screen. """
-        rv = self._taskParsObj.saveParList(filename=fname, comment=comment)
-        return rv
+        # do something like
+#       return self._taskParsObj.saveParList(filename=fname, comment=comment)
+        raise RuntimeError("Bug: EditParDialog is not to be used directly")
 
 
     def checkSetSaveChildren(self, doSave=True):

@@ -202,7 +202,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self.updateTitle(self._taskParsObj.filename)
 
 
-    def _doActualSave(self, fname, comment):
+    def _doActualSave(self, fname, comment, set_ro=False):
         """ Override this so we can handle case of file not writable, as
             well as to make our _lastSavedState copy. """
         try:
@@ -212,16 +212,21 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             # choice and try to use that.
             if not fname:
                 fname = self._taskParsObj.filename
-            mine = self._rcDir+os.sep+os.path.basename(fname)
+            fname = self._rcDir+os.sep+os.path.basename(fname)
             # Tell them the context is changing, and where we are saving
             msg = 'Installed config file for task "'+ \
                   self._taskParsObj.getName()+'" is not to be overwritten.'+ \
-                  '  Values will be saved to: \n\n\t"'+mine+'".'
+                  '  Values will be saved to: \n\n\t"'+fname+'".'
             tkMessageBox.showwarning(message=msg, title="Will not overwrite!")
             # Try saving to their local copy
-            rv=self._taskParsObj.saveParList(filename=mine, comment=comment)
+            rv=self._taskParsObj.saveParList(filename=fname, comment=comment)
             # Treat like a save-as
-            self._saveAsPostSave_Hook(mine)
+            self._saveAsPostSave_Hook(fname)
+
+        # Limit write privs if requested (only if not in _rcDir)
+        if set_ro and os.path.dirname(os.path.abspath(fname)) != \
+                                      os.path.abspath(self._rcDir):
+            cfgpars.checkSetReadOnly(fname)
 
         # Before returning, make a copy so we know what was last saved.
         # The dict() method returns a deep-copy dict of the keyvals.

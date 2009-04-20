@@ -28,13 +28,16 @@ import Tkinter
 
 class FileDialog(ModalDialog):
 
-    #       constructor
+    # constructor
 
-    def __init__(self, widget, title, filter="*"):
+    lastWrtPrtChoice = 0
+
+    def __init__(self, widget, title, filter="*", showWProt=False):
         self.widget = widget
         self.filter = filter.strip()
         self.orig_dir = os.getcwd()
         self.cwd = os.getcwd()       # the logical current working directory
+        self.showChmod = showWProt
         # Allow a start-directory as part of the given filter
         if self.filter.find(os.sep) >= 0:
             self.cwd = os.path.dirname(self.filter)
@@ -42,7 +45,7 @@ class FileDialog(ModalDialog):
         # main Dialog code
         Dialog.__init__(self, widget)
 
-    #       setup routine called back from Dialog
+    # setup routine called back from Dialog
 
     def SetupDialog(self):
 
@@ -83,6 +86,20 @@ class FileDialog(ModalDialog):
         self.CreateFileListBox()
         self.UpdateListBoxes()
 
+        # write-protect option
+
+        self.wpVar = IntVar(value=FileDialog.lastWrtPrtChoice) # use class attr
+        if self.showChmod:
+            self.writeProtFrame = Frame(self.top)
+            self.writeProtFrame['relief'] = 'raised'
+            self.writeProtFrame['bd'] = '2'
+            self.writeProtFrame.pack({'expand':'no','side':'top','fill':'both'})
+            self.wpButton = Checkbutton(self.writeProtFrame,
+                                        text="Write-protect after save",
+                                        command=self.wrtPrtClick,
+                                        var=self.wpVar)
+            self.wpButton.pack({'expand':'no', 'side':'left'})
+
         # editable filename
 
         self.fileNameFrame = Frame(self.top)
@@ -95,10 +112,11 @@ class FileDialog(ModalDialog):
         self.fileNameEntry = Entry(self.fileNameFrame)
         self.fileNameEntry["width"]  = "40"
         self.fileNameEntry["relief"] = "ridge"
-        self.fileNameEntry.pack({'expand':'yes', 'side':'right', 'fill':'x'})
+        self.fileNameEntry.pack({'expand':'yes', 'side':'right', 'fill':'x',
+                                 'pady': '2'})
         self.fileNameEntry.bind('<Return>', self.FileNameReturnKey)
 
-        #       buttons - ok, filter, cancel
+        # buttons - ok, filter, cancel
 
         self.buttonFrame = Frame(self.top)
         self.buttonFrame['relief'] = 'raised'
@@ -120,7 +138,7 @@ class FileDialog(ModalDialog):
         button["width"] = 8
         button.pack({'expand':'yes', 'pady':'2', 'side':'left'})
 
-    #       create the directory list box
+    # create the directory list box
 
     def CreateDirListBox(self):
         frame = Frame(self.listBoxFrame)
@@ -144,7 +162,7 @@ class FileDialog(ModalDialog):
         self.dirLb.bind('<Double-Button-1>', self.DoDoubleClickDir)
         scrollBar['command'] = self.dirLb.yview
 
-    #       create the files list box
+    # create the files list box
 
     def CreateFileListBox(self):
         frame = Frame(self.listBoxFrame)
@@ -169,7 +187,7 @@ class FileDialog(ModalDialog):
         self.fileLb.bind('<Double-Button-1>', self.DoDoubleClickFile)
         scrollBar['command'] = self.fileLb.yview
 
-    #       update the listboxes and directory label after a change of directory
+    # update the listboxes and directory label after a change of directory
 
     def UpdateListBoxes(self):
         cwd = self.cwd
@@ -195,7 +213,7 @@ class FileDialog(ModalDialog):
                 self.dirLb.insert('end', files[i])
         self.dirLabel['text'] = "Directory:" + self.cwd_print()
 
-    #       selection handlers
+    # selection handlers
 
     def DoSelection(self, event):
         lb = event.widget
@@ -220,8 +238,11 @@ class FileDialog(ModalDialog):
     def OkPressed(self):
         self.TerminateDialog(1)
 
+    def wrtPrtClick(self):
+        FileDialog.lastWrtPrtChoice = self.wpVar.get() # update class attr
+
     def FileNameReturnKey(self, event):
-        #       if its a relative path then include the cwd in the name
+        # if its a relative path then include the cwd in the name
         name = self.fileNameEntry.get().strip()
         if not os.path.isabs(os.path.expanduser(name)):
             self.fileNameEntry.delete(0, 'end')
@@ -245,9 +266,12 @@ class FileDialog(ModalDialog):
     def GetFileName(self):
         return self.fileNameEntry.get()
 
-    #       return the logical current working directory in a printable form
-    #       ie. without all the X/.. pairs. The easiest way to do this is to
-    #       chdir to cwd and get the path there.
+    def GetWriteProtectChoice(self):
+        return bool(self.wpVar.get())
+
+    # return the logical current working directory in a printable form
+    # ie. without all the X/.. pairs. The easiest way to do this is to
+    # chdir to cwd and get the path there.
 
     def cwd_print(self):
         os.chdir(self.cwd)
@@ -326,9 +350,9 @@ class PersistFileDialog(FileDialog):
     # Define a class variable to track the last accessed directory
     lastAccessedDir = None
 
-    def __init__(self, widget, title, filter="*"):
+    def __init__(self, widget, title, filter="*", showWProt=False):
 
-        FileDialog.__init__(self, widget, title, filter)
+        FileDialog.__init__(self, widget, title, filter, showWProt)
 
         # If the last accessed directory were not None, start up
         # the file browser in the last accessed directory.
@@ -380,8 +404,8 @@ class PersistLoadFileDialog(PersistFileDialog):
 
 class PersistSaveFileDialog(PersistFileDialog):
 
-    def __init__(self, master, title, filter):
-        PersistFileDialog.__init__(self, master, title, filter)
+    def __init__(self, master, title, filter, showWProt=False):
+        PersistFileDialog.__init__(self, master, title, filter, showWProt)
         self.top.title(title)
 
     def OkPressed(self):

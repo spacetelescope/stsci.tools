@@ -149,6 +149,19 @@ def getParsObjForPyPkg(pkgName):
     return ConfigObjPars(theFile,findFuncsUnder=thePkg,forceReadOnly=noLocals)
 
 
+def checkSetReadOnly(fname, raiseOnErr = False):
+    """ See if we have write-privileges to this file.  If we do, and we
+    are not supposed to, then fix that case. """
+    if os.access(fname, os.W_OK):
+        # We can write to this but it is supposed to be read-only. Fix it.
+        privs = os.stat(fname).st_mode
+        try:
+            os.chmod(fname,
+                     ((privs ^ stat.S_IWUSR) ^ stat.S_IWGRP) ^ stat.S_IWOTH)
+        except OSError:
+            if raiseOnErr: raise
+
+
 class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     """ This represents a task's dict of ConfigObj parameters. """
 
@@ -178,7 +191,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             # this is the real deal, expect a real file name
             self.__taskName = getEmbeddedKeyVal(cfgFileName, '_task_name_')
             if forceReadOnly:
-                self._checkSetReadOnly(cfgFileName)
+                checkSetReadOnly(cfgFileName)
 
         cfgSpecPath = self._findAssociatedConfigSpecFile(cfgFileName)
         assert os.path.exists(cfgSpecPath), \
@@ -250,18 +263,6 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         """ Return True if the passed in object is for the same task as
         we are. """
         return aCfgObjPrs.getName() == self.getName()
-
-    def _checkSetReadOnly(self, cfgFileName):
-        """ See if we have write-privileges to this file.  If we do, are we
-        are not supposed to, then fix that case. """
-        if os.access(cfgFileName, os.W_OK):
-            # We can write to this but it is supposed to be read-only. Fix it.
-            privs = os.stat(cfgFileName).st_mode
-            try:
-                os.chmod(cfgFileName, privs ^ stat.S_IWUSR)
-            except OSError:
-                # don't mind - this is just a goodwill attempt anyway
-                pass
 
     def setParam(self, name, val, scope='', check=1, idxHint=None):
         """ Find the ConfigObj entry.  Update the __paramList. """
