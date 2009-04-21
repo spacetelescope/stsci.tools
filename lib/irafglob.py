@@ -18,6 +18,10 @@ def irafglob(inlist, atfile=None):
     and wild-card characters, e.g. 'a.fits, @file.lst, *flt.fits'.
     """
 
+    # Sanity check
+    if inlist == None or len(inlist) == 0:
+        return []
+
     # Determine which form of input was provided:
     if isinstance(inlist, list):
         #  python list
