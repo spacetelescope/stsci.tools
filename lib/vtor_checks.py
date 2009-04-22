@@ -24,7 +24,7 @@ def sigStrToKwArgsDict(checkFuncSig):
     argParts = [x.strip() for x in argParts]
     retval = {}
     for argPair in argParts:
-        argSpl = argPair.split('=')
+        argSpl = argPair.split('=', 1)
         if len(argSpl) > 1:
             retval[argSpl[0]] = irafutils.stripQuotes(argSpl[1])
         else:
