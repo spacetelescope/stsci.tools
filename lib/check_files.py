@@ -106,7 +106,7 @@ def check_exptime(filelist):
     removed_files = []
     for f in filelist:
         try:
-            exptime = pyfits.getval(f, 'EXPTIME')
+            exptime = fileutil.getHeader(f+'[sci,1]')['EXPTIME']
         except KeyError:
             removed_files.append(f)
             print "Warning:  There are files without keyword EXPTIME"
