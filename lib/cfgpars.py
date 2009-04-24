@@ -172,6 +172,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         self._forUseWithEpar = forUseWithEpar
         self._rcDir = getAppDir()
         self._triggers = None
+        self._dependencies = None
 
         # Set up ConfigObj stuff
         assert setAllToDefaults or os.path.isfile(cfgFileName), \
@@ -372,41 +373,46 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     def _getParamsFromConfigDict(self, cfgObj, scopePrefix='',
                                  collectTriggers=False, dumpCfgspcTo=None):
         """ Walk the ConfigObj dict pulling out IRAF-like parameters into a
-        list. Since this operates on a dict this can be called recursively."""
+        list. Since this operates on a dict this can be called recursively.
+        This is also our chance to find and pull out triggers and such
+        dependencies. """
         # init
         retval = []
         if collectTriggers and len(scopePrefix) < 1:
             self._triggers = {}
-        # start walking
+            self._dependencies = {}
+        # start walking ("tell yer story walkin, buddy")
         for key in cfgObj:
             val = cfgObj[key]
-            if key.startswith('_') and key.endswith('_'):
-                continue # skip this, not a param, its a rule or something
 
+            # Do we need to skip this - if not a par, like a rule or something
+            toBeHidden = key.startswith('_') and key.endswith('_')
+
+            # a section
             if isinstance(val, dict):
-                if len(val.keys())>0 and len(retval)>0:
-                    # Here is where we sneak in the section comment
-                    # This is so incredibly kludgy (as the code was), it MUST
-                    # be revamped eventually!  This is for the epar GUI.
-                    prevPar = retval[-1]
-                    # Use the key (or its comment?) as the section header
-                    prevPar.set(prevPar.get('p_prompt')+'\n\n'+key,
-                                field='p_prompt', check=0)
-                if dumpCfgspcTo:
-                    dumpCfgspcTo.write('\n['+key+']\n')
-                # a logical grouping (append its params)
-                pfx = scopePrefix+'.'+key
-                pfx = pfx.strip('.')
-                retval = retval + self._getParamsFromConfigDict(val, pfx,
-                                       collectTriggers, dumpCfgspcTo) # recurse
+                if not toBeHidden:
+                    if len(val.keys())>0 and len(retval)>0:
+                        # Here is where we sneak in the section comment
+                        # This is so incredibly kludgy (as the code was), it
+                        # MUST be revamped eventually! This is for the epar GUI.
+                        prevPar = retval[-1]
+                        # Use the key (or its comment?) as the section header
+                        prevPar.set(prevPar.get('p_prompt')+'\n\n'+key,
+                                    field='p_prompt', check=0)
+                    if dumpCfgspcTo:
+                        dumpCfgspcTo.write('\n['+key+']\n')
+                    # a logical grouping (append its params)
+                    pfx = scopePrefix+'.'+key
+                    pfx = pfx.strip('.')
+                    retval = retval + self._getParamsFromConfigDict(val, pfx,
+                                      collectTriggers, dumpCfgspcTo) # recurse
             else:
                 # a param
                 fields = []
                 choicesOrMin = None
                 fields.append(key) # name
                 dtype = 's'
-                cspc = None
-                if key in cfgObj.configspec: cspc = cfgObj.configspec[key]
+                cspc = cfgObj.configspec.get(key) # None if not found
                 chk_func_name = ''
                 chk_args_dict = {}
                 if cspc:
@@ -464,22 +470,63 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                                repr(irafutils.stripQuotes(dscrp1.strip()))+")"
                     dumpCfgspcTo.write(junk+'\n')
                 # Create the par
-                par = basicpar.parFactory(fields, True)
-                par.setScope(scopePrefix)
-                retval.append(par)
-                # check for triggers
-                trg = chk_args_dict.get('trigger', None)
-                if trg != None:
-                    self._triggers[scopePrefix+'.'+key] = trg
-
+                if not toBeHidden:
+                    par = basicpar.parFactory(fields, True)
+                    par.setScope(scopePrefix)
+                    retval.append(par)
+                # Check for triggers and dependencies
+                if collectTriggers:
+                    absKeyName = scopePrefix+'.'+key # assumed to be unique
+                    trg = chk_args_dict.get('trigger')
+                    if trg:
+                        # e.g. _triggers['STEP2.use_ra_dec'] == '_rule1_'
+                        self._triggers[absKeyName] = trg
+                    # besides these, may someday use 'range_from', 'set_by', etc
+                    depType = 'active_if'
+                    depName = chk_args_dict.get(depType)
+                    if not depName:
+                        depType = 'inactive_if'
+                        depName = chk_args_dict.get(depType)
+                    # if not depName: # check for 'set_by', etc
+                    # NOTE - the above few lines stops at the first dependency
+                    # found (depName) for a given par.  If, in the future a
+                    # given par can have >1 dependency than we need to revamp!!
+                    if depName:
+                        # Add to _dependencies dict: (val is dict of pars:types)
+                        #
+                        # e.g. _dependencies['_rule1_'] == \
+                        #        {'STEP3.ra':      'active_if',
+                        #         'STEP3.dec':     'active_if',
+                        #         'STEP3.azimuth': 'inactive_if'}
+                        if depName in self._dependencies:
+                            thisRulesDict = self._dependencies[depName]
+                            assert not absKeyName in thisRulesDict, \
+                                'Cant yet handle multiple actions for the '+ \
+                                'same par and the same rule.  For "'+depName+ \
+                                '" dict was: '+str(thisRulesDict)+ \
+                                ' while trying to add to it: '+\
+                                str({absKeyName:depType})
+                            thisRulesDict[absKeyName] = depType
+                        else:
+                            self._dependencies[depName] = {absKeyName:depType}
         return retval
 
 
     def getTriggerStr(self, parScope, parName):
         """ For a given item (scope + name), return the string (or None) of
         it's associated trigger, if one exists. """
+        # The data structure of _triggers was chosen for how easily/quickly
+        # this particular access can be made here.
         fullName = parScope+'.'+parName
         return self._triggers.get(fullName) # returns None if unfound
+
+
+    def getParsWhoDependOn(self, ruleName):
+        """ Find any parameters which depend on the given trigger name. Returns
+        None or a dict of {scopedName: dependencyName} from _dependencies. """
+        # The data structure of _dependencies was chosen for how easily/quickly
+        # this particular access can be made here.
+        return self._dependencies.get(ruleName)
 
 
     def canPerformValidation(self):
@@ -533,3 +580,5 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # Done
         if len(errStr): return (False, oldVal) # was an error
         else:           return (True, None)    # val is OK
+
+

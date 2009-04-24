@@ -4,7 +4,7 @@ $Id$
 """
 
 import configobj, glob, os, tkMessageBox
-import cfgpars, editpar, filedlg
+import cfgpars, editpar, filedlg, vtor_checks
 from cfgpars import APP_NAME
 
 
@@ -158,6 +158,16 @@ def teal(theTask, parent=None, isChild=0, loadOnly=False):
             return dlg.getTaskParsObj()
 
 
+# .cfgspc embedded code execution is done here, in a relatively confined space
+def execTriggerCode(SCOPE, NAME, VAL, codeStr):
+    # The variables available to the code to be executed are:
+    #     SCOPE, NAME, VAL
+    # The code string itself is expected to set a var named OUT
+    OUT = None
+    exec codeStr
+    return OUT
+
+
 # Main class
 class ConfigObjEparDialog(editpar.EditParDialog):
 
@@ -282,14 +292,34 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             This is only called for those items which were previously
             specified to use this mechanism.  We do not turn this on for
             all items because the performance might be prohibitive. """
-        # the print line is a stand-in
-        triggerStr = self._taskParsObj.getTriggerStr(scope, name)
-        # call triggers in a general way, not directly here # !!!
-        if triggerStr == '_section_switch_':
+
+        triggerName = self._taskParsObj.getTriggerStr(scope, name)
+
+        # First handle the known/canned trigger names
+        if triggerName == '_section_switch_':
             state = str(newVal).lower() in ('on','yes','true')
             self._toggleSectionActiveState(scope, state, (name,))
-        else:
-            print name+" --> "+triggerStr
+            return
+
+        # Now handle rules with embedded code (e.g. triggerName == '_rule1_')
+        if '_RULES_' in self._taskParsObj and \
+           triggerName in self._taskParsObj['_RULES_'].configspec:
+            ruleSig = self._taskParsObj['_RULES_'].configspec[triggerName]
+            chkArgsDict = vtor_checks.sigStrToKwArgsDict(ruleSig)
+            codeStr = chkArgsDict.get('code')
+            if codeStr:
+                # execute it and retrieve the outcome
+                outval = execTriggerCode(scope, name, newVal, codeStr)
+                print name+': '+triggerName+" --> "+str(outval) # !!!
+                # Now that we have triggerName evaluated to outval, we need to
+                # look through all of the parameters and see if there are any
+                # items to be affected by triggerName (e.g. '_rule1_')
+                self._applyTriggerValue(triggerName, outval)
+                return
+
+        # Unknown/unusable trigger
+        raise RuntimeError('Unknown trigger for: "'+name+'", called "'+ \
+                           triggerName+'".  Please consult the .cfgspc file.')
     
 
     def _setTaskParsObj(self, theTask):
@@ -476,3 +506,47 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         co.final_comment = [''] # ensure \n at EOF
         co.unrepr = True # for simple types, eliminates need for .cfgspc
         co.write()
+
+
+    def _applyTriggerValue(self, triggerName, outval):
+        """ Here we look through the entire .cfgspc to see if any parameters
+        are affected by this trigger. For those that are, we apply the action
+        to the GUI widget.  The action is specified by depType. """
+        # First find which items are dependent upon this trigger (cached)
+        # e.g. { scope1.name1 : dep'cy-type, scope2.name2 : dep'cy-type, ... }
+        depParsDict = self._taskParsObj.getParsWhoDependOn(triggerName)
+        if not depParsDict: return
+        if 0: print "Dependent parameters:\n"+str(depParsDict)
+
+        # Then go through them and apply them to the items found
+        for absName in depParsDict:
+            used = False
+            # For each dep, check through the widgets for that scope.name set
+            for i in range(self.numParams):
+                scopedName = self.paramList[i].scope+'.'+self.paramList[i].name
+                if absName == scopedName: # a match was found
+                    depType = depParsDict[absName]
+                    if depType == 'active_if':
+                        self.entryNo[i].setActiveState(outval)
+                    elif depType == 'inactive_if':
+                        self.entryNo[i].setActiveState(not outval)
+                    else:
+                         raise RuntimeError('Unknown dependency: "'+depType+ \
+                                            '" for par: "'+scopedName+'"')
+                    used = True
+                    break
+
+            # Or maybe it is a whole section
+            if absName.endswith('._section_'):
+                scope = absName[:-10]
+                depType = depParsDict[absName]
+                if depType == 'active_if':
+                    self._toggleSectionActiveState(scope, outval, () )
+                elif depType == 'inactive_if':
+                    self._toggleSectionActiveState(scope, not outval, () )
+                used = True
+
+            # Help top debug the .cfgspc rules
+            if not used:
+                raise RuntimeError('UNUSED "'+triggerName+'" dependency: '+ \
+                      str({absName:depParsDict[absName]}))
