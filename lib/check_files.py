@@ -92,8 +92,7 @@ def checkStisFiles(filelist, ivmlist=None):
             errormesg = "No valid 'SCI extension in STIS file\n"
             raise ValueError, errormsg
     
-    if assoc_files != []:
-        stisExt2PrimKw(assoc_files)
+        stisExt2PrimKw([t[0]])
     
     newflist.extend(assoc_files)
     newilist.extend(assoc_ilist)
