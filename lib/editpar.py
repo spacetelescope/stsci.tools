@@ -511,9 +511,11 @@ class EditParDialog(object):
         """ Make an entire section (minus skipList items) either active or 
             inactive.  sectionName is the same as the param's scope. """
         for i in range(self.numParams):
-            if self.paramList[i].scope == sectionName and \
-               not self.paramList[i].name in skipList:
-                self.entryNo[i].setActiveState(state)
+            if self.paramList[i].scope == sectionName:
+                if self.paramList[i].name in skipList:
+                    self.entryNo[i].setActiveState(True) # these always active
+                else:
+                    self.entryNo[i].setActiveState(state)
 
 
     # Method to print the package and task names and to set up the menu
