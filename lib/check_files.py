@@ -423,3 +423,12 @@ def geis2mef(sciname, convert_dq=True):
         dq_name = convert(sciname.split('.')[0] + '.c1h')
         
     return newsciname
+
+def countInput(input):
+    files = parseinput.parseinput(input)
+    count = len(files[0])
+    for f in files[0]:
+        if pyfits.getval(f, 'INSTRUME') == 'STIS':
+            stisCount = stisObsCount(f)
+            count += (stisCount-1)
+    return count
