@@ -428,7 +428,7 @@ def countInput(input):
     files = parseinput.parseinput(input)
     count = len(files[0])
     for f in files[0]:
-        if pyfits.getval(f, 'INSTRUME') == 'STIS':
+        if (fileutil.isFits(f)[0]) and pyfits.getval(f, 'INSTRUME') == 'STIS':
             stisCount = stisObsCount(f)
             count += (stisCount-1)
     return count
