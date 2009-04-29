@@ -233,7 +233,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         """ Set or reset the internal __paramList from the dict's contents. """
         # See the note in setParam about this design needing to change...
         self.__paramList = self._getParamsFromConfigDict(self,
-                                collectTriggers=firstTime)
+                                initialPass=firstTime)
                                 # dumpCfgspcTo=sys.stdout)
         # Have to add this odd last one for the sake of the GUI (still?)
         if self._forUseWithEpar:
@@ -267,10 +267,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
     def setParam(self, name, val, scope='', check=1, idxHint=None):
         """ Find the ConfigObj entry.  Update the __paramList. """
-        theDict = self
-        if len(scope):
-            theDict = theDict[scope] # ! only goes one level deep - enhance !
-        assert name in theDict, "KeyError: "+scope+'.'+name+" unfound"
+        theDict, oldVal = self._find(scope, name)
 
         # Set the value, even if invalid.  It needs to be set before
         # the validation step (next).
@@ -371,14 +368,15 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
 
     def _getParamsFromConfigDict(self, cfgObj, scopePrefix='',
-                                 collectTriggers=False, dumpCfgspcTo=None):
+                                 initialPass=False, dumpCfgspcTo=None):
         """ Walk the ConfigObj dict pulling out IRAF-like parameters into a
         list. Since this operates on a dict this can be called recursively.
         This is also our chance to find and pull out triggers and such
         dependencies. """
         # init
         retval = []
-        if collectTriggers and len(scopePrefix) < 1:
+        if initialPass and len(scopePrefix) < 1:
+            self._posArgs = [] # positional args [2-tuples]: (index,scopedName)
             self._triggers = {}
             self._dependencies = {}
         # start walking ("tell yer story walkin, buddy")
@@ -405,7 +403,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     pfx = scopePrefix+'.'+key
                     pfx = pfx.strip('.')
                     retval = retval + self._getParamsFromConfigDict(val, pfx,
-                                      collectTriggers, dumpCfgspcTo) # recurse
+                                      initialPass, dumpCfgspcTo) # recurse
             else:
                 # a param
                 fields = []
@@ -451,7 +449,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     dscrp = dscrp0
                     if dscrp0 != dscrp1: # allow override if different
                         dscrp = dscrp1+eparoption.DSCRPTN_FLAG # flag it
-                        if collectTriggers: # if first time through
+                        if initialPass:
                             print 'Description of "'+key+'" overridden; '+\
                              'from:\n\t'+repr(dscrp0)+', to:\n\t'+repr(dscrp1)
                     fields.append(dscrp)
@@ -474,9 +472,16 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     par = basicpar.parFactory(fields, True)
                     par.setScope(scopePrefix)
                     retval.append(par)
+                # The next few items require a fully scoped name
+                absKeyName = scopePrefix+'.'+key # assumed to be unique
+                # Check for pars marked to be positional args
+                if initialPass:
+                    pos = chk_args_dict.get('pos')
+                    if pos:
+                        # we'll sort them later, on demand
+                        self._posArgs.append( (int(pos), scopePrefix, key) )
                 # Check for triggers and dependencies
-                if collectTriggers:
-                    absKeyName = scopePrefix+'.'+key # assumed to be unique
+                if initialPass:
                     trg = chk_args_dict.get('trigger')
                     if trg:
                         # e.g. _triggers['STEP2.use_ra_dec'] == '_rule1_'
@@ -529,6 +534,20 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         return self._dependencies.get(ruleName)
 
 
+    def getPosArgs(self):
+        """ Return a list, in order, of any parameters marked with "pos=N" in
+            the .cfgspc file. """
+        if len(self._posArgs) < 1: return []
+        # The first item in the tuple in index, so we now sort by it
+        self._posArgs.sort()
+        # Build a return list
+        retval = []
+        for idx, scope, name in self._posArgs:
+            theDict, val = self._find(scope, name)
+            retval.append(val)
+        return retval
+
+
     def canPerformValidation(self):
         """ Override this so we can do our own validation. tryValue() will
             be called as a result. """
@@ -540,6 +559,14 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         return True
 
 
+    def _find(self, scope, name):
+        """ Find the given par.  Return its value and its own (sub-)dict. """
+        theDict = self
+        if len(scope):
+            theDict = theDict[scope] # ! only goes one level deep - enhance !
+        return theDict, theDict[name] # KeyError if unfound
+
+
     def tryValue(self, name, val, scope=''):
         """ For the given item name (and scope), we are being asked to try
             the given value to see if it would pass validation.  We are not
@@ -549,14 +576,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
         # SIMILARITY BETWEEN THIS AND setParam() SHOULD BE CONSOLIDATED!
 
-        theDict = self
-        if len(scope):
-            theDict = theDict[scope] # ! only goes one level deep - enhance !
-        assert name in theDict, "KeyError: "+scope+'.'+name+" unfound"
-
         # Set the value, even if invalid.  It needs to be set before
         # the validation step (next).
-        oldVal = theDict[name]
+        theDict, oldVal = self._find(scope, name)
         if oldVal == val: return (True, None) # assume oldVal is valid
         theDict[name] = val
 
@@ -580,5 +602,4 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # Done
         if len(errStr): return (False, oldVal) # was an error
         else:           return (True, None)    # val is OK
-
 
