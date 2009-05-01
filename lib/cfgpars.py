@@ -15,6 +15,10 @@ import basicpar, eparoption, irafutils, taskpars, vtor_checks
 
 APP_NAME = "TEAL"
 
+class DuplicateKeyError(Exception):
+    pass
+
+
 def getAppDir():
     """ Return our application dir.  Create it if it doesn't exist. """
     # Be sure the resource dir exists
@@ -162,6 +166,42 @@ def checkSetReadOnly(fname, raiseOnErr = False):
             if raiseOnErr: raise
 
 
+def flattenDictTree(aDict):
+    """ Takes a dict of vals and dicts (so, a tree) as input, and returns
+    a flat dict (only one level) as output.  All key-vals are moved to
+    the top level.  If there are name collisions, an error is raised. """
+    retval = {}
+    for k in aDict:
+        val = aDict[k]
+        if isinstance(val, dict):
+            # This val is a dict, get its data (recursively) into a flat dict
+            subDict = flattenDictTree(val)
+            # Merge its dict of data into ours, watching for NO collisions
+            rvKeySet  = set(retval.keys())
+            sdKeySet = set(subDict.keys())
+            intr = rvKeySet.intersection(sdKeySet)
+            if len(intr) > 0:
+                raise DuplicateKeyError("Flattened dict already has "+ \
+                    "key(s): "+str(list(intr))+" - cannot flatten this.")
+
+            else:
+                retval.update(subDict)
+        else:
+            if k in retval:
+                raise DuplicateKeyError("Flattened dict already has key: "+\
+                                        k+" - cannot flatten this.")
+            else:
+                retval[k] = val
+    return retval
+
+
+def _find(theDict, scope, name):
+    """ Find the given par.  Return its value and its own (sub-)dict. """
+    if len(scope):
+        theDict = theDict[scope] # ! only goes one level deep - enhance !
+    return theDict, theDict[name] # KeyError if unfound
+
+
 class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     """ This represents a task's dict of ConfigObj parameters. """
 
@@ -267,7 +307,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
     def setParam(self, name, val, scope='', check=1, idxHint=None):
         """ Find the ConfigObj entry.  Update the __paramList. """
-        theDict, oldVal = self._find(scope, name)
+        theDict, oldVal = _find(self, scope, name)
 
         # Set the value, even if invalid.  It needs to be set before
         # the validation step (next).
@@ -538,14 +578,45 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         """ Return a list, in order, of any parameters marked with "pos=N" in
             the .cfgspc file. """
         if len(self._posArgs) < 1: return []
-        # The first item in the tuple in index, so we now sort by it
+        # The first item in the tuple is the index, so we now sort by it
         self._posArgs.sort()
         # Build a return list
         retval = []
         for idx, scope, name in self._posArgs:
-            theDict, val = self._find(scope, name)
+            theDict, val = _find(self, scope, name)
             retval.append(val)
         return retval
+
+
+    def getKwdArgs(self, flatten = False):
+        """ Return a dict of all normal dict parameters - that is, all
+            parameters NOT marked with "pos=N" in the .cfgspc file.  This will
+            also exclude all hidden parameters (metadata, rules, etc). """
+         
+        # Start with a full deep-copy.  What complicates this method is the
+        # idea of sub-sections.  This dict can have dicts as values, and so on.
+        dcopy = self.dict() # ConfigObj docs say this is a deep-copy
+
+        # First go through the dict removing all positional args
+        for idx,scope,name in self._posArgs:
+            theDict, val = _find(dcopy, scope, name)
+            # 'theDict' may be dcopy, or it may be a dict under it
+            theDict.pop(name)
+
+        # Then go through the dict removing all hidden items ('_item_name_')
+        for k in dcopy.keys():
+            if k.startswith('_') and k.endswith('_'):
+                dcopy.pop(k)
+
+        # Done with the nominal operation
+        if not flatten:
+            return dcopy
+
+        # They have asked us to flatten the structure - to bring all parameters
+        # up to the top level, even if they are in sub-sections.  So we look
+        # for values that are dicts.  We will throw something if we end up
+        # with name collisions at the top level as a result of this.
+        return flattenDictTree(dcopy)
 
 
     def canPerformValidation(self):
@@ -559,14 +630,6 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         return True
 
 
-    def _find(self, scope, name):
-        """ Find the given par.  Return its value and its own (sub-)dict. """
-        theDict = self
-        if len(scope):
-            theDict = theDict[scope] # ! only goes one level deep - enhance !
-        return theDict, theDict[name] # KeyError if unfound
-
-
     def tryValue(self, name, val, scope=''):
         """ For the given item name (and scope), we are being asked to try
             the given value to see if it would pass validation.  We are not
@@ -578,7 +641,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
         # Set the value, even if invalid.  It needs to be set before
         # the validation step (next).
-        theDict, oldVal = self._find(scope, name)
+        theDict, oldVal = _find(self, scope, name)
         if oldVal == val: return (True, None) # assume oldVal is valid
         theDict[name] = val
 
