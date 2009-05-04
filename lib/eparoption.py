@@ -432,7 +432,9 @@ class EnumEparOption(EparOption):
 
         # Generate the menu options with shortcuts underlined
         for option in self.paramInfo.choice:
-            self.entry.menu.add_radiobutton(label    = option,
+            lbl = option
+            if lbl=='-': lbl = ' -' # Tk treats '-' as a separator request
+            self.entry.menu.add_radiobutton(label     = lbl,
                                              value    = option,
                                              variable = self.choice,
                                              indicatoron = 0,
