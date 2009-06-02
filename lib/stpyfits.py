@@ -10,6 +10,7 @@ of Constant Data Value Arrays.
 The pyfits module is:
 """
 
+from __future__ import division
 from pyfits import *
 import pyfits
 import re
@@ -271,7 +272,7 @@ class st_ImageBaseHDU(core._ImageBaseHDU):
             self.__dict__[attr] = None
             _bitpix = self.header['BITPIX']
             if isinstance(self, GroupsHDU):
-                dims = self.size()*8/abs(_bitpix)
+                dims = self.size()*8//abs(_bitpix)
             else:
                 dims = self._dimShape()
 
