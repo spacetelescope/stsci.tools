@@ -97,7 +97,7 @@ def run( pytools_version = None ) :
     if not 'package_dir' in setupargs :
         setupargs['package_dir'] = { pkg[0] : 'lib' }
 
-    setup(
+    return setup(
         name =              pkg[0],
         packages =          pkg,
 
