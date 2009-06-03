@@ -12,6 +12,8 @@
 # where XX is the version of pytools you expect for the install to work
 #
 
+from __future__ import division # confidence high
+
 """
 Special handling for stsci_python package installation.
 

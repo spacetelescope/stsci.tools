@@ -1,4 +1,6 @@
 
+from __future__ import division # confidence high
+
 # This setup.py does not follow our usual pattern, because it is
 # the setup for pytools -- it can't use pytools to install itself..
 
