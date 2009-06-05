@@ -17,6 +17,7 @@
 # Comments, suggestions and bug reports welcome.
 
 from __future__ import generators
+from __future__ import division # confidence high
 
 import sys
 INTP_VER = sys.version_info[:2]

@@ -1,8 +1,7 @@
 """
-
 License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
-
 """
+from __future__ import division # confidence high
 import glob
 
 __author__ = 'Paul Barrett'
@@ -46,6 +45,5 @@ def irafglob(inlist, atfile=None):
     else:
         #  shell globbing
         flist = glob.glob(inlist)
-        
-    return flist
 
+    return flist

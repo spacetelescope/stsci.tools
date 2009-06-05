@@ -20,6 +20,7 @@
 """
 $Id$
 """
+from __future__ import division # confidence high
 
 import os, commands
 import alert
