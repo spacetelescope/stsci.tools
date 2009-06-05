@@ -4,6 +4,7 @@ $Id$
 
 Taken from pyraf/lib/epar.py, originally signed "M.D. De La Pena, 2000 Feb. 4"
 """
+from __future__ import division # confidence high
 
 #System level modules
 from Tkinter import  _default_root

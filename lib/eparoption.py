@@ -21,6 +21,7 @@ $Id$
 
 M.D. De La Pena, 1999 August 05
 """
+from __future__ import division # confidence high
 
 # System level modules
 from Tkinter import *
@@ -495,7 +496,7 @@ class BooleanEparOption(EparOption):
         # Need to buffer the value width so the radio buttons and
         # the adjoining labels are aligned properly
         self.valueWidth = self.valueWidth + 10
-        self.padWidth   = self.valueWidth / 2
+        self.padWidth   = self.valueWidth // 2
 
         # boolean parameters have 3 values: yes, no & undefined
         # Just display two choices (but variable may initially be

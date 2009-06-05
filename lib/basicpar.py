@@ -3,6 +3,7 @@
 
 $Id$
 """
+from __future__ import division # confidence high
 
 import re, sys
 import irafutils, minmatch

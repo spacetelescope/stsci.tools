@@ -7,6 +7,7 @@
 """
 $Id$
 """
+from __future__ import division # confidence high
 
 from Tkinter import *
 
@@ -17,7 +18,7 @@ class Dialog:
         self.top = Toplevel(self.master)
         self.top.title(self.__class__.__name__)
         self.top.minsize(1, 1)
-        self.myWaitVar = `self.top` + 'EndDialogVar'
+        self.myWaitVar = str(self.top) + 'EndDialogVar'
 
     def Show(self):
         self.SetupDialog()
@@ -43,8 +44,8 @@ class Dialog:
         h = self.top.winfo_screenheight()
         reqw = self.top.winfo_reqwidth()
         reqh = self.top.winfo_reqheight()
-        centerx = `(w-reqw)/2`
-        centery = `(h-reqh)/2 - 100`
+        centerx = str((w-reqw)//2)
+        centery = str((h-reqh)//2 - 100)
         geomStr = "+" + centerx + "+" + centery
         self.top.geometry(geomStr)
 
