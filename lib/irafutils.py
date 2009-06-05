@@ -14,6 +14,7 @@ $Id$
 
 R. White, 1999 Jul 16
 """
+from __future__ import division
 
 import os, sys, string, struct, re, keyword, types, select
 import Tkinter
@@ -25,11 +26,11 @@ def printCols(strlist,cols=5,width=80):
     # This may exist somewhere in the Python standard libraries?
     # Should probably rewrite this, it is pretty crude.
 
-    nlines = (len(strlist)+cols-1)/cols
+    nlines = (len(strlist)+cols-1)//cols
     line = nlines*[""]
     for i in xrange(len(strlist)):
         c, r = divmod(i,nlines)
-        nwid = c*width/cols - len(line[r])
+        nwid = c*width//cols - len(line[r])
         if nwid>0:
             line[r] = line[r] + nwid*" " + strlist[i]
         else:

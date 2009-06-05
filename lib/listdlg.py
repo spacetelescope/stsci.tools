@@ -1,6 +1,3 @@
-from Tkinter import *
-from tkSimpleDialog import Dialog
-
 #
 # A home-grown list-selection convenience dialog.  As *soon* as Tkinter comes
 # with one of these, replace all uses of his one with that.  This currently
@@ -9,6 +6,9 @@ from tkSimpleDialog import Dialog
 """
 $Id$
 """
+from __future__ import division # confidence high
+from Tkinter import *
+from tkSimpleDialog import Dialog
 
 class ListSingleSelectDialog(Dialog):
 

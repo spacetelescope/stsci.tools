@@ -22,6 +22,7 @@ $Id$
 
 R. White, 2000 January 28
 """
+from __future__ import division # confidence high
 
 import copy
 from types import StringType
