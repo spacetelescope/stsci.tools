@@ -1,7 +1,7 @@
 """ Main module for the ConfigObj version of the EPAR task editor
-
 $Id$
 """
+from __future__ import division # confidence high
 
 import configobj, glob, os, tkMessageBox
 import cfgpars, editpar, filedlg, vtor_checks
@@ -252,7 +252,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
     def hasUnsavedChanges(self):
         """ Determine if there are any edits in the GUI that have not yet been
         saved (e.g. to a file). """
-        
+
         # Sanity check - this case shouldn't occur
         assert self._lastSavedState != None, \
                "BUG: Please report this as it should never occur."
@@ -318,9 +318,9 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                 return
 
         # Unknown/unusable trigger
-        raise RuntimeError('Unknown trigger for: "'+name+'", called "'+ \
+        raise RuntimeError('Unknown trigger for: "'+name+'", named: "'+ \
                            triggerName+'".  Please consult the .cfgspc file.')
-    
+
 
     def _setTaskParsObj(self, theTask):
         """ Overridden version for ConfigObj. theTask can be either

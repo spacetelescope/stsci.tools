@@ -128,6 +128,8 @@
     A badly formatted set of arguments will raise a ``VdtParamError``.
 """
 
+from __future__ import division # confidence high
+
 __docformat__ = "restructuredtext en"
 
 __version__ = '0.3.2'
