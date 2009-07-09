@@ -307,10 +307,14 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             ruleSig = self._taskParsObj['_RULES_'].configspec[triggerName]
             chkArgsDict = vtor_checks.sigStrToKwArgsDict(ruleSig)
             codeStr = chkArgsDict.get('code')
+            # SECURITY NOTE: because this part executes arbitrary code, that
+            # code string must always be found only in the configspec file,
+            # which is intended to only ever be root-installed w/ the package.
             if codeStr:
                 # execute it and retrieve the outcome
                 outval = execTriggerCode(scope, name, newVal, codeStr)
-                print name+': '+triggerName+" --> "+str(outval) # !!!
+                # Leave this debug line in until it annoys someone
+                print name+': '+triggerName+" --> "+str(outval)
                 # Now that we have triggerName evaluated to outval, we need to
                 # look through all of the parameters and see if there are any
                 # items to be affected by triggerName (e.g. '_rule1_')

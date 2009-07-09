@@ -418,6 +418,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         retval = []
         if initialPass and len(scopePrefix) < 1:
             self._posArgs = [] # positional args [2-tuples]: (index,scopedName)
+            # FOR SECURITY: the following two chunks of data, _triggers and
+            # _dependencies, are collected ONLY from the .cfgspc file
             self._triggers = {}
             self._dependencies = {}
         # start walking ("tell yer story walkin, buddy")
@@ -521,19 +523,21 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     if pos:
                         # we'll sort them later, on demand
                         self._posArgs.append( (int(pos), scopePrefix, key) )
-                # Check for triggers and dependencies
+                # Check for triggers and/or dependencies
                 if initialPass:
+                    # Triggers?
                     trg = chk_args_dict.get('trigger')
                     if trg:
                         # e.g. _triggers['STEP2.use_ra_dec'] == '_rule1_'
                         self._triggers[absKeyName] = trg
-                    # besides these, may someday use 'range_from', 'set_by', etc
+                    # Dependencies? (besides these used here, may someday
+                    # use 'range_from', 'set_by', etc.)
                     depType = 'active_if'
-                    depName = chk_args_dict.get(depType)
+                    depName = chk_args_dict.get(depType) #eg. depName='_rule1_'
                     if not depName:
                         depType = 'inactive_if'
                         depName = chk_args_dict.get(depType)
-                    # if not depName: # check for 'set_by', etc
+                    # if not depName: # check for depType == 'set_by', etc
                     # NOTE - the above few lines stops at the first dependency
                     # found (depName) for a given par.  If, in the future a
                     # given par can have >1 dependency than we need to revamp!!
@@ -555,6 +559,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                             thisRulesDict[absKeyName] = depType
                         else:
                             self._dependencies[depName] = {absKeyName:depType}
+                    # else no dependencies found for this chk_args_dict
         return retval
 
 
