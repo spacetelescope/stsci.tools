@@ -25,6 +25,7 @@ $Id$
 
 Taken from pyraf.irafglobals, originally signed "R. White, 2000 Jan 5"
 """
+from __future__ import division
 
 import os
 _os = os
@@ -372,7 +373,7 @@ class _EPSILONClass(object):
         return self._value % other
 
     def __divmod__(self, other):
-        return (self._value / other, self._value % other)
+        return (self._value // other, self._value % other)
 
     def __pow__(self, other):
         return self._value ** other
@@ -403,7 +404,7 @@ class _EPSILONClass(object):
         return other % self._value
 
     def __rdivmod__(self, other):
-        return (other / self._value, other % self._value)
+        return (other // self._value, other % self._value)
 
     def __rpow__(self, other):
         return other ** self._value
