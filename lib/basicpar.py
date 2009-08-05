@@ -1296,7 +1296,7 @@ class _IntMixin:
             return INDEF
         elif value is None or isinstance(value,int):
             return value
-        elif value == "":
+        elif value in ("", "None", "NONE"):
             return None
         elif isinstance(value,float):
             # try converting to integer
@@ -1391,7 +1391,7 @@ class _RealMixin:
             return INDEF
         elif value is None or isinstance(value,float):
             return value
-        elif value == "":
+        elif value in ("", "None", "NONE"):
             return None
         elif isinstance(value, (int,long)):
             return float(value)

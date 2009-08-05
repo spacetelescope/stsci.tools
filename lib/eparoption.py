@@ -607,7 +607,7 @@ class NumberEparOption(EparOption):
 
     def convertToNative(self, aVal):
         """ Natively as an int. """
-        if aVal in (None, '', 'None'): return None
+        if aVal in (None, '', 'None', 'NONE', 'INDEF'): return None
         return int(aVal)
 
     def notNull(self, value):
@@ -632,7 +632,9 @@ class NumberEparOption(EparOption):
     # checks max, min, special value (INDEF, parameter indirection), etc.
     def entryCheck(self, event = None, repair = True):
         """ Ensure any INDEF entry is uppercase, before base class behavior """
-        self.choice.set(self.choice.get().upper())
+        valupr = self.choice.get().upper()
+        if valupr.strip() == 'INDEF':
+            self.choice.set(valupr)
         return EparOption.entryCheck(self, event, repair = repair)
 
 # numeric widget class specific to floats
@@ -641,7 +643,7 @@ class FloatEparOption(NumberEparOption):
 
     def convertToNative(self, aVal):
         """ Natively as a float. """
-        if aVal in (None, '', 'None'): return None
+        if aVal in (None, '', 'None', 'NONE', 'INDEF'): return None
         return float(aVal)
 
 
