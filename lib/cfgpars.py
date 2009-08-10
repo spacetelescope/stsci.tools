@@ -74,24 +74,32 @@ def getEmbeddedKeyVal(cfgFileName, kwdName, dflt=None):
         raise KeyError('Unfound item: "'+kwdName+'" in: '+cfgFileName)
 
 
-def findCfgFileForPkg(pkgName, theExt, taskName=None):
+def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
     """ Locate the configuration files for/from/within a given python package.
-    pkgName is a string python package name.  theExt is either '.cfg' or
-    '.cfgspc'. If the task name is known, it is given as taskName, otherwise
-    on is determined using the pkgName. """
+    pkgName is a string python package name.  This is used unless pkgObj
+    is given, in which case pkgName is taken from pkgObj.__name__.
+    theExt is either '.cfg' or '.cfgspc'. If the task name is known, it is
+    given as taskName, otherwise one is determined using the pkgName.
+    Returns a tuple of (package-object, cfg-file-name). """
     # arg check
     ext = theExt
     if ext[0] != '.': ext = '.'+theExt
-    # do the import
-    try:
-        fl = []
-        if pkgName.find('.') > 0:
-            fl = [ pkgName[:pkgName.rfind('.')], ]
-        thePkg = __import__(str(pkgName), fromlist=fl)
-    except:
-        raise RuntimeError("Unfound package or "+ext+" file for: "+\
-                           str(pkgName))
-    # So it was a package name - find the .cfg or .cfgspc file
+
+    # do the import, if needed
+    if pkgObj == None:
+        try:
+            fl = []
+            if pkgName.find('.') > 0:
+                fl = [ pkgName[:pkgName.rfind('.')], ]
+            thePkg = __import__(str(pkgName), fromlist=fl)
+        except:
+            raise RuntimeError("Unfound package or "+ext+" file for: "+\
+                               str(pkgName))
+    else:
+        thePkg = pkgObj
+        pkgName = pkgObj.__name__
+
+    # Now that we have the package object, find the .cfg or .cfgspc file
     path = os.path.dirname(thePkg.__file__)
     if len(path) < 1: path = '.'
     flist = glob.glob(path+"/pars/*"+ext)
@@ -151,7 +159,7 @@ def getParsObjForPyPkg(pkgName):
             theFile = ftups[-1][1]
     # Create a stand-in instance from this file.  Force a read-only situation
     # if we are dealing with the installed (expected to be) unwritable file.
-    return ConfigObjPars(theFile,findFuncsUnder=thePkg,forceReadOnly=noLocals)
+    return ConfigObjPars(theFile, associatedPkg=thePkg, forceReadOnly=noLocals)
 
 
 def checkSetReadOnly(fname, raiseOnErr = False):
@@ -208,12 +216,13 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
     def __init__(self, cfgFileName, forUseWithEpar=True,
                  setAllToDefaults=False,
-                 findFuncsUnder=None, forceReadOnly=False):
+                 associatedPkg=None, forceReadOnly=False):
 
         self._forUseWithEpar = forUseWithEpar
         self._rcDir = getAppDir()
         self._triggers = None
         self._dependencies = None
+        self.__assocPkg = associatedPkg
 
         # Set up ConfigObj stuff
         assert setAllToDefaults or os.path.isfile(cfgFileName), \
@@ -263,11 +272,11 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # see if we are using a package with it's own run() function
         self._runFunc = None
         self._helpFunc = None
-        if findFuncsUnder != None:
-            if hasattr(findFuncsUnder, 'run'):
-                self._runFunc = findFuncsUnder.run
-            if hasattr(findFuncsUnder, 'getHelpAsString'):
-                self._helpFunc = findFuncsUnder.getHelpAsString
+        if self.__assocPkg != None:
+            if hasattr(self.__assocPkg, 'run'):
+                self._runFunc = self.__assocPkg.run
+            if hasattr(self.__assocPkg, 'getHelpAsString'):
+                self._helpFunc = self.__assocPkg.getHelpAsString
 
 
     def syncParamList(self, firstTime):
@@ -296,7 +305,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # adds a tenth of a second to startup.  It's not clear how much this
         # is used.  Clicking "Defaults" in the GUI does not call this.  This
         # data is only used in the individual widget pop-up menus.
-        tmpObj = ConfigObjPars(self.filename, setAllToDefaults=True)
+        tmpObj = ConfigObjPars(self.filename, associatedPkg=self.__assocPkg,
+                               setAllToDefaults=True)
         return tmpObj.getParList()
 
     def getFilename(self): return self.filename
@@ -397,10 +407,18 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         retval = self._rcDir+os.sep+self.__taskName+".cfgspc"
         if os.path.isfile(retval): return retval
 
-        # Now try to import the taskname and see if there is a .cfgspc file
-        # in that directory
-        thePkg, theFile = findCfgFileForPkg(self.__taskName, '.cfgspc',
-                                            taskName = self.__taskName)
+        # Now try and see if there is a matching .cfgspc file in/under an
+        # associated package, if one is defined.
+        if self.__assocPkg != None:
+            x, theFile = findCfgFileForPkg(None, '.cfgspc',
+                                           pkgObj = self.__assocPkg,
+                                           taskName = self.__taskName)
+            return theFile
+
+        # Finally try to import the taskname and see if there is a .cfgspc
+        # file in that directory
+        x, theFile = findCfgFileForPkg(self.__taskName, '.cfgspc',
+                                       taskName = self.__taskName)
         return theFile
 
         # unfound
