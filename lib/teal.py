@@ -368,9 +368,10 @@ class ConfigObjEparDialog(editpar.EditParDialog):
 
         # task's python pkg dir (if tsk == python pkg name)
         try:
-            pkgf = cfgpars.findCfgFileForPkg(tsk, '.cfg', taskName=tsk)[1]
+            x, pkgf = cfgpars.findCfgFileForPkg(tsk, '.cfg', taskName=tsk,
+                              pkgObj=self._taskParsObj.getAssocPkg())
             taskFiles.update( (pkgf,) )
-        except:
+        except cfgpars.NoCfgFileError:
             pass # no big deal - maybe there is no python package
 
         # user's own resourceDir
@@ -415,8 +416,9 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             fd.DialogCleanup()
             if fname == None: return # canceled
 
-        # load it into a tmp object
-        tmpObj = cfgpars.ConfigObjPars(fname)
+        # load it into a tmp object (use associatedPkg if we have one)
+        tmpObj = cfgpars.ConfigObjPars(fname, associatedPkg=\
+                                       self._taskParsObj.getAssocPkg())
 
         # check it to make sure it is a match
         if not self._taskParsObj.isSameTaskAs(tmpObj):
@@ -460,6 +462,8 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # Create an empty object, where every item is set to it's default value
         try:
             tmpObj = cfgpars.ConfigObjPars(self._taskParsObj.filename,
+                                           associatedPkg=\
+                                           self._taskParsObj.getAssocPkg(),
                                            setAllToDefaults=True)
             self.showStatus("Loading default "+self.taskName+" values via: "+ \
                  os.path.basename(tmpObj._original_configspec), keep=2)

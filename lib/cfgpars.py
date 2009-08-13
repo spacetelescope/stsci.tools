@@ -19,6 +19,9 @@ APP_NAME = "TEAL"
 class DuplicateKeyError(Exception):
     pass
 
+class NoCfgFileError(Exception):
+    pass
+
 
 def getAppDir():
     """ Return our application dir.  Create it if it doesn't exist. """
@@ -93,8 +96,8 @@ def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
                 fl = [ pkgName[:pkgName.rfind('.')], ]
             thePkg = __import__(str(pkgName), fromlist=fl)
         except:
-            raise RuntimeError("Unfound package or "+ext+" file for: "+\
-                               str(pkgName))
+            raise NoCfgFileError("Unfound package or "+ext+" file via: "+ \
+                                 "import "+str(pkgName))
     else:
         thePkg = pkgObj
         pkgName = pkgObj.__name__
@@ -104,7 +107,8 @@ def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
     if len(path) < 1: path = '.'
     flist = glob.glob(path+"/pars/*"+ext)
     flist += glob.glob(path+"/*"+ext)
-    assert len(flist) > 0, "Unfound "+ext+" files for package: "+pkgName
+    if len(flist) < 1:
+        raise NoCfgFileError("Found no "+ext+" files under package: "+pkgName)
 
     # Now go through these and find the first one for the assumed or given
     # task name.  The task name for 'BigBlackBox.drizzle' would be 'drizzle'.
@@ -124,8 +128,8 @@ def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
             # We've found the correct file in an installation area.  Return
             # the package object and the found file.
             return thePkg, f
-    raise RuntimeError('No valid '+ext+' files found in package: "'+pkgName+ \
-                       '" for task: "'+taskName+'"')
+    raise NoCfgFileError('No valid '+ext+' files found in package: "'+pkgName+\
+                         '" for task: "'+taskName+'"')
 
 
 def getCfgFilesInDirForTask(aDir, aTask):
@@ -311,6 +315,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
     def getFilename(self): return self.filename
 
+    def getAssocPkg(self): return self.__assocPkg
+
     def isSameTaskAs(self, aCfgObjPrs):
         """ Return True if the passed in object is for the same task as
         we are. """
@@ -422,8 +428,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         return theFile
 
         # unfound
-        raise RuntimeError('Unfound config-spec file for task: "'+ \
-                           self.__taskName+'"')
+        raise NoCfgFileError('Unfound config-spec file for task: "'+ \
+                             self.__taskName+'"')
 
 
     def _getParamsFromConfigDict(self, cfgObj, scopePrefix='',
