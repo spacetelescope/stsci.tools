@@ -78,7 +78,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '1.1.2 (4 Mar 2009)'
+__version__ = '1.1.3 (26 Aug 2009)'
 def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -317,7 +317,7 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     # For the ACS/WFC case the chip number doesn't match the image
     # extension
     nr = 1
-    if instrument == 'ACS' and detector == 'WFC':
+    if (instrument == 'ACS' and detector == 'WFC') or (instrument == 'WFC3' and detector == 'UVIS'):
         if nimsets > 1:
           Nrefchip = 2
         else:
