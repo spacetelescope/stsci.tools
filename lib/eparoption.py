@@ -31,8 +31,12 @@ import FileDialog, tkFileDialog
 # Community modules
 import filedlg
 
-# Are we using X?
-USING_X = sys.platform != 'darwin'
+# Are we using X? (see description of logic in pyraf's wutil.py)
+USING_X = True
+if sys.platform == 'darwin':
+    junk = ",".join(sys.path)
+    USING_X = junk.lower().find('/pyobjc') < 0
+    del junk
 
 # Constants
 MAXLIST  =  15
