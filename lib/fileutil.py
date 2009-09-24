@@ -638,7 +638,7 @@ def parseExtn(extn=None):
     ('sci', 1)
     """
     if not extn:
-        return ('', 1)
+        return ('', 0)
     
     try:
         lext = extn.split(',')
