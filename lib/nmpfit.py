@@ -117,7 +117,7 @@ Perform Levenberg-Marquardt least-squares minimization, based on MINPACK-1.
         -15 and -1 then MPFIT will stop the calculation and return to the caller.
 
 
-                                                                                ANALYTIC DERIVATIVES
+                    ANALYTIC DERIVATIVES
 
         In the search for the best-fit solution, MPFIT by default
         calculates derivatives numerically via a finite difference
@@ -1533,7 +1533,8 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         ## Reverse the sign of the step if we are up against the parameter
         ## limit, or if the user requested it.
-        mask = dside == -1
+        #mask = dside == -1
+        mask = numpy.take((dside == -1), ifree)
 
         if len(ulimited) > 0 and len(ulimit) > 0:
             #mask = mask or (ulimited and (x > ulimit-h))
