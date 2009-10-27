@@ -17,7 +17,10 @@ R. White, 1999 Jul 16
 from __future__ import division
 
 import os, sys, string, struct, re, keyword, types, select
-import Tkinter
+import capable
+if capable.OF_GRAPHICS:
+    import Tkinter
+
 
 def printCols(strlist,cols=5,width=80):
 
