@@ -3,7 +3,7 @@ This is meant to be fast and light, having no complicated dependencies, so
 that any module can fearlessly import this without adverse affects or
 performance concerns.
 
-$Id: capable.py 1 2009-06-04 19:54:18Z sontag $
+$Id$
 """
 
 from __future__ import division # confidence high
