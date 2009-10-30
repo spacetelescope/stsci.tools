@@ -78,7 +78,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '1.1.3 (26 Aug 2009)'
+__version__ = '1.1.4 (30 Oct 2009)'
 def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -366,6 +366,7 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     # Look for any subarray offset
     #
     ltv1,ltv2 = drutil.getLTVOffsets(image)
+    print '[makewcs.update] ltv: ',ltv1,ltv2
     #
     # If reference point is not centered on distortion model
     # shift coefficients to be applied relative to observation
@@ -385,15 +386,26 @@ def _update(image,idctab,nimsets,apply_tdd=False,
         ltvoffy = 0.
         offshiftx = 0.
         offshifty = 0.
-
+    print '[makewcs.update] offset: ',offsetx,offsety,shiftx,shifty
+    
     if ltv1 != 0. or ltv2 != 0.:
        fx,fy = idcmodel.shift(idcmodel.cx,idcmodel.cy,offsetx,offsety)
 
     # Extract the appropriate information for reference chip
+    
+    ridcmodel = models.IDCModel(idctab,
+                    chip=Nrefchip, direction='forward', date=dateobs,
+                    filter1=filter1, filter2=filter2, offtab=offtab, binned=binned,
+                    tddcorr=apply_tdd)
+    rfx = ridcmodel.cx
+    rfy = ridcmodel.cy
+    rrefpix = ridcmodel.refpix
+    rorder = ridcmodel.norder
+    """
     rfx,rfy,rrefpix,rorder=mutil.readIDCtab(idctab,chip=Nrefchip,
         direction='forward', filter1=filter1,filter2=filter2,offtab=offtab, 
         date=dateobs,tddcorr=apply_tdd)
-
+    """
     # Create the reference image name
     rimage = image.split('[')[0]+"[sci,%d]" % nr
     if not quiet:
