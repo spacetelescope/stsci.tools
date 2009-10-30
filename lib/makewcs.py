@@ -366,7 +366,6 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     # Look for any subarray offset
     #
     ltv1,ltv2 = drutil.getLTVOffsets(image)
-    print '[makewcs.update] ltv: ',ltv1,ltv2
     #
     # If reference point is not centered on distortion model
     # shift coefficients to be applied relative to observation
@@ -386,7 +385,6 @@ def _update(image,idctab,nimsets,apply_tdd=False,
         ltvoffy = 0.
         offshiftx = 0.
         offshifty = 0.
-    print '[makewcs.update] offset: ',offsetx,offsety,shiftx,shifty
     
     if ltv1 != 0. or ltv2 != 0.:
        fx,fy = idcmodel.shift(idcmodel.cx,idcmodel.cy,offsetx,offsety)
