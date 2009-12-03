@@ -194,6 +194,18 @@ class EparOption(object):
             self.master.infoText.pack(side = TOP, anchor = W)
 
 
+    def extraBindingsForSelectableText(self):
+        ' Collect in one place the bindings needed for watchTextSelection()'
+        # See notes in watchTextSelection()
+        self.entry.bind('<FocusIn>', self.watchTextSelection, "+")
+        self.entry.bind('<ButtonRelease-1>', self.watchTextSelection, "+")
+        self.entry.bind('<B1-Motion>', self.watchTextSelection, "+")
+        self.entry.bind('<Shift_L>', self.watchTextSelection, "+")
+        self.entry.bind('<Left>', self.watchTextSelection, "+")
+        self.entry.bind('<Right>', self.watchTextSelection, "+")
+#       self.entry.bind('<Shift-Left>', self.watchTextSelection, "+")
+#       self.entry.bind('<Shift-Right>', self.watchTextSelection, "+")
+
     def convertToNative(self, aVal):
         """ The basic type is natively a string. """
         if aVal == None: return None
@@ -219,6 +231,20 @@ class EparOption(object):
         else:
             return "break"
 
+    def watchTextSelection(self, event=None):
+        """ Callback used to see if there is a new text selection. In certain
+        cases we manually add the text to the clipboard (though on most
+        platforms the correct behavior happens automatically). """
+        # Note that this isn't perfect - it is a key click behind when
+        # selections are made via shift-arrow.  If this becomes important, it
+        # can likely be fixed with after().
+        if self.entry.selection_present(): # entry must be text entry type
+            i1 = self.entry.index(SEL_FIRST)
+            i2 = self.entry.index(SEL_LAST)
+            if i1 >= 0 and i2 >= 0 and i2 > i1:
+                sel = self.entry.get()[i1:i2]
+#               print "SELECTED!: "+str(sel)
+
     def focusIn(self, event=None):
         """Select all text (if applicable) on taking focus"""
         try:
@@ -227,7 +253,7 @@ class EparOption(object):
             # scrolls and text selection when the focus moves in and out
             # of the window.
             if self.doScroll(event):
-                self.entry.selection_range(0, END)
+                self.entry.selection_range(0, END) # select all text in widget
             else:
                 # restore selection to what it was on the last FocusOut
                 if self.lastSelection:
@@ -604,6 +630,7 @@ class StringEparOption(EparOption):
         self.entry = Entry(self.master.frame, width = self.valueWidth,
                      textvariable = self.choice) # , bg=self.bkgColor)
         self.entry.pack(side = LEFT, fill = X, expand = TRUE)
+        self.extraBindingsForSelectableText()
 
 # widget class that works for numbers and arrays of numbers
 
@@ -630,6 +657,7 @@ class NumberEparOption(EparOption):
         self.entry = Entry(self.master.frame, width = self.valueWidth,
                            textvariable = self.choice) #, bg=self.bkgColor)
         self.entry.pack(side = LEFT)
+        self.extraBindingsForSelectableText()
 
     # Check the validity of the entry
     # Note that doing this using the parameter set method automatically
