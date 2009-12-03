@@ -87,5 +87,4 @@ def _checkTkInit():
             # create it but withdraw it immediately
             _theRoot = Tkinter.Tk()
             _theRoot.withdraw()
-            print "had to create ROOT - rm me after I verify epar doesnt"
         del Tkinter
