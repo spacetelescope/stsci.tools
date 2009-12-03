@@ -29,7 +29,7 @@ import os, sys, string, commands
 import FileDialog, tkFileDialog
 
 # Community modules
-import filedlg
+import filedlg #, clipboard_helper
 
 # Are we using X? (see description of logic in pyraf's wutil.py)
 USING_X = True
@@ -196,15 +196,13 @@ class EparOption(object):
 
     def extraBindingsForSelectableText(self):
         ' Collect in one place the bindings needed for watchTextSelection()'
-        # See notes in watchTextSelection()
+        # See notes in watchTextSelection
         self.entry.bind('<FocusIn>', self.watchTextSelection, "+")
         self.entry.bind('<ButtonRelease-1>', self.watchTextSelection, "+")
         self.entry.bind('<B1-Motion>', self.watchTextSelection, "+")
         self.entry.bind('<Shift_L>', self.watchTextSelection, "+")
         self.entry.bind('<Left>', self.watchTextSelection, "+")
         self.entry.bind('<Right>', self.watchTextSelection, "+")
-#       self.entry.bind('<Shift-Left>', self.watchTextSelection, "+")
-#       self.entry.bind('<Shift-Right>', self.watchTextSelection, "+")
 
     def convertToNative(self, aVal):
         """ The basic type is natively a string. """
@@ -227,7 +225,10 @@ class EparOption(object):
                                           entry.index(SEL_LAST))
             except AttributeError:
                 pass
-            entry.selection_clear()
+            if USING_X and sys.platform == 'darwin':
+                pass # do nothing here - we need it left selected for cut/paste
+            else:
+                entry.selection_clear()
         else:
             return "break"
 
@@ -243,7 +244,12 @@ class EparOption(object):
             i2 = self.entry.index(SEL_LAST)
             if i1 >= 0 and i2 >= 0 and i2 > i1:
                 sel = self.entry.get()[i1:i2]
-#               print "SELECTED!: "+str(sel)
+                # Add to clipboard on platforms where necessary.
+                print 'selected: "'+sel+'"'
+#               The following is unneeded if the selected text stays selected
+#               when focus is lost or another app is bought to the forground.
+#               if sel and USING_X and sys.platform == 'darwin':
+#                   clipboard_helper.put(sel, 'PRIMARY')
 
     def focusIn(self, event=None):
         """Select all text (if applicable) on taking focus"""
@@ -630,7 +636,7 @@ class StringEparOption(EparOption):
         self.entry = Entry(self.master.frame, width = self.valueWidth,
                      textvariable = self.choice) # , bg=self.bkgColor)
         self.entry.pack(side = LEFT, fill = X, expand = TRUE)
-        self.extraBindingsForSelectableText()
+#       self.extraBindingsForSelectableText() # do not use yet
 
 # widget class that works for numbers and arrays of numbers
 
@@ -657,7 +663,7 @@ class NumberEparOption(EparOption):
         self.entry = Entry(self.master.frame, width = self.valueWidth,
                            textvariable = self.choice) #, bg=self.bkgColor)
         self.entry.pack(side = LEFT)
-        self.extraBindingsForSelectableText()
+#       self.extraBindingsForSelectableText() # do not use yet
 
     # Check the validity of the entry
     # Note that doing this using the parameter set method automatically
