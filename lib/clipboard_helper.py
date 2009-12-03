@@ -4,7 +4,7 @@ or mouse events for that platform.  In some corner cases this might not be
 true, so this module exists to help facilitate any needed copying or pasting.
 For now, this is Tkinter based, but it is imported lazily.
 
-$Id: clipboard_helper.py 1 2009-10-30 02:16:18Z sontag $
+$Id$
 """
 
 from __future__ import division # confidence high
