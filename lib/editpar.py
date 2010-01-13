@@ -10,11 +10,11 @@ from __future__ import division # confidence high
 from Tkinter import  _default_root
 from Tkinter import *
 from tkMessageBox import askokcancel, askyesno, showwarning
-import os, time
+import os, tempfile, time
 
 # pytools modules
 from irafglobals import userWorkingHome
-import basicpar, eparoption, filedlg, listdlg, taskpars
+import basicpar, eparoption, filedlg, irafutils, listdlg, taskpars
 
 # Constants
 MINVIEW     = 500
@@ -213,6 +213,9 @@ class EditParDialog(object):
 
         # make up, down arrows and return/shift-return do same as Tab, Shift-Tab
         top.bind('<Up>', self.focusPrev)
+        top.bind('<MouseWheel>', self.mwl)
+        top.bind('<Button-4>', self.mwl)
+        top.bind('<Button-5>', self.mwl)
         top.bind('<Down>', self.focusNext)
         top.bind('<Shift-Return>', self.focusPrev)
         top.bind('<Return>', self.focusNext)
@@ -374,6 +377,11 @@ class EditParDialog(object):
     def getTaskParsObj(self):
         """ Simple accessor.  Return the _taskParsObj object. """
         return self._taskParsObj
+
+    def mwl(self, event):
+        """Mouse Wheel"""
+#       print "MOUSE WHEEL!"
+        return
 
 # A bug appeared in Python 2.3 that caused tk_focusNext and
 # tk_focusPrev to fail. The follwoing two routines now will
@@ -1104,8 +1112,30 @@ class EditParDialog(object):
 
 
     # HTMLHELP: invoke the HTML help
-    def htmlHelp(self, event=None):
-        print "EditParDialog.htmlHelp --> UNFINISHED ..."
+    def htmlHelp(self, helpString=None, title=None):
+        """ Pop up the help in a browser window.  By default, this tries to
+        show the help for the current task.  With the option arguments, it can
+        be used to show any help string. """
+        # Check the help string.  If it turns out to b a URL, launch that, if
+        # not, dump it to a quick and dirty tmp html file to make it
+        # presentable, and pass that file name as the URL.
+        if not helpString:
+            helpString = self.getHelpString(self.pkgName+'.'+self.taskName)
+        if not title:
+            title = self.taskName
+        lwr = helpString.lower()
+        if lwr.startswith("http:") or lwr.startswith("https:") or \
+           lwr.startswith("file:"):
+            irafutils.launchBrowser(helpString, subj=title)
+        else:
+            (fd, fname) = tempfile.mkstemp(suffix='.html', prefix='editpar_')
+            os.close(fd)
+            f = open(fname, 'w')
+            f.write('<html><head><title>'+title+'</title></head>\n')
+            f.write('<body><h3>'+title+'</h3>\n')
+            f.write('<pre>\n'+helpString+'\n</pre></body></html>')
+            f.close()
+            irafutils.launchBrowser("file://"+fname, subj=title)
 
 
     # HELP: invoke help and put the page in a window
@@ -1127,16 +1157,19 @@ class EditParDialog(object):
 
     # EPAR HELP: invoke help and put the epar help page in a window
     def eparHelp(self, event=None):
-
-        try:
-            if self.eparHelpWin.state() != NORMAL:
-                self.eparHelpWin.deiconify()
-            self.eparHelpWin.tkraise()
-            return
-        except (AttributeError, TclError):
-            pass
-        self.eparHelpWin = self.helpBrowser(self._appHelpString,
-                                            title='Parameter Editor Help')
+        if self._showHelpInBrowser:
+            self.htmlHelp(helpString=self._appHelpString,
+                          title='Parameter Editor Help')
+        else:
+            try:
+                if self.eparHelpWin.state() != NORMAL:
+                    self.eparHelpWin.deiconify()
+                self.eparHelpWin.tkraise()
+                return
+            except (AttributeError, TclError):
+                pass
+            self.eparHelpWin = self.helpBrowser(self._appHelpString,
+                                                title='Parameter Editor Help')
 
 
     def canceled(self):

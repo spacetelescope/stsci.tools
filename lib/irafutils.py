@@ -8,7 +8,8 @@ removeEscapes   Remove escaped quotes & newlines from strings
 translateName   Convert CL parameter or variable name to Python-acceptable name
 untranslateName Undo Python conversion of CL parameter or variable name
 tkread          Read n bytes from file while running Tk mainloop
-tkreadline     Read a line from file while running Tk mainloop
+tkreadline      Read a line from file while running Tk mainloop
+launchBrowser   Given a URL, try to pop it up in a browser on most platforms.
 
 $Id$
 
@@ -399,3 +400,27 @@ class _TkRead:
                 self.widget.quit()
         except OSError, error:
             raise IOError("Error reading from %s" % (fd,))
+
+def launchBrowser(url, brow_bin='mozilla', subj=None):
+    """ Given a URL, try to pop it up in a browser on most platforms.
+    brow_bin is only used on OS's where there is no "open" or "start" cmd.
+    Tries using the '<browser> -remote' command to load the page in
+    a running browser.  If that fails, starts a new browser. """
+
+    # should be changed to use the subprocess module to support Win?
+    pid = os.fork()
+    if pid == 0:
+        if not sys.platform[:-1] in ('sunos','linux'): # e.g. OSX, Win, etc
+            if 0 != os.system("open "+url):
+                print "Error opening URL: "+url
+            os._exit(0)
+        cmd = brow_bin+" -remote 'openURL("+url+")' '"+url+"' 1> /dev/null 2>&1"
+        status = os.system(cmd)
+        if status != 0:
+            print "Running "+brow_bin+" for HTML help..."
+            os.execvp(brow_bin,[brow_bin,url])
+        os._exit(0)
+    else:
+        if not subj:
+            subj = url
+        print 'HTML help on "'+subj+'" is being displayed in a browser'
