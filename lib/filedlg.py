@@ -31,14 +31,20 @@ class FileDialog(ModalDialog):
 
     # constructor
 
-    lastWrtPrtChoice = 0
+    lastWrtPrtChoice = None
 
-    def __init__(self, widget, title, filter="*", showWProt=False):
+    def __init__(self, widget, title, filter="*", initWProtState=None):
+        """ Supply parent widget, title, filter, and initWProtState (True or
+        False).  Set initWProtState to None to hide the write-protect
+        check-box. """
         self.widget = widget
         self.filter = filter.strip()
         self.orig_dir = os.getcwd()
         self.cwd = os.getcwd()       # the logical current working directory
-        self.showChmod = showWProt
+        self.showChmod = initWProtState != None
+        # normally we use persistence for lastWrtPrtChoice; use this 1st time
+        if FileDialog.lastWrtPrtChoice == None:
+            FileDialog.lastWrtPrtChoice = initWProtState
         # Allow a start-directory as part of the given filter
         if self.filter.find(os.sep) >= 0:
             self.cwd = os.path.dirname(self.filter)
@@ -89,7 +95,9 @@ class FileDialog(ModalDialog):
 
         # write-protect option
 
-        self.wpVar = IntVar(value=FileDialog.lastWrtPrtChoice) # use class attr
+        junk = FileDialog.lastWrtPrtChoice
+        if junk == None: junk = 0
+        self.wpVar = IntVar(value=junk) # use class attr
         if self.showChmod:
             self.writeProtFrame = Frame(self.top)
             self.writeProtFrame['relief'] = 'raised'
@@ -351,9 +359,9 @@ class PersistFileDialog(FileDialog):
     # Define a class variable to track the last accessed directory
     lastAccessedDir = None
 
-    def __init__(self, widget, title, filter="*", showWProt=False):
+    def __init__(self, widget, title, filter="*", initWProtState=None):
 
-        FileDialog.__init__(self, widget, title, filter, showWProt)
+        FileDialog.__init__(self, widget, title, filter, initWProtState)
 
         # If the last accessed directory were not None, start up
         # the file browser in the last accessed directory.
@@ -405,8 +413,8 @@ class PersistLoadFileDialog(PersistFileDialog):
 
 class PersistSaveFileDialog(PersistFileDialog):
 
-    def __init__(self, master, title, filter, showWProt=False):
-        PersistFileDialog.__init__(self, master, title, filter, showWProt)
+    def __init__(self, master, title, filter, initWProtState=None):
+        PersistFileDialog.__init__(self, master, title, filter, initWProtState)
         self.top.title(title)
 
     def OkPressed(self):
