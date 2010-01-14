@@ -79,6 +79,7 @@ class EditParDialog(object):
         self._showExtraHelpButton = False
         self._showHelpInBrowser   = False
         self._unpackagedTaskTitle = "Task"
+        self._writeProtectOnSaveAs= False
         self._defaultsButtonTitle = "Defaults"
         self._optFile             = DFT_OPT_FILE
 
@@ -978,14 +979,15 @@ class EditParDialog(object):
 
         # The user wishes to save to a different name
         # (could use Tkinter's FileDialog, but this one is prettier)
-        fd = filedlg.PersistSaveFileDialog(self.top, "Save Parameter File As",
-                                           self._getSaveAsFilter(),
-                                           showWProt=True)
+        # initWProtState is only used in the 1st call of a session
+        fd = filedlg.PersistSaveFileDialog(self.top,
+                     "Save Parameter File As", self._getSaveAsFilter(),
+                     initWProtState=self._writeProtectOnSaveAs)
         if fd.Show() != 1:
             fd.DialogCleanup()
             return
         fname = fd.GetFileName()
-        doChmod = fd.GetWriteProtectChoice()
+        self._writeProtectOnSaveAs = fd.GetWriteProtectChoice()
         fd.DialogCleanup()
 
         # First check the child parameters, aborting save if
@@ -1010,8 +1012,8 @@ class EditParDialog(object):
         # save to their stated file.  Since we have already processed the
         # bad entries, there should be none returned.
         mstr = "TASKMETA: task="+self.taskName+" package="+self.pkgName
-        if self.checkSetSaveEntries(doSave=True, filename=fname,
-                                    comment=mstr, set_ro=doChmod):
+        if self.checkSetSaveEntries(doSave=True, filename=fname, comment=mstr,
+                                    set_ro=self._writeProtectOnSaveAs):
             raise Exception("Unexpected bad entries for: "+self.taskName)
 
         # Run any subclass-specific steps right after the save
