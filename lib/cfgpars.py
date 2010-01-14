@@ -173,8 +173,9 @@ def checkSetReadOnly(fname, raiseOnErr = False):
         # We can write to this but it is supposed to be read-only. Fix it.
         privs = os.stat(fname).st_mode
         try:
-            os.chmod(fname,
-                     ((privs ^ stat.S_IWUSR) ^ stat.S_IWGRP) ^ stat.S_IWOTH)
+            # Take away usr-write, leave group and other alone, though it
+            # may be simpler to just force/set it to: r--r--r-- or r--------
+            os.chmod(fname, (privs ^ stat.S_IWUSR))
         except OSError:
             if raiseOnErr: raise
 
