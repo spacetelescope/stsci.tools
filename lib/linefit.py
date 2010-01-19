@@ -8,6 +8,8 @@ Y = b0 + b1* X
 @version: '1.0 (2007-02-20)'
 
 """
+from __future__ import division # confidence high
+
 import numerixenv
 numerixenv.check()
 

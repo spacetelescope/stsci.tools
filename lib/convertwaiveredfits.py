@@ -124,6 +124,9 @@
 """
 
 # Developed by Science Software Branch, STScI, USA.
+
+from __future__ import division # confidence high
+
 __version__ = "1.0 (31 January, 2008)"
 
 #

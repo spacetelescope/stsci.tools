@@ -5,8 +5,10 @@ association tables and shift files.
 :author: Warren Hack, Nadia Dencheva
 :version: '0.1 (2008-01-03)'
 """
+
 __docformat__ = 'restructuredtext'
 
+from __future__ import division # confidence high
 import fileutil as fu
 import wcsutil
 import pyfits

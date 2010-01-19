@@ -1,4 +1,5 @@
 # from __future__ import absolute_import
+from __future__ import division # confidence high
 
 __version__ = "3.0"
 

@@ -1,3 +1,5 @@
+from __future__ import division # confidence high
+
 from pytools import parseinput, fileutil, readgeis, asnutil,irafglob
 import pyfits
 import os 

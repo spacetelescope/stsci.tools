@@ -16,7 +16,7 @@ the value in the y array.
 
 
 """
-
+from __future__ import division # confidence high
 import numpy as N 
 
 #This section for standalone imports only-------------------------------------

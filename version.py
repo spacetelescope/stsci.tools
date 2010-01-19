@@ -30,6 +30,8 @@
 #   print yourpackage.svn_version.__svn_version__
 #   print yourpackage.svn_version.__full_svn_info__
 #
+from __future__ import division # confidence high
+
 import os.path
 import re
 

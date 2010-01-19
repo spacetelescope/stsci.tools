@@ -49,8 +49,10 @@ MAKEWCS V0.0 (RNH) - Created new version to implement more complete
                         Also, simplified keyword access using PyFITS object.
         V0.8.0 (CJH) - Modified to work with either numarray or numpy through
                         the use of the numerix interface layer.
-        
+
 """
+from __future__ import division # confidence high
+
 import numerixenv
 numerixenv.check()
 
@@ -82,7 +84,7 @@ __version__ = '1.1.4 (30 Oct 2009)'
 def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
 
     print "+ MAKEWCS Version %s" % __version__
-    
+
     _prepend = prepend
 
     files = parseinput.parseinput(input)[0]
@@ -90,11 +92,11 @@ def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
     if files == []:
         print "No valid input files found.\n"
         raise IOError
-    
+
     for image in files:
         #find out what the input is
         imgfits,imgtype = fileutil.isFits(image)
-        
+
         # Check for existence of waiver FITS input, and quit if found.
         if imgfits and imgtype == 'waiver':
             """
@@ -120,7 +122,7 @@ def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
             # Work with new file
             image = newfilename
             newfiles.append(image)
-            
+
         if not quiet:
             print "Input files: ",files
 
@@ -148,10 +150,10 @@ def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
         if not NUM_PER_EXTN.has_key(_instrument):
 
             raise "Instrument %s not supported yet. Exiting..."%_instrument
-        
+
         _detector = fileutil.getKeyword(_phdu, keyword='DETECTOR')                          
         _nimsets = get_numsci(image)
-        
+
         for i in xrange(_nimsets):
             if image.find('.fits') > 0:
                 _img = image+'[sci,'+repr(i+1)+']'
@@ -160,7 +162,7 @@ def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
             if not restore:
                 if not quiet: 
                     print 'Updating image: ', _img
-                  
+
                 _update(_img,idctab, _nimsets, apply_tdd=False,
                         quiet=quiet,instrument=_instrument,prepend=_prepend, 
                         nrchip=Nrefchip, nrext = Nrefext)
@@ -176,24 +178,24 @@ def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
                     if (tddcorr and tddswitch != 'OMIT'):
                         print 'Applying time-dependent distortion corrections...'
                         _update(_img,idctab, _nimsets, apply_tdd=True, \
-                        quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nrefext)
+                                quiet=quiet,instrument=_instrument,prepend=_prepend, nrchip=Nrefchip, nrext = Nrefext)
             else:                    
                 if not quiet:
                     print 'Restoring original WCS values for',_img  
                 restoreCD(_img,_prepend)
-        
+
         #fimg = fileutil.openImage(image,mode='update')
         #if fimg[0].header.has_key('TDDCORR') and fimg[0].header['TDDCORR'] == 'PERFORM':
         #    fimg[0].header['TDDCORR'] = 'COMPLETE'
         #fimg.close()
-        
+
     if newfiles == []:
         return files
     else:
         return newfiles
-    
+
 def restoreCD(image,prepend):
-    
+
     _prepend = prepend
     try:
         _wcs = wcsutil.WCSObject(image)
@@ -204,7 +206,7 @@ def restoreCD(image,prepend):
 
 def _update(image,idctab,nimsets,apply_tdd=False,
             quiet=None,instrument=None,prepend=None,nrchip=None, nrext=None):
-    
+
     tdd_xyref = {1: [2048, 3072], 2:[2048, 1024]}
     _prepend = prepend
     _dqname = None        
@@ -222,7 +224,7 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     dateobs = readKeyword(hdr,'DATE-OBS')
     if not quiet:
         print "OFFTAB, DATE-OBS: ",offtab,dateobs
-    
+
     print "-Updating image ",image
 
     if not quiet:
@@ -241,7 +243,7 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     else:
         print 'PA_V3 keyword not found, WCS cannot be updated. Quitting ...'
         raise ValueError
-    
+
     # Find out about instrument, detector & filters
     detector = readKeyword(hdr,'DETECTOR')
 
@@ -267,20 +269,20 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     else:
         filter1 = readKeyword(hdr,'FILTER1')
         filter2 = readKeyword(hdr,'FILTER2')
-    
+
     if filter1 == None or filter1.strip() == '': filter1 = 'CLEAR'
     else: filter1 = filter1.strip()
     if filter2 == None or filter2.strip() == '': filter2 = 'CLEAR'
     else: filter2 = filter2.strip()
-    
+
     if filter1.find('CLEAR') == 0: filter1 = 'CLEAR'
     if filter2.find('CLEAR') == 0: filter2 = 'CLEAR'
-    
+
     # Set up parity matrix for chip
     if instrument == 'WFPC2' or instrument =='STIS' or instrument == 'NICMOS':
         parity = PARITY[instrument]
     elif PARITY.has_key(detector):
-       parity = PARITY[detector]
+        parity = PARITY[detector]
     else:
         raise 'Detector ',detector,' Not supported at this time. Exiting...'
 
@@ -289,13 +291,13 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     # as this is where
     VA_fac=1.0
     if instrument == 'ACS':
-       _va_key = readKeyword(hdr,'VAFACTOR')
-       if _va_key != None: 
-          VA_fac = float(_va_key)
-       
-       if not quiet:
-          print 'VA factor: ',VA_fac
-       
+        _va_key = readKeyword(hdr,'VAFACTOR')
+        if _va_key != None: 
+            VA_fac = float(_va_key)
+
+        if not quiet:
+            print 'VA factor: ',VA_fac
+
     #ra_targ = float(readKeyword(hdr,'RA_TARG'))
     #dec_targ = float(readKeyword(hdr,'DEC_TARG'))
 
@@ -319,16 +321,16 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     nr = 1
     if (instrument == 'ACS' and detector == 'WFC') or (instrument == 'WFC3' and detector == 'UVIS'):
         if nimsets > 1:
-          Nrefchip = 2
+            Nrefchip = 2
         else:
-          Nrefchip = chip
+            Nrefchip = chip
     elif instrument == 'NICMOS':
         Nrefchip = readKeyword(hdr,'CAMERA')
     elif instrument == 'WFPC2':
         nr = nrext
     else:
-       if nimsets > 1:
-          nr = Nrefchip
+        if nimsets > 1:
+            nr = Nrefchip
 
     if not quiet:
         print "-PA_V3 : ",pvt," CHIP #",chip
@@ -339,18 +341,18 @@ def _update(image,idctab,nimsets,apply_tdd=False,
         alpha,beta = mutil.compute_wfc_tdd_coeffs(dateobs)
         tdd = N.array([[beta, alpha], [alpha, -beta]])
         mrotp = fileutil.buildRotMatrix(2.234529)/2048.
-        
+
     else:
         alpha = 0.0
         beta = 0.0
-        
+
     # Extract the appropriate information from the IDCTAB
     #fx,fy,refpix,order=fileutil.readIDCtab(idctab,chip=chip,direction='forward',
     #            filter1=filter1,filter2=filter2,offtab=offtab,date=dateobs)
     idcmodel = models.IDCModel(idctab,
-                    chip=chip, direction='forward', date=dateobs,
-                    filter1=filter1, filter2=filter2, offtab=offtab, binned=binned,
-                    tddcorr=apply_tdd)
+                               chip=chip, direction='forward', date=dateobs,
+                               filter1=filter1, filter2=filter2, offtab=offtab, binned=binned,
+                               tddcorr=apply_tdd)
     fx = idcmodel.cx
     fy = idcmodel.cy
     refpix = idcmodel.refpix
@@ -358,10 +360,10 @@ def _update(image,idctab,nimsets,apply_tdd=False,
 
     # Get the original image WCS
     Old=wcsutil.WCSObject(image,prefix=_prepend)
-    
+
     # Reset the WCS keywords to original archived values.
     Old.restore()
- 
+
     #
     # Look for any subarray offset
     #
@@ -385,16 +387,16 @@ def _update(image,idctab,nimsets,apply_tdd=False,
         ltvoffy = 0.
         offshiftx = 0.
         offshifty = 0.
-    
+
     if ltv1 != 0. or ltv2 != 0.:
-       fx,fy = idcmodel.shift(idcmodel.cx,idcmodel.cy,offsetx,offsety)
+        fx,fy = idcmodel.shift(idcmodel.cx,idcmodel.cy,offsetx,offsety)
 
     # Extract the appropriate information for reference chip
-    
+
     ridcmodel = models.IDCModel(idctab,
-                    chip=Nrefchip, direction='forward', date=dateobs,
-                    filter1=filter1, filter2=filter2, offtab=offtab, binned=binned,
-                    tddcorr=apply_tdd)
+                                chip=Nrefchip, direction='forward', date=dateobs,
+                                filter1=filter1, filter2=filter2, offtab=offtab, binned=binned,
+                                tddcorr=apply_tdd)
     rfx = ridcmodel.cx
     rfy = ridcmodel.cy
     rrefpix = ridcmodel.refpix
@@ -407,8 +409,8 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     # Create the reference image name
     rimage = image.split('[')[0]+"[sci,%d]" % nr
     if not quiet:
-       print "Reference image: ",rimage       
- 
+        print "Reference image: ",rimage       
+
     # Create the tangent plane WCS on which the images are defined
     # This is close to that of the reference chip
     R=wcsutil.WCSObject(rimage)
@@ -422,12 +424,12 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     #crval1 = float(R.crval1)
     #crval2 = dec
     dec = float(R.crval2)
-    
+
     # Get an approximate reference position on the sky
     rref = (rrefpix['XREF']+ltvoffx, rrefpix['YREF']+ltvoffy)
-    
+
     crval1,crval2=R.xy2rd(rref)
-    
+
     if apply_tdd:
         # Correct zero points for TDD
         tddscale = (R.pscale/fx[1][1])
@@ -438,7 +440,7 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     else:
         rv23_corr = N.array([[0],[0]])
         v23_corr = N.array([[0],[0]])
-        
+
     # Convert the PA_V3 orientation to the orientation at the aperture
     # This is for the reference chip only - we use this for the
     # reference tangent plane definition
@@ -453,42 +455,42 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     # Add the chip rotation angle
     if rrefpix['THETA']:
         pv += rrefpix['THETA']
-       
+
 
     # Set values for the rest of the reference WCS
     R.crval1=crval1
     R.crval2=crval2
     R.crpix1=0.0 + offshiftx
     R.crpix2=0.0 + offshifty
-    
+
     R_scale=rrefpix['PSCALE']/3600.0
     R.cd11=parity[0][0] *  cos(pv*pi/180.0)*R_scale
     R.cd12=parity[0][0] * -sin(pv*pi/180.0)*R_scale
     R.cd21=parity[1][1] *  sin(pv*pi/180.0)*R_scale
     R.cd22=parity[1][1] *  cos(pv*pi/180.0)*R_scale
-        
+
     ##print R
     R_cdmat = N.array([[R.cd11,R.cd12],[R.cd21,R.cd22]])
-    
+
     if not quiet:
         print "  Reference Chip Scale (arcsec/pix): ",rrefpix['PSCALE']
 
     # Offset and angle in V2/V3 from reference chip to
     # new chip(s) - converted to reference image pixels
-    
+
     off = sqrt((v2-v2ref)**2 + (v3-v3ref)**2)/(R_scale*3600.0)
 
     # Here we must include the PARITY
     if v3 == v3ref:
-       theta=0.0
+        theta=0.0
     else:
-       theta = atan2(parity[0][0]*(v2-v2ref),parity[1][1]*(v3-v3ref))
+        theta = atan2(parity[0][0]*(v2-v2ref),parity[1][1]*(v3-v3ref))
 
     if rrefpix['THETA']: theta += rrefpix['THETA']*pi/180.0
 
     dX=(off*sin(theta)) + offshiftx
     dY=(off*cos(theta)) + offshifty
-    
+
     # Check to see whether we are working with GEIS or FITS input
     _fname,_iextn = fileutil.parseFilename(image)
 
@@ -506,18 +508,18 @@ def _update(image,idctab,nimsets,apply_tdd=False,
 
     #New=wcsutil.WCSObject(_new_name,new=yes)
     New = Old.copy()
-    
+
     # Calculate new CRVALs and CRPIXs
     New.crval1,New.crval2=R.xy2rd((dX,dY))
     New.crpix1=refpix['XREF'] + ltvoffx
     New.crpix2=refpix['YREF'] + ltvoffy
-    
+
     # Account for subarray offset
     # Angle of chip relative to chip
     if refpix['THETA']:
-       dtheta = refpix['THETA'] - rrefpix['THETA']
+        dtheta = refpix['THETA'] - rrefpix['THETA']
     else:
-       dtheta = 0.0
+        dtheta = 0.0
 
     # Create a small vector, in reference image pixel scale
     # There is no parity effect here ???
@@ -545,38 +547,38 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     New.cd12=diff_angles(c,New.crval1)*cos(New.crval2*pi/180.0)
     New.cd21=diff_angles(b,New.crval2)
     New.cd22=diff_angles(d,New.crval2)
-    
+
     # Apply the velocity aberration effect if applicable
     if VA_fac != 1.0:
 
-       # First shift the CRVALs apart
+        # First shift the CRVALs apart
 #       New.crval1 = ra_targ + VA_fac*(New.crval1 - ra_targ) 
 #       New.crval2 = dec_targ + VA_fac*(New.crval2 - dec_targ) 
-       # First shift the CRVALs apart
-       # This is now relative to the reference chip, not the
-       # target position.
-       New.crval1 = R.crval1 + VA_fac*diff_angles(New.crval1, R.crval1)
-       New.crval2 = R.crval2 + VA_fac*diff_angles(New.crval2, R.crval2)
+        # First shift the CRVALs apart
+        # This is now relative to the reference chip, not the
+        # target position.
+        New.crval1 = R.crval1 + VA_fac*diff_angles(New.crval1, R.crval1)
+        New.crval2 = R.crval2 + VA_fac*diff_angles(New.crval2, R.crval2)
 
-       # and scale the CDs
-       New.cd11 = New.cd11*VA_fac
-       New.cd12 = New.cd12*VA_fac
-       New.cd21 = New.cd21*VA_fac
-       New.cd22 = New.cd22*VA_fac        
-        
+        # and scale the CDs
+        New.cd11 = New.cd11*VA_fac
+        New.cd12 = New.cd12*VA_fac
+        New.cd21 = New.cd21*VA_fac
+        New.cd22 = New.cd22*VA_fac        
+
     New_cdmat = N.array([[New.cd11,New.cd12],[New.cd21,New.cd22]])
 
     # Store new one
     # archive=yes specifies to also write out archived WCS keywords
     # overwrite=no specifies do not overwrite any pre-existing archived keywords
-        
+
     New.write(fitsname=_new_name,overwrite=no,quiet=quiet,archive=yes)
     if _dqname:
         _dq_iextn = _iextn.replace('sci', dqext.lower())
         _new_dqname = _dqname +'['+_dq_iextn+']'
         dqwcs = wcsutil.WCSObject(_new_dqname)
         dqwcs.write(fitsname=_new_dqname, wcs=New,overwrite=no,quiet=quiet, archive=yes)
-    
+
     """ Convert distortion coefficients into SIP style
         values and write out to image (assumed to be FITS). 
     """  
@@ -587,30 +589,30 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     c = fy[1,1]/3600.0
     d = fy[1,0]/3600.0
     det = (a*d - b*c)*refpix['PSCALE']
-    
+
     # Write to header
     fimg = fileutil.openImage(_new_name,mode='update')
     _new_root,_nextn = fileutil.parseFilename(_new_name)
     _new_extn = fileutil.getExtn(fimg,_nextn)
-    
-    
+
+
     # Transform the higher-order coefficients
     for n in range(order+1):
-      for m in range(order+1):
-        if n >= m and n>=2:
+        for m in range(order+1):
+            if n >= m and n>=2:
 
-          # Form SIP-style keyword names
-          Akey="A_%d_%d" % (m,n-m)
-          Bkey="B_%d_%d" % (m,n-m)
+                # Form SIP-style keyword names
+                Akey="A_%d_%d" % (m,n-m)
+                Bkey="B_%d_%d" % (m,n-m)
 
-          # Assign them values
-          #Aval=string.upper("%13.9e" % (f*(d*fx[n,m]-b*fy[n,m])/det))
-          #Bval=string.upper("%13.9e" % (f*(a*fy[n,m]-c*fx[n,m])/det))
-          Aval= f*(d*fx[n,m]-b*fy[n,m])/det
-          Bval= f*(a*fy[n,m]-c*fx[n,m])/det
+                # Assign them values
+                #Aval=string.upper("%13.9e" % (f*(d*fx[n,m]-b*fy[n,m])/det))
+                #Bval=string.upper("%13.9e" % (f*(a*fy[n,m]-c*fx[n,m])/det))
+                Aval= f*(d*fx[n,m]-b*fy[n,m])/det
+                Bval= f*(a*fy[n,m]-c*fx[n,m])/det
 
-          _new_extn.header.update(Akey,Aval)
-          _new_extn.header.update(Bkey,Bval)
+                _new_extn.header.update(Akey,Aval)
+                _new_extn.header.update(Bkey,Bval)
 
     # Update the SIP flag keywords as well
     #iraf.hedit(image,"CTYPE1","RA---TAN-SIP",verify=no,show=no)
@@ -637,32 +639,32 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     _new_extn.header.update("OCY11",fy[1][1])
     #_new_extn.header.update("TDDXOFF",rv23_corr[0][0] - v23_corr[0][0])
     #_new_extn.header.update("TDDYOFF",-(rv23_corr[1][0] - v23_corr[1][0]))
-        
+
     # Report time-dependent coeffs, if computed
     if instrument == 'ACS' and detector == 'WFC':
         _new_extn.header.update("TDDALPHA",alpha)
         _new_extn.header.update("TDDBETA",beta)
 
-    
+
     # Close image now
     fimg.close()
     del fimg
-    
-    
+
+
 def diff_angles(a,b):
     """ Perform angle subtraction a-b taking into account
         small-angle differences across 360degree line. """
-        
+
     diff = a - b
 
     if diff > 180.0:
-       diff -= 360.0
+        diff -= 360.0
 
     if diff < -180.0:
-       diff += 360.0
-    
+        diff += 360.0
+
     return diff
-    
+
 def readKeyword(hdr,keyword):
 
     try:
@@ -712,7 +714,7 @@ def shift_coeffs(cx,cy,xs,ys,norder):
     This will support creating coeffs files for drizzle which will 
     be applied relative to the center of the image, rather than relative
     to the reference position of the chip.
-    
+
     Derived directly from PyDrizzle V3.3d.
     """
 
@@ -762,18 +764,18 @@ def getNrefchip(image,instrument='WFPC2'):
     hdu.close()
     return Nrefchip, Nrefext
 
-        
+
 def help():
     _help_str = """ makewcs - a task for updating an image header WCS to make
           it consistent with the distortion model and velocity aberration.  
-    
+
     This task will read in a distortion model from the IDCTAB and generate 
     a new WCS matrix based on the value of ORIENTAT.  It will support subarrays
     by shifting the distortion coefficients to image reference position before
     applying them to create the new WCS, including velocity aberration. 
     Original WCS values will be moved to an O* keywords (OCD1_1,...).
     Currently, this task will only support ACS and WFPC2 observations.
-    
+
     Syntax:
         makewcs.run(image,quiet=no)
     where 

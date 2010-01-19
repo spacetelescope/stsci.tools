@@ -1,3 +1,4 @@
+from __future__ import division # confidence high
 import os
 
 def check_input(xxx):

@@ -13,6 +13,7 @@
 #                                 loop over a taskList object. -- CJH
 #
 #       Version 0.2.0, 31-Mar-06: Added numpy to the task list. -- CJH
+from __future__ import division # confidence high
 
 __version__ = '0.2.0'
 

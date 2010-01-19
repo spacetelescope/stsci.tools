@@ -1,3 +1,5 @@
+from __future__ import division # confidence high
+
 from nonlincor import xyinterp
 import numpy as N
 

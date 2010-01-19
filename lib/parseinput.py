@@ -15,6 +15,7 @@
 #   Version 0.1.5 10/11/2005: Corrected typo in errorstr variable name discovered
 #                   by external user j.e.geach@durham.ac.uk.
 
+from __future__ import division # confidence high
 
 __version__ = '0.1.5 (10/11/2005)'
 __author__  = 'Christopher Hanley'

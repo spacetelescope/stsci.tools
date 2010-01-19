@@ -59,6 +59,9 @@
 # Developed by Science Software Branch, STScI, USA.
 # This version needs pyfits 0.9.6.3 or later
 # and numpy version 1.0.4 or later
+
+from __future__ import division # confidence high
+
 __version__ = "2.1 (30 June, 2008), \xa9 AURA"
 
 import numerixenv
@@ -150,10 +153,10 @@ def readgeis(input):
         _bitpix = -_bitpix
     if _naxis0 > 0:
         size = reduce(lambda x,y:x*y, _naxis[1:])
-        data_size = abs(_bitpix) * size / 8
+        data_size = abs(_bitpix) * size // 8
     else:
         data_size = 0
-    group_size = data_size + _psize / 8
+    group_size = data_size + _psize // 8
 
     # decode the group parameter definitions,
     # group parameters will become extension header

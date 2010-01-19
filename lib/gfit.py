@@ -10,6 +10,7 @@ nmpfit.py is a version of mpfit.py which uses numarray.
 @version: '1.0 (2007-02-20)'
 
 """
+from __future__ import division # confidence high
 
 __version__ = '1.0'          #Release version number only
 __vdate__ = '2007-02-20'     #Date of this version
