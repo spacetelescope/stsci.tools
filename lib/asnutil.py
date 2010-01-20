@@ -6,14 +6,15 @@ association tables and shift files.
 :version: '0.1 (2008-01-03)'
 """
 
-__docformat__ = 'restructuredtext'
-
 from __future__ import division # confidence high
+
 import fileutil as fu
 import wcsutil
 import pyfits
 import numpy as N
 import os.path, time
+
+__docformat__ = 'restructuredtext'
 
 __version__ = '0.2(2008-08-27)'
 
