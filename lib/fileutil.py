@@ -58,7 +58,14 @@ from __future__ import division # confidence high
 import numerixenv
 numerixenv.check()
 
-import pyfits, readgeis
+
+# Turn this on when stpyfits gets fixed (PyFITS Trac #28)
+try:
+    import stpyfits as pyfits
+except ImportError:
+    import pyfits
+import readgeis
+
 import string,os,types,shutil,copy, re, sys
 import calendar
 import numpy as N
