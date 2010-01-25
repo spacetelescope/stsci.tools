@@ -39,10 +39,10 @@ class st_HDUList(pyfits.HDUList):
     __doc__ = __doc__ + pyfits.HDUList.__doc__
 
     def writeto(self, name, output_verify='exception', clobber=False,
-                classExtensions={}):
+                classExtensions={}, checksum=False):
         _assignSt_pyfitsClassExtensions(classExtensions)
         pyfits.HDUList.writeto(self, name, output_verify, clobber,
-                               classExtensions)
+                               classExtensions, checksum)
 
     writeto.__doc__ = pyfits.HDUList.writeto.__doc__
 
@@ -165,7 +165,7 @@ class st_File(core._File):
 
     _readHDU.__doc__ = core._File._readHDU.__doc__
 
-    def writeHDUheader(self, hdu):
+    def writeHDUheader(self, hdu, checksum=False):
         if (hdu.header.has_key('PIXVALUE') and hdu.header['NAXIS'] > 0):
 #
 #           This is a Constant Value Data Array.  Verify that the data actually
@@ -193,34 +193,18 @@ class st_File(core._File):
                                      after='PIXVALUE')
                     del newHeader['NAXIS'+str(n)]
 
-                blocks = repr(newHeader.ascard)
-                blocks = blocks + core._pad('END')
-                blocks = blocks + core._padLength(len(blocks))*' '
-
-                if len(blocks)%core._blockLen != 0:
-                    raise IOError
-                self._File__file.flush()
-                loc = self._File__file.tell()
-                self._File__file.write(blocks)
-
-                # flush, to make sure the content is written
-                self._File__file.flush()
+                hdu = core._AllHDU(header=newHeader)
             else:
 #
 #               All elements in array are not the same value.
 #               so this is no longer a constant data value array
 #
                 del hdu.header['PIXVALUE']
-                st_ext = False
-        else:
-            st_ext = False
 
-        if not st_ext:
+#       This is not a STScI extension so call the base class method
+#       to write the header.
 #
-#          This is not a STScI extension so call the base class method
-#          to write the header.
-#
-           loc = core._File.writeHDUheader(self,hdu)
+        loc = core._File.writeHDUheader(self, hdu, checksum=checksum)
 
         return loc
 
@@ -322,10 +306,10 @@ class st_ImageBaseHDU(core._ImageBaseHDU):
     __getattr__.__doc__ = core._ImageBaseHDU.__getattr__.__doc__
 
     def writeto(self, name, output_verify='exception', clobber=False,
-                classExtensions={}):
+                classExtensions={}, checksum=False):
         _assignSt_pyfitsClassExtensions(classExtensions)
         core._ImageBaseHDU.writeto(self, name, output_verify, clobber,
-                               classExtensions)
+                                   classExtensions, checksum)
 
     writeto.__doc__ = core._ImageBaseHDU.writeto.__doc__
 
@@ -363,7 +347,7 @@ class st_ImageHDU(ImageHDU, st_ImageBaseHDU):
     Notes
     -----
 
-    This class adds st_ImageBaseHDU to the inheritance hierarchy of 
+    This class adds st_ImageBaseHDU to the inheritance hierarchy of
     pyfits.ImageHDU when accessed through the stpyfits namespace.
 
     The pyfits.ImageHDU class is:
@@ -376,7 +360,7 @@ class st_ImageHDU(ImageHDU, st_ImageBaseHDU):
 
         self.header._hdutype = st_ImageHDU
 
-    __init__.__doc__ = pyfits.ImageHDU.__init__.__doc__ 
+    __init__.__doc__ = pyfits.ImageHDU.__init__.__doc__
 
 
 ImageHDU = st_ImageHDU
@@ -412,8 +396,8 @@ def _assignSt_pyfitsClassExtensions(classExtensions):
 
 def _assignSt_pyfitsClassExtensionsKeywordDict(keywords):
     """
-    Function to add the stpyfits classExtension dictionary to the input 
-    keyword dictionary.  
+    Function to add the stpyfits classExtension dictionary to the input
+    keyword dictionary.
 
     If the classExtension dictionary already exists in the inpt keyword
     dictionary, it is updated for stpyfits.
@@ -433,10 +417,10 @@ def _assignSt_pyfitsClassExtensionsKeywordDict(keywords):
         keywords['classExtensions'] = classExtensions
 
 #
-# Reimplement the open convenience function to allow it to pass a dictionary 
-# containing classes and their corresponding reimplementations.  The 
-# reimplemented classes will be constructed instead of the original classes.  
-# This will allow for support of the STScI specific features provided in 
+# Reimplement the open convenience function to allow it to pass a dictionary
+# containing classes and their corresponding reimplementations.  The
+# reimplemented classes will be constructed instead of the original classes.
+# This will allow for support of the STScI specific features provided in
 # stpyfits.
 #
 def open(name, mode="copyonwrite", memmap=0, classExtensions={}, **parms):
@@ -450,10 +434,10 @@ open.__doc__ = pyfits.open.__doc__
 fitsopen = open
 
 #
-# Reimplement the info convenience function to allow it to pass a dictionary 
-# containing classes and their corresponding reimplementations.  The 
-# reimplemented classes will be constructed instead of the original classes.  
-# This will allow for support of the STScI specific features provided in 
+# Reimplement the info convenience function to allow it to pass a dictionary
+# containing classes and their corresponding reimplementations.  The
+# reimplemented classes will be constructed instead of the original classes.
+# This will allow for support of the STScI specific features provided in
 # stpyfits.
 #
 def info(filename, classExtensions={}, **parms):
@@ -464,24 +448,24 @@ def info(filename, classExtensions={}, **parms):
 info.__doc__ = pyfits.info.__doc__
 
 #
-# Reimplement the append convenience function to allow it to pass a dictionary 
-# containing classes and their corresponding reimplementations.  The 
-# reimplemented classes will be constructed instead of the original classes.  
-# This will allow for support of the STScI specific features provided in 
+# Reimplement the append convenience function to allow it to pass a dictionary
+# containing classes and their corresponding reimplementations.  The
+# reimplemented classes will be constructed instead of the original classes.
+# This will allow for support of the STScI specific features provided in
 # stpyfits.
 #
 def append(filename, data, header=None, classExtensions={}):
-    
+
     _assignSt_pyfitsClassExtensions(classExtensions)
     pyfits.append(filename, data, header, classExtensions)
 
 append.__doc__ = pyfits.append.__doc__
 
 #
-# Reimplement the writeto convenience function to allow it to pass a dictionary 
-# containing classes and their corresponding reimplementations.  The 
-# reimplemented classes will be constructed instead of the original classes.  
-# This will allow for support of the STScI specific features provided in 
+# Reimplement the writeto convenience function to allow it to pass a dictionary
+# containing classes and their corresponding reimplementations.  The
+# reimplemented classes will be constructed instead of the original classes.
+# This will allow for support of the STScI specific features provided in
 # stpyfits.
 #
 def writeto(filename, data, header=None, **keys):
@@ -492,10 +476,10 @@ def writeto(filename, data, header=None, **keys):
 writeto.__doc__ = pyfits.writeto.__doc__
 
 #
-# Reimplement the update convenience function to allow it to pass a dictionary 
-# containing classes and their corresponding reimplementations.  The 
-# reimplemented classes will be constructed instead of the original classes.  
-# This will allow for support of the STScI specific features provided in 
+# Reimplement the update convenience function to allow it to pass a dictionary
+# containing classes and their corresponding reimplementations.  The
+# reimplemented classes will be constructed instead of the original classes.
+# This will allow for support of the STScI specific features provided in
 # stpyfits.
 #
 def update(filename, data, *ext, **extkeys):
@@ -506,7 +490,7 @@ def update(filename, data, *ext, **extkeys):
 update.__doc__ = pyfits.update.__doc__
 
 #
-# Reimplement the getheader convenience function to allow it to pass a 
+# Reimplement the getheader convenience function to allow it to pass a
 # dictionary containing classes and their corresponding reimplementations.  The
 # reimplemented classes will be constructed instead of the original classes.
 # This will allow for support of the STScI specific features provided in
@@ -530,7 +514,7 @@ getheader.__doc__ = pyfits.getheader.__doc__
 # stpyfits.
 #
 def getdata(filename, *ext, **extkeys):
-    
+
     _assignSt_pyfitsClassExtensionsKeywordDict(extkeys)
     data = pyfits.getdata(filename, *ext, **extkeys)
 
@@ -540,9 +524,9 @@ getdata.__doc__ = pyfits.getdata.__doc__
 
 #
 # Reimplement the getval convenience function to call the stpyfits
-# getheader function.  This will allow it to pass a dictionary containing 
-# classes and their corresponding reimplementations.  The reimplemented 
-# classes will be constructed instead of the original classes.  This will 
+# getheader function.  This will allow it to pass a dictionary containing
+# classes and their corresponding reimplementations.  The reimplemented
+# classes will be constructed instead of the original classes.  This will
 # allow for support of the STScI specific features provided in stpyfits.
 #
 def getval(filename, key, *ext, **extkeys):
@@ -561,7 +545,7 @@ getval.__doc__ = pyfits.getval.__doc__
 #
 def setval(filename, key, value="", comment=None, before=None, after=None,
            savecomment=False, *ext, **extkeys):
-    
+
     _assignSt_pyfitsClassExtensionsKeywordDict(extkeys)
     pyfits.setval(filename, key, value, comment, before, after,
                   savecomment, *ext, **extkeys)
@@ -576,7 +560,7 @@ setval.__doc__ = pyfits.setval.__doc__
 # stpyfits.
 #
 def delval(filename, key, *ext, **extkeys):
-    
+
     _assignSt_pyfitsClassExtensionsKeywordDict(extkeys)
     pyfits.delval(filename, key, *ext, **extkeys)
 
