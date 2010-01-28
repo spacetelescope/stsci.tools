@@ -19,8 +19,7 @@ All packages will need to import jwtools.tester and add the following
 function to the __init__.py of their package:
 
 def test(*args,**kwds):
-    thisdir = os.path.dirname(os.path.abspath(__file__))
-    pytools.tester.test(curdir=thisdir)
+    pytools.tester.test(modname=__name__, *args, **kwds)
 
 
 This assumes that all software packages are installed with the structure:
@@ -41,7 +40,7 @@ from __future__ import division
 
 import os,sys
 
-def test(*args,**kwds):
+def test(modname,*args,**kwds):
     """
     Purpose:
     ========
@@ -50,16 +49,16 @@ def test(*args,**kwds):
 
     """
 
-    try:
-        thisdir = kwds['curdir']
-    except KeyError:
-        thisdir = os.path.dirname(os.path.abspath(__file__))
+    if modname != None :
+        curdir = sys.modules[modname].__file__
+        curdir = os.path.abspath(curdir)
+        curdir = os.path.dirname(curdir)
     DIRS=['/tests']
 
     args=[]
     for dirname in DIRS:
         args.append('-w')
-        args.append(thisdir+dirname)
+        args.append(curdir+dirname)
 
     result = False
 
