@@ -1,4 +1,4 @@
-""" Main module for the ConfigObj version of the EPAR task editor
+""" Main module for the ConfigObj version of the parameter task editor
 $Id$
 """
 from __future__ import division # confidence high
@@ -81,6 +81,8 @@ File menu:
     Save
              Save the parameters to the file named in the title bar.  This
              does not close the editor window, nor does it execute the task.
+             If however, this button appears as "Save & Quit", then it will
+             in fact close the editor window after saving.
     Save As...
              Save the parameters to a user-specified file.  This does not
              close the editor window, nor does it execute the task.
@@ -127,7 +129,7 @@ Help menu:
              Display help on the task whose parameters are being edited.
              By default the help pops up in a new window, but the help can also
              be displayed in a web browser by modifying the Options.
-    EPAR Help
+    TEAL Help
              Display this help.
 
 
@@ -136,7 +138,7 @@ Toolbar Buttons
 
 The Toolbar contains a set of buttons that provide shortcuts for the most
 common menu bar actions.  Their names are the same as the menu items given
-above: Execute, Save, Close, Cancel, and Defaults.
+above: Execute, Save (or Save & Quit), Close, Cancel, and Defaults.
 
 Note that the toolbar buttons are accessible from the keyboard using the Tab
 and Shift-Tab keys.  They are located in sequence before the first parameter.
@@ -147,11 +149,19 @@ the "Execute" button.
 
 
 # Starts a GUI session
-def teal(theTask, parent=None, isChild=0, loadOnly=False):
+def teal(theTask, parent=None, isChild=0, loadOnly=False, returnDict=True):
+#        overrides=None):
     if loadOnly:
-        return cfgpars.getObjectFromTaskArg(theTask)
+        obj = cfgpars.getObjectFromTaskArg(theTask)
+#       obj.strictUpdate(overrides) # !!! does this skip verify step?? need it!
+        return obj
     else:
-        dlg = ConfigObjEparDialog(theTask, parent, isChild)
+        dlg = ConfigObjEparDialog(theTask, parent=parent, isChild=isChild,
+                                  returnDict=returnDict)
+#                                 overrides=overrides)
+        # Return, depending on the mode in which we are operating
+        if not returnDict:
+            return
         if dlg.canceled():
             return None
         else:
@@ -171,8 +181,17 @@ def execTriggerCode(SCOPE, NAME, VAL, codeStr):
 # Main class
 class ConfigObjEparDialog(editpar.EditParDialog):
 
-    def __init__(self, theTask, parent=None, isChild=0,
-                 title=APP_NAME, childList=None):
+    def __init__(self, theTask, parent=None, title=APP_NAME,
+                 isChild=0, childList=None, returnDict=True):
+#                overrides=None,
+
+        # returnDict is fundamental to this GUI.  If True, then a dict is
+        # returned to the caller when it is Closed (None is returned if it
+        # is Canceled).  If False, we operate in an auto-close mode (like EPAR)
+        self._returnDict = returnDict
+
+        # Keep track of any passed-in keyvals before creating the _taskParsObj
+#       self._overrides = overrides
 
         # Init base - calls _setTaskParsObj(), sets self.taskName, etc
         editpar.EditParDialog.__init__(self, theTask, parent, isChild,
@@ -189,7 +208,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # our own GUI setup
         self._appName              = APP_NAME
         self._appHelpString        = tealHelpString
-        self._useSimpleAutoClose   = False # is a fundamental issue here
+        self._useSimpleAutoClose   = not self._returnDict
         self._showExtraHelpButton  = False
         self._saveAndCloseOnExec   = cod.get('saveAndCloseOnExec', True)
         self._showHelpInBrowser    = cod.get('showHelpInBrowser', False)
@@ -335,6 +354,8 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # Immediately make a copy of it's un-tampered internal dict.
         # The dict() method returns a deep-copy dict of the keyvals.
         self._lastSavedState = self._taskParsObj.dict()
+        # do this here ??!!! or before _lastSavedState ??!!!
+#       self._taskParsObj.strictUpdate(self._overrides)
 
 
     def _getSaveAsFilter(self):
