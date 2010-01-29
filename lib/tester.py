@@ -39,7 +39,9 @@ recognize as tests.
 
 from __future__ import division
 
-import os,sys
+import os
+import os.path
+import sys
 
 def test(modname,*args,**kwds):
     """
@@ -54,12 +56,21 @@ def test(modname,*args,**kwds):
         curdir = sys.modules[modname].__file__
         curdir = os.path.abspath(curdir)
         curdir = os.path.dirname(curdir)
-    DIRS=['/test']
+    DIRS=[ curdir + '/test', curdir + '/tests' ]
 
     args=[]
+    found_one = 0
     for dirname in DIRS:
-        args.append('-w')
-        args.append(curdir+dirname)
+        if os.path.isdir(dirname) :
+            args.append('-w')
+            args.append(dirname)
+            found_one = 1
+
+    if not found_one :
+        print "no tests found in:"
+        for x in DIRS :
+            print "  ",x
+        return False
 
     result = False
 
@@ -68,5 +79,6 @@ def test(modname,*args,**kwds):
         result = nose.run(argv=args)
     except ImportError:
         print "Nose 0.10.4 or greater is required for running tests."
+
     return result
 
