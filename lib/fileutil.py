@@ -126,9 +126,20 @@ def getDate():
 
 def isFits(input):
     """
-    Returns a tuple (isfits, fitstype)
+    Always returns a tuple (isfits, fitstype)
     isfits - True|False
-    fitstype - one of 'waiver', 'mef', 'simple'
+    fitstype - if True, one of 'waiver', 'mef', 'simple'
+               if False, None 
+               if None, Exception description
+    
+    Input images which do not have a valid FITS filename will automatically
+    result in a return of (False, None). 
+    
+    In the case that the input has a valid FITS filename but runs into some
+    error upon opening, this routine will return a value of 'isfits = None' along
+    with the Exception strings as the 'fitstype'.  
+    
+    
     """
     isfits = False
     fitstype = None
@@ -140,8 +151,9 @@ def isFits(input):
     if isfits:
         try:
             f = pyfits.open(input)
-        except IOError:
-            raise
+        except Exception, e:
+            f.close()
+            return None, str(type(e))+e.args[0]+' for '+input
         data0 = f[0].data
         if data0 != None:
             try:
