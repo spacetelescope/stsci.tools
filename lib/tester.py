@@ -15,9 +15,10 @@ Dependencies:
 
 Usage Example:
 ==============
-All packages will need to import jwtools.tester and add the following
+All packages will need to import pytools.tester and add the following
 function to the __init__.py of their package:
 
+import pytools.tester
 def test(*args,**kwds):
     pytools.tester.test(modname=__name__, *args, **kwds)
 
@@ -27,14 +28,14 @@ This assumes that all software packages are installed with the structure:
 package/
     __init__.py
     modules.py
-    /tests
-
-Where the /tests subdirectory containts the nose tests.
-
-
+    test/
+    test/__init__.py
+    test/test_whatever.py
+    
+Where the /test subdirectory containts the python files that nose will
+recognize as tests.
 
 """
-
 
 from __future__ import division
 
@@ -45,7 +46,7 @@ def test(modname,*args,**kwds):
     Purpose:
     ========
     test: Run refcore nosetest suite of tests. The tests are located in the
-    /test directory of the installed modules.
+    test/ directory of the installed modules.
 
     """
 
@@ -53,7 +54,7 @@ def test(modname,*args,**kwds):
         curdir = sys.modules[modname].__file__
         curdir = os.path.abspath(curdir)
         curdir = os.path.dirname(curdir)
-    DIRS=['/tests']
+    DIRS=['/test']
 
     args=[]
     for dirname in DIRS:
