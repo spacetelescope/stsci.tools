@@ -458,7 +458,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                 # go ahead and updateModel, even though it will take longer,
                 # we need it updated for the copy of the dict we make below
         except editpar.UnfoundParamError, pe:
-            tkMessageBox.showwarning(message=pe.message, title="Error in "+\
+            tkMessageBox.showwarning(message=str(pe), title="Error in "+\
                                      os.path.basename(fname))
 
         # This new fname is our current context
@@ -491,7 +491,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                  os.path.basename(tmpObj._original_configspec), keep=2)
         except Exception, ex:
             msg = "Error Determining Defaults"
-            tkMessageBox.showerror(message=msg+'\n\n'+ex.message,
+            tkMessageBox.showerror(message=msg+'\n\n'+str(ex),
                                    title="Error Determining Defaults")
             return
 
@@ -500,7 +500,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         try:
             self.setAllEntriesFromParList(newParList) # needn't updateModel yet
         except editpar.UnfoundParamError, pe:
-            tkMessageBox.showerror(message=pe.message,
+            tkMessageBox.showerror(message=str(pe),
                                    title="Error Setting to Default Values")
 
     def _getGuiSettings(self):
