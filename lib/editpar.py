@@ -1458,4 +1458,4 @@ class EditParDialog(object):
             self._taskParsObj.run(mode='h', _save=1)
         except taskpars.NoExecError, nee:  # catch only this, let all else thru
             showwarning(message="No way found to run task\n\n"+\
-                        nee.message, title="Can Not Run Task")
+                        str(nee), title="Can Not Run Task")
