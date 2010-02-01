@@ -39,9 +39,9 @@ General functions included are:
         The 'prodonly' parameter specifies whether to use products as inputs
             or not; where 'prodonly=no' specifies to only use EXP as inputs.
     isFits(input) - returns (True|False, fitstype), fitstype is one of
-                    ('simple', 'mef', 'waiver') 
-        
-IRAF compatibility functions (abbreviated list):    
+                    ('simple', 'mef', 'waiver')
+
+IRAF compatibility functions (abbreviated list):
     osfn(filename)
         Convert IRAF virtual path name to OS pathname
     show(*args, **kw)
@@ -50,7 +50,7 @@ IRAF compatibility functions (abbreviated list):
         Print current time and date
     access(filename)
         Returns true if file exists, where filename can include IRAF variables
-        
+
 
 """
 from __future__ import division # confidence high
@@ -74,7 +74,7 @@ import time as _time
 # Environment variable handling - based on iraffunctions.py
 # define INDEF, yes, no, EOF, Verbose, userIrafHome
 
-# Set up IRAF-compatible Boolean values    
+# Set up IRAF-compatible Boolean values
 yes = True
 no = False
 
@@ -129,16 +129,16 @@ def isFits(input):
     Returns a tuple (isfits, fitstype)
     isfits - True|False
     fitstype - if True, one of 'waiver', 'mef', 'simple'
-               if False, None 
-    
+               if False, None
+
     Input images which do not have a valid FITS filename will automatically
-    result in a return of (False, None). 
-    
-    For files with 
+    result in a return of (False, None).
+
+    For files with
     In the case that the input has a valid FITS filename but runs into some
     error upon opening, this routine will raise that exception for the calling
-    routine/user to handle.  
-    
+    routine/user to handle.
+
     """
     isfits = False
     fitstype = None
@@ -151,7 +151,7 @@ def isFits(input):
     if isfits:
         try:
             f = None
-            f = pyfits.open(input)
+            f = pyfits.open(input, mode='readonly')
         except Exception, e:
             if f is not None: f.close()
             raise
@@ -163,12 +163,12 @@ def isFits(input):
             except IndexError:
                 #if len(data0.shape) == 2:
                 fitstype = 'simple'
-            
+
         else:
             fitstype = 'mef'
         f.close()
 
-    return isfits, fitstype 
+    return isfits, fitstype
 
 
 def buildRotMatrix(theta):
@@ -452,12 +452,12 @@ def getHeader(filename,handle=None):
             raise ValueError,'Handle must be PyFITS object!'
 
     _hdr = _fimg['PRIMARY'].header.copy()
-    
+
     # if the data is not in the primary array delete NAXIS
     # so that the correct value is read from the extension header
     if _hdr['NAXIS'] == 0:
         del _hdr['NAXIS']
-    
+
     if _extn > 0:
         # Append correct extension/chip/group header to PRIMARY...
         for _card in getExtn(_fimg,_extn).header.ascardlist():
@@ -502,28 +502,28 @@ def buildFITSName(geisname):
 
     return _fitsname
 
-    
-    
+
+
 def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fitsname=None):
     """ Opens file and returns PyFITS object.
-        It will work on both FITS and GEIS formatted images. 
+        It will work on both FITS and GEIS formatted images.
 
         If a GEIS image is used as input, it will convert it to a MEF object
-        and only if 'writefits = True' will write it out to a file. If 
-        'fitsname = None', the name used to write out the new MEF file 
-        will be created using 'buildFITSName()'. 
-        
+        and only if 'writefits = True' will write it out to a file. If
+        'fitsname = None', the name used to write out the new MEF file
+        will be created using 'buildFITSName()'.
+
         If a waiver FITS file is provided, it will raise an Exception.
-        
+
         Parameters:
             filename  - name of input file
             mode      - mode for opening file
             memmap    - switch for using memory mapping
             writefits - if True, will write out GEIS as multi-extension FITS
-                        and return handle to that opened GEIS-derived MEF file 
+                        and return handle to that opened GEIS-derived MEF file
             clobber   - overwrite previously written out GEIS-derived MEF file
             fitsname  - name to use for GEIS-derived MEF file,
-                        if None and writefits==True, 
+                        if None and writefits==True,
                             will use 'buildFITSName()' to generate one
     """
     # Insure that the filename is always fully expanded
@@ -534,15 +534,15 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
     # Extract the rootname and extension specification
     # from input image name
     _fname,_iextn = parseFilename(filename)
-        
-    # Check whether we have a FITS file and if so what type    
+
+    # Check whether we have a FITS file and if so what type
     isfits,fitstype = isFits(_fname)
 
     if isfits:
         if fitstype != 'waiver':
             # Open the FITS file
             fimg = pyfits.open(_fname,mode=mode,memmap=memmap)
-            return fimg    
+            return fimg
         else:
             import convertwaiveredfits
             try:
@@ -572,7 +572,7 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
                     fimg.writeto(fitsname, clobber=clobber)
                     if dqexists:
                         print 'Writing out WAIVERED as MEF to ',dqfitsname
-                        dqfile.writeto(dqfitsname, clobber=clobber)                        
+                        dqfile.writeto(dqfitsname, clobber=clobber)
             # Now close input GEIS image, and open writable
             # handle to output FITS image instead...
             fimg.close()
@@ -590,7 +590,7 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
             fimg =  readgeis.readgeis(_fname)
         except:
             raise IOError("Could not open GEIS input:",_fname)
-        
+
         #check for the existence of a data quality file
         _dqname = buildNewRootname(_fname, extn='.c1h')
         dqexists = os.path.exists(_dqname)
@@ -600,9 +600,9 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
                 dqfitsname = buildFITSName(_dqname)
             except:
                 print "Could not read data quality file %s" % _dqname
-        
+
         # Check to see if user wanted to update GEIS header.
-        # or write out a multi-extension FITS file and return a handle to it            
+        # or write out a multi-extension FITS file and return a handle to it
         if writefits:
                 # User wants to make a FITS copy and update it
                 # using the filename they have provided
@@ -616,7 +616,7 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
                     fimg.writeto(fitsname, clobber=clobber)
                     if dqexists:
                         print 'Writing out GEIS as MEF to ',dqfitsname
-                        dqfile.writeto(dqfitsname, clobber=clobber)                        
+                        dqfile.writeto(dqfitsname, clobber=clobber)
             # Now close input GEIS image, and open writable
             # handle to output FITS image instead...
             fimg.close()
@@ -642,15 +642,15 @@ def parseFilename(filename):
     else:
         _fname = filename
         _extn = None
-    
+
     return _fname,_extn
 
 def parseExtn(extn=None):
-    """ 
+    """
     Parse a string representing a qualified fits extension name as in the
     output of parseFilename and return a tuple (str(extname), int(extver)),
-    which can be passed to pyfits functions using the 'ext' kw. 
-    Default return is the first extension in a fits file. 
+    which can be passed to pyfits functions using the 'ext' kw.
+    Default return is the first extension in a fits file.
     >>>parseExtn('sci,2')
     ('sci', 2)
     >>>parseExtn('2')
@@ -660,12 +660,12 @@ def parseExtn(extn=None):
     """
     if not extn:
         return ('', 0)
-    
+
     try:
         lext = extn.split(',')
     except:
         return ('', 1)
-    
+
     if len(lext) == 1 and lext[0].isdigit():
         return ("", int(lext[0]))
     elif len(lext) == 2:
@@ -679,7 +679,7 @@ def getExtn(fimg,extn=None):
         extension specified in filename.
         Defaults to returning the first extension with
             data or the primary extension, if none have data.
-        If a non-existent extension has been specified, 
+        If a non-existent extension has been specified,
             it raises a KeyError exception.
     """
     # If no extension is provided, search for first extension
@@ -696,7 +696,7 @@ def getExtn(fimg,extn=None):
         # An extension was provided, so parse it out...
         if repr(extn).find(',') > 1:
             if isinstance(extn,tuple):
-                # We have a tuple possibly created by parseExtn(), so 
+                # We have a tuple possibly created by parseExtn(), so
                 # turn it into a list for easier manipulation.
                 _extns = list(extn)
                 if '' in _extns:
@@ -734,7 +734,7 @@ def getExtn(fimg,extn=None):
                     for hdu in fimg:
                         isimg = isinstance(hdu,pyfits.ImageHDU)
                         if isimg and extn.lower() == hdu.header['extname'].lower():
-                            print 
+                            print
                             _nextn = i
                             break
                         i += 1
@@ -885,8 +885,8 @@ def _remove(file):
             os.remove(file[:-1]+'d')
 
 def removeFile(inlist):
-    """ Utility function for deleting a list of files or a single file. 
-        This function will automatically delete both files of a 
+    """ Utility function for deleting a list of files or a single file.
+        This function will automatically delete both files of a
             GEIS image, just like 'iraf.imdelete'.
     """
     if type(inlist) != types.StringType:
@@ -1069,10 +1069,10 @@ def envget(var,default=None):
     if 'pyraf' in sys.modules:
         #ONLY if pyraf is already loaded, import iraf into the namespace
         from pyraf import iraf
-    else: 
+    else:
         # else set iraf to None so it knows to not use iraf's environment
         iraf = None
-    
+
     try:
         if iraf:
             return iraf.envget(var)
@@ -1127,7 +1127,7 @@ def defvar(varname):
     if 'pyraf' in sys.modules:
         #ONLY if pyraf is already loaded, import iraf into the namespace
         from pyraf import iraf
-    else: 
+    else:
         # else set iraf to None so it knows to not use iraf's environment
         iraf = None
 
