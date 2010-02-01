@@ -85,7 +85,7 @@ EXTLIST =  ['_crj.fits','_flt.fits','_sfl.fits','_cal.fits','_raw.fits','.c0h','
 
 BLANK_ASNDICT = {'output':None,'order':[],'members':{'abshift':no,'dshift':no}}
 
-__version__ = '1.3.2 (04-Nov-2008)'
+__version__ = '1.3.3 (1-Feb-2010)'
 
 def help():
     print __doc__
@@ -126,34 +126,35 @@ def getDate():
 
 def isFits(input):
     """
-    Always returns a tuple (isfits, fitstype)
+    Returns a tuple (isfits, fitstype)
     isfits - True|False
     fitstype - if True, one of 'waiver', 'mef', 'simple'
                if False, None 
-               if None, Exception description
     
     Input images which do not have a valid FITS filename will automatically
     result in a return of (False, None). 
     
+    For files with 
     In the case that the input has a valid FITS filename but runs into some
-    error upon opening, this routine will return a value of 'isfits = None' along
-    with the Exception strings as the 'fitstype'.  
-    
+    error upon opening, this routine will raise that exception for the calling
+    routine/user to handle.  
     
     """
     isfits = False
     fitstype = None
     names = ['fits','fit', 'FITS','FIT']
     #determine if input is a fits file based on extension
-    isfits = True in [l in input for l in names]
+    # Only check type of FITS file if filename ends in valid FITS string
+    isfits = True in [input.endswith(l) for l in names]
     # if input is a fits file determine what kind of fits it is
     #waiver fits len(shape) == 3
     if isfits:
         try:
+            f = None
             f = pyfits.open(input)
         except Exception, e:
-            f.close()
-            return None, str(type(e))+e.args[0]+' for '+input
+            if f is not None: f.close()
+            raise
         data0 = f[0].data
         if data0 != None:
             try:
