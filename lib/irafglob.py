@@ -3,9 +3,12 @@ License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 """
 from __future__ import division # confidence high
 import glob
-
+try:
+    from fileutil import osfn # added to provide interpretation of environment variables
+except:
+    osfn = None
 __author__ = 'Paul Barrett'
-__version__ = '1.0'
+__version__ = '1.1'
 
 def irafglob(inlist, atfile=None):
     """ Returns a list of filenames based on the type of IRAF input.
@@ -44,6 +47,8 @@ def irafglob(inlist, atfile=None):
             flist += irafglob(f)
     else:
         #  shell globbing
+        if osfn:
+            inlist = osfn(inlist)
         flist = glob.glob(inlist)
 
     return flist
