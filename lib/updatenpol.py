@@ -177,28 +177,35 @@ def find_d2ifile(flist,detector):
     """ Search a list of files for one that matches the detector specified
     """
     d2ifile = None
+    d2idate = None
     for f in flist:
-        fimg = pyfits.open(f)
-        fdet = fimg[0].header['detector'] 
-        fimg.close()
+        fdet = pyfits.getval(f,'detector') 
         if fdet == detector:
-            d2ifile = f
-            break
+            fdate = fu.convertDate(pyfits.getval(f,'DATE'))
+            if d2idate is None or fdate > d2idate:
+                d2idate = fdate
+                d2ifile = f
     return d2ifile
         
 def find_npolfile(flist,detector,filters):
     """ Search a list of files for one that matches the configuration 
         of detector and filters used.
     """      
+    npolfile = None
+    npoldate = None
     for f in flist:
-        print 'Getting header from NPOLFILE ',f
-        phdr = pyfits.getheader(f)
-        if phdr['detector'] == detector:
-            if phdr['filter1'] == 'ANY' or \
-             (phdr['filter1'] == filters[0] and phdr['filter2'] == filters[1]):
-                del phdr # (probably unnecessary) clean up
-                return f
-    return None
+        fdet = pyfits.getval(f,'detector')
+        if fdet == detector:
+            filt1 = pyfits.getval(f,'filter1')
+            filt2 = pyfits.getval(f,'filter2')
+            fdate = pyfits.getval(f,'date')
+            if filt1 == 'ANY' or \
+             (filt1 == filters[0] and filt2 == filters[1]):
+                ddate = fu.convertDate(fdate)
+                if npoldate is None or ddate > npoldate:
+                    npoldate = ddate
+                    npolfile = f
+    return npolfile
 
 if __name__ == "__main__":
 
