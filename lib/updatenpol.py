@@ -22,10 +22,17 @@
                 Option:
 
                 -h
-                        print the help (this text)
+                    print the help (this text)
                 -l
-                        if specified, copy NPOLFILEs and D2IMFILEs to
-                        local directory for use with the input files
+                    if specified, copy NPOLFILEs and D2IMFILEs to
+                    local directory for use with the input files
+                -i
+                    if specified, the program will interactively request
+                    the exact names of the NPOLFILE and D2IMFILE reference files
+                    to be used for updating the header of each file. The value of
+                    'refdir' will be ignored in interactive mode.
+                    ===> WARNING: 
+                         It will ask for this information for EACH separate INPUT file. 
 
         Examples:
             updatenpol *flt.fits myjref$
@@ -58,7 +65,7 @@ import pyfits
 from pytools import fileutil as fu
 from pytools import parseinput
 
-def update(input,refdir,local=None):
+def update(input,refdir,local=None,interactive=False):
     """ 
     Purpose
     =======    
@@ -87,17 +94,22 @@ def update(input,refdir,local=None):
     `local`: boolean
                 Specifies whether or not to copy new reference files to local
                 directory for use with the input files
+    `interactive': boolean 
+                Specifies whether or not to interactively ask the user for the
+                exact names of the new reference files instead of automatically
+                searching a directory for them.
     """ 
     # expand (as needed) the list of input files
     files,output = parseinput.parseinput(input)
 
-    # expand reference directory name (if necessary) to 
-    # interpret IRAF or environment variable names
-    rdir = fu.osfn(refdir)
-    ngeofiles,ngout = parseinput.parseinput(rdir+'*npl.fits')
-    # Find D2IMFILE in refdir for updating input file header as well
-    d2ifiles,d2iout = parseinput.parseinput(rdir+"*d2i.fits")
-    
+    if not interactive:
+        # expand reference directory name (if necessary) to 
+        # interpret IRAF or environment variable names
+        rdir = fu.osfn(refdir)
+        ngeofiles,ngout = parseinput.parseinput(rdir+'*npl.fits')
+        # Find D2IMFILE in refdir for updating input file header as well
+        d2ifiles,d2iout = parseinput.parseinput(rdir+"*d2i.fits")
+
     # Now, build a matched list of input files and DGEOFILE reference files
     # to use for selecting the appropriate new reference file from the 
     # refdir directory. 
@@ -110,13 +122,18 @@ def update(input,refdir,local=None):
         fdet = phdr['detector']
         # get header of DGEOFILE 
         dhdr = pyfits.getheader(fu.osfn(phdr['DGEOFILE']))
-        # search all new NPOLFILEs for one that matches current DGEOFILE config
-        npol = find_npolfile(ngeofiles,fdet,[phdr['filter1'],phdr['filter2']])
+        if not interactive:
+            # search all new NPOLFILEs for one that matches current DGEOFILE config
+            npol = find_npolfile(ngeofiles,fdet,[phdr['filter1'],phdr['filter2']])
+        else:
+            npol = raw_input("Enter name of NPOLFILE for %s:"%f)
+            if npol == "": npol = None
+            
         if npol is None:
             errstr =  "No valid NPOLFILE found in "+rdir+" for detector="+fdet+"\n"
             errstr += " filters = "+phdr['filter1']+","+phdr['filter2']
             raise ValueError,errstr
-
+            
         npolname = os.path.split(npol)[1]
         if local:
             npolname = os.path.join(fdir,npolname)
@@ -128,7 +145,12 @@ def update(input,refdir,local=None):
         phdr.update('NPOLFILE',npolname,comment="Non-polynomial corrections in Paper IV LUT")
 
         # Now find correct D2IFILE
-        d2i = find_d2ifile(d2ifiles,fdet)
+        if not interactive:
+            d2i = find_d2ifile(d2ifiles,fdet)
+        else:
+            d2i = raw_input("Enter name of D2IMFILE for %s:"%f)
+            if d2i == "": d2i = None
+            
         if d2i is None:
             print '=============\nWARNING:'
             print "    No valid D2IMFILE found in "+rdir+" for detector ="+fdet
@@ -183,7 +205,7 @@ if __name__ == "__main__":
     import getopt
 
     try:
-        optlist, args = getopt.getopt(sys.argv[1:], 'hl')
+        optlist, args = getopt.getopt(sys.argv[1:], 'hli')
     except getopt.error, e:
         print str(e)
         print __doc__
@@ -192,6 +214,7 @@ if __name__ == "__main__":
     # initialize default values
     help = 0
     local = False
+    interactive = False
     
     # read options
     for opt, value in optlist:
@@ -199,12 +222,14 @@ if __name__ == "__main__":
             help = 1
         if opt == "-l":
             local = True
+        if opt == "-i":
+            interactive = True
 
     if (help):
         print __doc__
         print "\t", __version__+'('+__vdate__+')'
     else:
-        update(args[:-1],args[-1],local=local)
+        update(args[:-1],args[-1],local=local,interactive=interactive)
 
 """
 
