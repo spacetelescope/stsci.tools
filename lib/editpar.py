@@ -214,9 +214,9 @@ class EditParDialog(object):
 
         # make up, down arrows and return/shift-return do same as Tab, Shift-Tab
         top.bind('<Up>', self.focusPrev)
-        top.bind('<MouseWheel>', self.mwl)
-        top.bind('<Button-4>', self.mwl)
-        top.bind('<Button-5>', self.mwl)
+        top.bind('<MouseWheel>', self.mwl) # on OSX, rolled up or down
+        top.bind('<Button-4>', self.mwl)   # on Linux, rolled up
+        top.bind('<Button-5>', self.mwl)   # on Linux, rolled down
         top.bind('<Down>', self.focusNext)
         top.bind('<Shift-Return>', self.focusPrev)
         top.bind('<Return>', self.focusNext)
@@ -380,9 +380,13 @@ class EditParDialog(object):
         return self._taskParsObj
 
     def mwl(self, event):
-        """Mouse Wheel"""
-#       print "MOUSE WHEEL!"
-        return
+        """Mouse Wheel - under Tkinter we seem to need Tk v8.5+ for this """
+        if event.num == 4:
+            self.top.f.canvas.yview_scroll(-1, 'units')
+        elif event.num == 5:
+            self.top.f.canvas.yview_scroll(1, 'units')
+        else: # assume event.delta has the direction, but reversed sign
+            self.top.f.canvas.yview_scroll(-(event.delta), 'units')
 
 # A bug appeared in Python 2.3 that caused tk_focusNext and
 # tk_focusPrev to fail. The follwoing two routines now will
