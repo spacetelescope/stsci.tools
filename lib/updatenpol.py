@@ -3,14 +3,14 @@
 # $Id: readgeis.py 8609 2010-01-19 16:22:48Z dencheva $
 
 """
-    update_npol:  Update the header of ACS file(s) with the names of new
+    updatenpol:  Update the header of ACS file(s) with the names of new
                 NPOLFILE and D2IMFILE reference files for use with the 
                 C version of MultiDrizzle.
     
         License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
         
         Usage:
-            update_npol [options] input refdir
+            updatenpol [options] input refdir
             
                 'input' is the specification of the files to be updated, either
                 as a single filename, an ASN table name, or wild-card specification
@@ -28,22 +28,22 @@
                         local directory for use with the input files
 
         Examples:
-            update_npol *flt.fits myjref$
+            updatenpol *flt.fits myjref$
             
             This command will update all the FLT files in the current directory
             with the new NPOLFILE and D2IMFILE reference files found in the 'myjref' 
             directory as defined in the environment.  
     
         Python Syntax:
-            >>> import update_npol
-            >>> update_npol.update('*flt.fits','myjref$')
+            >>> import updatenpol
+            >>> updatenpol.update('*flt.fits','myjref$')
             
             Another use under Python would be to feed it a specific list of files
             to be updated using:
-            >>> update_npol.update(['file1_flt.fits','file2_flt.fits'],'myjref$')
+            >>> updatenpol.update(['file1_flt.fits','file2_flt.fits'],'myjref$')
             
             Files in another directory can also be processed using:
-            >>> update_npol.update('data$*flt.fits','../new/ref/')
+            >>> updatenpol.update('data$*flt.fits','../new/ref/')
             
 """
 
@@ -68,8 +68,8 @@ def update(input,refdir,local=None):
     
     Example
     =======
-    >>>import update_npol
-    >>>update_npol.update('j8bt06010_asn.fits', 'myref$')
+    >>>import updatenpol
+    >>>updatenpol.update('j8bt06010_asn.fits', 'myref$')
     
     :Parameters:
 
