@@ -534,9 +534,9 @@ class TestStpyfitsFunctions(unittest.TestCase):
         hdu = stpyfits.ImageHDU()
         self.assertEqual(hdu.header._hdutype,stpyfits.st_ImageHDU)
         hdu1 = pyfits.ImageHDU()
-        self.assertEqual(hdu1.header._hdutype,pyfits.NP_pyfits.ImageHDU)
+        self.assertEqual(hdu1.header._hdutype,pyfits.core.ImageHDU)
         self.assertEqual(type(hdu),stpyfits.st_ImageHDU)
-        self.assertEqual(type(hdu1),pyfits.NP_pyfits.ImageHDU)
+        self.assertEqual(type(hdu1),pyfits.core.ImageHDU)
 
     def testPrimaryHDUConstructor(self):
         """Test the PrimaryHDU constructor in both the pyfits and stpyfits 
@@ -846,7 +846,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         hdul.writeto('new.fits', clobber=True)
 
         hdul = stpyfits.open('new.fits', 'update')
-        d = np.arange(10)
+        d = np.arange(10,dtype=np.int32)
         d = d*0
         d = d+3
         hdul[0].data = d
@@ -909,7 +909,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         hdul2.close()
         
         hdul3 = stpyfits.open('new.fits', 'update')
-        d = np.arange(15)
+        d = np.arange(15, dtype=np.int32)
         d = d*0
         d = d+4
         hdul3[0].data = d
