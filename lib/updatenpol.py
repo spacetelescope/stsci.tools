@@ -106,9 +106,9 @@ def update(input,refdir,local=None,interactive=False):
         # expand reference directory name (if necessary) to 
         # interpret IRAF or environment variable names
         rdir = fu.osfn(refdir)
-        ngeofiles,ngout = parseinput.parseinput(rdir+'*npl.fits')
+        ngeofiles,ngout = parseinput.parseinput(os.path.join(rdir,'*npl.fits'))
         # Find D2IMFILE in refdir for updating input file header as well
-        d2ifiles,d2iout = parseinput.parseinput(rdir+"*d2i.fits")
+        d2ifiles,d2iout = parseinput.parseinput(os.path.join(rdir,"*d2i.fits"))
 
     # Now, build a matched list of input files and DGEOFILE reference files
     # to use for selecting the appropriate new reference file from the 
@@ -206,6 +206,10 @@ def find_npolfile(flist,detector,filters):
                     npoldate = ddate
                     npolfile = f
     return npolfile
+
+def help():
+    print 'updatenpol Version ',__version__+__vdate__
+    print update.__doc__
 
 if __name__ == "__main__":
 
