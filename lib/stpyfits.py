@@ -20,7 +20,7 @@ try:
 except:
    raise RuntimeError, "The numpy array package is required for use."
 
-__version__ = '1.0' + '/' + pyfits.__version__
+__version__ = '1.0.1' + '/' + pyfits.__version__
 
 if pyfits.__doc__:
     __doc__ = __doc__ + pyfits.__doc__
@@ -30,7 +30,8 @@ class st_HDUList(pyfits.HDUList):
     A class that extends the pyfits.HDUList class to extend its behavior to
     implement STScI specific extensions to Pyfits.
 
-    Base Class methods reimplemented: writeto, __getitem__, and flush.
+    Base Class methods reimplemented: writeto, __getitem__, insert, append,
+    and flush.
 
     The pyfits.HDUList class is:
 
@@ -59,6 +60,18 @@ class st_HDUList(pyfits.HDUList):
         pyfits.HDUList.flush(self, output_verify, verbose, classExtensions)
 
     flush.__doc__ = pyfits.HDUList.flush.__doc__
+
+    def insert(self, index, hdu, classExtensions={}):
+        _assignSt_pyfitsClassExtensions(classExtensions)
+        pyfits.HDUList.insert(self, index, hdu, classExtensions)
+
+    insert.__doc__ = pyfits.HDUList.insert.__doc__
+
+    def append(self, hdu, classExtensions={}):
+        _assignSt_pyfitsClassExtensions(classExtensions)
+        pyfits.HDUList.append(self, hdu, classExtensions)
+
+    insert.__doc__ = pyfits.HDUList.append.__doc__
 
 HDUList = st_HDUList
 
