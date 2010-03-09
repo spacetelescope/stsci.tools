@@ -141,7 +141,7 @@ def update(input,refdir,local=None,interactive=False):
             if os.path.exists(npolname): os.remove(npolname)
             shutil.copy(npol,npolname)
         else:
-            npolname = refdir+npolname
+            npolname = os.path.join(refdir,npolname)
         phdr.update('NPOLFILE',npolname,comment="Non-polynomial corrections in Paper IV LUT")
 
         # Now find correct D2IFILE
@@ -165,7 +165,7 @@ def update(input,refdir,local=None,interactive=False):
                 if os.path.exists(d2iname): os.remove(d2iname)
                 shutil.copy(d2i,d2iname)
             else:
-                d2iname = refdir+d2iname
+                d2iname = os.path.join(refdir,d2iname)
             
         phdr.update('D2IMFILE',d2iname,comment="Column correction table")
 
