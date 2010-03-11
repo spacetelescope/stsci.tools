@@ -79,6 +79,13 @@
                 and FILTNAM1 (or their very existence).
 
 
+        fitsdiff commandline arguments can also be set using the
+        environment variable FITSDIFF_SETTINGS.  If the
+        FITSDIFF_SETTINGS environment variable is present, each
+        argument present will override the corresponding argument on
+        the commandline.  This environment variable exists to make it
+        easier to change the behavior of fitsdiff on a global level,
+        such as in a set of regression tests.
 """
 import numerixenv
 numerixenv.check()
@@ -87,7 +94,7 @@ numerixenv.check()
 # Developed by Science Software Group, STScI, USA.
 __version__ = "1.4 (23 August 2006)"
 
-import sys, types
+import os, sys, types
 import pyfits
 import numpy as num
 from numpy import char
@@ -682,6 +689,11 @@ def main() :
         print __doc__
         print "\t", __version__
 
+    if 'FITSDIFF_SETTINGS' in os.environ:
+        optlist_argv = os.environ['FITSDIFF_SETTINGS'].split()
+        optlist_env, optlist_args = getopt.getopt(optlist_argv, 'c:k:f:n:d:o:bh')
+        optlist += optlist_env
+        
     # initialize default values
     help = 0
     comment_excl_list = ''
