@@ -288,7 +288,7 @@ class EditParDialog(object):
         # Scrollregion is based upon the full size of the entry Frame
         canvas.config(scrollregion=(0, 0, width, height))
         # Smooth scroll
-        self.yscrollincrement = 50
+        self.yscrollincrement = 5 # changed Mar2010, had been 50 a long time
         canvas.config(yscrollincrement=self.yscrollincrement)
 
         # Set the actual viewable region for the Canvas
