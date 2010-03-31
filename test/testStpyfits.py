@@ -39,19 +39,19 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(output,["Filename: o4sp040b0_raw.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
         "0    PRIMARY     PrimaryHDU     215  ()            int16\n",
-        "1    SCI         ImageHDU       143  (1062, 1044)  int16\n",
-        "2    ERR         ImageHDU        71  (1062, 1044)  int16\n",
-        "3    DQ          ImageHDU        71  (1062, 1044)  int16\n",
-        "4    SCI         ImageHDU       143  (1062, 1044)  int16\n",
-        "5    ERR         ImageHDU        71  (1062, 1044)  int16\n",
-        "6    DQ          ImageHDU        71  (1062, 1044)  int16\n",
+        "1    SCI         ImageHDU       141  (62, 44)      int16\n",
+        "2    ERR         ImageHDU        71  (62, 44)      int16\n",
+        "3    DQ          ImageHDU        71  (62, 44)      int16\n",
+        "4    SCI         ImageHDU       141  (62, 44)      int16\n",
+        "5    ERR         ImageHDU        71  (62, 44)      int16\n",
+        "6    DQ          ImageHDU        71  (62, 44)      int16\n",
         "Filename: o4sp040b0_raw.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
         "0    PRIMARY     PrimaryHDU     215  ()            int16\n",
-        "1    SCI         ImageHDU       143  (1062, 1044)  int16\n",
+        "1    SCI         ImageHDU       141  (62, 44)      int16\n",
         "2    ERR         ImageHDU        71  ()            int16\n",
         "3    DQ          ImageHDU        71  ()            int16\n",
-        "4    SCI         ImageHDU       143  (1062, 1044)  int16\n",
+        "4    SCI         ImageHDU       141  (62, 44)      int16\n",
         "5    ERR         ImageHDU        71  ()            int16\n",
         "6    DQ          ImageHDU        71  ()            int16\n",
         "Filename: cdva2.fits\n",
@@ -176,8 +176,8 @@ class TestStpyfitsFunctions(unittest.TestCase):
 
         self.assertEqual(hd['NAXIS'],2)
         self.assertEqual(hd1['NAXIS'],0)
-        self.assertEqual(hd['NAXIS1'],1062)
-        self.assertEqual(hd['NAXIS2'],1044)
+        self.assertEqual(hd['NAXIS1'],62)
+        self.assertEqual(hd['NAXIS2'],44)
 
         try:
             val = hd1['NAXIS1']
@@ -211,8 +211,8 @@ class TestStpyfitsFunctions(unittest.TestCase):
             self.fail(
              "expected a KeyError exception for NPIX2 in stpyfits namespace")
 
-        self.assertEqual(hd1['NPIX1'],1062)
-        self.assertEqual(hd1['NPIX2'],1044)
+        self.assertEqual(hd1['NPIX1'],62)
+        self.assertEqual(hd1['NPIX2'],44)
 
     def testGetDataConvienceFunction(self):
         """Test the getdata convience function in both the pyfits and 
