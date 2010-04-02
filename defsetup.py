@@ -1,6 +1,6 @@
 from __future__ import division # confidence high
 
-pkg = "pytools"
+pkg = [ 'pytools', 'pytools.tests' ]
 
 setupargs = {
 
@@ -11,6 +11,7 @@ setupargs = {
     'license' :         "http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE",
     'platforms' :       ["Linux","Solaris","Mac OS X","Win"],
     'scripts' :         [ 'lib/fitsdiff','lib/convertwaiveredfits','lib/updatenpol.py'] ,
-                    
+    'package_dir' :     { 'pytools' : 'lib', 'pytools.tests' : 'lib/tests' },
+    'data_files' :      [ ( 'pytools/tests', [ 'lib/tests/*.fits' ] ) ],
     }
 

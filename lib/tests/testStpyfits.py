@@ -6,6 +6,9 @@ import pytools.stpyfits as stpyfits
 import pyfits
 import numpy as np
 import exceptions,os,sys
+import os.path
+
+test_dir = os.path.dirname(__file__) + "/"
 
 class TestStpyfitsFunctions(unittest.TestCase):
 
@@ -25,10 +28,10 @@ class TestStpyfitsFunctions(unittest.TestCase):
 
         tmpfile = open(self.tmpfilename,'w')
         sys.stdout = tmpfile
-        stpyfits.info('o4sp040b0_raw.fits')
-        pyfits.info('o4sp040b0_raw.fits')
-        stpyfits.info('cdva2.fits')
-        pyfits.info('cdva2.fits')
+        stpyfits.info(test_dir+'o4sp040b0_raw.fits')
+        pyfits.info(test_dir+'o4sp040b0_raw.fits')
+        stpyfits.info(test_dir+'cdva2.fits')
+        pyfits.info(test_dir+'cdva2.fits')
         sys.stdout = sys.__stdout__
         tmpfile.close()
         tmpfile = open(self.tmpfilename,'r')
@@ -36,7 +39,8 @@ class TestStpyfitsFunctions(unittest.TestCase):
         tmpfile.close()
         os.remove(self.tmpfilename)
 
-        self.assertEqual(output,["Filename: o4sp040b0_raw.fits\n",
+        self.assertEqual(output,[
+        "Filename: "+test_dir+"o4sp040b0_raw.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
         "0    PRIMARY     PrimaryHDU     215  ()            int16\n",
         "1    SCI         ImageHDU       141  (62, 44)      int16\n",
@@ -45,7 +49,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         "4    SCI         ImageHDU       141  (62, 44)      int16\n",
         "5    ERR         ImageHDU        71  (62, 44)      int16\n",
         "6    DQ          ImageHDU        71  (62, 44)      int16\n",
-        "Filename: o4sp040b0_raw.fits\n",
+        "Filename: "+test_dir+"o4sp040b0_raw.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
         "0    PRIMARY     PrimaryHDU     215  ()            int16\n",
         "1    SCI         ImageHDU       141  (62, 44)      int16\n",
@@ -54,19 +58,20 @@ class TestStpyfitsFunctions(unittest.TestCase):
         "4    SCI         ImageHDU       141  (62, 44)      int16\n",
         "5    ERR         ImageHDU        71  ()            int16\n",
         "6    DQ          ImageHDU        71  ()            int16\n",
-        "Filename: cdva2.fits\n",
+        "Filename: "+test_dir+"cdva2.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
         "0    PRIMARY     PrimaryHDU       7  (10, 10)      int32\n",
-        "Filename: cdva2.fits\n",
+        "Filename: "+test_dir+"cdva2.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
         "0    PRIMARY     PrimaryHDU       7  ()            int32\n"])
+
 
     def testOpenConvienceFunction(self):
         """Test the open convience function in both the pyfits and stpyfits 
            namespace."""
 
-        hdul = stpyfits.open('cdva2.fits')
-        hdul1 = pyfits.open('cdva2.fits')
+        hdul = stpyfits.open(test_dir+'cdva2.fits')
+        hdul1 = pyfits.open(test_dir+'cdva2.fits')
 
         self.assertEqual(hdul[0].header['NAXIS'],2)
         self.assertEqual(hdul1[0].header['NAXIS'],0)
@@ -128,8 +133,8 @@ class TestStpyfitsFunctions(unittest.TestCase):
         """Test the getheader convience function in both the pyfits and 
            stpyfits namespace."""
 
-        hd = stpyfits.getheader('cdva2.fits')
-        hd1 = pyfits.getheader('cdva2.fits')
+        hd = stpyfits.getheader(test_dir+'cdva2.fits')
+        hd1 = pyfits.getheader(test_dir+'cdva2.fits')
 
         self.assertEqual(hd['NAXIS'],2)
         self.assertEqual(hd1['NAXIS'],0)
@@ -171,8 +176,8 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hd1['NPIX1'],10)
         self.assertEqual(hd1['NPIX2'],10)
 
-        hd = stpyfits.getheader('o4sp040b0_raw.fits',2)
-        hd1 = pyfits.getheader('o4sp040b0_raw.fits',2)
+        hd = stpyfits.getheader(test_dir+'o4sp040b0_raw.fits',2)
+        hd1 = pyfits.getheader(test_dir+'o4sp040b0_raw.fits',2)
 
         self.assertEqual(hd['NAXIS'],2)
         self.assertEqual(hd1['NAXIS'],0)
@@ -218,7 +223,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         """Test the getdata convience function in both the pyfits and 
            stpyfits namespace."""
 
-        d = stpyfits.getdata('cdva2.fits')
+        d = stpyfits.getdata(test_dir+'cdva2.fits')
         self.assertEqual(d.all(), np.array([[1,1,1,1,1,1,1,1,1,1],
                                             [1,1,1,1,1,1,1,1,1,1],
                                             [1,1,1,1,1,1,1,1,1,1],
@@ -232,7 +237,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
                                             dtype=np.int32).all())
 
         try:
-            d1 = pyfits.getdata('cdva2.fits')
+            d1 = pyfits.getdata(test_dir+'cdva2.fits')
         except IndexError:
             pass
         else:
@@ -243,8 +248,8 @@ class TestStpyfitsFunctions(unittest.TestCase):
         """Test the getval convience function in both the pyfits and 
            stpyfits namespace."""
 
-        val = stpyfits.getval('cdva2.fits','NAXIS',0)
-        val1 = pyfits.getval('cdva2.fits','NAXIS',0)
+        val = stpyfits.getval(test_dir+'cdva2.fits','NAXIS',0)
+        val1 = pyfits.getval(test_dir+'cdva2.fits','NAXIS',0)
         self.assertEqual(val, 2)
         self.assertEqual(val1,0)
 
@@ -252,8 +257,8 @@ class TestStpyfitsFunctions(unittest.TestCase):
         """Test the writeto convience function in both the pyfits and stpyfits 
            namespace."""
 
-        hdul = stpyfits.open('cdva2.fits')
-        hdul1 = pyfits.open('cdva2.fits')
+        hdul = stpyfits.open(test_dir+'cdva2.fits')
+        hdul1 = pyfits.open(test_dir+'cdva2.fits')
 
         stpyfits.writeto('new.fits',hdul[0].data,hdul[0].header,clobber=True)
         pyfits.writeto('new1.fits',hdul1[0].data,hdul1[0].header,clobber=True)
@@ -292,8 +297,8 @@ class TestStpyfitsFunctions(unittest.TestCase):
         """Test the append convience function in both the pyfits and stpyfits 
            namespace."""
 
-        hdul = stpyfits.open('cdva2.fits')
-        hdul1 = pyfits.open('cdva2.fits')
+        hdul = stpyfits.open(test_dir+'cdva2.fits')
+        hdul1 = pyfits.open(test_dir+'cdva2.fits')
 
         stpyfits.writeto('new.fits',hdul[0].data,hdul[0].header,clobber=True)
         pyfits.writeto('new1.fits',hdul1[0].data,hdul1[0].header,clobber=True)
@@ -415,8 +420,8 @@ class TestStpyfitsFunctions(unittest.TestCase):
         """Test the update convience function in both the pyfits and stpyfits 
            namespace."""
 
-        hdul = stpyfits.open('cdva2.fits')
-        hdul1 = pyfits.open('cdva2.fits')
+        hdul = stpyfits.open(test_dir+'cdva2.fits')
+        hdul1 = pyfits.open(test_dir+'cdva2.fits')
 
         stpyfits.writeto('new.fits',hdul[0].data,hdul[0].header,clobber=True)
 
@@ -976,8 +981,8 @@ class TestStpyfitsFunctions(unittest.TestCase):
         """Test the __getattr__ method of ImageBaseHDU in both the pyfits 
            and stpyfits namespace."""
 
-        hdul = stpyfits.open('cdva2.fits')
-        hdul1 = pyfits.open('cdva2.fits')
+        hdul = stpyfits.open(test_dir+'cdva2.fits')
+        hdul1 = pyfits.open(test_dir+'cdva2.fits')
 
         hdu = hdul[0]
         hdu1 = hdul1[0]

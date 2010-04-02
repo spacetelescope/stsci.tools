@@ -43,6 +43,8 @@ import os
 import os.path
 import sys
 
+pytools_tester_active = False
+
 def test(modname,*args,**kwds):
     """
     Purpose:
@@ -76,9 +78,20 @@ def test(modname,*args,**kwds):
 
     try:
         import nose, nose.core
-        result = nose.run(argv=args)
     except ImportError:
         print "Nose 0.10.4 or greater is required for running tests."
+        raise
+
+    try :
+        pytools_tester_active = True
+
+        result = nose.run(argv=args)
+
+    except :
+        pytools_tester_active = False
+        raise
+
+    pytools_tester_active = False
 
     return result
 

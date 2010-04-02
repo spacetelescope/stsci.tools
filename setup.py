@@ -26,8 +26,7 @@ from distutils.core import setup
 from defsetup import setupargs, pkg
 
 setup(
-    name =              pkg,
-    packages =          [ pkg ],
-    package_dir =       { pkg : 'lib' },
+    name = 'pytools',
+    packages = pkg,
     **setupargs
     )
