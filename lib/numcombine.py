@@ -29,6 +29,8 @@
 #
 
 # Import necessary modules
+from __future__ import division
+
 import numerixenv
 numerixenv.check()
 
@@ -55,11 +57,11 @@ class numCombine:
         # Convert the input arrays to the type of array used by the numerix layer
         for i in range(len(numarrayObjectList)):
             numarrayObjectList[i] = n.asarray(numarrayObjectList[i])
-        
+
         if numarrayMaskList is not None:
             for i in range(len(numarrayMaskList)):
                 numarrayMaskList[i] = n.asarray(numarrayMaskList[i])
-                
+
         # define variables
         self.__numarrayObjectList = numarrayObjectList
         self.__numarrayMaskList = numarrayMaskList
@@ -185,8 +187,8 @@ class numCombine:
             # If we have been given masks we need to reset the mask values to 0 in the image
             if (self.__numarrayMaskList != None):
                 # Reset any pixl at _maxValue + 1 to 0.
-                self.combArrObj = n.where(__maskSum == self.__numObjs, 0, self.combArrObj)            
-                        
+                self.combArrObj = n.where(__maskSum == self.__numObjs, 0, self.combArrObj)
+
 
     def __sumImages(self,numarrayObjectList):
         """ Sum a list of numarray objects. """
