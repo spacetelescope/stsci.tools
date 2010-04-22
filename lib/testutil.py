@@ -1,4 +1,4 @@
-
+from __future__ import division
 import math, time
 import unittest
 import numpy as N
