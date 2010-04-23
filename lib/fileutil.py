@@ -68,7 +68,7 @@ import readgeis
 
 import string,os,types,shutil,copy, re, sys
 import calendar, datetime
-import numpy as N
+import numpy as np
 import time as _time
 
 # Environment variable handling - based on iraffunctions.py
@@ -98,15 +98,15 @@ def help():
 #
 #################
 def DEGTORAD(deg):
-    return (deg * N.pi / 180.)
+    return (deg * np.pi / 180.)
 
 def RADTODEG(rad):
-    return (rad * 180. / N.pi)
+    return (rad * 180. / np.pi)
 
 def DIVMOD(num,val):
-    if isinstance(num,N.ndarray):
+    if isinstance(num,np.ndarray):
     # Treat number as numpy object
-        _num = N.remainder(num,val)
+        _num = np.remainder(num,val)
     else:
         _num = divmod(num,val)[1]
     return _num
@@ -143,6 +143,40 @@ def decimal_date(dateobs,timeobs=None):
     ddate = int(year) + dday
     
     return ddate
+
+def interpretDQvalue(input):
+    """ Converts an integer 'input' into its component bit values as a list of
+        power of 2 integers. 
+        For example, the bit value 1027 would return [1,2,1024]
+    """
+    
+    nbits=16
+    # We will only support integer values up to 2**128
+    for iexp in [16,32,64,128]:
+        # Find out whether the input value is less than 2**iexp
+        if (input // (2**iexp)) == 0:
+            # when it finally is, we have identified how many bits can be used to
+            # describe this input bitvalue
+            nbits = iexp
+            break  
+        
+    # Find out how 'dtype' values are described on this machine
+    a = np.zeros(1,dtype='int16')
+    atype_descr = a.dtype.descr[0][1]
+    # Use this description to build the description we need for our input integer
+    dtype_str = atype_descr[:2]+str(nbits//8)
+    result = np.zeros(nbits+1,dtype=dtype_str)
+
+    # For each bit, determine whether it has been set in the input value or not
+    for n in range(nbits+1):
+        i = 2**n
+        if input & i > 0: 
+            # record which bit has been set as the power-of-2 integer
+            result[n] = i
+            
+    # Return the non-zero unique values as a Python list
+    return np.delete(np.unique(result),0).tolist()
+            
 
 def isFits(input):
     """
@@ -194,9 +228,9 @@ def isFits(input):
 
 def buildRotMatrix(theta):
     _theta = DEGTORAD(theta)
-    _mrot = N.zeros(shape=(2,2),dtype=N.float64)
-    _mrot[0] = (N.cos(_theta),N.sin(_theta))
-    _mrot[1] = (-N.sin(_theta),N.cos(_theta))
+    _mrot = np.zeros(shape=(2,2),dtype=np.float64)
+    _mrot[0] = (np.cos(_theta),np.sin(_theta))
+    _mrot[1] = (-np.sin(_theta),np.cos(_theta))
 
     return _mrot
 
@@ -300,7 +334,7 @@ def buildNewRootname(filename,extn=None,extlist=None):
     _extlist = copy.deepcopy(EXTLIST)
     # Also, add a default where '_dth.fits' replaces
     # whatever extension was there ('.fits','.c1h',...)
-    _extlist.append('.')
+    #_extlist.append('.')
     # Also append any user-specified extensions...
     if extlist:
         _extlist += extlist
@@ -529,12 +563,11 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
     """ Opens file and returns PyFITS object.
         It will work on both FITS and GEIS formatted images. 
 
-        If a GEIS image is used as input, it will convert it to a MEF object
+        If a GEIS or waivered FITS image is used as input, 
+        it will convert it to a MEF object
         and only if 'writefits = True' will write it out to a file. If 
         'fitsname = None', the name used to write out the new MEF file 
         will be created using 'buildFITSName()'. 
-        
-        If a waiver FITS file is provided, it will raise an Exception.
         
         Parameters:
             filename  - name of input file
