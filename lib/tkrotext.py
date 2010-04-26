@@ -19,7 +19,7 @@ class ROText(Tkinter.Text):
 
     def __init__(self, master, **kw):
         """  defer most of __init__ to the base class """
-        self._fbto = master
+        self._fbto = None
         if 'focusBackTo' in kw:
             self._fbto = kw['focusBackTo']
             del kw['focusBackTo']
@@ -28,7 +28,8 @@ class ROText(Tkinter.Text):
         self.bind("<Key>", self.ignoreMostKeys)
         self.bind("<Button-2>", lambda e: "break")
         self.bind("<Button-3>", lambda e: "break")
-        self.bind("<Leave>", self.mouseLeft)
+        if self._fbto:
+            self.bind("<Leave>", self.mouseLeft)
         self.config(insertwidth=0)
 
     # disallow common insert calls, but allow a backdoor when needed
