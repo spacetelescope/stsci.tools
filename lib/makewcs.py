@@ -80,7 +80,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '1.1.4 (30 Oct 2009)'
+__version__ = '1.1.5 (27 Apr 2010)'
 def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -125,7 +125,7 @@ def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
 
         if not quiet:
             print "Input files: ",files
-
+       
         # First get the name of the IDC table
         #idctab = drutil.getIDCFile(_files[0][0],keyword='idctab')[0]
         idctab = drutil.getIDCFile(image,keyword='idctab')[0]
@@ -153,7 +153,7 @@ def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
 
         _detector = fileutil.getKeyword(_phdu, keyword='DETECTOR')                          
         _nimsets = get_numsci(image)
-
+  
         for i in xrange(_nimsets):
             if image.find('.fits') > 0:
                 _img = image+'[sci,'+repr(i+1)+']'
@@ -286,17 +286,17 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     else:
         raise 'Detector ',detector,' Not supported at this time. Exiting...'
 
-    # If ACS get the VAFACTOR, otherwise set to 1.0
+    # Get the VAFACTOR keyword if it exists, otherwise set to 1.0
     # we also need the reference pointing position of the target
     # as this is where
-    VA_fac=1.0
-    if instrument == 'ACS':
-        _va_key = readKeyword(hdr,'VAFACTOR')
-        if _va_key != None: 
-            VA_fac = float(_va_key)
-
-        if not quiet:
-            print 'VA factor: ',VA_fac
+    _va_key = readKeyword(hdr,'VAFACTOR')
+    if _va_key != None: 
+        VA_fac = float(_va_key)
+    else:
+        VA_fac=1.0
+        
+    if not quiet:
+        print 'VA factor: ',VA_fac
 
     #ra_targ = float(readKeyword(hdr,'RA_TARG'))
     #dec_targ = float(readKeyword(hdr,'DEC_TARG'))
