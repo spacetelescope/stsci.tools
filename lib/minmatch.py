@@ -40,7 +40,7 @@ class MinMatchDict(UserDict):
         self.mmkeys = None
         if minkeylength<1: minkeylength = 1
         self.minkeylength = minkeylength
-        if dict:
+        if dict is not None:
             add = self.add
             for key in dict.keys(): add(key,dict[key])
 
@@ -169,6 +169,14 @@ class MinMatchDict(UserDict):
         return self.data.has_key(key)
 
     def update(self, other):
+        # check for missing attrs (needed in python 2.7)
+        if not hasattr(self, 'data'):
+            self.data = {}
+        if not hasattr(self, 'mmkeys'):
+            self.mmkeys = None
+        if not hasattr(self, 'minkeylength'):
+            self.minkeylength = other.minkeylength
+        # now do the update from 'other'
         if type(other) is type(self.data):
             for key in other.keys():
                 self.add(key,other[key])
