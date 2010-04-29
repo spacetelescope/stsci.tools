@@ -10,14 +10,15 @@
         License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
         
         Usage:
-            updatenpol [options] input refdir
+            updatenpol [options] input [refdir]
             
                 'input' is the specification of the files to be updated, either
                 as a single filename, an ASN table name, or wild-card specification
                 of a list of files
                 
                 'refdir' is the name of the directory containing all the new
-                reference files (*_npl.fits and *_d2i.fits files).
+                reference files (*_npl.fits and *_d2i.fits files). 
+                If no directory is given, it will look in 'jref$' by default. 
                 
                 Option:
 
@@ -57,15 +58,15 @@
 from __future__ import division
 __docformat__ = 'restructuredtext'
 
-__version__ = '1.0.0'
-__vdate__ = '1-Feb-2010'
+__version__ = '1.0.1'
+__vdate__ = '29-Apr-2010'
 import os,sys,shutil
 
 import pyfits
 from pytools import fileutil as fu
 from pytools import parseinput
 
-def update(input,refdir,local=None,interactive=False):
+def update(input,refdir="jref$",local=None,interactive=False):
     """ 
     Purpose
     =======    
@@ -155,6 +156,7 @@ def update(input,refdir,local=None,interactive=False):
             print '=============\nWARNING:'
             print "    No valid D2IMFILE found in "+rdir+" for detector ="+fdet
             print "    D2IMFILE correction will not be applied."
+            print '=============\n'
             d2iname = ""
         else:
             d2iname = os.path.split(d2i)[1]
@@ -235,7 +237,8 @@ if __name__ == "__main__":
             local = True
         if opt == "-i":
             interactive = True
-
+    if len(args) < 2:
+        args.append('jref$')
     if (help):
         print __doc__
         print "\t", __version__+'('+__vdate__+')'
