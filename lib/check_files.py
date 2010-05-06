@@ -51,12 +51,48 @@ def checkFiles(filelist,ivmlist = None):
     
     removed_pav3_files = checkPA_V3(newfilelist)
     newfilelist, ivmlist = update_input(newfilelist, ivmlist, removed_pav3_files)
+
+    checkPhotKeywords(newfilelist)
+    newfilelist, ivmlist = update_input(newfilelist, ivmlist,[])
     
     if newfilelist == []:
         return [], []    
             
     return newfilelist, ivmlist
     
+def checkPhotKeywords(filelist):
+        """ Insure that the SCI headers contains all the necessary photometry 
+        keywords, moving them into the extension header if necessary.
+        This only moves keywords from the PRIMARY header if the keywords
+        do not already exist in the SCI header.
+        """
+        PHOTKEYS = ['PHOTFLAM','PHOTPLAM','PHOTBW','PHOTZPT','PHOTMODE']
+        for f in filelist:
+            handle = fileutil.openImage(f,mode='update',memmap=0) 
+            phdr = handle['PRIMARY'].header
+            # Look for all SCI extensions in input file
+            for extn in handle:
+                hdr = extn.header
+                # When we find the SCI extension, check for PHOT keywords
+                if hdr.has_key('extname') and hdr['extname'] == 'SCI':
+                    for pkey in PHOTKEYS:
+                        if not hdr.has_key(pkey):
+                            print 'Keyword ',pkey,' not found in SCI,1 of ',f
+                            # Make sure there is a copy PRIMARY header, if so, copy it 
+                            if phdr.has_key(pkey):
+                                print 'Keyword ',pkey,' found in PRIMARY header.'
+                                # Copy keyword from PRIMARY header
+                                hdr.update(pkey,phdr[pkey])
+                                # then delete it from PRIMARY header to avoid duplication
+                                del phdr[pkey]
+                            else:
+                                # If there is no such keyword to be found, define a default
+                                if pkey != 'PHOTMODE':
+                                    hdr.update(pkey,0.0)
+                                else:
+                                    hdr.update(pkey,'')
+            handle.close()
+
 def checkStisFiles(filelist, ivmlist=None):
     newflist = []
     newilist = []
