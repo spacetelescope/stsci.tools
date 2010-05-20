@@ -80,7 +80,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '1.1.5 (27 Apr 2010)'
+__version__ = '1.1.6 (19 May 2010)'
 def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -335,16 +335,6 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     if not quiet:
         print "-PA_V3 : ",pvt," CHIP #",chip
 
-    # Determine whether to perform time-dependent correction
-    # Construct matrices neded to correct the zero points for TDD
-    if apply_tdd:
-        alpha,beta = mutil.compute_wfc_tdd_coeffs(dateobs)
-        tdd = N.array([[beta, alpha], [alpha, -beta]])
-        mrotp = fileutil.buildRotMatrix(2.234529)/2048.
-
-    else:
-        alpha = 0.0
-        beta = 0.0
 
     # Extract the appropriate information from the IDCTAB
     #fx,fy,refpix,order=fileutil.readIDCtab(idctab,chip=chip,direction='forward',
@@ -357,6 +347,19 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     fy = idcmodel.cy
     refpix = idcmodel.refpix
     order = idcmodel.norder
+
+    # Determine whether to perform time-dependent correction
+    # Construct matrices neded to correct the zero points for TDD
+    if apply_tdd:
+        #alpha,beta = mutil.compute_wfc_tdd_coeffs(dateobs,skew_coeffs)
+        alpha = refpix['TDDALPHA']
+        beta = refpix['TDDBETA']
+        tdd = N.array([[beta, alpha], [alpha, -beta]])
+        mrotp = fileutil.buildRotMatrix(2.234529)/2048.
+
+    else:
+        alpha = 0.0
+        beta = 0.0
 
     # Get the original image WCS
     Old=wcsutil.WCSObject(image,prefix=_prepend)
