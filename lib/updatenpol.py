@@ -58,8 +58,8 @@
 from __future__ import division
 __docformat__ = 'restructuredtext'
 
-__version__ = '1.0.1'
-__vdate__ = '29-Apr-2010'
+__version__ = '1.0.2'
+__vdate__ = '25-May-2010'
 import os,sys,shutil
 
 import pyfits
@@ -100,6 +100,7 @@ def update(input,refdir="jref$",local=None,interactive=False):
                 exact names of the new reference files instead of automatically
                 searching a directory for them.
     """ 
+    print 'UPDATENPOL Version',__version__+'('+__vdate__+')'
     # expand (as needed) the list of input files
     files,output = parseinput.parseinput(input)
 
@@ -142,8 +143,11 @@ def update(input,refdir="jref$",local=None,interactive=False):
             if os.path.exists(npolname): os.remove(npolname)
             shutil.copy(npol,npolname)
         else:
-            npolname = os.path.join(refdir,npolname)
-        phdr.update('NPOLFILE',npolname,comment="Non-polynomial corrections in Paper IV LUT")
+            if '$' in refdir:
+                npolname = refdir+npolname
+            else:
+                npolname = os.path.join(refdir,npolname)
+        phdr.update('NPOLFILE',npolname,comment="Non-polynomial corrections in Paper IV LUT",after='DGEOFILE')
 
         # Now find correct D2IFILE
         if not interactive:
@@ -167,9 +171,12 @@ def update(input,refdir="jref$",local=None,interactive=False):
                 if os.path.exists(d2iname): os.remove(d2iname)
                 shutil.copy(d2i,d2iname)
             else:
-                d2iname = os.path.join(refdir,d2iname)
+                if '$' in refdir:
+                    d2iname = refdir+d2iname
+                else:
+                    d2iname = os.path.join(refdir,d2iname)
             
-        phdr.update('D2IMFILE',d2iname,comment="Column correction table")
+        phdr.update('D2IMFILE',d2iname,comment="Column correction table",after='DGEOFILE')
 
         # Close this input file header and go on to the next
         fimg.close()
