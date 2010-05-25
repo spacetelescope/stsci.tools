@@ -10,7 +10,7 @@ setupargs = {
     'author_email' :    "help@stsci.edu",
     'license' :         "http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE",
     'platforms' :       ["Linux","Solaris","Mac OS X","Win"],
-    'scripts' :         [ 'lib/fitsdiff','lib/convertwaiveredfits','lib/updatenpol.py'] ,
+    'scripts' :         [ 'lib/fitsdiff','lib/convertwaiveredfits','lib/updatenpol'] ,
     'package_dir' :     { 'pytools' : 'lib', 'pytools.tests' : 'lib/tests' },
     'data_files' :      [ ( 'pytools/tests', [ 'lib/tests/*.fits' ] ) ],
     }
