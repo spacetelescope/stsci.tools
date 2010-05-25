@@ -220,7 +220,7 @@ def help():
     print 'updatenpol Version ',__version__+__vdate__
     print update.__doc__
 
-if __name__ == "__main__":
+def main():
 
     import getopt
 
@@ -252,6 +252,8 @@ if __name__ == "__main__":
     else:
         update(args[:-1],args[-1],local=local,interactive=interactive)
 
+if __name__ == "__main__":
+    main()
 """
 
 Copyright (C) 2003 Association of Universities for Research in Astronomy (AURA)
