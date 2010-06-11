@@ -466,7 +466,11 @@ def countInput(input):
     files = parseinput.parseinput(input)
     count = len(files[0])
     for f in files[0]:
-        if (fileutil.isFits(f)[0]) and pyfits.getval(f, 'INSTRUME') == 'STIS':
-            stisCount = stisObsCount(f)
-            count += (stisCount-1)
+        if fileutil.isFits(f)[0]:
+            try:
+                ins = pyfits.getval(f, 'INSTRUME')
+            except: # allow odd fits files; do not stop the count
+                ins = None
+            if ins == 'STIS':
+                count += (stisObsCount(f)-1)
     return count
