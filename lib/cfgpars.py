@@ -56,7 +56,7 @@ def getObjectFromTaskArg(theTask):
     if os.path.isfile(str(theTask)):
         return ConfigObjPars(theTask)
 
-    # Else it must be a package name to load
+    # Else it must be a Python package name to load
     return getParsObjForPyPkg(theTask)
 
 
@@ -162,8 +162,20 @@ def getParsObjForPyPkg(pkgName):
             ftups.sort()
             theFile = ftups[-1][1]
     # Create a stand-in instance from this file.  Force a read-only situation
-    # if we are dealing with the installed (expected to be) unwritable file.
+    # if we are dealing with the installed, (expected to be) unwritable file.
     return ConfigObjPars(theFile, associatedPkg=thePkg, forceReadOnly=noLocals)
+
+
+def getUsrCfgFilesForPyPkg(pkgName):
+    """ See if the user has one of their own local .cfg files for this task, 
+        such as might be created automatically during the save of a read-only
+        package, and return their names. """
+    # Get the python package and it's .cfg file
+    thePkg, theFile = findCfgFileForPkg(pkgName, '.cfg')
+    # See if the user has any of their own local .cfg files for this task
+    tname = getEmbeddedKeyVal(theFile, '_task_name_')
+    flist = getCfgFilesInDirForTask(getAppDir(), tname)
+    return flist
 
 
 def checkSetReadOnly(fname, raiseOnErr = False):
