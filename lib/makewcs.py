@@ -80,7 +80,7 @@ PARITY = {'WFC':[[1.0,0.0],[0.0,-1.0]],'HRC':[[-1.0,0.0],[0.0,1.0]],
 
 NUM_PER_EXTN = {'ACS':3,'WFPC2':1,'STIS':3,'NICMOS':5, 'WFC3':3}
 
-__version__ = '1.1.6 (19 May 2010)'
+__version__ = '1.1.7 (6 Jul 2010)'
 def run(input,quiet=yes,restore=no,prepend='O', tddcorr=True):
 
     print "+ MAKEWCS Version %s" % __version__
@@ -265,7 +265,8 @@ def _update(image,idctab,nimsets,apply_tdd=False,
     elif instrument == 'WFC3':
         filter1 = readKeyword(hdr,'FILTER')
         filter2 = None
-        #filter2 = readKeyword(hdr,'FILTER2')
+        # use value of 'BINAXIS' keyword to set binning value for WFC3 data
+        binned = readKeyword(hdr,'BINAXIS1')
     else:
         filter1 = readKeyword(hdr,'FILTER1')
         filter2 = readKeyword(hdr,'FILTER2')
