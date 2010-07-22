@@ -432,6 +432,8 @@ class EnumEparOption(EparOption):
                                  indicatoron  = 1,
                                  takefocus    = 1,
                                  highlightthickness = 1,
+                                 activeforeground='black',
+                                 fg='black',
                                  bg=self.bkgColor)
 
         self.entry.menu = Menu(self.entry, tearoff=0, postcommand=self.postcmd,
