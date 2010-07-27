@@ -112,10 +112,11 @@ except NameError:
             i += 1
             yield i, item
 
-try:
-    True, False
-except NameError:
-    True, False = 1, 0
+#ry:
+#   True, False
+#xcept NameError:
+#   True, False = 1, 0
+# !!! CDS 27 July 2010 - STScI doesn't support Python before True,False
 
 
 __version__ = '4.5.3'
