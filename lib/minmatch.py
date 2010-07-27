@@ -25,7 +25,7 @@ R. White, 2000 January 28
 from __future__ import division # confidence high
 
 import copy
-from types import StringType
+import types
 from UserDict import UserDict
 
 class AmbiguousKeyError(KeyError):
@@ -81,7 +81,7 @@ class MinMatchDict(UserDict):
         # check for exact match first
         # ambiguous key is ok if there is exact match
         if self.data.has_key(key): return key
-        if type(key) != StringType:
+        if type(key) != types.StringType:
             raise KeyError("MinMatchDict keys must be strings")
         # no exact match, so look for unique minimum match
         if self.mmkeys is None: self._mmInit()
@@ -242,7 +242,7 @@ class QuietMinMatchDict(MinMatchDict):
 
 # some simple tests
 
-if __name__ == "__main__":
+def test():
     d = MinMatchDict()
     d.add('test',1)
     d.add('text',2)
@@ -300,3 +300,7 @@ if __name__ == "__main__":
     except KeyError, e:
         print str(e)
         print '---'
+
+
+if __name__ == "__main__":
+    test()
