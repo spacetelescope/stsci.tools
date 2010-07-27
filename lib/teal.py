@@ -3,8 +3,8 @@ $Id$
 """
 from __future__ import division # confidence high
 
-import configobj, glob, os, tkMessageBox
-import cfgpars, editpar, filedlg, vtor_checks
+import glob, os, tkMessageBox
+import configobj, cfgpars, editpar, filedlg, vtor_checks
 from cfgpars import APP_NAME
 
 
