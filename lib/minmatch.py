@@ -43,6 +43,10 @@ class MinMatchDict(UserDict):
             add = self.add
             for key in dict.keys(): add(key,dict[key])
 
+    def __contains__(self, key):
+        """For the "in" operator. Raise an exception if key is ambiguous"""
+        return self.has_key(key, exact=False)
+
     def __deepcopy__(self, memo=None):
         """Deep copy of dictionary"""
         # this is about twice as fast as the default implementation
@@ -79,7 +83,7 @@ class MinMatchDict(UserDict):
     def getfullkey(self, key, new=0):
         # check for exact match first
         # ambiguous key is ok if there is exact match
-        if self.data.has_key(key): return key
+        if key in self.data: return key
         if not isinstance(key, (str,unicode)):
             raise KeyError("MinMatchDict keys must be strings")
         # no exact match, so look for unique minimum match
@@ -104,7 +108,7 @@ class MinMatchDict(UserDict):
         """Add a new key/item pair to the dictionary.  Resets an existing
         key value only if this is an exact match to a known key."""
         mmkeys = self.mmkeys
-        if mmkeys is not None and not self.data.has_key(key):
+        if mmkeys is not None and not (key in self.data):
             # add abbreviations as short as minkeylength
             # always add at least one entry (even for key="")
             lenkey = len(key)
@@ -161,11 +165,11 @@ class MinMatchDict(UserDict):
         """Raises an exception if key is ambiguous"""
         if not exact:
             key = self.getfullkey(key,new=1)
-        return self.data.has_key(key)
+        return key in self.data
 
     def has_exact_key(self, key):
         """Returns true if there is an exact match for this key"""
-        return self.data.has_key(key)
+        return key in self.data
 
     def update(self, other):
         # check for missing attrs (needed in python 2.7)
@@ -285,7 +289,9 @@ def test():
     del d['tess']
     print "d.items()", d.items()
     print "d.get('tes')", d.get('tes')
-    print "d.has_key('tes')", d.has_key('tes')
+    print "d.has_key('tes'):", d.has_key('tes')
+    print "d.has_key('tes', exact=True):", d.has_key('tes', exact=True)
+    print "'tes' in d:", 'tes' in d
     print "d.clear()"
     d.clear()
     print "d.items()", d.items()
