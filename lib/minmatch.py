@@ -25,7 +25,6 @@ R. White, 2000 January 28
 from __future__ import division # confidence high
 
 import copy
-import types
 from UserDict import UserDict
 
 class AmbiguousKeyError(KeyError):
@@ -81,7 +80,7 @@ class MinMatchDict(UserDict):
         # check for exact match first
         # ambiguous key is ok if there is exact match
         if self.data.has_key(key): return key
-        if type(key) != types.StringType:
+        if not isinstance(key, (str,unicode)):
             raise KeyError("MinMatchDict keys must be strings")
         # no exact match, so look for unique minimum match
         if self.mmkeys is None: self._mmInit()
