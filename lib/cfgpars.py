@@ -90,14 +90,31 @@ def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
 
     # do the import, if needed
     if pkgObj == None:
+        # First try something simple like a regular or dotted import
         try:
             fl = []
             if pkgName.find('.') > 0:
                 fl = [ pkgName[:pkgName.rfind('.')], ]
             thePkg = __import__(str(pkgName), fromlist=fl)
         except:
-            raise NoCfgFileError("Unfound package or "+ext+" file via: "+ \
-                                 "import "+str(pkgName))
+            throwIt = True
+            # One last case to try is something like "csc_kill" from
+            # "acstools.csc_kill", but this convenience capability will only be
+            # allowed if the parent pkg (acstools) has already been imported.
+            if pkgName.find('.') < 0:
+                matches = [x for x in sys.modules.keys() \
+                           if x.endswith("."+pkgName)]
+                if len(matches) > 1:
+                    raise NoCfgFileError("Unfound package or "+ext+ \
+                       " file for: "+pkgName+", ambiguous -> "+str(matches))
+                if len(matches) == 1:
+                    pkgName = matches[0]
+                    thePkg = sys.modules[pkgName]
+                    throwIt = False
+            
+            if throwIt:
+                raise NoCfgFileError("Unfound package or "+ext+" file via: "+\
+                                     "import "+str(pkgName))
     else:
         thePkg = pkgObj
         pkgName = pkgObj.__name__
