@@ -1,4 +1,0 @@
-#! python
-
-import pytools.updatenpol
-pytools.updatenpol.main()
