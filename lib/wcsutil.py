@@ -61,7 +61,7 @@ DEFAULT_PREFIX = 'O'
 
 
 
-__version__ = '1.2.1 (17-Oct-2008)'
+__version__ = '1.2.2 (03-Aug-2010)'
 
 def help():
     print 'wcsutil Version '+str(__version__)+':\n'
@@ -275,11 +275,16 @@ class WCSObject:
 
                 # Check for existence of NPIX/PIXVALUE keywords
                 # which represent a constant array extension
+                    _dkey = 'npix1'
                     self.naxis1 = _header['npix1']
+                    _dkey = 'npix2'
                     self.naxis2 = _header['npix2']
+                    _dkey = 'pixvalue'
                     self.pixvalue = _header['pixvalue']
                 else:
+                    _dkey = 'naxis1'
                     self.naxis1 = _header['naxis1']
+                    _dkey = 'naxis2'
                     self.naxis2 = _header['naxis2']
                     self.pixvalue = None
 
