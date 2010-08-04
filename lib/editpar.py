@@ -62,6 +62,7 @@ class EditParDialog(object):
         self.paramList = self._taskParsObj.getParList(docopy=1)
         self._rcDir = resourceDir
         self._leaveStatusMsgUntil = 0
+        self._statusMsgsToShow = [] # keep a *small* number of late msgs
 
         # Ignore the last parameter which is $nargs
         self.numParams = len(self.paramList) - 1
@@ -821,38 +822,40 @@ class EditParDialog(object):
 
     def printHelpViewInfo(self, event):
         self.showStatus(
-            " Choice of display for the help page: a window or a browser")
+            "Choice of display for the help page: a window or a browser")
 
     def printHelpInfo(self, event):
-        self.showStatus(" Display the help page")
+        self.showStatus("Display the help page")
 
     def printUnlearnInfo(self, event):
-        self.showStatus(" Set all parameter values to their default settings")
+        self.showStatus("Set all parameter values to their default settings")
 
     def printSaveQuitInfo(self, event):
         if self._useSimpleAutoClose:
-            self.showStatus(" Save current entries and exit this edit session")
+            self.showStatus("Save current entries and exit this edit session")
         else:
-            self.showStatus(" Save the current entries to "+ \
+            self.showStatus("Save the current entries to "+ \
                             self._taskParsObj.getFilename())
 
     def printSaveAsInfo(self, event):
-        self.showStatus(" Save the current entries to a user-specified file")
+        self.showStatus("Save the current entries to a user-specified file")
 
     def printOpenInfo(self, event):
-        self.showStatus(" Load and edit parameter values from a user-specified file")
+        self.showStatus(
+            "Load and edit parameter values from a user-specified file")
 
     def printCloseInfo(self, event):
-        self.showStatus(" Close this edit session.  Save first?")
+        self.showStatus("Close this edit session.  Save first?")
 
     def printAbortInfo(self, event):
-        self.showStatus(" Abort this edit session, discarding any unsaved changes.")
+        self.showStatus(
+            "Abort this edit session, discarding any unsaved changes.")
 
     def printExecuteInfo(self, event):
         if self._saveAndCloseOnExec:
-            self.showStatus(" Execute the task, and save and exit this edit session")
+            self.showStatus("Execute the task, and save and exit this edit session")
         else:
-            self.showStatus(" Execute the task; this window will remain open")
+            self.showStatus("Execute the task; this window will remain open")
 
 
     # Process invalid input values and invoke a query dialog
@@ -1439,18 +1442,49 @@ class EditParDialog(object):
         # all windows saved successfully
         return
 
+
+    def _runNextMsg(self):
+        """ Internal callback used to make sure the msg list keeps moving. """
+        if len(self._statusMsgsToShow) > 0:
+            self.showStatus('')
+
+
     def showStatus(self, msg, keep=0):
         """ Show the given status string, but not until any given delay from
             the previous message has expired. keep is a time (secs) to force
             the message to remain without being overwritten or cleared. """
+        # prep it, space-wise
+        msg = msg.strip()
+        if len(msg) > 0: msg = '  '+msg
+
+        # see if we can show it
         now = time.time()
-        if now >= self._leaveStatusMsgUntil:
+        if now >= self._leaveStatusMsgUntil: # we are safe to show a msg
+            # first see if the msg is empty and if so take one off our list
+            if len(msg) < 1 and len(self._statusMsgsToShow) > 0:
+                msg, keep = self._statusMsgsToShow[0] # overwrite both args
+                del self._statusMsgsToShow[0]
             # print the status out
             self.top.status.config(text = msg)
             # reset our delay flag
             self._leaveStatusMsgUntil = 0
             if keep > 0:
                 self._leaveStatusMsgUntil = now + keep
+        else:
+            # there is a previous message still up, is this one important?
+            if len(msg) > 0 and keep > 0:
+                # Uh-oh, this is an important message that we don't want to
+                # simply skip, but on the other hand we can't show it yet...
+                # So we add it to _statusMsgsToShow and show it later (asap)
+                if (msg,keep) not in self._statusMsgsToShow:
+                    if len(self._statusMsgsToShow) < 5:
+                        self._statusMsgsToShow.append( (msg,keep) ) # tuple
+                        # also kick off a timer to get this one pushed through
+                        left = self._leaveStatusMsgUntil - now
+                        self.top.after(int(1000*left)+1, self._runNextMsg)
+                    else:
+                        # should never happen, but just in case
+                        print "Lost message!: "+msg+" (too far behind...)"
 
     # Run the task
     def runTask(self):
