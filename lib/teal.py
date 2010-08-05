@@ -322,7 +322,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             return
 
         # Now handle rules with embedded code (e.g. triggerName == '_rule1_')
-        if '_RULES_' in self._taskParsObj and \
+        if triggerName != None and '_RULES_' in self._taskParsObj and \
            triggerName in self._taskParsObj['_RULES_'].configspec:
             ruleSig = self._taskParsObj['_RULES_'].configspec[triggerName]
             chkArgsDict = vtor_checks.sigStrToKwArgsDict(ruleSig)
@@ -334,7 +334,10 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                 # execute it and retrieve the outcome
                 outval = execTriggerCode(scope, name, newVal, codeStr)
                 # Leave this debug line in until it annoys someone
-                print name+': '+triggerName+" --> "+str(outval)
+                msg = 'Value of "'+name+'" triggered "'+triggerName+'"'
+                stroutval = str(outval)
+                if len(stroutval) < 30: msg += '  -->  "'+stroutval+'"'
+                self.showStatus(msg, keep=1)
                 # Now that we have triggerName evaluated to outval, we need to
                 # look through all of the parameters and see if there are any
                 # items to be affected by triggerName (e.g. '_rule1_')
@@ -465,6 +468,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self.updateTitle(fname)
         self._taskParsObj.filename = fname # !! maybe try setCurrentContext() ?
         self.freshenFocus()
+        self.showStatus("Loaded values from: "+fname, keep=2)
 
         # Since we are in a new context (and have made no changes yet), make
         # a copy so we know what the last state was.
@@ -547,12 +551,13 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # e.g. { scope1.name1 : dep'cy-type, scope2.name2 : dep'cy-type, ... }
         depParsDict = self._taskParsObj.getParsWhoDependOn(triggerName)
         if not depParsDict: return
-        if 0: print "Dependent parameters:\n"+str(depParsDict)
+        if 0: print "Dependent parameters:\n"+str(depParsDict)+"\n"
 
-        # Then go through them and apply them to the items found
+        # Then go through the dependent pars and apply the trigger to them
+        settingMsg = ''
         for absName in depParsDict:
             used = False
-            # For each dep, check through the widgets for that scope.name set
+            # For each dep par, loop to find the widget for that scope.name
             for i in range(self.numParams):
                 scopedName = self.paramList[i].scope+'.'+self.paramList[i].name
                 if absName == scopedName: # a match was found
@@ -561,9 +566,14 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                         self.entryNo[i].setActiveState(outval)
                     elif depType == 'inactive_if':
                         self.entryNo[i].setActiveState(not outval)
+                    elif depType == 'is_set_by':
+                        self.entryNo[i].forceValue(outval)
+                        if len(settingMsg) > 0: settingMsg += ", "
+                        settingMsg += '"'+self.paramList[i].name+'" to "'+\
+                                      outval+'"'
                     else:
-                         raise RuntimeError('Unknown dependency: "'+depType+ \
-                                            '" for par: "'+scopedName+'"')
+                        raise RuntimeError('Unknown dependency: "'+depType+ \
+                                           '" for par: "'+scopedName+'"')
                     used = True
                     break
 
@@ -577,7 +587,10 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                     self._toggleSectionActiveState(scope, not outval, () )
                 used = True
 
-            # Help top debug the .cfgspc rules
+            # Help to debug the .cfgspc rules
             if not used:
                 raise RuntimeError('UNUSED "'+triggerName+'" dependency: '+ \
                       str({absName:depParsDict[absName]}))
+
+        if len(settingMsg) > 0:
+            self.showStatus('Automatically set '+settingMsg, keep=2)
