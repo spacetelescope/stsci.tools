@@ -301,6 +301,10 @@ class EditParDialog(object):
         # Associate deletion of the main window to a Abort
         self.top.protocol("WM_DELETE_WINDOW", self.abort)
 
+        # Trigger all widgets one time before starting in case they have
+        # values which would run a trigger
+        self.checkAllTriggers()
+
         # Set focus to first parameter
         self.setViewAtTop()
 
@@ -311,11 +315,6 @@ class EditParDialog(object):
         width = self.top.winfo_width()
         height = self.top.winfo_height() + height - viewHeight
         self.top.maxsize(width=width, height=height)
-
-        # Trigger all widgets one time before starting in case they have
-        # values which would run a trigger
-        for i in range(self.numParams):
-            self.entryNo[i].widgetEdited()
 
         # run the mainloop
         if not self.isChild:
@@ -360,6 +359,15 @@ class EditParDialog(object):
 
     def updateTitle(self, atitle):
         self.top.title('%s:  %s' % (self._guiName, atitle))
+
+
+    def checkAllTriggers(self):
+        """ Go over all widgets and let them know they have been edited
+            recently and they need to check for any trigger actions.  This
+            would be used right after all the widgets have their values
+            set or forced (e.g. via setAllEntriesFromParList). """
+        for i in range(self.numParams):
+            self.entryNo[i].widgetEdited(skipDups=False)
 
 
     def freshenFocus(self):
@@ -1308,7 +1316,7 @@ class EditParDialog(object):
                 par.set(aParList.getValue(par.name, native=1, prompt=0))
 
             # gui holds a str, but par.value is native; conversion occurs
-            gui_entry.forceValue(par.value)
+            gui_entry.forceValue(par.value, noteEdited=False) # no triggers yet
 
         if updateModel:
             # Update the model values via checkSetSaveEntries
@@ -1443,10 +1451,12 @@ class EditParDialog(object):
         return
 
 
-    def _runNextMsg(self):
+    def _pushMessages(self):
         """ Internal callback used to make sure the msg list keeps moving. """
+        # This continues to get itself called until no msgs are left in list.
+        self.showStatus('')
         if len(self._statusMsgsToShow) > 0:
-            self.showStatus('')
+            self.top.after(200, self._pushMessages)
 
 
     def showStatus(self, msg, keep=0):
@@ -1455,12 +1465,15 @@ class EditParDialog(object):
             the message to remain without being overwritten or cleared. """
         # prep it, space-wise
         msg = msg.strip()
-        if len(msg) > 0: msg = '  '+msg
+        if len(msg) > 0:
+            msg = '  '+msg
+            # right here would be the place to collect a history of msgs...
 
         # see if we can show it
         now = time.time()
-        if now >= self._leaveStatusMsgUntil: # we are safe to show a msg
-            # first see if the msg is empty and if so take one off our list
+        if now >= self._leaveStatusMsgUntil: # we are clear, can show a msg
+            # first see if this msg is '' - if so we will show an important
+            # waiting msg instead of the '', and then pop it off our list
             if len(msg) < 1 and len(self._statusMsgsToShow) > 0:
                 msg, keep = self._statusMsgsToShow[0] # overwrite both args
                 del self._statusMsgsToShow[0]
@@ -1479,9 +1492,9 @@ class EditParDialog(object):
                 if (msg,keep) not in self._statusMsgsToShow:
                     if len(self._statusMsgsToShow) < 5:
                         self._statusMsgsToShow.append( (msg,keep) ) # tuple
-                        # also kick off a timer to get this one pushed through
-                        left = self._leaveStatusMsgUntil - now
-                        self.top.after(int(1000*left)+1, self._runNextMsg)
+                        # kick off timer loop to get this one pushed through
+                        if len(self._statusMsgsToShow) == 1:
+                            self._pushMessages()
                     else:
                         # should never happen, but just in case
                         print "Lost message!: "+msg+" (too far behind...)"

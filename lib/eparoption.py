@@ -295,13 +295,16 @@ class EparOption(object):
             return "break"
 
 
-    def widgetEdited(self, event=None, val=None):
+    def widgetEdited(self, event=None, val=None, skipDups=True):
         """ A general method for firing any applicable triggers when
             a value has been set.  This is meant to be easily callable from any
             part of this class (or its subclasses), so that it can be called
-            as soon as need be (immed. on click?).  This *should* be able to
-            be called multiple times, itself handling the removal of
-            duplicate successive calls. """
+            as soon as need be (immed. on click?).  This is smart enough to
+            be called multiple times, itself handling the removal of any/all
+            duplicate successive calls (unless skipDups is False). If val is
+            None, it will use the GUI entry's current value via choice.get().
+        """
+
 
         # be as lightweight as possible if obj doesn't care about this stuff
         if not self._editedCallbackObj: return
@@ -310,7 +313,7 @@ class EparOption(object):
         if curVal == None:
             curVal = self.choice.get()
         # see if this is a duplicate successive call for the same value
-        if curVal == self._lastWidgetEditedVal: return
+        if skipDups and curVal==self._lastWidgetEditedVal: return
         # pull trigger
         self._editedCallbackObj.edited(self.paramInfo.scope,
                                        self.paramInfo.name,
@@ -380,10 +383,18 @@ class EparOption(object):
         """Clear just this Entry"""
         self.entry.delete(0, END)
 
-    def forceValue(self, newVal):
+    def forceValue(self, newVal, noteEdited=False):
         """Force-set a parameter entry to the given value"""
         if newVal == None: newVal = ""
         self.choice.set(newVal)
+        if noteEdited:
+            self.widgetEdited(val=newVal, skipDups=False)
+        # WARNING: the value of noteEdited really should be false (default)
+        # in most cases because we need the widgetEdited calls to be arranged
+        # at one level higher than we are (single param).  We need to allow the
+        # caller to first loop over all eparoptions, setting their values
+        # without triggering anything, and THEN go through again and run any
+        # triggers.
 
     def unlearnValue(self):
         """Unlearn a parameter value by setting it back to its default"""
@@ -587,17 +598,17 @@ class BooleanEparOption(EparOption):
             self.rbyes.bind('<Button-2>', self.popupChoices)
 
         # Regular selection - allow immediate trigger/check
-        self.rbyes.bind('<Button-1>', self.widgetEditedYes)
-        self.rbno.bind('<Button-1>', self.widgetEditedNo)
+        self.rbyes.bind('<Button-1>', self.boolWidgetEditedYes)
+        self.rbno.bind('<Button-1>', self.boolWidgetEditedNo)
 
     def trace(self, *args):
         self.entry.focus_set()
 
     # Only needed over widgetEdited because the Yes isn't set yet
-    def widgetEditedYes(self, event=None): self.widgetEdited(val="yes")
+    def boolWidgetEditedYes(self, event=None): self.widgetEdited(val="yes")
 
     # Only needed over widgetEdited because the No isn't set yet
-    def widgetEditedNo(self, event=None): self.widgetEdited(val="no")
+    def boolWidgetEditedNo(self, event=None): self.widgetEdited(val="no")
 
     def set(self, event=None):
         """Set value to Yes"""

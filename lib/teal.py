@@ -331,6 +331,8 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             # code string must always be found only in the configspec file,
             # which is intended to only ever be root-installed w/ the package.
             if codeStr:
+                self.showStatus("Evaluating "+triggerName+' ...') # dont keep
+                self.top.update_idletasks() # allow msg to draw before the exec
                 # execute it and retrieve the outcome
                 outval = execTriggerCode(scope, name, newVal, codeStr)
                 # Leave this debug line in until it annoys someone
@@ -463,6 +465,8 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         except editpar.UnfoundParamError, pe:
             tkMessageBox.showwarning(message=str(pe), title="Error in "+\
                                      os.path.basename(fname))
+        # trip any triggers
+        self.checkAllTriggers()
 
         # This new fname is our current context
         self.updateTitle(fname)
@@ -491,8 +495,6 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                                            associatedPkg=\
                                            self._taskParsObj.getAssocPkg(),
                                            setAllToDefaults=True)
-            self.showStatus("Loading default "+self.taskName+" values via: "+ \
-                 os.path.basename(tmpObj._original_configspec), keep=2)
         except Exception, ex:
             msg = "Error Determining Defaults"
             tkMessageBox.showerror(message=msg+'\n\n'+str(ex),
@@ -503,6 +505,9 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         newParList = tmpObj.getParList()
         try:
             self.setAllEntriesFromParList(newParList) # needn't updateModel yet
+            self.checkAllTriggers()
+            self.showStatus("Loaded default "+self.taskName+" values via: "+ \
+                 os.path.basename(tmpObj._original_configspec), keep=1)
         except editpar.UnfoundParamError, pe:
             tkMessageBox.showerror(message=str(pe),
                                    title="Error Setting to Default Values")
@@ -567,7 +572,9 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                     elif depType == 'inactive_if':
                         self.entryNo[i].setActiveState(not outval)
                     elif depType == 'is_set_by':
-                        self.entryNo[i].forceValue(outval)
+                        self.entryNo[i].forceValue(outval, noteEdited=True)
+                        # WARNING! since we use True for noteEdited above, any
+                        # triggers IT has will now also run - watch recursion!
                         if len(settingMsg) > 0: settingMsg += ", "
                         settingMsg += '"'+self.paramList[i].name+'" to "'+\
                                       outval+'"'
@@ -593,4 +600,5 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                       str({absName:depParsDict[absName]}))
 
         if len(settingMsg) > 0:
-            self.showStatus('Automatically set '+settingMsg, keep=2)
+            self.freshenFocus()
+            self.showStatus('Automatically set '+settingMsg, keep=1)

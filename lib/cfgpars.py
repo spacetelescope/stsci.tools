@@ -160,7 +160,7 @@ def getCfgFilesInDirForTask(aDir, aTask):
 
 def getParsObjForPyPkg(pkgName):
     """ Locate the appropriate ConfigObjPars (or subclass) within the given
-        package. """
+        package. NOTE this begins the same way as getUsrCfgFilesForPyPkg() """
     # Get the python package and it's .cfg file
     thePkg, theFile = findCfgFileForPkg(pkgName, '.cfg')
     # See if the user has any of their own local .cfg files for this task
@@ -254,8 +254,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
         self._forUseWithEpar = forUseWithEpar
         self._rcDir = getAppDir()
-        self._triggers = None
-        self._dependencies = None
+        self._allTriggers = None # all known triggers in this object
+        self._allDepdcs = None   # all known dependencies in this object
         self.__assocPkg = associatedPkg
 
         # Set up ConfigObj stuff
@@ -351,6 +351,16 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         """ Return True if the passed in object is for the same task as
         we are. """
         return aCfgObjPrs.getName() == self.getName()
+
+#   def strictUpdate(self, aDict):
+#       """ Override the current values with those in the given dict.  This
+#           is like dict's update, except it doesn't allow new keys and it
+#           verifies the values (it does??!!!) """
+#       if aDict == None:
+#           return
+#       for k in aDict:
+#           v = aDict[k]
+#           print("Skipping ovverride key = "+k+", val = "+str(v))
 
     def setParam(self, name, val, scope='', check=1, idxHint=None):
         """ Find the ConfigObj entry.  Update the __paramList. """
@@ -472,10 +482,10 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         retval = []
         if initialPass and len(scopePrefix) < 1:
             self._posArgs = [] # positional args [2-tuples]: (index,scopedName)
-            # FOR SECURITY: the following two chunks of data, _triggers and
-            # _dependencies, are collected ONLY from the .cfgspc file
-            self._triggers = {}
-            self._dependencies = {}
+            # FOR SECURITY: the following two chunks of data, _allTriggers and
+            # _allDepdcs, are collected ONLY from the .cfgspc file
+            self._allTriggers = {}
+            self._allDepdcs = {}
         # start walking ("tell yer story walkin, buddy")
         for key in cfgObj:
             val = cfgObj[key]
@@ -579,31 +589,39 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                         self._posArgs.append( (int(pos), scopePrefix, key) )
                 # Check for triggers and/or dependencies
                 if initialPass:
-                    # Triggers?
-                    trg = chk_args_dict.get('trigger')
+                    # What triggers what? (thats why theres an 's' in the kwd)
+                    if chk_args_dict.get('trigger'):
+                        print "WARNING: outdated version of .cfgspc!! for "+\
+                              self.__taskName+", 'trigger' unused for "+\
+                              absKeyName
+                    trg = chk_args_dict.get('triggers')
                     if trg:
-                        # e.g. _triggers['STEP2.use_ra_dec'] == '_rule1_'
-                        self._triggers[absKeyName] = trg
+                        # e.g. _allTriggers['STEP2.use_ra_dec'] == '_rule1_'
+                        self._allTriggers[absKeyName] = trg
                     # Dependencies? (besides these used here, may someday
-                    # use 'range_from', 'set_by', etc.)
-                    depType = 'active_if'
-                    depName = chk_args_dict.get(depType) #eg. depName='_rule1_'
+                    # add: 'range_from', 'warn_if', etc.)
+                    depName = None
+                    if not depName:
+                        depType = 'active_if'
+                        depName = chk_args_dict.get(depType) # e.g. =='_rule1_'
                     if not depName:
                         depType = 'inactive_if'
                         depName = chk_args_dict.get(depType)
-                    # if not depName: # check for depType == 'set_by', etc
+                    if not depName:
+                        depType = 'is_set_by'
+                        depName = chk_args_dict.get(depType)
                     # NOTE - the above few lines stops at the first dependency
                     # found (depName) for a given par.  If, in the future a
                     # given par can have >1 dependency than we need to revamp!!
                     if depName:
-                        # Add to _dependencies dict: (val is dict of pars:types)
+                        # Add to _allDepdcs dict: (val is dict of pars:types)
                         #
-                        # e.g. _dependencies['_rule1_'] == \
+                        # e.g. _allDepdcs['_rule1_'] == \
                         #        {'STEP3.ra':      'active_if',
                         #         'STEP3.dec':     'active_if',
                         #         'STEP3.azimuth': 'inactive_if'}
-                        if depName in self._dependencies:
-                            thisRulesDict = self._dependencies[depName]
+                        if depName in self._allDepdcs:
+                            thisRulesDict = self._allDepdcs[depName]
                             assert not absKeyName in thisRulesDict, \
                                 'Cant yet handle multiple actions for the '+ \
                                 'same par and the same rule.  For "'+depName+ \
@@ -612,7 +630,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                                 str({absKeyName:depType})
                             thisRulesDict[absKeyName] = depType
                         else:
-                            self._dependencies[depName] = {absKeyName:depType}
+                            self._allDepdcs[depName] = {absKeyName:depType}
                     # else no dependencies found for this chk_args_dict
         return retval
 
@@ -620,18 +638,18 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     def getTriggerStr(self, parScope, parName):
         """ For a given item (scope + name), return the string (or None) of
         it's associated trigger, if one exists. """
-        # The data structure of _triggers was chosen for how easily/quickly
+        # The data structure of _allTriggers was chosen for how easily/quickly
         # this particular access can be made here.
         fullName = parScope+'.'+parName
-        return self._triggers.get(fullName) # returns None if unfound
+        return self._allTriggers.get(fullName) # returns None if unfound
 
 
     def getParsWhoDependOn(self, ruleName):
         """ Find any parameters which depend on the given trigger name. Returns
-        None or a dict of {scopedName: dependencyName} from _dependencies. """
-        # The data structure of _dependencies was chosen for how easily/quickly
+        None or a dict of {scopedName: dependencyName} from _allDepdcs. """
+        # The data structure of _allDepdcs was chosen for how easily/quickly
         # this particular access can be made here.
-        return self._dependencies.get(ruleName)
+        return self._allDepdcs.get(ruleName)
 
 
     def getPosArgs(self):
