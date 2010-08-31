@@ -122,8 +122,7 @@ def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
     # Now that we have the package object, find the .cfg or .cfgspc file
     path = os.path.dirname(thePkg.__file__)
     if len(path) < 1: path = '.'
-    flist = glob.glob(path+"/pars/*"+ext)
-    flist += glob.glob(path+"/*"+ext)
+    flist = irafutils.rglob(path, "*"+ext)
     if len(flist) < 1:
         raise NoCfgFileError("Found no "+ext+" files under package: "+pkgName)
 
@@ -149,13 +148,34 @@ def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
                          '" for task: "'+taskName+'"')
 
 
-def getCfgFilesInDirForTask(aDir, aTask):
+def findAllCfgTasksUnderDir(aDir):
+    """ Finds all installed tasks by examining any .cfg files found on disk
+        at and under the given directory, as an installation might be.
+        This returns a dict of { filename : taskname }
+    """
+    retval = {}
+    for f in irafutils.rglob(aDir, '*.cfg'):
+        retval[f] = getEmbeddedKeyVal(f, '_task_name_', '')
+    return retval
+
+
+def getCfgFilesInDirForTask(aDir, aTask, recurse=False):
     """ This is a specialized function which is meant only to keep the
         same code from needlessly being much repeated throughout this
-        application.  This must be kept as fast and as light as possible. """
-    flist = glob.glob(aDir+os.sep+'*.cfg')
-    return [f for f in flist if \
-            getEmbeddedKeyVal(f, '_task_name_', '') == aTask]
+        application.  This must be kept as fast and as light as possible.
+        This checks a given directory for .cfg files matching a given
+        task.  If recurse is True, it will check subdirectories.
+        If aTask is None, it returns all files and ignores aTask.
+    """
+    if recurse:
+        flist = irafutils.rglob(aDir, '*.cfg')
+    else:
+        flist = glob.glob(aDir+os.sep+'*.cfg')
+    if aTask:
+        return [f for f in flist if \
+                getEmbeddedKeyVal(f, '_task_name_', '') == aTask]
+    else:
+        return flist
 
 
 def getParsObjForPyPkg(pkgName):

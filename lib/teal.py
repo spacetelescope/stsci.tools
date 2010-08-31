@@ -151,6 +151,7 @@ the "Execute" button.
 # Starts a GUI session
 def teal(theTask, parent=None, isChild=0, loadOnly=False, returnDict=True):
 #        overrides=None):
+    """ Start the GUI session, or simply load a task's ConfigObj. """
     if loadOnly:
         obj = cfgpars.getObjectFromTaskArg(theTask)
 #       obj.strictUpdate(overrides) # !!! does this skip verify step?? need it!
@@ -168,14 +169,42 @@ def teal(theTask, parent=None, isChild=0, loadOnly=False, returnDict=True):
             return dlg.getTaskParsObj()
 
 
-# .cfgspc embedded code execution is done here, in a relatively confined space
 def execTriggerCode(SCOPE, NAME, VAL, codeStr):
-    # The variables available to the code to be executed are:
-    #     SCOPE, NAME, VAL
-    # The code string itself is expected to set a var named OUT
+    """ .cfgspc embedded code execution is done here, in a relatively confined
+        space.  The variables available to the code to be executed are:
+              SCOPE, NAME, VAL
+        The code string itself is expected to set a var named OUT
+    """
     OUT = None
     exec codeStr
     return OUT
+
+
+def print_tasknames(mainTaskName, aDir, term_width=80):
+    """ Print a message listing TEAL-enabled tasks available under a 
+        given installation directory (where mainTaskName resides).
+    """
+    taskDict = cfgpars.findAllCfgTasksUnderDir(aDir)
+    tasks = [v for v in taskDict.values() if v != mainTaskName]
+    # only be verbose if there is more than mainTaskName found
+    if len(tasks) > 0:
+        sortedUniqTasks = sorted(set(tasks))
+        if len(sortedUniqTasks) == 1:
+            print('The following task in the '+mainTaskName+\
+                  ' package can be run with TEAL:')
+            tlines = sortedUniqTasks[0].center(term_width)
+        else: # >1
+            print('The following tasks in the '+mainTaskName+\
+                  ' package can be run with TEAL:')
+            i = 0
+            tlines = ''
+            for ttt in sortedUniqTasks:
+                if i >= 5:
+                    i = 0
+                    tlines += '\n'
+                tlines += ttt.center(term_width//5)
+                i += 1
+        print(tlines)
 
 
 # Main class
