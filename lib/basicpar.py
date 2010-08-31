@@ -1233,11 +1233,9 @@ class _BooleanMixin:
             return INDEF
         elif value is None or value == "":
             return None
-        elif value==yes:
-            # this handles 1, 1.0, yes, "yes", "YES", "y", "Y", True
+        elif value in (1, 1.0, yes, "yes", "YES", "y", "Y", True):
             return yes
-        elif value==no:
-            # this handles 0, 0.0, no, "no", "NO", "n", "N", False
+        elif value in (0, 0.0, no,  "no",  "NO",  "n", "N", False):
             return no
         elif isinstance(value,str):
             v2 = irafutils.stripQuotes(value.strip())
@@ -1247,8 +1245,8 @@ class _BooleanMixin:
             elif v2[0:1] == ")":
                 # assume this is indirection -- just save it as a string
                 return v2
-        raise ValueError("Parameter %s: illegal boolean value %s" %
-                (self.name, `value`))
+        raise ValueError("Parameter %s: illegal boolean value %s or type %s" %
+                (self.name, `value`, str(type(value))))
 
 # -----------------------------------------------------
 # IRAF boolean parameter class
