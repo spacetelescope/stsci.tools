@@ -4,6 +4,7 @@ printCols       Print elements of list in cols columns
 stripQuotes     Strip single or double quotes off string and remove embedded
                 quote pairs
 csvSplit        Split comma-separated fields in strings (cover bug in csv mod)
+rglob           Recursive glob
 removeEscapes   Remove escaped quotes & newlines from strings
 translateName   Convert CL parameter or variable name to Python-acceptable name
 untranslateName Undo Python conversion of CL parameter or variable name
@@ -17,7 +18,7 @@ R. White, 1999 Jul 16
 """
 from __future__ import division
 
-import os, sys, string, struct, re, keyword, types, select
+import os, sys, string, struct, re, fnmatch, keyword, types, select
 import capable
 if capable.OF_GRAPHICS:
     import Tkinter
@@ -237,6 +238,16 @@ def testCsvSplit(quiet=True):
         assert len(ll) == c[1] and repr(ll) == c[2], \
            "For case: "+repr(c[0])+" expected:\n"+c[2]+"\nbut got:\n"+repr(ll)
     return True
+
+def rglob(root, pattern):
+    """ Same thing as glob.glob, but recursively checks subdirs. """
+    # Thanks to Alex Martelli for basics on Stack Overflow
+    retlist = []
+    if None not in (pattern, root):
+        for base, dirs, files in os.walk(root):
+            goodfiles = fnmatch.filter(files, pattern)
+            retlist.extend(os.path.join(base, f) for f in goodfiles)
+    return retlist
 
 def removeEscapes(value, quoted=0):
 
