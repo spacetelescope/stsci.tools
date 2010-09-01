@@ -180,21 +180,21 @@ def execTriggerCode(SCOPE, NAME, VAL, codeStr):
     return OUT
 
 
-def print_tasknames(mainTaskName, aDir, term_width=80):
+def print_tasknames(pkgName, aDir, term_width=80):
     """ Print a message listing TEAL-enabled tasks available under a 
-        given installation directory (where mainTaskName resides).
+        given installation directory (where pkgName resides).
     """
     taskDict = cfgpars.findAllCfgTasksUnderDir(aDir)
-    tasks = [v for v in taskDict.values() if v != mainTaskName]
-    # only be verbose if there is more than mainTaskName found
+    tasks = taskDict.values()
+    # only be verbose if there something found
     if len(tasks) > 0:
         sortedUniqTasks = sorted(set(tasks))
         if len(sortedUniqTasks) == 1:
-            tlines = 'The following task in the '+mainTaskName+\
+            tlines = 'The following task in the '+pkgName+\
                      ' package can be run with TEAL:\n'+\
                      sortedUniqTasks[0].center(term_width)
         else: # >1
-            tlines = 'The following tasks in the '+mainTaskName+\
+            tlines = 'The following tasks in the '+pkgName+\
                      ' package can be run with TEAL:\n'
             i = 0
             for ttt in sortedUniqTasks:
