@@ -190,14 +190,13 @@ def print_tasknames(mainTaskName, aDir, term_width=80):
     if len(tasks) > 0:
         sortedUniqTasks = sorted(set(tasks))
         if len(sortedUniqTasks) == 1:
-            print('The following task in the '+mainTaskName+\
-                  ' package can be run with TEAL:')
-            tlines = sortedUniqTasks[0].center(term_width)
+            tlines = 'The following task in the '+mainTaskName+\
+                     ' package can be run with TEAL:\n'+\
+                     sortedUniqTasks[0].center(term_width)
         else: # >1
-            print('The following tasks in the '+mainTaskName+\
-                  ' package can be run with TEAL:')
+            tlines = 'The following tasks in the '+mainTaskName+\
+                     ' package can be run with TEAL:\n'
             i = 0
-            tlines = ''
             for ttt in sortedUniqTasks:
                 if i >= 5:
                     i = 0
