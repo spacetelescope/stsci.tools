@@ -197,29 +197,38 @@ def print_tasknames(pkgName, aDir, term_width=80, always=False):
 
     # Check for tasks
     taskDict = cfgpars.findAllCfgTasksUnderDir(aDir)
-    tasks = taskDict.values()
+    tasks = [x for x in taskDict.values() if len(x) > 0]
     # only be verbose if there something found
     if len(tasks) > 0:
         sortedUniqTasks = sorted(set(tasks))
         if len(sortedUniqTasks) == 1:
             tlines = 'The following task in the '+pkgName+\
-                     ' package can be run with TEAL:\n'+\
-                     sortedUniqTasks[0].center(term_width)
-        else: # >1
+                     ' package can be run with TEAL:\n'
+        else:
             tlines = 'The following tasks in the '+pkgName+\
                      ' package can be run with TEAL:\n'
-            i = 0
-            for ttt in sortedUniqTasks:
-                if i >= 5:
-                    i = 0
-                    tlines += '\n'
-                tlines += ttt.center(term_width//5)
-                i += 1
+        # Pad list for len == 1, 2, 3
+        if len(sortedUniqTasks) in (2, 3):
+            sortedUniqTasks.insert(0, '')
+        elif len(sortedUniqTasks) == 1:
+            sortedUniqTasks = ['', ''] + sortedUniqTasks
+        # Loop over tasks
+        i = 0
+        for ttt in sortedUniqTasks:
+            if i >= 5:
+                i = 0
+                tlines += '\n'
+            tlines += ttt.center(term_width//5)
+            i += 1
+
         print(tlines)
 
 
 # Main class
 class ConfigObjEparDialog(editpar.EditParDialog):
+
+    FALSEVALS = (None, False, '', 0, 0.0, '0', '0.0', 'OFF', 'Off', 'off',
+                 'NO', 'No', 'no', 'N', 'n', 'FALSE', 'False', 'false')
 
     def __init__(self, theTask, parent=None, title=APP_NAME,
                  isChild=0, childList=None, returnDict=True):
@@ -357,7 +366,10 @@ class ConfigObjEparDialog(editpar.EditParDialog):
 
         # First handle the known/canned trigger names
         if triggerName == '_section_switch_':
-            state = str(newVal).lower() in ('on','yes','true')
+            # Try to uniformly handle all possible par types here, not
+            # just boolean (e.g. str, int, float, etc.)
+            # Also, see logic in _BooleanMixin._coerceOneValue()
+            state = newVal not in self.FALSEVALS
             self._toggleSectionActiveState(scope, state, (name,))
             return
 
