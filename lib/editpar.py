@@ -63,6 +63,7 @@ class EditParDialog(object):
         self._rcDir = resourceDir
         self._leaveStatusMsgUntil = 0
         self._statusMsgsToShow = [] # keep a *small* number of late msgs
+        self._tmwm = int(os.getenv('TEAL_MOUSE_WHEEL_MULTIPLIER', 1))
 
         # Ignore the last parameter which is $nargs
         self.numParams = len(self.paramList) - 1
@@ -390,12 +391,12 @@ class EditParDialog(object):
 
     def mwl(self, event):
         """Mouse Wheel - under Tkinter we seem to need Tk v8.5+ for this """
-        if event.num == 4:
-            self.top.f.canvas.yview_scroll(-1, 'units')
-        elif event.num == 5:
-            self.top.f.canvas.yview_scroll(1, 'units')
+        if event.num == 4: # up on Linux
+            self.top.f.canvas.yview_scroll(-1*self._tmwm, 'units')
+        elif event.num == 5: # down on Linux
+            self.top.f.canvas.yview_scroll(1*self._tmwm, 'units')
         else: # assume event.delta has the direction, but reversed sign
-            self.top.f.canvas.yview_scroll(-(event.delta), 'units')
+            self.top.f.canvas.yview_scroll(-(event.delta)*self._tmwm, 'units')
 
 # A bug appeared in Python 2.3 that caused tk_focusNext and
 # tk_focusPrev to fail. The follwoing two routines now will
