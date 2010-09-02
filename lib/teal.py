@@ -3,7 +3,7 @@ $Id$
 """
 from __future__ import division # confidence high
 
-import glob, os, tkMessageBox
+import glob, os, sys, tkMessageBox
 import configobj, cfgpars, editpar, filedlg, vtor_checks
 from cfgpars import APP_NAME
 
@@ -180,10 +180,22 @@ def execTriggerCode(SCOPE, NAME, VAL, codeStr):
     return OUT
 
 
-def print_tasknames(pkgName, aDir, term_width=80):
+def print_tasknames(pkgName, aDir, term_width=80, always=False):
     """ Print a message listing TEAL-enabled tasks available under a 
         given installation directory (where pkgName resides).
+        If always is True, this will always print when tasks are
+        found; otherwise it will only print found tasks when in interactive
+        mode.
     """
+    # See if we can bail out early
+    if not always:
+        # We can't use the sys.ps1 check if in PyRAF since it changes sys
+        if 'pyraf' not in sys.modules:
+           # sys.ps1 is only defined in interactive mode
+           if not hasattr(sys, 'ps1'):
+               return # leave here, we're in someone's script
+
+    # Check for tasks
     taskDict = cfgpars.findAllCfgTasksUnderDir(aDir)
     tasks = taskDict.values()
     # only be verbose if there something found
