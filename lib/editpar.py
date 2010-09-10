@@ -63,7 +63,8 @@ class EditParDialog(object):
         self._rcDir = resourceDir
         self._leaveStatusMsgUntil = 0
         self._statusMsgsToShow = [] # keep a *small* number of late msgs
-        self._tmwm = int(os.getenv('TEAL_MOUSE_WHEEL_MULTIPLIER', 1))
+        # setting _tmwm=1 is the slowest motion, 7 seems OK, 10 maybe too fast
+        self._tmwm = int(os.getenv('TEAL_MOUSE_WHEEL_MULTIPLIER', 7))
 
         # Ignore the last parameter which is $nargs
         self.numParams = len(self.paramList) - 1
