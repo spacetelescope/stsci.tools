@@ -279,7 +279,7 @@ class EparOption(object):
             if value != self.previousValue:
                 self.paramInfo.set(value)
             # fire any applicable triggers, whether value has changed or not
-            self.widgetEdited()
+            self.widgetEdited(action='entry')
             return None
         except ValueError, exceptionInfo:
             # Reset the entry to the previous (presumably valid) value
@@ -295,7 +295,7 @@ class EparOption(object):
             return "break"
 
 
-    def widgetEdited(self, event=None, val=None, skipDups=True):
+    def widgetEdited(self, event=None, val=None, action='entry', skipDups=True):
         """ A general method for firing any applicable triggers when
             a value has been set.  This is meant to be easily callable from any
             part of this class (or its subclasses), so that it can be called
@@ -303,6 +303,7 @@ class EparOption(object):
             be called multiple times, itself handling the removal of any/all
             duplicate successive calls (unless skipDups is False). If val is
             None, it will use the GUI entry's current value via choice.get().
+            See teal.py for a description of action.
         """
 
 
@@ -317,7 +318,8 @@ class EparOption(object):
         # pull trigger
         self._editedCallbackObj.edited(self.paramInfo.scope,
                                        self.paramInfo.name,
-                                       self.previousValue, curVal)
+                                       self.previousValue, curVal,
+                                       action)
         # for our duplicate checker
         self._lastWidgetEditedVal = curVal
 
@@ -405,7 +407,7 @@ class EparOption(object):
     def setEditedCallbackObj(self, ecbo):
         """ Sets a callback object to be triggred when this option/parameter
             is edited.  The object is expected to have an "edited()" method
-            which takes args as shown where it is called in entryCheck(). """
+            which takes args as shown where it is called in widgetEdited. """
         self._editedCallbackObj = ecbo
 
     def setActiveState(self, active):

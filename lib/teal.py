@@ -263,6 +263,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self._showHelpInBrowser    = cod.get('showHelpInBrowser', False)
         self._writeProtectOnSaveAs = cod.get('writeProtectOnSaveAs', False)
         self._optFile              = APP_NAME.lower()+".optionDB"
+        self._triggerAlways        = 'TEAL_SKIP_TRIGS_ON_LOAD' not in os.environ
 
         # our own colors
         # prmdrss teal: #00ffaa, pure cyan (teal) #00ffff (darker) #008080
@@ -356,13 +357,16 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             return None
 
 
-    def edited(self, scope, name, lastSavedVal, newVal):
+    def edited(self, scope, name, lastSavedVal, newVal, action):
         """ This is the callback function invoked when an item is edited.
             This is only called for those items which were previously
             specified to use this mechanism.  We do not turn this on for
             all items because the performance might be prohibitive. """
 
+        # Get name of trigger that this par triggers
         triggerName = self._taskParsObj.getTriggerStr(scope, name)
+        assert triggerName != None and len(triggerName) > 0, \
+               'Empty trigger name for: "'+name+'", consult the .cfgspc file.'
 
         # First handle the known/canned trigger names
         if triggerName == '_section_switch_':
@@ -374,15 +378,40 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             return
 
         # Now handle rules with embedded code (e.g. triggerName == '_rule1_')
-        if triggerName != None and '_RULES_' in self._taskParsObj and \
+        if '_RULES_' in self._taskParsObj and \
            triggerName in self._taskParsObj['_RULES_'].configspec:
+            # Get codeStr to execute it, but before we do so, check 'when' -
+            # make sure this is an action that is allowed to cause a trigger
             ruleSig = self._taskParsObj['_RULES_'].configspec[triggerName]
             chkArgsDict = vtor_checks.sigStrToKwArgsDict(ruleSig)
-            codeStr = chkArgsDict.get('code')
+            codeStr = chkArgsDict.get('code') # or None
+            when2run = chkArgsDict.get('when') # or None
+
+            greenlight = False
+            if self._triggerAlways or when2run is None:
+                greenlight = True
+            else: # 'when' was set to something so we need to check action
+                # check value of action (poor man's enum)
+                assert action in editpar.GROUP_ACTIONS, \
+                    "Unknown action: "+str(action)+', expected one of: '+ \
+                    str(editpar.GROUP_ACTIONS)
+                # check value of 'when' (allow them to use comma-sep'd str)
+                # (readers be aware that values must be those possible for
+                #  'action', and 'always' is also allowed)
+                whenlist = when2run.split(',')
+                # warn for invalid values
+                for w in whenlist:
+                    if not w in editpar.GROUP_ACTIONS and w != 'always':
+                       print 'WARNING - skipping bad value for when kwd: "'+\
+                              w+'" in trigger/rule: '+triggerName
+                # finally, do the correlation
+                greenlight = 'always' in whenlist or action in whenlist
+
             # SECURITY NOTE: because this part executes arbitrary code, that
             # code string must always be found only in the configspec file,
             # which is intended to only ever be root-installed w/ the package.
             if codeStr:
+                if not greenlight: return # not an error - just skip this one
                 self.showStatus("Evaluating "+triggerName+' ...') # dont keep
                 self.top.update_idletasks() # allow msg to draw before the exec
                 # execute it and retrieve the outcome
@@ -518,7 +547,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             tkMessageBox.showwarning(message=str(pe), title="Error in "+\
                                      os.path.basename(fname))
         # trip any triggers
-        self.checkAllTriggers()
+        self.checkAllTriggers('fopen')
 
         # This new fname is our current context
         self.updateTitle(fname)
@@ -557,7 +586,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         newParList = tmpObj.getParList()
         try:
             self.setAllEntriesFromParList(newParList) # needn't updateModel yet
-            self.checkAllTriggers()
+            self.checkAllTriggers('defaults')
             self.showStatus("Loaded default "+self.taskName+" values via: "+ \
                  os.path.basename(tmpObj._original_configspec), keep=1)
         except editpar.UnfoundParamError, pe:

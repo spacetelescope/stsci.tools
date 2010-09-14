@@ -23,6 +23,7 @@ INPUTWIDTH  = 10
 VALUEWIDTH  = 21
 PROMPTWIDTH = 55
 DFT_OPT_FILE = "epar.optionDB"
+GROUP_ACTIONS = ('defaults','init','fopen','entry')
 
 # Use these values for startup geometry ***for now***
 # PARENT is the main editor window
@@ -305,7 +306,7 @@ class EditParDialog(object):
 
         # Trigger all widgets one time before starting in case they have
         # values which would run a trigger
-        self.checkAllTriggers()
+        self.checkAllTriggers('init')
 
         # Set focus to first parameter
         self.setViewAtTop()
@@ -363,13 +364,13 @@ class EditParDialog(object):
         self.top.title('%s:  %s' % (self._guiName, atitle))
 
 
-    def checkAllTriggers(self):
+    def checkAllTriggers(self, action):
         """ Go over all widgets and let them know they have been edited
             recently and they need to check for any trigger actions.  This
             would be used right after all the widgets have their values
             set or forced (e.g. via setAllEntriesFromParList). """
         for i in range(self.numParams):
-            self.entryNo[i].widgetEdited(skipDups=False)
+            self.entryNo[i].widgetEdited(action=action, skipDups=False)
 
 
     def freshenFocus(self):
