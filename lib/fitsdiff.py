@@ -730,19 +730,30 @@ def main() :
     if (help):
         print __doc__
         print "\t", __version__
+        return 0
     else:
         if len(args) == 2:
             (list1, list2) = parse_path (args[0], args[1])
             npairs = min (len(list1), len(list2))
+            nodiff = 1
             for i in range(npairs):
-                fitsdiff(list1[i], list2[i], comment_excl_list, value_excl_list, field_excl_list, maxdiff, delta, neglect_blanks, output)
+
+                # fitsdiff() returns 1 for same, 0 for different
+                if not fitsdiff(list1[i], list2[i], comment_excl_list, value_excl_list, field_excl_list, maxdiff, delta, neglect_blanks, output) :
+                    nodiff = 0
+
+            if nodiff :
+                return 0
+            else :
+                return 1
 
         else:
             print "Needs pair(s) of input files.  Use -h for help"
+            return 2
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
 
 
 """

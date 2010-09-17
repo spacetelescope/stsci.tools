@@ -1,4 +1,5 @@
 #! python
 
+import sys
 import pytools.fitsdiff
-pytools.fitsdiff.main()
+sys.exit(pytools.fitsdiff.main())
