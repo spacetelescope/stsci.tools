@@ -78,6 +78,7 @@ class EditParDialog(object):
         self._appName             = "Par Editor"
         self._appHelpString       = "No help yet created for this GUI editor"
         self._useSimpleAutoClose  = False # certain buttons close GUI also
+        self._showExecuteButton   = True
         self._showSaveCloseOnExec = True
         self._saveAndCloseOnExec  = True
         self._showExtraHelpButton = False
@@ -601,9 +602,10 @@ class EditParDialog(object):
 
 #       fileButton.menu.add_command(label="Open...", command=self.pfopen)
 
-        fileButton.menu.add_command(label="Execute", command=self.execute)
-        if self.isChild:
-            fileButton.menu.entryconfigure(0, state=DISABLED)
+        if self._showExecuteButton:
+            fileButton.menu.add_command(label="Execute", command=self.execute)
+            if self.isChild:
+                fileButton.menu.entryconfigure(0, state=DISABLED)
 
         saqlbl ="Save"
         if self._useSimpleAutoClose: saqlbl += " & Quit"
@@ -704,7 +706,7 @@ class EditParDialog(object):
                                      value="BROWSER", command=self.setHelpWin,
                                      variable=self._helpChoice)
 
-        if self._showSaveCloseOnExec:
+        if self._showExecuteButton and self._showSaveCloseOnExec:
             optionButton.menu.add_separator()
             optionButton.menu.add_checkbutton(label="Save and Close on Execute",
                                               command=self.setExecOpt,
@@ -744,19 +746,20 @@ class EditParDialog(object):
         top.bind("<Leave>", self.clearInfo)
 
         # Execute the task
-        buttonExecute = Button(box, text="Execute", bg=self._bboxColor,
-                               relief=RAISED, command=self.execute,
-                               highlightbackground=self._bboxColor)
-        buttonExecute.pack(side=LEFT, padx=5, pady=7)
-        buttonExecute.bind("<Enter>", self.printExecuteInfo)
-        if not self._useSimpleAutoClose:
-            # separate this button from the others - it's unusual
-            strut = Label(box, text="", bg=self._bboxColor)
-            strut.pack(side=LEFT, padx=20)
+        if self._showExecuteButton:
+            buttonExecute = Button(box, text="Execute", bg=self._bboxColor,
+                                   relief=RAISED, command=self.execute,
+                                   highlightbackground=self._bboxColor)
+            buttonExecute.pack(side=LEFT, padx=5, pady=7)
+            buttonExecute.bind("<Enter>", self.printExecuteInfo)
+            if not self._useSimpleAutoClose:
+                # separate this button from the others - it's unusual
+                strut = Label(box, text="", bg=self._bboxColor)
+                strut.pack(side=LEFT, padx=20)
 
-        # EXECUTE button is disabled for child windows
-        if self.isChild:
-            buttonExecute.configure(state=DISABLED)
+            # EXECUTE button is disabled for child windows
+            if self.isChild:
+                buttonExecute.configure(state=DISABLED)
 
         # Save the parameter settings and exit from epar
         saqlbl ="Save"

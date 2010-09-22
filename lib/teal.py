@@ -149,7 +149,8 @@ the "Execute" button.
 
 
 # Starts a GUI session
-def teal(theTask, parent=None, isChild=0, loadOnly=False, returnDict=True):
+def teal(theTask, parent=None, loadOnly=False, returnDict=True,
+         canExecute=True):
 #        overrides=None):
     """ Start the GUI session, or simply load a task's ConfigObj. """
     if loadOnly:
@@ -157,8 +158,8 @@ def teal(theTask, parent=None, isChild=0, loadOnly=False, returnDict=True):
 #       obj.strictUpdate(overrides) # !!! does this skip verify step?? need it!
         return obj
     else:
-        dlg = ConfigObjEparDialog(theTask, parent=parent, isChild=isChild,
-                                  returnDict=returnDict)
+        dlg = ConfigObjEparDialog(theTask, parent=parent,
+                                  returnDict=returnDict, canExecute=canExecute)
 #                                 overrides=overrides)
         # Return, depending on the mode in which we are operating
         if not returnDict:
@@ -231,7 +232,8 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                  'NO', 'No', 'no', 'N', 'n', 'FALSE', 'False', 'false')
 
     def __init__(self, theTask, parent=None, title=APP_NAME,
-                 isChild=0, childList=None, returnDict=True):
+                 isChild=0, childList=None, returnDict=True,
+                 canExecute=True):
 #                overrides=None,
 
         # returnDict is fundamental to this GUI.  If True, then a dict is
@@ -241,6 +243,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
 
         # Keep track of any passed-in keyvals before creating the _taskParsObj
 #       self._overrides = overrides
+        self._canExecute = canExecute
 
         # Init base - calls _setTaskParsObj(), sets self.taskName, etc
         editpar.EditParDialog.__init__(self, theTask, parent, isChild,
@@ -275,6 +278,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self._bboxColor = cod.get('buttonBoxColor', ltblu)
         self._entsColor = cod.get('entriesColor', ltblu)
 
+        self._showExecuteButton = self._canExecute
 
     def _preMainLoop(self):
         """ Override so that we can do some things right before activating. """
