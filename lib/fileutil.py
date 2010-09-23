@@ -727,6 +727,23 @@ def parseExtn(extn=None):
     else:
         return (lext[0], 1)
 
+def countExtn(fimg,extname='SCI'):
+    """ Return the number of 'extname' extensions, defaulting to counting the
+    number of SCI extensions.
+    """
+    closefits = False
+    if isinstance(fimg,str):
+        fimg = pyfits.open(fimg)
+        closefits = True
+    n = 0
+    for e in fimg:
+        if e.header.has_key('extname') and e.header['extname'] == extname:
+            n += 1
+
+    if closefits:
+        fimg.close()
+        
+    return n
 
 def getExtn(fimg,extn=None):
     """ Returns the PyFITS extension corresponding to
