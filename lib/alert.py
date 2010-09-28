@@ -39,7 +39,7 @@ class AlertDialog(ModalDialog):
         upperFrame.pack({'expand':'yes', 'side':'top', 'fill':'both' })
         self.bitmap = Label(upperFrame)
         self.bitmap.pack({'side':'left'})
-        msgList = string.splitfields(self.msgString, "\n")
+        msgList = self.msgString.split("\n")
         for i in range(len(msgList)):
             msgText = Label(upperFrame)
             msgText["text"]   = msgList[i]

@@ -106,7 +106,7 @@ class EparOption(object):
                       prompt = 0)
 
         # Check the prompt to determine how many lines of valid text exist
-        lines       = string.split(self.prompt, "\n")
+        lines       = self.prompt.split("\n")
         nlines      = len(lines)
         promptLines = " " + lines[0]
         infoLines   = ""
@@ -114,9 +114,9 @@ class EparOption(object):
         if (nlines > 1):
             # Keep all the lines of text before the blank line for the prompt
             for i in range(1, nlines):
-                ntokens = string.split(lines[i])
+                ntokens = lines[i].split()
                 if ntokens != []:
-                    promptLines = string.join([promptLines, lines[i]], "\n")
+                    promptLines = "\n".join([promptLines, lines[i]])
                 else:
                     blankLineNo = i
                     break
@@ -179,9 +179,9 @@ class EparOption(object):
             self.master.infoText = Frame(self.master)
 
             for j in range(blankLineNo + 1, nlines):
-                ntokens = string.split(lines[j])
+                ntokens = lines[j].split()
                 if ntokens != []:
-                    infoLines = string.join([infoLines, lines[j]], "\n")
+                    infoLines = "\n".join([infoLines, lines[j]])
                 else:
                     break
 
@@ -457,7 +457,7 @@ class EnumEparOption(EparOption):
         self.shortcuts = {}
         trylist = self.paramInfo.choice
         underline = {}
-        charset = string.lowercase + string.digits
+        charset = string.ascii_lowercase + string.digits
         i = 0
         while trylist:
             trylist2 = []
