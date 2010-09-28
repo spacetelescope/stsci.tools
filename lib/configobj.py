@@ -1247,7 +1247,7 @@ class ConfigObj(Section):
         if isinstance(infile, basestring):
             self.filename = infile
             if os.path.isfile(infile):
-                h = open(infile, 'rb')
+                h = open(infile) # !!! was 'rb' but fails Py3K and we dont need
                 infile = h.read() or []
                 h.close()
             elif self.file_error:
@@ -1455,7 +1455,7 @@ class ConfigObj(Section):
         
         # No encoding specified - so we need to check for UTF8/UTF16
         for BOM, (encoding, final_encoding) in BOMS.items():
-            if not line.startswith(BOM):
+            if not isinstance(BOM, str) or not line.startswith(BOM):
                 continue
             else:
                 # BOM discovered
@@ -2109,7 +2109,8 @@ class ConfigObj(Section):
         if outfile is not None:
             outfile.write(output)
         else:
-            h = open(self.filename, 'wb')
+            # !!! write mode was 'wb' but that fails in Py3K and we dont need
+            h = open(self.filename, 'w')
             h.write(output)
             h.close()
 
