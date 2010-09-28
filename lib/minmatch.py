@@ -25,7 +25,12 @@ R. White, 2000 January 28
 from __future__ import division # confidence high
 
 import copy
-from UserDict import UserDict
+# Need to import UserDict - 3.x has it in collections, 2.x has it in UserDict,
+# and the 2to3 tool doesn't fix this for us; the following should handle it all
+try:
+    from collections import UserDict # try for 3.x
+except ImportError:
+    from UserDict import UserDict # must be in 2.x
 
 class AmbiguousKeyError(KeyError):
     pass
