@@ -14,7 +14,7 @@ the CRVALs of the reference chip.
 
 The original WCS are first copied to MCD1_1 etc before being updated.
 
-UPINCD history:
+:UPINCD History:
 First try, Richard Hook, ST-ECF/STScI, August 2002.
 Version 0.0.1 (WJH) - Obtain IDCTAB using PyDrizzle function.
 Version 0.1 (WJH) - Added support for processing image lists.  
@@ -30,7 +30,7 @@ Version 0.4 (WJH) - Updated to support use of 'defaultModel' for generic
 Version 0.5 (WJH) - Added support for WFPC2 OFFTAB updates, which updates
                     the CRVALs.  However, for WFPC2 data, the creation of
                     the backup values does not currently work.
----------------------------
+:MAKEWCS History:
 MAKEWCS V0.0 (RNH) - Created new version to implement more complete
                      WCS creation based on a reference tangent plane.
 
@@ -769,32 +769,53 @@ def getNrefchip(image,instrument='WFPC2'):
     return Nrefchip, Nrefext
 
 
+_help_str = """ makewcs - a task for updating an image header WCS to make
+      it consistent with the distortion model and velocity aberration.  
+
+This task will read in a distortion model from the IDCTAB and generate 
+a new WCS matrix based on the value of ORIENTAT.  It will support subarrays
+by shifting the distortion coefficients to image reference position before
+applying them to create the new WCS, including velocity aberration. 
+Original WCS values will be moved to an O* keywords (OCD1_1,...).
+Currently, this task will only support ACS and WFPC2 observations.
+
+Parameters
+---------- 
+input: str
+    The filename(s) of image(s) to be updated given either as:
+      * a single image with extension specified,
+      * a substring common to all desired image names,
+      * a wildcarded filename
+      * '@file' where file is a file containing a list of images
+
+quiet: bool
+    turns off ALL reporting messages: 'yes' or 'no'(default)
+
+prepend: char
+    This parameter specifies what prefix letter should be used to 
+    create a new set of WCS keywords for recording the original values
+    [Default: 'O']
+
+restore: bool
+    restore WCS for all input images to defaults if possible:
+    'yes' or 'no'(default) 
+
+tddcorr: bool 
+    applies the time-dependent skew terms to the SIP coefficients
+    written out to the header: 'yes' or True or, 'no' or False (default).
+
+Notes
+-----
+This function can be run using the syntax:
+    makewcs.run(image,quiet=no,prepend='O',restore=no,tddcorr=True)
+An example of how this can be used is given as::
+
+    >>> import makewcs
+    >>> makewcs.run('raw') # This will update all _raw files in directory
+    >>> makewcs.run('j8gl03igq_raw.fits[sci,1]')
+"""
+
 def help():
-    _help_str = """ makewcs - a task for updating an image header WCS to make
-          it consistent with the distortion model and velocity aberration.  
-
-    This task will read in a distortion model from the IDCTAB and generate 
-    a new WCS matrix based on the value of ORIENTAT.  It will support subarrays
-    by shifting the distortion coefficients to image reference position before
-    applying them to create the new WCS, including velocity aberration. 
-    Original WCS values will be moved to an O* keywords (OCD1_1,...).
-    Currently, this task will only support ACS and WFPC2 observations.
-
-    Syntax:
-        makewcs.run(image,quiet=no)
-    where 
-        image   - either a single image with extension specified,
-                  or a substring common to all desired image names,
-                  or a wildcarded filename
-                  or '@file' where file is a file containing a list of images
-        quiet   - turns off ALL reporting messages: 'yes' or 'no'(default)
-        restore - restore WCS for all input images to defaults if possible:
-                    'yes' or 'no'(default) 
-        apply_tdd - applies the time-dependent skew terms to the SIP coefficients
-                    written out to the header: 'yes' or True or, 'no' or False (default).
-    Usage:
-        --> import makewcs
-        --> makewcs.run('raw') # This will update all _raw files in directory
-        --> makewcs.run('j8gl03igq_raw.fits[sci,1]')
-    """
     print _help_str
+
+run.__doc__ = _help_str

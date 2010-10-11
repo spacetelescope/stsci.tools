@@ -3,124 +3,131 @@
 # $Id$
 
 """
-        convertwaiveredfits: Convert a waivered FITS file to various other 
-                             formats.
+    convertwaiveredfits: Convert a waivered FITS file to various other formats.
 
-        License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
+    :License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 
-        Usage:
+    :Syntax From the command line:
 
-           From command line -
-                convertwaiveredfits.py [-hm] [-o <outputFileName>,...] FILE ...
+        convertwaiveredfits.py [-hm] [-o <outputFileName>,...] FILE ...
 
-                Convert the waivered FITS files (FILEs) to various formats.
-                The default conversion format is multi-extension FITS.
+    Convert the waivered FITS files (FILEs) to various formats.
+    The default conversion format is multi-extension FITS.
 
-                Options:
+    :Options:
 
-                  -h,  --help                      print this help message and
-                                                   exit
+    -h, --help                       print this help message and exit
 
-                  -v, --verbose                    turn on verbose output
+    -v, --verbose                    turn on verbose output
 
-                  -m,  --multiExtensionConversion  convert to multi-extension
-                                                   FITS format (Default)
+    -m, --multiExtensionConversion   convert to multi-extension 
+                                     FITS format (Default)
 
-                  -o,  --outputFileName            comma separated list of
-                                                   output file specifications
-                                                   one per input FILE
-                                                   Default: input file
-                                                    specification with the last
-                                                    character of the base name
-                                                    changed to: 
-                                                     'h' - multi-extension FITS
-                                                           format
+    -o, --outputFileName             comma separated list of
+                                     output file specifications
+                                     one per input FILE
+                                     Default: input file
+                                     specification with the last
+                                     character of the base name
+                                     changed to `h` in multi-extension FITS format
 
-                Examples:
+    Examples
+    ========
+    Conversion of a WFPC2 waivered FITS file obtained from the HST archive::
 
-                  convertwaiveredfits.py u9zh010bm_c0f.fits
+        convertwaiveredfits u9zh010bm_c0f.fits 
 
-                  this will convert the waivered FITS file u9zh010bm_c0f.fits
-                  to multi-extension FITS format and generate the output file
-                  u9zh010bm_c0h.fits
+    This will convert the waivered FITS file `u9zh010bm_c0f.fits`
+    to multi-extension FITS format and generate the output file
+    `u9zh010bm_c0h.fits`.
 
 
-                  convertwaiveredfits.py -o out1.fits,out2.fits
-                                         u9zh010bm_c0f.fits u9zh010bm_c1f.fits
+    Conversion of multiple FITS files can be done using::
+    
+        convertwaiveredfits -o out1.fits,out2.fits
+                             u9zh010bm_c0f.fits u9zh010bm_c1f.fits
 
-                  this will convert the waivered FITS files u9zh010bm_c0f.fits
-                  and u9zh010bm_c1f.fits to multi-extension FITS format and
-                  generate the output files out1.fits and out2.fits
-
-
-           From Python - 
-                convertwaiveredfits(waiveredObject, 
-                                    outputFileName=None, 
-                                    forceFileOutput=False, 
-                                    convertTo='multiExtension',
-                                    verbose=False)
-
-                Parameters:
-
-                  waiveredObject  input object representing a waivered FITS 
-                                  file; either a pyfits.HDUList object, a file 
-                                  object, or a file specification
-
-                  outputFileName  file specification for the output file
-                                  Default: None - do not generate an output file
-
-                  forceFileOutput force the generation of an output file when 
-                                  the outputFileName parameter is None; the 
-                                  output file specification will be the same as
-                                  the input file specification with the last 
-                                  character of the base name replaced with the 
-                                  character:
-
-                                    'h' - multi-extension FITS
-
-                                  Default: False
-
-                  convertTo       target conversion type
-                                  Default: 'multiExtension'
-
-                  verbose         provide verbose output
-                                  Default: False
-                         
-                Returns:
-
-                  hduList         pyfits.HDUList containing converted output
-
-                Examples:
-
-                  import convertwaiveredfits
-                  hdulist =
-                   convertwaiveredfits.convertwaiveredfits('u9zh010bm_c0f.fits',
-                                                           forceFileOutput=True)
-
-                  this will convert the waivered FITS file u9zh010bm_c0f.fits
-                  to multi-extension FITS format and write the output to the
-                  file u9zh010bm_c0h.fits;  the returned HDUList is in 
-                  multi-extension FITS format
+    This will convert the waivered FITS files u9zh010bm_c0f.fits
+    and u9zh010bm_c1f.fits to multi-extension FITS format and
+    generate the output files out1.fits and out2.fits
 
 
-                  import convertwaiveredfits
-                  inFile = open('u9zh010bm_c0f.fits',mode='rb')
-                  hdulist = convertwaiveredfits.convertwaiveredfits(inFile,
-                                                                    'out.fits')
+    :Python Syntax: You can run this code interactively from within Python using the syntax:
 
-                  this will convert the waivered FITS file u9zh010bm_c0f.fits
-                  to multi-extension FITS format and write the output to the
-                  file out.fits; the returned HDUList is in multi-extension 
-                  FITS format
+        >>> from pytools import convertwaiveredfits
+        >>> fobj = convertwaiveredfits.convertwaiveredfits(waiveredObject, 
+        >>>                    outputFileName=None, 
+        >>>                    forceFileOutput=False, 
+        >>>                    convertTo='multiExtension', 
+        >>>                    verbose=False)
 
-                  import pyfits
-                  import convertwaiveredfits
-                  inHdul = pyfits.open('u9zh010bm_c0f.fits')
-                  hdulist = convertwaiveredfits.convertwaiveredfits(inHdul)
-                  
-                  this will convert the waivered FITS file u9zh010bm_c0f.fits
-                  to multi-extension FITS format; no output file is generated;
-                  the returned HDUList is in multi-extension format 
+    The returned object `fobj` is a PyFITS object using the multi-extension FITS format.
+    
+
+    Parameters
+    ==========
+    waiveredObject: obj
+        input object representing a waivered FITS 
+        file; either a pyfits.HDUList object, a file 
+        object, or a file specification
+
+    outputFileName : string
+        file specification for the output file
+        Default: None - do not generate an output file
+
+    forceFileOutput: boolean 
+        force the generation of an output file when 
+        the outputFileName parameter is None; the 
+        output file specification will be the same as
+        the input file specification with the last 
+        character of the base name replaced with the 
+        character `h` in multi-extension FITS format.
+
+        Default: False
+
+    convertTo: string
+        target conversion type
+        Default: 'multiExtension'
+
+    verbose: boolean
+        provide verbose output
+        Default: False
+             
+    Returns
+    =======
+    hduList         
+        pyfits.HDUList (PyFITS multi-extension FITS object) containing converted output
+
+    Examples
+    ========
+      >>> import convertwaiveredfits
+      >>> hdulist = convertwaiveredfits.convertwaiveredfits('u9zh010bm_c0f.fits',
+                                               forceFileOutput=True)
+
+    this will convert the waivered FITS file u9zh010bm_c0f.fits
+    to multi-extension FITS format and write the output to the
+    file u9zh010bm_c0h.fits;  the returned HDUList is in 
+    multi-extension FITS format
+
+
+      >>> import convertwaiveredfits
+      >>> inFile = open('u9zh010bm_c0f.fits',mode='rb')
+      >>> hdulist = convertwaiveredfits.convertwaiveredfits(inFile,
+                                                        'out.fits')
+
+    this will convert the waivered FITS file u9zh010bm_c0f.fits
+    to multi-extension FITS format and write the output to the
+    file out.fits; the returned HDUList is in multi-extension 
+    FITS format
+
+      >>> import pyfits
+      >>> import convertwaiveredfits
+      >>> inHdul = pyfits.open('u9zh010bm_c0f.fits')
+      >>> hdulist = convertwaiveredfits.convertwaiveredfits(inHdul)
+      
+    this will convert the waivered FITS file u9zh010bm_c0f.fits
+    to multi-extension FITS format; no output file is generated;
+    the returned HDUList is in multi-extension format 
 """
 
 # Developed by Science Software Branch, STScI, USA.
@@ -544,9 +551,8 @@ def convertwaiveredfits(waiveredObject,
                           outputFileName parameter is None; the output file
                           specification will be the same as the input file
                           specification with the last character of the base
-                          name replaced with the character:
-
-                              'h' - multi-extension FITS
+                          name replaced with the character `h` in 
+                          multi-extension FITS format.
 
                           Default: False
 

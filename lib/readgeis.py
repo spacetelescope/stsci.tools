@@ -13,7 +13,7 @@
 
                 GEISname is the input GEIS file in GEIS format, and FITSname
                 is the output file in FITS format. GEISname can be a
-                directory name.  In this case, it will try to use all *.??h
+                directory name.  In this case, it will try to use all `*.??h`
                 files as input file names.
 
                 If FITSname is omitted or is a directory name, this task will
@@ -21,38 +21,44 @@
 
                 abc.xyh will have an output name of abc_xyf.fits
 
-                Option:
+        :Options:
+        
+        -h     print the help (this text)
 
-                -h
-                        print the help (this text)
+        :Example:
 
-        Example:
+        If used in Pythons script, a user can, e. g.::
 
-                readgeis.py test1.hhh test1.fits
+            >>> import readgeis
+            >>> hdulist = readgeis.readgeis(GEISFileName)
+            (do whatever with hdulist)
+            >>> hdulist.writeto(FITSFileName)
 
-                this command will convert the input GEIS file test1.hhh to
-                a FITS file test1.fits.
+        The most basic usage from the command line::
+        
+            readgeis.py test1.hhh test1.fits
 
-                If used in Pythons script, a user can, e. g.:
-
-                import readgeis
-                hdulist = readgeis.readgeis(GEISFileName)
-                (do whatever with hdulist)
-                hdulist.writeto(FITSFileName)
+        This command will convert the input GEIS file test1.hhh to
+        a FITS file test1.fits.
 
 
-                readgeis.py .
+        From the command line:: 
 
-                this will convert all *.??h files in the current directory
-                to FITS files (of corresponding names) and write them in the
-                current directory.
+            readgeis.py .
 
-                readgeis.py "u*" "*"
+        this will convert all `*.??h` files in the current directory
+        to FITS files (of corresponding names) and write them in the
+        current directory.
 
-                this will convert all u*.??h files in the current directory
-                to FITS files (of corresponding names) and write them in the
-                current directory.  Note that when using wild cards, it is
-                necessary to put them in quotes.
+
+        Another example of usage from the command line::
+        
+            readgeis.py "u*" "*"
+
+        this will convert all `u*.??h` files in the current directory
+        to FITS files (of corresponding names) and write them in the
+        current directory.  Note that when using wild cards, it is
+        necessary to put them in quotes.
 
 """
 

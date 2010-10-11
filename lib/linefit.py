@@ -4,8 +4,8 @@ Fit a line to a data set with optional weights.
 Returns the parameters of the model, bo, b1:
 Y = b0 + b1* X
 
-@author: Nadia Dencheva
-@version: '1.0 (2007-02-20)'
+:author: Nadia Dencheva
+:version: '1.0 (2007-02-20)'
 
 """
 from __future__ import division # confidence high
@@ -26,14 +26,18 @@ __vdate__ = '2007-02-20'     #Date of this version
 def linefit(x,y,weights=None):
 
     """
-    @type  y:         1D numpy array
-    @param y:         The data to be fitted
-    @type  x:         1D numpy array
-    @param x:         The x values of the y array. x and y must
-                      have the same shape.
-    @type  weights:   1D numpy array, must have the same shape as x and y
-    @param weights:   weight values
+    Parameters
+    ----------
+    y: 1D numpy array
+        The data to be fitted
+    x: 1D numpy array
+        The x values of the y array. x and y must
+        have the same shape.
+    weights:   1D numpy array, must have the same shape as x and y
+        weight values
 
+    Examples
+    --------
     >>> x=N.array([-5, -4 ,-3 ,-2 ,-1, 0, 1, 2, 3, 4, 5])
     >>> y=N.array([1, 5, 4, 7, 10, 8, 9, 13, 14, 13, 18])
     >>> around(linefit(x,y), decimals=5)

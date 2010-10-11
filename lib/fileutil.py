@@ -1,36 +1,51 @@
 """ fileutil.py -- General file functions
-           These were initially designed for use with PyDrizzle.
-
+           
+These were initially designed for use with PyDrizzle.
 These functions only rely on booleans 'yes' and 'no', PyFITS and readgeis.
 
 This file contains both IRAF-compatibility and general file access functions.
-General functions included are:
+General functions included are::
+
     DEGTORAD(deg), RADTODEG(rad)
+
     DIVMOD(num,val)
+
     convertDate(date)
         Converts the DATE date string into a decimal year.
+
     decimal_date(date-obs,time-obs=None)
         Converts the DATE-OBS (with optional TIME-OBS) string into a decimal year
+
     buildRootname(filename, extn=None, extlist=None)
+
     buildNewRootname(filename, ext=None)
+
     parseFilename(filename)
         Splits a input name into a tuple containing (filename, group/extension)
+
     getKeyword(filename, keyword, default=None, handle=None)
+
     getHeader(filename,handle=None)
          Return a copy of the PRIMARY header, along with any group/extension
          header, for this filename specification.
+
     getExtn(fimg,extn=None)
         Returns a copy of the specified extension with data from PyFITS object
         'fimg' for desired file.
+
     updateKeyword(filename, key, value)
+
     openImage(filename,mode='readonly',memmap=0,fitsname=None)
          Opens file and returns PyFITS object.
          It will work on both FITS and GEIS formatted images.
 
     findFile(input)
+
     checkFileExists(filename,directory=None)
+
     removeFile(inlist):
         Utility function for deleting a list of files or a single file.
+
     rAsciiLine(ifile)
         Returns the next non-blank line in an ASCII file.
 
@@ -38,20 +53,23 @@ General functions included are:
         Reads an association (ASN) table and interprets inputs and output.
         The 'prodonly' parameter specifies whether to use products as inputs
             or not; where 'prodonly=no' specifies to only use EXP as inputs.
+
     isFits(input) - returns (True|False, fitstype), fitstype is one of
                     ('simple', 'mef', 'waiver') 
         
-IRAF compatibility functions (abbreviated list):    
+IRAF compatibility functions (abbreviated list)::    
+
     osfn(filename)
         Convert IRAF virtual path name to OS pathname
+
     show(*args, **kw)
         Print value of IRAF or OS environment variables
+
     time()
         Print current time and date
+
     access(filename)
         Returns true if file exists, where filename can include IRAF variables
-        
-
 """
 from __future__ import division # confidence high
 
@@ -180,11 +198,17 @@ def interpretDQvalue(input):
 
 def isFits(input):
     """
-    Returns a tuple (isfits, fitstype)
-    isfits - True|False
-    fitstype - if True, one of 'waiver', 'mef', 'simple'
+    Returns
+    --------
+    isFits: a tuple (isfits, fitstype)
+        The values of `isfits` and `fitstype` are specified as:: 
+ 
+            isfits - True|False
+            fitstype - if True, one of 'waiver', 'mef', 'simple'
                if False, None 
     
+    Notes
+    -----
     Input images which do not have a valid FITS filename will automatically
     result in a return of (False, None). 
     
@@ -280,7 +304,9 @@ def getFilterNames(header,filternames=None):
     Returns a comma-separated string of filter names extracted from the
     input header (PyFITS header object).  This function has been hard-coded
     to support the following instruments:
+    
         ACS, WFPC2, STIS
+
     This function relies on the 'INSTRUME' keyword to define what instrument
     has been used to generate the observation/header.
 
@@ -563,22 +589,30 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
     """ Opens file and returns PyFITS object.
         It will work on both FITS and GEIS formatted images. 
 
+        Notes
+        -----
         If a GEIS or waivered FITS image is used as input, 
         it will convert it to a MEF object
         and only if 'writefits = True' will write it out to a file. If 
         'fitsname = None', the name used to write out the new MEF file 
         will be created using 'buildFITSName()'. 
         
-        Parameters:
-            filename  - name of input file
-            mode      - mode for opening file
-            memmap    - switch for using memory mapping
-            writefits - if True, will write out GEIS as multi-extension FITS
-                        and return handle to that opened GEIS-derived MEF file 
-            clobber   - overwrite previously written out GEIS-derived MEF file
-            fitsname  - name to use for GEIS-derived MEF file,
-                        if None and writefits==True, 
-                            will use 'buildFITSName()' to generate one
+        Parameters
+        ----------
+        filename: str
+            name of input file
+        mode: str
+            mode for opening file based on PyFITS `mode` parameter values
+        memmap: int
+            switch for using memory mapping, 0 for no, 1 for yes
+        writefits: bool
+            if True, will write out GEIS as multi-extension FITS
+            and return handle to that opened GEIS-derived MEF file 
+        clobber: bool
+            overwrite previously written out GEIS-derived MEF file
+        fitsname: str
+            name to use for GEIS-derived MEF file,
+            if None and writefits==True, will use 'buildFITSName()' to generate one
     """
     # Insure that the filename is always fully expanded
     # This will not affect filenames without paths or
@@ -705,12 +739,15 @@ def parseExtn(extn=None):
     output of parseFilename and return a tuple (str(extname), int(extver)),
     which can be passed to pyfits functions using the 'ext' kw. 
     Default return is the first extension in a fits file. 
-    >>>parseExtn('sci,2')
-    ('sci', 2)
-    >>>parseExtn('2')
-    ('', 2)
-    >>>parseExtn('sci')
-    ('sci', 1)
+    
+    Examples
+    --------
+        >>>parseExtn('sci,2')
+        ('sci', 2)
+        >>>parseExtn('2')
+        ('', 2)
+        >>>parseExtn('sci')
+        ('sci', 1)
     """
     if not extn:
         return ('', 0)
@@ -746,12 +783,12 @@ def countExtn(fimg,extname='SCI'):
     return n
 
 def getExtn(fimg,extn=None):
-    """ Returns the PyFITS extension corresponding to
-        extension specified in filename.
-        Defaults to returning the first extension with
-            data or the primary extension, if none have data.
+    """ Returns the PyFITS extension corresponding to extension specified in filename.
+
+        Defaults to returning the first extension with data or the primary 
+        extension, if none have data.
         If a non-existent extension has been specified, 
-            it raises a KeyError exception.
+        it raises a KeyError exception.
     """
     # If no extension is provided, search for first extension
     # in FITS file with data associated with it.

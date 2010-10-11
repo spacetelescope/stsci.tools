@@ -1,18 +1,18 @@
 """
-Module: xyinterp.py
+:Module: xyinterp.py
 
 Interpolates y based on the given xval.
 
-x and y are a pair of independent/dependent variable arrays that must
+`x` and `y` are a pair of independent/dependent variable arrays that must
 be the same length. The x array must also be sorted.
-xval is a user-specified value. This routine looks
-up xval in the x array and uses that information to properly interpolate
+`xval` is a user-specified value. This routine looks
+up `xval` in the x array and uses that information to properly interpolate
 the value in the y array. 
 
 
-@author: Vicki Laidler
+:author: Vicki Laidler
 
-@version: '0.1 (2006-07-06)'  
+:version: '0.1 (2006-07-06)'  
 
 
 """
@@ -28,9 +28,7 @@ __vdate__ = '2006-07-06'     #Date of this version, in this (FITS-style) format
 def xyinterp(x,y,xval):
     """ 
     
-    Purpose
-    =======
-    Interpolates y based on the given xval.
+    :Purpose: Interpolates y based on the given xval.
 
     x and y are a pair of independent/dependent variable arrays that must
     be the same length. The x array must also be sorted.
@@ -38,38 +36,41 @@ def xyinterp(x,y,xval):
     up xval in the x array and uses that information to properly interpolate
     the value in the y array.  
 
-    Algorithm
-    ---------
+    Notes
+    =====
     Use the searchsorted method on the X array to determine the bin in
     which xval falls; then use that information to compute the corresponding
     y value.
     
 
-    Dependencies 
-    ============
+    See Also 
+    ========
     numpy
 
-    Details
+    Parameters
+    ==========
+
+    x: 1D numpy array  
+        independent variable array: MUST BE SORTED
+
+    y: 1D numpy array
+        dependent variable array
+
+    xval: float 
+        the x value at which you want to know the value of y
+
+    Returns
     =======
+    y: float 
+        the value of y corresponding to xval
 
-    @param x: independent variable array: MUST BE SORTED
-    @type x: 1D numpy array
+    Raises
+    ======
+    ValueError: 
+        If arrays are unequal length; or x array is unsorted;
+        or if xval falls outside the bounds of x (extrapolation is unsupported
 
-    @param y: dependent variable array
-    @type y: 1D numpy array 
-
-    @param xval: the x value at which you want to know the value of y
-    @type xval: number
-
-
-    @returns: the value of y corresponding to xval
-    @rtype: number
-
-    @version: 0.1 last modified 2006-07-06
-
-    
-    @raise ValueError: If arrays are unequal length; or x array is unsorted;
-    or if xval falls outside the bounds of x (extrapolation is unsupported
+    :version: 0.1 last modified 2006-07-06
 
 """
 

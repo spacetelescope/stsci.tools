@@ -17,7 +17,7 @@ def irafglob(inlist, atfile=None):
     at-files, use the atfile keyword to process them.
 
     This function is recursive, so IRAF lists can also contain at-files
-    and wild-card characters, e.g. 'a.fits, @file.lst, *flt.fits'.
+    and wild-card characters, e.g. `a.fits`, `@file.lst`, `*flt.fits`.
     """
 
     # Sanity check

@@ -146,57 +146,85 @@ def troll(roll, dec, v2, v3):
 
 class WCSObject:
     """ This class should contain the WCS information from the
-            input exposure's header and provide conversion functionality
-            from pixels to RA/Dec and back.
+        input exposure's header and provide conversion functionality
+        from pixels to RA/Dec and back.
 
-        Syntax:
-            wcs = wcsutil.WCSObject(rootname,header=None,shape=None,
-                                    pa_key='PA_V3',new=no,prefix=None)
-        Parameters:
-            rootname: filename in a format supported by IRAF, specifically:
+        :Syntax: The basic syntax for using this object is::
+        
+            >>> wcs = wcsutil.WCSObject(rootname,header=None,shape=None,
+            >>>                        pa_key='PA_V3',new=no,prefix=None)
+                                    
+        This will create a WCSObject which provides basic WCS functions.
+        
+        Parameters
+        ==========
+        rootname: string
+            filename in a format supported by IRAF, specifically::
+            
                 filename.hhh[group] -or-
                 filename.fits[ext] -or-
                 filename.fits[extname,extver]
-            header:   PyFITS header object from which WCS keywords can be read
-            shape:    tuple giving (nx,ny,pscale)
-            pa_key:   name of keyword to read in telescopy orientation
-            new:      specify a new object rather than creating one by
-                        reading in keywords from an existing image
-            prefix:   string to use as prefix for creating archived versions
-                        of WCS keywords, if such keywords do not already exist
 
-            Setting 'new=yes' will create a WCSObject from scratch
-                regardless of any input rootname.  This avoids unexpected
-                filename collisions.
-        Methods:
-            print_archive(format=True) - print out archive keyword values
-            get_archivekw(keyword)     - return archived value for WCS keyword
-            set_pscale()               - set pscale attribute for object
-            compute_pscale(cd11,cd21)  - compute pscale value
-            get_orient()               - return orient computed from CD matrix
-            updateWCS(pixel_scale=None,orient=None,refpos=None,refval=None,size=None)
-                                       - reset entire WCS based on given values
-            xy2rd(pos)                 - compute RA/Dec position for given (x,y) tuple
-            rd2xy(skypos,hour=no)      - compute X,Y position for given (RA,Dec)
-            rotateCD(orient)           - rotate CD matrix to new orientation
-                                            given by 'orient'
-            recenter()                 - Reset reference position to X,Y center of frame
-            write(fitsname=None,archive=True,overwrite=False,quiet=True)
-                                       - write out values of WCS to specified file
-            restore()                  - reset WCS keyword values to those from
-                                            archived values
-            read_archive(header,prepend=None)
-                                       - read any archive WCS keywords from PyFITS header
-            archive(prepend=None,overwrite=no,quiet=yes)
-                                       - create archived copies of WCS keywords.
-            write_archive(fitsname=None,overwrite=no,quiet=yes)
-                                       - write out the archived WCS values to the file
-            restoreWCS(prepend=None)   - resets WCS values in file to original values
-            createReferenceWCS(refname,overwrite=yes)
-                                       - write out values of WCS keywords to NEW FITS
-                                         file without any image data
-            copy(deep=True)            - create a copy of the WCSObject.
-            help()                     - prints out this help message
+        header: object  
+            PyFITS header object from which WCS keywords can be read
+        shape:    tuple 
+            tuple giving (nx,ny,pscale)
+        pa_key: string   
+            name of keyword to read in telescopy orientation
+        new: boolean
+            specify a new object rather than creating one by
+            reading in keywords from an existing image
+        prefix: string 
+            string to use as prefix for creating archived versions
+            of WCS keywords, if such keywords do not already exist
+
+        Notes
+        ======        
+        Setting 'new=yes' will create a WCSObject from scratch
+        regardless of any input rootname.  This avoids unexpected
+        filename collisions.
+
+        Methods
+        =======
+        print_archive(format=True)
+            print out archive keyword values
+        get_archivekw(keyword)     
+            return archived value for WCS keyword
+        set_pscale()               
+            set pscale attribute for object
+        compute_pscale(cd11,cd21)  
+            compute pscale value
+        get_orient()               
+            return orient computed from CD matrix
+        updateWCS(pixel_scale=None,orient=None,refpos=None,refval=None,size=None)
+            reset entire WCS based on given values
+        xy2rd(pos)                 
+            compute RA/Dec position for given (x,y) tuple
+        rd2xy(skypos,hour=no)      
+            compute X,Y position for given (RA,Dec)
+        rotateCD(orient)           
+            rotate CD matrix to new orientation given by 'orient'
+        recenter()                 
+            Reset reference position to X,Y center of frame
+        write(fitsname=None,archive=True,overwrite=False,quiet=True)
+            write out values of WCS to specified file
+        restore()                  
+            reset WCS keyword values to those from archived values
+        read_archive(header,prepend=None)
+            read any archive WCS keywords from PyFITS header
+        archive(prepend=None,overwrite=no,quiet=yes)
+            create archived copies of WCS keywords.
+        write_archive(fitsname=None,overwrite=no,quiet=yes)
+            write out the archived WCS values to the file
+        restoreWCS(prepend=None) 
+            resets WCS values in file to original values
+        createReferenceWCS(refname,overwrite=yes)
+            write out values of WCS keywords to NEW FITS
+            file without any image data
+        copy(deep=True)            
+            create a copy of the WCSObject.
+        help()                     
+            prints out this help message
 
     """
     def __init__(self, rootname,header=None,shape=None,pa_key='PA_V3',new=no,prefix=None):

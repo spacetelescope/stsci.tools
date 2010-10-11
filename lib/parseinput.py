@@ -32,21 +32,41 @@ from pytools.asnutil import readASNTable
 
 def parseinput(inputlist,outputname=None, atfile=None):
     """
-    FUNCTION: paseinput
-    PUPOSE  : Recursively parse user input based upon the irafglob
-       program and construct a list of files that need to be processed.
-       This program addresses the following deficiencies of the irafglob program:
+    Recursively parse user input based upon the irafglob
+    program and construct a list of files that need to be processed.
+    This program addresses the following deficiencies of the irafglob program::
 
-       1) parseinput can extract filenames from association tables
+       parseinput can extract filenames from association tables
     
-       This program will return a list of input files that will need to
-       be processed in addition to the name of any outfiles specified in
-       an association table.
-    INPUT   : inputlist - string object
-              outputname - string object
-    OUTPUT  : files - python list containing name of output files to be processed
-              newoutputname - string object containing name of output file to be
-                              created.
+    Returns
+    -------
+    This program will return a list of input files that will need to
+    be processed in addition to the name of any outfiles specified in
+    an association table.
+
+    Parameters
+    ----------
+    inputlist - string
+        specification of input files using either wild-cards, @-file or 
+        comma-separated list of filenames
+
+    outputname - string
+        desired name for output product to be created from the input files
+
+    atfile - object
+        function to use in interpreting the @-file columns that gets passed to irafglob
+        
+    Returns
+    -------    
+    files - list of strings 
+        names of output files to be processed
+    newoutputname - string 
+        name of output file to be created.
+        
+    See Also
+    --------
+    pytools.irafglob
+    
     """
 
     # Initalize some variables
@@ -118,11 +138,17 @@ def parseinput(inputlist,outputname=None, atfile=None):
 
 def checkASN(filename):
     """
-    FUNCTION: checkASN
-    PURPOSE : Determine if the filename provided to the function belongs to
-              an association.
-    INPUT   : string
-    OUTPUT  : boolean value 
+    Determine if the filename provided to the function belongs to
+    an association.
+
+    Parameters
+    ----------
+    filename: string
+    
+    Returns
+    -------
+    validASN  : boolean value
+     
     """
     # Extract the file extn type:
     extnType = filename[filename.rfind('_')+1:filename.rfind('.')]
@@ -136,12 +162,16 @@ def checkASN(filename):
     
 def isValidAssocExtn(extname):
     """
-    FUNCTION: isValidAssocExtn
-    PURPOSE : Determine if the extension name given as input could
-              represent a valid association file.
-    INPUT   : string
-    OUTPUT  : boolean value
+    Determine if the extension name given as input could
+    represent a valid association file.
+
+    Parameters
+    ----------
+    extname : string
     
+    Returns
+    -------
+    isValid  : boolean value
     
     """
     # Define a list of valid extension types to define an association table.
@@ -156,12 +186,20 @@ def isValidAssocExtn(extname):
     
 def countinputs(inputlist):
     """
-    FUNCTION: countinputs
-    PURPOSE : Determine the number of inputfiles provided by the user and the
-              number of those files that are association tables
-    INPUT   : string representing the user input
-    OUTPUT  : numInputs - number of inputs provided by the user
-              numASNfiles - number of associattion files provided as input
+    Determine the number of inputfiles provided by the user and the
+    number of those files that are association tables
+    
+    Parameters
+    ----------
+    inputlist   : string 
+        the user input
+        
+    Returns
+    -------
+    numInputs: int
+        number of inputs provided by the user
+    numASNfiles: int
+        number of association files provided as input
     """
     
     # Initialize return values

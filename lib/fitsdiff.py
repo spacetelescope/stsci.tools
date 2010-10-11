@@ -8,67 +8,68 @@
 
         License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 
-        Usage:
+        :Usage:
+            The basic use of this module has the following syntax::
 
                 fitsdiff.py [options] filename1 filename2
 
-                where filename1 filename2 are the two files to be compared.
-                they can be wild cards, in such cases, they must be enclosed
-                by double or single quotes.  they can also be directory names:
-                if both are directory names, all files in each of the
-                directories will be included, if only one is directory name,
-                then the directory name will be prefixed to the file name(s)
-                specified by the other argument.  for example:
+            where filename1 filename2 are the two files to be compared.
+            they can be wild cards, in such cases, they must be enclosed
+            by double or single quotes.  they can also be directory names:
+            if both are directory names, all files in each of the
+            directories will be included, if only one is directory name,
+            then the directory name will be prefixed to the file name(s)
+            specified by the other argument.  for example::
 
-                fitsdiff.py "*.fits" "/machine/data1"
+                    fitsdiff.py "*.fits" "/machine/data1"
 
-                will compare all FITS files in the current directory to the
-                corresponding files in the directory /machine/data1
+            will compare all FITS files in the current directory to the
+            corresponding files in the directory /machine/data1
 
-                Options are one or more of:
+            Options are one or more of:
 
-                -c  (list of keywords)
-                        a list of keywords whose comments will not be compared.
-                        If want to exclude all keywords, use "*", make sure to
-                        have double or single quotes around the asterisk.
-                        default = None
-                -k  (list of keywords)
-                        a list of keywords not to be compared.
-                        If want to exclude all keywords, use "*", make sure to
-                        have double or single quotes around the asterisk.
-                        default = None
-                -f  (list of column names)
-                        a list of fields (i.e. columns) not to be compared.
-                        If want to exclude all columns, use "*", make sure to
-                        have double or single quotes around the asterisk.
-                        default = None
-                -n  (non-negative integer)
-                        max number of different data (image pixel or table
-                        element) to report per extension,
-                        default = 10
-                -d  (non-negative number)
-                        relative difference level below which data are
-                        considered equal, this criterion only applies to
-                        floating point numbers, both data and keyword values,
-                        it does not apply to integers.
-                        default = 0.
-                -b
-                        means trailing blanks in string values (both in header
-                        keywords and column values) are significant, i.e.
-                        'ABC   ' and 'ABC' mean different things if this
-                        swithch is set.
-                -o  (output file name)
-                        output file name where the result goes
-                -h
-                        print the help (this text)
+            -c  (list of keywords)
+                    a list of keywords whose comments will not be compared.
+                    If want to exclude all keywords, use "*", make sure to
+                    have double or single quotes around the asterisk.
+                    default = None
+            -k  (list of keywords)
+                    a list of keywords not to be compared.
+                    If want to exclude all keywords, use "*", make sure to
+                    have double or single quotes around the asterisk.
+                    default = None
+            -f  (list of column names)
+                    a list of fields (i.e. columns) not to be compared.
+                    If want to exclude all columns, use "*", make sure to
+                    have double or single quotes around the asterisk.
+                    default = None
+            -n  (non-negative integer)
+                    max number of different data (image pixel or table
+                    element) to report per extension,
+                    default = 10
+            -d  (non-negative number)
+                    relative difference level below which data are
+                    considered equal, this criterion only applies to
+                    floating point numbers, both data and keyword values,
+                    it does not apply to integers.
+                    default = 0.
+            -b
+                    means trailing blanks in string values (both in header
+                    keywords and column values) are significant, i.e.
+                    'ABC   ' and 'ABC' mean different things if this
+                    swithch is set.
+            -o  (output file name)
+                    output file name where the result goes
+            -h
+                    print the help (this text)
 
-                If the two files are identical within the specified conditions,
-                it will report "No difference is found."
-                If the value(s) of -c and -k takes the form '@filename',
-                list is in the text file 'filename', and each line in that
-                text file contains one keyword.
+            If the two files are identical within the specified conditions,
+            it will report "No difference is found."
+            If the value(s) of -c and -k takes the form '@filename',
+            list is in the text file 'filename', and each line in that
+            text file contains one keyword.
 
-        Example:
+        :Example:
 
                 fitsdiff.py -k filename,filtnam1 -n 5 -d 1.e-6 test1.fits test2
 

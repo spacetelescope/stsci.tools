@@ -385,14 +385,17 @@ def _assignSt_pyfitsClassExtensions(classExtensions):
     If and extenstion for a class already exists in the dictionary, it is
     not replaced.
 
-    :Parameters:
-      classExtensions: A dictionary that maps pyfits classes to extensions of
-                       those classes.  When present in the dictionary, the
-                       extension class will be constructed in place of the
-                       pyfits class.
+    Parameters
+    ----------
+    classExtensions: A dictionary 
+        This dictionary maps pyfits classes to extensions of
+        those classes.  When present in the dictionary, the
+        extension class will be constructed in place of the
+        pyfits class.
 
-    :Returns:
-      None
+    Returns
+    -------
+    None
     """
 
     if not classExtensions.has_key(core._File):
@@ -415,11 +418,14 @@ def _assignSt_pyfitsClassExtensionsKeywordDict(keywords):
     If the classExtension dictionary already exists in the inpt keyword
     dictionary, it is updated for stpyfits.
 
-    :Parameters:
-      keywords: A dictionary that maps keyword arguments to their values.
+    Parameters
+    ----------
+    keywords: dictionary 
+        A dictionary that maps keyword arguments to their values.
 
-    :Returns:
-      None
+    Returns
+    -------
+    None
     """
 
     if keywords.has_key('classExtensions'):

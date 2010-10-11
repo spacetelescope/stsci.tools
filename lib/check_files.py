@@ -223,14 +223,16 @@ def stisObsCount(input):
 
 def splitStis(stisfile, sci_count):
     """
-    Purpose
-    =======
+    :Purpose: Split a STIS association file into multiple imset MEF files.
     
-    Split a STIS association file into multiple imset MEF files.
     Split the corresponding spt file if present into single spt files.
     If an spt file can't be split or is missing a Warning is printed.
     
-    Output: a list with the names of the new flt files.
+    Returns
+    -------
+    names: list
+        a list with the names of the new flt files.
+        
     """
     newfiles = []
     

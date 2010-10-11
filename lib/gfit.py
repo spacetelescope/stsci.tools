@@ -65,31 +65,35 @@ maxiter=200, quiet=0):
     """
     Return the gaussian fit as an object.
 
-    @type  y:   1D Numarray array
-    @param y:   The data to be fitted
-    @type  x:   1D Numarray array
-    @param x:   (optional) The x values of the y array. x and y must
-                            have the same shape.
-    @type  err: 1D Numarray array
-    @param err: (optional) 1D array with measurement errors, must be
-                            the same shape as y
-    @type weights: 1D Numarray array
-    @param weights: (optiional) 1D array with weights, must be the same
-                                    shape as y
-    @type par:  List
-    @param par: (optional) Starting values for the parameters to be fitted
-    @type parinfo: Dictionary of lists
-    @param parinfo: (optional) provides additional information for the
-                                    parameters. For a detailed description see nmpfit.py.
-                                    Parinfo can be used to limit parameters or keep
-                                    some of them fixed.
-    @type maxiter: number
-    @param maxiter: Maximum number of iterations to perform
-                                    Default: 200
-    @type quiet: number
-    @param quiet: if set to 1, nmpfit does not print to the screen
-                                    Default: 0
+    Parameters
+    ----------
+    y:   1D Numarray array
+        The data to be fitted
+    x:   1D Numarray array
+        (optional) The x values of the y array. x and y must
+        have the same shape.
+    err: 1D Numarray array
+        (optional) 1D array with measurement errors, must be
+        the same shape as y
+    weights: 1D Numarray array
+        (optiional) 1D array with weights, must be the same
+        shape as y
+    par:  List
+        (optional) Starting values for the parameters to be fitted
+    parinfo: Dictionary of lists
+        (optional) provides additional information for the
+        parameters. For a detailed description see nmpfit.py.
+        Parinfo can be used to limit parameters or keep
+        some of them fixed.
+    maxiter: number
+        Maximum number of iterations to perform
+        Default: 200
+    quiet: number
+        if set to 1, nmpfit does not print to the screen
+        Default: 0
 
+    Examples
+    --------
     >>> x=N.arange(10,20, 0.1)
     >>> y= 10*N.e**(-(x-15)**2/4)
     >>> print gfit1d(y,x=x, maxiter=20,quiet=1).params
