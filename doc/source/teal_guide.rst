@@ -126,8 +126,16 @@ This function simply relies on the module level docstring to describe how to use
 
 .. note:: The formatting for the docstrings or help files read in by this function can use the numpy documentation restructured text markup format to be compatible with Sphinx when automatically generating documentation on this task using Sphinx. The numpy extension results in simple enough formatting that works well in the TEAL Help window without requiring any translation. More information on this format can be found in the `Numpy Documentation`_ pages.
 
-More complex tasks may require the documentation which would be too long to comfortably fit within docstrings in the code itself.  In those cases, separate files with extended discussions formatted using the numpy restructured text (reST) markup can be written and saved using the naming convention of ```<taskname>.help``` in the same directory as the module. The function can then simply use Python file operations to read it in as a list of strings which are concatenated together and passed along as the output.  The task `betadrizzle` uses separate files and can be used as an example of how this can be implemented. 
+More complex tasks may require the documentation which would be too long to comfortably fit within docstrings in the code itself.  In those cases, separate files with extended discussions formatted using the numpy restructured text (reST) markup can be written and saved using the naming convention of ```<taskname>.help``` in the same directory as the module. The function can then simply use Python file operations to read it in as a list of strings which are concatenated together and passed along as the output. This operation has been made extremely simple through the definition of a new function within the TEAL package; namely, ``teal.getHelpFileAsString()``.  An example of how this could be used to extend the help file for `resetbits` would be::
 
+    def getHelpAsString():
+        helpString = 'resetbits Version '+__version__+__vdate__+'\n'
+        helpString += __doc__+'\n'
+        helpString += teal.getHelpFileAsString(__taskname__,__file__)
+
+        return helpString
+        
+The parameter ``__taskname__`` should already have been defined for the task and gets used to find the file on disk with the name ``__taskname__.help``. The parameter ``__file__`` specifies where the task's module has been installed with the assumption that the help file has been installed in the same directory.  The task `betadrizzle` uses separate files and can be used as an example of how this can be implemented. 
 
 Defining How to Run the Task
 ----------------------------
