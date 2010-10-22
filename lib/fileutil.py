@@ -1115,6 +1115,7 @@ unsavedVars = [
                         '__file__',
                         '__name__',
                         '__re_var_match',
+                        '__re_var_match2',
                         '__re_var_paren',
                         '_badFormats',
                         '_clearString',
@@ -1213,7 +1214,8 @@ def osfn(filename):
     # - strips blanks around path components
     # - if no slashes or relative paths, return relative pathname
     # - otherwise return absolute pathname
-
+    if filename is None: return filename
+    
     ename = Expand(filename)
     dlist = ename.split(os.sep)
     dlist = map(string.strip, dlist)
@@ -1329,6 +1331,7 @@ def time(**kw):
 
 # search for leading string without embedded '$'
 __re_var_match = re.compile(r'(?P<varname>[^$]*)\$')
+__re_var_match2 = re.compile(r'\$(?P<varname>\w*)')
 
 # search for string embedded in parentheses
 __re_var_paren = re.compile(r'\((?P<varname>[^()]*)\)')
@@ -1373,6 +1376,10 @@ def _expand1(instring, noerror):
     if mm is None:
         return instring
     varname = mm.group('varname')
+    if varname in ['',' ',None]:
+        mm = __re_var_match2.match(instring)
+        varname = mm.group('varname')
+        
     if defvar(varname):
         # recursively expand string after substitution
         return _expand1(envget(varname) + instring[mm.end():], noerror)
