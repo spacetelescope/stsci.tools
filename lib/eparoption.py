@@ -60,7 +60,7 @@ class EparOption(object):
     choiceClass = StringVar
 
     def __init__(self, master, statusBar, paramInfo, defaultParamInfo,
-                 doScroll, fieldWidths, defaultsVerb, bg):
+                 doScroll, fieldWidths, defaultsVerb, bg, indent=False):
 
         # Connect to the information/status Label
         self.status = statusBar
@@ -73,7 +73,7 @@ class EparOption(object):
         # A new Frame is created for each parameter entry
         self.master       = master
         self.bkgColor     = bg
-        self.master.frame = Frame(self.master, bg=self.bkgColor)
+        self.master_frame = Frame(self.master, bg=self.bkgColor)
         self.paramInfo    = paramInfo
         self.defaultParamInfo = defaultParamInfo
         self.defaultsVerb = defaultsVerb
@@ -81,7 +81,7 @@ class EparOption(object):
         self.valueWidth   = fieldWidths.get('valueWidth')
         self.promptWidth  = fieldWidths.get('promptWidth')
 
-        self.choice = self.choiceClass(self.master.frame)
+        self.choice = self.choiceClass(self.master_frame)
 
         self.name  = self.paramInfo.name
         self.value = self.paramInfo.get(field = "p_filename", native = 0,
@@ -92,11 +92,11 @@ class EparOption(object):
 
         # Generate the input label
         if (self.paramInfo.get(field = "p_mode") == "h"):
-            self.inputLabel = Label(self.master.frame, anchor = W,
+            self.inputLabel = Label(self.master_frame, anchor = W,
                                     text  = "(" + self.name + ")",
                                     width = self.inputWidth, bg=self.bkgColor)
         else:
-            self.inputLabel = Label(self.master.frame, anchor = W,
+            self.inputLabel = Label(self.master_frame, anchor = W,
                                     text  = self.name,
                                     width = self.inputWidth, bg=self.bkgColor)
         self.inputLabel.pack(side = LEFT, fill = X, expand = TRUE)
@@ -128,7 +128,7 @@ class EparOption(object):
         if self._flaggedDescription: fgColor = "red"
 
         # Generate the prompt label
-        self.promptLabel = Label(self.master.frame, anchor=W, fg=fgColor,
+        self.promptLabel = Label(self.master_frame, anchor=W, fg=fgColor,
                                  text=promptLines, width=self.promptWidth,
                                  bg=self.bkgColor)
         self.promptLabel.pack(side=RIGHT, fill=X, expand=TRUE)
@@ -168,7 +168,10 @@ class EparOption(object):
             self.entry.bind('<Button-2>', self.popupChoices)
 
         # Pack the parameter entry Frame
-        self.master.frame.pack(side = TOP, ipady = 1)
+        if indent:
+            self.master_frame.pack(side=TOP, fill=X, padx=15, ipady=1)
+        else:
+            self.master_frame.pack(side=TOP, fill=X, ipady=1)
 
         # If there is more text associated with this entry, join all the
         # lines of text with the blank line.  This is the "special" text
@@ -436,7 +439,7 @@ class EnumEparOption(EparOption):
             self.valueWidth = self.valueWidth - 9 # looks right on Aqua
 
         # Generate the button
-        self.entry = Menubutton(self.master.frame,
+        self.entry = Menubutton(self.master_frame,
                                  width  = self.valueWidth,
                                  text   = self.choice.get(),      # label
                                  relief = RAISED,
@@ -547,14 +550,17 @@ class BooleanEparOption(EparOption):
         # Need to buffer the value width so the radio buttons and
         # the adjoining labels are aligned properly
         self.valueWidth = self.valueWidth + 10
-        self.padWidth   = self.valueWidth // 2
+        if USING_X:
+            self.padWidth = (self.valueWidth // 2) + 5  # looks right
+        else:
+            self.padWidth = (self.valueWidth // 2) - 2 # looks right
 
         # boolean parameters have 3 values: yes, no & undefined
         # Just display two choices (but variable may initially be
         # undefined)
         self.choice.set(self.value)
 
-        self.entry = Frame(self.master.frame,
+        self.entry = Frame(self.master_frame,
                            relief    = FLAT,
                            width     = self.valueWidth,
                            takefocus = 1,
@@ -648,7 +654,7 @@ class StringEparOption(EparOption):
         self.unlearnEnabled = NORMAL
 
         self.choice.set(self.value)
-        self.entry = Entry(self.master.frame, width = self.valueWidth,
+        self.entry = Entry(self.master_frame, width = self.valueWidth,
                      textvariable = self.choice) # , bg=self.bkgColor)
         self.entry.pack(side = LEFT, fill = X, expand = TRUE)
 #       self.extraBindingsForSelectableText() # do not use yet
@@ -675,7 +681,7 @@ class NumberEparOption(EparOption):
         self.previousValue = self.value
 
         self.choice.set(self.value)
-        self.entry = Entry(self.master.frame, width = self.valueWidth,
+        self.entry = Entry(self.master_frame, width = self.valueWidth,
                            textvariable = self.choice) #, bg=self.bkgColor)
         self.entry.pack(side = LEFT)
 #       self.extraBindingsForSelectableText() # do not use yet
