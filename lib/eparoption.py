@@ -90,6 +90,14 @@ class EparOption(object):
         self._editedCallbackObj = None
         self._lastWidgetEditedVal = None
 
+        # DISABLE any indent for now - not sure why but this causes odd text
+        # field sizes in other (unrelated and unindented) parameters...  Maybe
+        # because it messes with the total width of the window...
+        if 0 and indent:
+            self.spacer = Label(self.master_frame, anchor=W,
+                                text="", width=3, bg=self.bkgColor)
+            self.spacer.pack(side=LEFT, fill=X, expand=TRUE)
+
         # Generate the input label
         if (self.paramInfo.get(field = "p_mode") == "h"):
             self.inputLabel = Label(self.master_frame, anchor = W,
@@ -168,10 +176,7 @@ class EparOption(object):
             self.entry.bind('<Button-2>', self.popupChoices)
 
         # Pack the parameter entry Frame
-        if indent:
-            self.master_frame.pack(side=TOP, fill=X, padx=15, ipady=1)
-        else:
-            self.master_frame.pack(side=TOP, fill=X, ipady=1)
+        self.master_frame.pack(side=TOP, fill=X, ipady=1)
 
         # If there is more text associated with this entry, join all the
         # lines of text with the blank line.  This is the "special" text
@@ -718,7 +723,7 @@ _eparOptionDict = { "b": BooleanEparOption,
 def eparOptionFactory(master, statusBar, param, defaultParam,
                       doScroll, fieldWidths,
                       plugIn=None, editedCallbackObj=None,
-                      defaultsVerb="Default", bg=None):
+                      defaultsVerb="Default", bg=None, indent=False):
 
     """Return EparOption item of appropriate type for the parameter param"""
 
@@ -736,6 +741,6 @@ def eparOptionFactory(master, statusBar, param, defaultParam,
 
     # Create it
     eo = eparOption(master, statusBar, param, defaultParam, doScroll,
-                    fieldWidths, defaultsVerb, bg)
+                    fieldWidths, defaultsVerb, bg, indent=indent)
     eo.setEditedCallbackObj(editedCallbackObj)
     return eo
