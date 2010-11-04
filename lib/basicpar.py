@@ -851,8 +851,10 @@ class IrafArrayPar(IrafPar):
         fields[1] = self.type
         fields[2] = self.mode
         fields[3] = str(ndim)
+        next = 4
         for d in self.shape:
-            fields.extend([str(d),'1'])
+            fields[next] = str(d); next += 1
+            fields[next] = '1';    next += 1
         nvstart = 7+2*ndim
         if self.choice is not None:
             schoice = map(self.toString, self.choice)
