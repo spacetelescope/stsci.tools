@@ -75,6 +75,8 @@ def run( pytools_version = None ) :
             print "want ",pytools_version
             sys.exit(1)
 
+    # look for include files that common linux distributions leave out
+    check_requirements()
 
     from distutils.core import setup
     from defsetup import setupargs, pkg
@@ -307,3 +309,58 @@ def __set_setup_date__( path="./", fname='svn_version.py') :
     f.write("%s # setupdate\n" % ("setupdate = "+repr(d)))
     f.close()
 
+
+######## ######## ######## ######## ######## ######## ######## ########
+#
+# 
+
+def check_requirements() :
+
+    import distutils.sysconfig
+
+    dev_pkg_missing =0
+    numpy_missing = 0
+
+    d = distutils.sysconfig.get_python_inc( plat_specific=0 )
+    if not os.path.exists( d + '/Python.h') :
+        print "ERROR: Python development files are missing from",d
+        dev_pkg_missing=1
+
+    d = distutils.sysconfig.get_python_inc( plat_specific=1 )
+    if not os.path.exists( d + '/pyconfig.h') :
+        print "ERROR: Python development files are missing from",d
+        dev_pkg_missing=1
+
+    try :
+        import numpy
+    except ImportError:
+        numpy_missing = 1
+
+    if not numpy_missing :
+        d = numpy.get_include()    
+        if not os.path.exists( d + '/numpy/arrayobject.h') :
+            print "ERROR: Numpy development files are missing from",d
+            dev_pkg_missing=1
+
+    # print explanations for whatever problems there are
+    if numpy_missing:
+        print """
+This installation requires the numpy package.  You may find it in
+your operating system distribution, or you may find it at
+http://numpy.scipy.org
+"""
+
+    if dev_pkg_missing :
+        print """
+Many OS distributions separate Python and Numpy into user and
+developer packages.  You need both packages to complete this install,
+but this machine appears to be missing one of the developer packages.
+The package names are different on different systems, but usually
+the necessary package is named somethng like 'python-dev' or
+'python-devel' (or 'numpy-dev' or 'numpy-devel', for numpy).
+
+"""
+
+    if numpy_missing or dev_pkg_missing :
+        import sys
+        sys.exit(0)
