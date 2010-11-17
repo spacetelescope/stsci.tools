@@ -3,10 +3,13 @@ $Id$
 """
 from __future__ import division # confidence high
 
-import glob, os, sys, tkMessageBox
+import glob, os, sys
 import configobj, cfgpars, editpar, filedlg, vtor_checks
 from cfgpars import APP_NAME
 from irafutils import rglob
+import capable
+if capable.OF_GRAPHICS:
+    import tkMessageBox
 
 # tool help
 tealHelpString = """\

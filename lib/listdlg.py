@@ -7,8 +7,12 @@
 $Id$
 """
 from __future__ import division # confidence high
-from Tkinter import *
-from tkSimpleDialog import Dialog
+import capable
+if capable.OF_GRAPHICS:
+    from Tkinter import *
+    from tkSimpleDialog import Dialog
+else:
+    Dialog = object
 
 class ListSingleSelectDialog(Dialog):
 

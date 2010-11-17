@@ -23,9 +23,14 @@ $Id$
 from __future__ import division # confidence high
 
 import os, commands
-import alert
-from dialog import *
-import Tkinter
+import capable
+if capable.OF_GRAPHICS:
+    import Tkinter
+    import alert
+    from dialog import *
+else:
+    ModalDialog = object
+
 
 class FileDialog(ModalDialog):
 

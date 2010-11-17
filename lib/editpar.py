@@ -7,10 +7,12 @@ Taken from pyraf/lib/epar.py, originally signed "M.D. De La Pena, 2000 Feb. 4"
 from __future__ import division # confidence high
 
 #System level modules
-from Tkinter import  _default_root
-from Tkinter import *
-from tkMessageBox import askokcancel, askyesno, showwarning
 import os, tempfile, time
+import capable
+if capable.OF_GRAPHICS:
+    from Tkinter import  _default_root
+    from Tkinter import *
+    from tkMessageBox import askokcancel, askyesno, showwarning
 
 # pytools modules
 from irafglobals import userWorkingHome

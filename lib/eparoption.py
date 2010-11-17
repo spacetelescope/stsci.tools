@@ -24,9 +24,13 @@ M.D. De La Pena, 1999 August 05
 from __future__ import division # confidence high
 
 # System level modules
-from Tkinter import *
 import os, sys, string, commands
-import FileDialog, tkFileDialog
+import capable
+if capable.OF_GRAPHICS:
+    from Tkinter import *
+    import FileDialog, tkFileDialog
+else:
+    StringVar = None
 
 # Community modules
 import filedlg #, clipboard_helper
