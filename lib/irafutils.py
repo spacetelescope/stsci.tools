@@ -428,16 +428,14 @@ def launchBrowser(url, brow_bin='mozilla', subj=None):
         if not webbrowser.open(url):
             print "Error opening URL: "+url
         else:
-            print 'Help on "'+subj+'" is now being displayed in a browser'
+            print 'Help on "'+subj+'" is now being displayed in a web browser'
         return
 
     # Go ahead and fork a subprocess to call the correct binary
     pid = os.fork()
     if pid == 0: # child
         if sys.platform == 'darwin':
-            if 0 == os.system("open "+url):
-                print 'Help on "'+subj+'" is now being displayed in a browser'
-            else:
+            if 0 != os.system("open "+url):
                 print "Error opening URL: "+url
         os._exit(0)
 #       The following retries if "-remote" doesnt work, opening a new browser
@@ -450,4 +448,4 @@ def launchBrowser(url, brow_bin='mozilla', subj=None):
     else: # parent
         if not subj:
             subj = url
-        print 'HTML help on "'+subj+'" is being displayed in a browser'
+        print 'Help on "'+subj+'" is now being displayed in a browser'
