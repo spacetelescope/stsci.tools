@@ -417,23 +417,37 @@ class _TkRead:
 def launchBrowser(url, brow_bin='mozilla', subj=None):
     """ Given a URL, try to pop it up in a browser on most platforms.
     brow_bin is only used on OS's where there is no "open" or "start" cmd.
-    Tries using the '<browser> -remote' command to load the page in
-    a running browser.  If that fails, starts a new browser. """
+    """
 
-    # should be changed to use the subprocess module to support Win?
+    if not subj: subj = url
+
+    # Tries to use webbrowser module on most OSes, unless a system command
+    # is needed.  (E.g. win, linux, sun, etc)
+    if sys.platform not in ('darwin'):
+        import webbrowser
+        if not webbrowser.open(url):
+            print "Error opening URL: "+url
+        else:
+            print 'Help on "'+subj+'" is now being displayed in a browser'
+        return
+
+    # Go ahead and fork a subprocess to call the correct binary
     pid = os.fork()
-    if pid == 0:
-        if not sys.platform[:-1] in ('sunos','linux'): # e.g. OSX, Win, etc
-            if 0 != os.system("open "+url):
+    if pid == 0: # child
+        if sys.platform == 'darwin':
+            if 0 == os.system("open "+url):
+                print 'Help on "'+subj+'" is now being displayed in a browser'
+            else:
                 print "Error opening URL: "+url
-            os._exit(0)
-        cmd = brow_bin+" -remote 'openURL("+url+")' '"+url+"' 1> /dev/null 2>&1"
-        status = os.system(cmd)
-        if status != 0:
-            print "Running "+brow_bin+" for HTML help..."
-            os.execvp(brow_bin,[brow_bin,url])
         os._exit(0)
-    else:
+#       The following retries if "-remote" doesnt work, opening a new browser
+#       cmd = brow_bin+" -remote 'openURL("+url+")' '"+url+"' 1> /dev/null 2>&1"
+#       if 0 != os.system(cmd)
+#           print "Running "+brow_bin+" for HTML help..."
+#           os.execvp(brow_bin,[brow_bin,url])
+#       os._exit(0)
+
+    else: # parent
         if not subj:
             subj = url
         print 'HTML help on "'+subj+'" is being displayed in a browser'
