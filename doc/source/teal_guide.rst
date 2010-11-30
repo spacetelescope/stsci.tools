@@ -8,8 +8,8 @@ Cookbook for Building TEAL Interfaces
    
    The release of the Task Editor And Launcher(TEAL) with STScI_Python
    v2.10 in June 2010 provided the tools for building powerful GUI
-   interfaces for editing the parameters of complex tasks and running that
-   task with minimal effort. Learning how to use something new always
+   interfaces for editing the parameters of complex tasks and running those
+   tasks with minimal effort. Learning how to use something new always
    takes a special effort, and this document provides a step-by-step
    walkthrough of how to build TEAL interfaces for any Python task to
    make this effort as easy as possible.
@@ -22,7 +22,7 @@ The new TEAL GUI can be added to nearly any Python task that allows users to set
 
 This document does not assume the user has any familiarity with using configobj in any manner and as as result includes very basic information which developers with some experience with configobj can simply skip over. 
 
-The development of the TEAL interface for the task `resetbits` in the `betadrizzle` package.  More elaborate examples will be explained after the development of the TEAL interface for `resetbits` has been described. 
+The development of the TEAL interface for the task `resetbits` in the `betadrizzle` package is used as an example.  More elaborate examples will be explained after the development of the TEAL interface for `resetbits` has been described. 
 
 ----------------------
 Building the Interface
@@ -62,7 +62,7 @@ This file will then get installed in the directory `betadrizzle/pars/resetbits.c
 
 Parameter Validation Rules
 --------------------------
-The type for the parameter values, along with the definition of any range of valid values, get defined in the second configobj file: the configobj specification (configspec) file or `cfgspc` file.  This file can also provide rules for how the GUI should respond to input values as well, turning the TEAL GUI into an active assistant for the user when editing large or complex sets of parameters. 
+The type for the parameter values, along with the definition of any range of valid values, is defined in the second configobj file: the configobj specification (configspec) file or `cfgspc` file.  This file can also provide rules for how the GUI should respond to input values as well, turning the TEAL GUI into an active assistant for the user when editing large or complex sets of parameters. 
 
 For this example, we have a very basic set of parameters to define without any advance logic required. TEAL provides validators for a wide range of parameter types, including:
 
@@ -81,7 +81,7 @@ For this example, we have a very basic set of parameters to define without any a
   * `option`: matches only those values provided in the list of valid options
         Defined using `option_kw()` command with the list of valid values as a parameter
 
-There is also support for IP addresses as input parameters, and lists or tuples of any of these basic parameter types. Information on how to use those types, though, can be found within the `ConfigObj module`_ documentation.
+ConfigObj also has support for IP addresses as input parameters, and lists or tuples of any of these basic parameter types. Information on how to use those types, though, can be found within the `ConfigObj module`_ documentation.
 
 With these available parameter types in mind, the parameters for the task can be defined in the configspec file. For the `resetbits` task, we would need::
 
@@ -103,14 +103,14 @@ Step 2: TEAL Functions for the Task
 ===================================
 TEAL requires that a couple of functions be defined within the task in order for the GUI to know how to get the help for the task and to run the task.  The functions that need to be defined are:
 
-  * ``run(configobj=None)``
+  * ``run(configObj)``
       This function serves as the hook to allow the GUI to run the task
   * ``getHelpAsString()``
       This function returns a long string which provides the help for the task
 
-The sole input from TEAL will be a ConfigObj instance, a class which provides all the input parameters and their values after validation by the configobj validators.  This instance gets passed by TEAL to the tasks ``run()`` function and needs to be interpreted by that function in order to run the task.  
+The sole input from TEAL will be a ConfigObj instance, a class which provides all the input parameters and their values after validation by the configobj validators.  This instance gets passed by TEAL to the task's ``run()`` function and needs to be interpreted by that function in order to run the task.  
 
-.. note:: The ``run()`` and ``getHelpAsString()`` functions, along with the task's primary user interface function, all need to be in module with the same name as the task as TEAL finds the task by importing the taskname. 
+.. note:: The ``run()`` and ``getHelpAsString()`` functions, along with the task's primary user interface function, all need to be in the module with the same name as the task, as TEAL finds the task by importing the taskname. Or, these two functions may instead be arranged as methods of a task class, if desired.
 
 Defining the Help String
 ------------------------
@@ -139,12 +139,12 @@ The parameter ``__taskname__`` should already have been defined for the task and
 
 Defining How to Run the Task
 ----------------------------
-The ConfigObj instance passed by TEAL into the module needs to be interpreted and used to run the application.  There are a couple of different models which can be used to define the interface between the ``run()`` function and the task's primary user interface function.  
+The ConfigObj instance passed by TEAL into the module needs to be interpreted and used to run the application.  There are a couple of different models which can be used to define the interface between the ``run()`` function and the task's primary user interface function (i.e. how it would be called in a script).  
 
   #. The ``run()`` function interprets the ConfigObj instance and calls the user interface  
      function. This works well for tasks which have a small number of parameters. 
      
-  #. The ``run()`` function serves as the primary driver for the task and a separate 
+  #. The ``run()`` function serves as the primary driver for the task and a separate function
      gets defined to provide a simpler interface for the user to call interactively. This
      works well for tasks which have a large number of parameters or sets of parameters
      defined in the ConfigObj interface. 
@@ -201,7 +201,7 @@ The fact that this task has a valid TEAL interface can be verified by insuring t
 
 Running the GUI using Python 
 ----------------------------
-Fundamentally, TEAL is a Python task that can be run interactively under any Python interpreter, not just PyRAF.  It can be called for our example task using the syntax::
+Fundamentally, TEAL is a Python GUI that can be run interactively under any Python interpreter, not just PyRAF.  It can be called for our example task using the syntax::
 
     >>> from pytools import teal
     >>> cobj = teal.teal('resetbits')
@@ -259,7 +259,7 @@ The behavior of the TEAL GUI can be controlled for each section in a number of w
 The supported values for the `triggers` argument currently understood by TEAL are:
 
     * ``_section_switch_``: Activates/Deactivates the ability to edit the values of the parameters in this section
-    * ``_rule<#>_``: Runs the code in this rule to automatically set this parameter, and control the behavior of other parameters like section defintions as well.
+    * ``_rule<#>_``: Runs the code in this rule (defined elsewhere in the .cfgspc file) to automatically set this parameter, and control the behavior of other parameters like section defintions as well.
     
 The example for defining the section 'STEP 1: STATIC MASK' illustrates how to use the ``_section_switch_`` trigger to control the editing of the parameters in that section.
 
@@ -287,16 +287,19 @@ This capability has been implemented in `betadrizzle` to control whether or not 
     
 In this case, ``_rule1_`` gets defined in the special parameter section ``[_RULES_]`` and triggered upon the editing of the parameter ``input``.  The result of this logic will then automatically set the value of any section parameter with the ``is_set_by=_rule1_`` argument, such as the parameter ``driz_separate`` in the section ``[STEP 3: DRIZZLE SEPARATE IMAGES]``
 
-The rule itself can also be defined with an argument to define when the rule will be evaluated.  The currently supported options for the argument ``when`` for rules are:
+The rule is executed within Python via two reserved words: ``VAL``, and ``OUT``.  ``VAL`` is automatically set to the value of the parameter which was used to trigger the execution of the rule, right before the rule is executed.  ``OUT`` will be the outcome of the rule code - the way it returns data to the rule execution machinery without calling a Python `return`.
+
+For the rule itself, one can optionally state (via the ``when`` argument) when the rule will be evaluated.  The currently supported options for the ``when`` argument (used for rules only) are:
  
-   * ``defaults``: Evaluate the rule upon starting the GUI, or when the TEAL GUI has been configured to evaluate rules on startup.
-   * ``entry``: Evaluate the rule anytime the value changes
-   * ``always``: Evaluate the rule under all circumstances regardless of user settings in the GUI
+   * ``init``: Evaluate the rule upon starting the GUI
+   * ``defaults``: Evaluate the rule when the parameter value changes because the user clicked the "Defaults" button
+   * ``entry``: Evaluate the rule any time the value is changed in the GUI by the user manually
+   * ``fopen``: Evaluate the rule any time a saved file is opened by the user, changing the value
+   * ``always``: Evaluate the rule under any of these circumstances
 
-These options can be provided as a comma-separated list for combinations, although care should be taken to avoid any logic problems for when the rule gets evaluated.
+These options can be provided as a comma-separated list for combinations, although care should be taken to avoid any logic problems for when the rule gets evaluated.  If a ``when`` argument is not supplied, the value of ``always`` is assumed.
 
 
 
-
-.. _`ConfigObj module`: http://wiki.python.org/moin/ConfigObj
+.. _`ConfigObj module`: http://www.voidspace.org.uk/python/configobj.html
 .. _`Numpy Documentation`: http://projects.scipy.org/numpy/wiki/CodingStyleGuidelines
