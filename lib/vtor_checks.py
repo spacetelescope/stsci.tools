@@ -27,9 +27,16 @@ def sigStrToKwArgsDict(checkFuncSig):
     for argPair in argParts:
         argSpl = argPair.split('=', 1)
         if len(argSpl) > 1:
-            retval[argSpl[0]] = irafutils.stripQuotes(argSpl[1])
+            if argSpl[0] in retval:
+                if isinstance(retval[argSpl[0]], (list,tuple)):
+                    retval[argSpl[0]]+=(irafutils.stripQuotes(argSpl[1]),) # 3rd
+                else: # 2nd in, so convert to tuple
+                    retval[argSpl[0]] = (retval[argSpl[0]],
+                                         irafutils.stripQuotes(argSpl[1]),)
+            else:
+                retval[argSpl[0]] = irafutils.stripQuotes(argSpl[1]) # 1st in
         else:
-            retval[argSpl[0]] = None
+            retval[argSpl[0]] = None #  eg. found "triggers=, max=6, ..."
     return retval
 
 

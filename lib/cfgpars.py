@@ -323,6 +323,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # get the initial param list out of the ConfigObj dict
         self.syncParamList(True)
 
+#       print(self.triggerLogicToStr()) # DBG: for debugging
+
         # see if we are using a package with it's own run() function
         self._runFunc = None
         self._helpFunc = None
@@ -342,7 +344,6 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # Have to add this odd last one for the sake of the GUI (still?)
         if self._forUseWithEpar:
             self.__paramList.append(basicpar.IrafParS(['$nargs','s','h','N']))
-
 
     def getName(self): return self.__taskName
 
@@ -375,7 +376,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 #   def strictUpdate(self, aDict):
 #       """ Override the current values with those in the given dict.  This
 #           is like dict's update, except it doesn't allow new keys and it
-#           verifies the values (it does??!!!) """
+#           verifies the values (it does?!) """
 #       if aDict == None:
 #           return
 #       for k in aDict:
@@ -447,6 +448,15 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 '". You must either override the "run" method in your '+ \
                 'ConfigObjPars subclass, or you must supply a "run" '+ \
                 'function in your package.')
+
+    def triggerLogicToStr(self):
+        """ Print all the trigger logic to a string and return it. """
+        import json
+        retval = "TRIGGERS:\n"+json.dumps(self._allTriggers, indent=3)
+        retval += "\n\nDEPENDENCIES:\n"+json.dumps(self._allDepdcs, indent=3)
+        retval += "\n"
+        return retval
+
 
     def getHelpAsString(self):
         """ This may be overridden by a subclass. """
@@ -614,10 +624,16 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                         print "WARNING: outdated version of .cfgspc!! for "+\
                               self.__taskName+", 'trigger' unused for "+\
                               absKeyName
-                    trg = chk_args_dict.get('triggers')
-                    if trg:
-                        # e.g. _allTriggers['STEP2.use_ra_dec'] == '_rule1_'
-                        self._allTriggers[absKeyName] = trg
+                    trgs = chk_args_dict.get('triggers')
+                    if trgs and len(trgs)>0:
+                        # eg. _allTriggers['STEP2.xy'] == ('_rule1_','_rule3_')
+                        assert absKeyName not in self._allTriggers, \
+                            'More than 1 of these in .cfgspc?: '+absKeyName
+                        # we force this to always be a sequence
+                        if isinstance(trgs, (list,tuple)):
+                            self._allTriggers[absKeyName] = trgs
+                        else:
+                            self._allTriggers[absKeyName] = (trgs,)
                     # Dependencies? (besides these used here, may someday
                     # add: 'range_from', 'warn_if', etc.)
                     depName = None
@@ -629,6 +645,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                         depName = chk_args_dict.get(depType)
                     if not depName:
                         depType = 'is_set_by'
+                        depName = chk_args_dict.get(depType)
+                    if not depName:
+                        depType = 'is_disabled_by'
                         depName = chk_args_dict.get(depType)
                     # NOTE - the above few lines stops at the first dependency
                     # found (depName) for a given par.  If, in the future a
@@ -655,9 +674,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         return retval
 
 
-    def getTriggerStr(self, parScope, parName):
-        """ For a given item (scope + name), return the string (or None) of
-        it's associated trigger, if one exists. """
+    def getTriggerStrings(self, parScope, parName):
+        """ For a given item (scope + name), return all strings (in a tuple)
+        that it is meant to trigger, if any exist.  Returns None is none. """
         # The data structure of _allTriggers was chosen for how easily/quickly
         # this particular access can be made here.
         fullName = parScope+'.'+parName

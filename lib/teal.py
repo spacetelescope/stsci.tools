@@ -158,7 +158,7 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
     """ Start the GUI session, or simply load a task's ConfigObj. """
     if loadOnly:
         obj = cfgpars.getObjectFromTaskArg(theTask)
-#       obj.strictUpdate(overrides) # !!! does this skip verify step?? need it!
+#       obj.strictUpdate(overrides) # !! does this skip verify step?? need it!
         return obj
     else:
         dlg = ConfigObjEparDialog(theTask, parent=parent,
@@ -185,7 +185,7 @@ def execTriggerCode(SCOPE, NAME, VAL, codeStr):
 
 
 def print_tasknames(pkgName, aDir, term_width=80, always=False):
-    """ Print a message listing TEAL-enabled tasks available under a 
+    """ Print a message listing TEAL-enabled tasks available under a
         given installation directory (where pkgName resides).
         If always is True, this will always print when tasks are
         found; otherwise it will only print found tasks when in interactive
@@ -229,23 +229,23 @@ def print_tasknames(pkgName, aDir, term_width=80, always=False):
 
 def getHelpFileAsString(taskname,taskpath):
     """
-    This functions will return useful help as a string read from a file 
-    in the task's installed directory called "<module>.help". 
+    This functions will return useful help as a string read from a file
+    in the task's installed directory called "<module>.help".
 
     If no such file can be found, it will simply return an empty string.
-    
+
     Notes
     -----
-    The location of the actual help file will be found under the task's 
-    installed directory using 'irafutils.rglob' to search all sub-dirs to 
-    find the file. This allows the help file to be either in the tasks 
+    The location of the actual help file will be found under the task's
+    installed directory using 'irafutils.rglob' to search all sub-dirs to
+    find the file. This allows the help file to be either in the tasks
     installed directory or in any sub-directory, such as a "help/" directory.
-    
+
     Parameters
     ----------
     taskname: string
         Value of `__taskname__` for a module/task
-    
+
     taskpath: string
         Value of `__file__` for an installed module which defines the task
 
@@ -260,7 +260,7 @@ def getHelpFileAsString(taskname,taskpath):
     if taskname.find('.') > -1: # if taskname is given as package.taskname...
         helpname=taskname.split(".")[1]    # taskname should be __taskname__ from task's module
     else:
-        helpname = taskname 
+        helpname = taskname
     helpfile=rglob(localDir[0],helpname+".help")[0]
 
     if os.access(helpfile,os.R_OK):
@@ -274,7 +274,7 @@ def getHelpFileAsString(taskname,taskpath):
         helpString= ''
 
     return helpString
-    
+
 
 def cfgGetBool(theObj, name, dflt):
     """ Get a stringified val from a ConfigObj obj and return it as bool """
@@ -411,10 +411,10 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         """ Override to allow us to use an edited callback. """
 
         # We know that the _taskParsObj is a ConfigObjPars
-        triggerStr = self._taskParsObj.getTriggerStr(parScope, parName)
+        triggerStrs = self._taskParsObj.getTriggerStrings(parScope, parName)
 
         # Some items will have a trigger, but likely most won't
-        if triggerStr:
+        if triggerStrs and len(triggerStrs) > 0:
             return self
         else:
             return None
@@ -424,75 +424,119 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         """ This is the callback function invoked when an item is edited.
             This is only called for those items which were previously
             specified to use this mechanism.  We do not turn this on for
-            all items because the performance might be prohibitive. """
+            all items because the performance might be prohibitive.
+            This kicks off any previously registered triggers. """
 
-        # Get name of trigger that this par triggers
-        triggerName = self._taskParsObj.getTriggerStr(scope, name)
-        assert triggerName != None and len(triggerName) > 0, \
+        # Get name(s) of any triggers that this par triggers
+        triggerNamesTup = self._taskParsObj.getTriggerStrings(scope, name)
+        assert triggerNamesTup != None and len(triggerNamesTup) > 0, \
                'Empty trigger name for: "'+name+'", consult the .cfgspc file.'
 
-        # First handle the known/canned trigger names
-        if triggerName == '_section_switch_':
-            # Try to uniformly handle all possible par types here, not
-            # just boolean (e.g. str, int, float, etc.)
-            # Also, see logic in _BooleanMixin._coerceOneValue()
-            state = newVal not in self.FALSEVALS
-            self._toggleSectionActiveState(scope, state, (name,))
-            return
+        # Loop through all trigger names - each one is a trigger to kick off -
+        # in the order that they appear in the tuple we got.  Most cases will
+        # probably only have a single trigger in the tuple.
+        for triggerName in triggerNamesTup:
+            # First handle the known/canned trigger names
+#           print (scope, name, newVal, action, triggerName) # DBG: debug line
 
-        # Now handle rules with embedded code (e.g. triggerName == '_rule1_')
-        if '_RULES_' in self._taskParsObj and \
-           triggerName in self._taskParsObj['_RULES_'].configspec:
-            # Get codeStr to execute it, but before we do so, check 'when' -
-            # make sure this is an action that is allowed to cause a trigger
-            ruleSig = self._taskParsObj['_RULES_'].configspec[triggerName]
-            chkArgsDict = vtor_checks.sigStrToKwArgsDict(ruleSig)
-            codeStr = chkArgsDict.get('code') # or None
-            when2run = chkArgsDict.get('when') # or None
+            # _section_switch_
+            if triggerName == '_section_switch_':
+                # Try to uniformly handle all possible par types here, not
+                # just boolean (e.g. str, int, float, etc.)
+                # Also, see logic in _BooleanMixin._coerceOneValue()
+                state = newVal not in self.FALSEVALS
+                self._toggleSectionActiveState(scope, state, (name,))
+                continue
 
-            greenlight = False
-            if self._triggerAlways or when2run is None:
-                greenlight = True
-            else: # 'when' was set to something so we need to check action
-                # check value of action (poor man's enum)
-                assert action in editpar.GROUP_ACTIONS, \
-                    "Unknown action: "+str(action)+', expected one of: '+ \
-                    str(editpar.GROUP_ACTIONS)
-                # check value of 'when' (allow them to use comma-sep'd str)
-                # (readers be aware that values must be those possible for
-                #  'action', and 'always' is also allowed)
-                whenlist = when2run.split(',')
-                # warn for invalid values
-                for w in whenlist:
-                    if not w in editpar.GROUP_ACTIONS and w != 'always':
-                       print 'WARNING - skipping bad value for when kwd: "'+\
-                              w+'" in trigger/rule: '+triggerName
-                # finally, do the correlation
-                greenlight = 'always' in whenlist or action in whenlist
+            # _2_section_switch_ (see notes above in _section_switch_)
+            if triggerName == '_2_section_switch_':
+                state = newVal not in self.FALSEVALS
+                # toggle most of 1st section (as usual) and ALL of next section
+                self._toggleSectionActiveState(scope, state, (name,))
+                # get first par of next section (fpons) - is a tuple
+                fpons = self.findNextSection(scope, name)
+                nextSectScope = fpons[0]
+                if nextSectScope:
+                    self._toggleSectionActiveState(nextSectScope, state, None)
+                continue
 
-            # SECURITY NOTE: because this part executes arbitrary code, that
-            # code string must always be found only in the configspec file,
-            # which is intended to only ever be root-installed w/ the package.
-            if codeStr:
-                if not greenlight: return # not an error - just skip this one
-                self.showStatus("Evaluating "+triggerName+' ...') # dont keep
-                self.top.update_idletasks() # allow msg to draw before the exec
-                # execute it and retrieve the outcome
-                outval = execTriggerCode(scope, name, newVal, codeStr)
-                # Leave this debug line in until it annoys someone
-                msg = 'Value of "'+name+'" triggered "'+triggerName+'"'
-                stroutval = str(outval)
-                if len(stroutval) < 30: msg += '  -->  "'+stroutval+'"'
-                self.showStatus(msg, keep=1)
-                # Now that we have triggerName evaluated to outval, we need to
-                # look through all of the parameters and see if there are any
-                # items to be affected by triggerName (e.g. '_rule1_')
-                self._applyTriggerValue(triggerName, outval)
-                return
+            # Now handle rules with embedded code (eg. triggerName=='_rule1_')
+            if '_RULES_' in self._taskParsObj and \
+               triggerName in self._taskParsObj['_RULES_'].configspec:
+                # Get codeStr to execute it, but before we do so, check 'when' -
+                # make sure this is an action that is allowed to cause a trigger
+                ruleSig = self._taskParsObj['_RULES_'].configspec[triggerName]
+                chkArgsDict = vtor_checks.sigStrToKwArgsDict(ruleSig)
+                codeStr = chkArgsDict.get('code') # or None
+                when2run = chkArgsDict.get('when') # or None
 
-        # Unknown/unusable trigger
-        raise RuntimeError('Unknown trigger for: "'+name+'", named: "'+ \
-                           triggerName+'".  Please consult the .cfgspc file.')
+                greenlight = False
+                if self._triggerAlways or when2run is None:
+                    greenlight = True
+                else: # 'when' was set to something so we need to check action
+                    # check value of action (poor man's enum)
+                    assert action in editpar.GROUP_ACTIONS, \
+                        "Unknown action: "+str(action)+', expected one of: '+ \
+                        str(editpar.GROUP_ACTIONS)
+                    # check value of 'when' (allow them to use comma-sep'd str)
+                    # (readers be aware that values must be those possible for
+                    #  'action', and 'always' is also allowed)
+                    whenlist = when2run.split(',')
+                    # warn for invalid values
+                    for w in whenlist:
+                        if not w in editpar.GROUP_ACTIONS and w != 'always':
+                           print('WARNING: skipping bad value for when kwd: "'+\
+                                  w+'" in trigger/rule: '+triggerName)
+                    # finally, do the correlation
+                    greenlight = 'always' in whenlist or action in whenlist
+
+                # SECURITY NOTE: because this part executes arbitrary code, that
+                # code string must always be found only in the configspec file,
+                # which is intended to only ever be root-installed w/ the pkg.
+                if codeStr:
+                    if not greenlight:
+                        continue # not an error, just skip this one
+                    self.showStatus("Evaluating "+triggerName+' ...') #dont keep
+                    self.top.update_idletasks() #allow msg to draw prior to exec
+                    # execute it and retrieve the outcome
+                    outval = execTriggerCode(scope, name, newVal, codeStr)
+                    # Leave this debug line in until it annoys someone
+                    msg = 'Value of "'+name+'" triggered "'+triggerName+'"'
+                    stroutval = str(outval)
+                    if len(stroutval) < 30: msg += '  -->  "'+stroutval+'"'
+                    self.showStatus(msg, keep=0)
+                    # Now that we have triggerName evaluated to outval, we need
+                    # to look through all the parameters and see if there are
+                    # any items to be affected by triggerName (e.g. '_rule1_')
+                    self._applyTriggerValue(triggerName, outval)
+                    continue
+
+            # If we get here, we have an unknown/unusable trigger
+            raise RuntimeError('Unknown trigger for: "'+name+'", named: "'+ \
+                  str(triggerName)+'".  Please consult the .cfgspc file.')
+
+
+    def findNextSection(self, scope, name):
+        """ Starts with given par (scope+name) and looks further down the list
+        of parameters until one of a different non-null scope is found.  Upon
+        success, returns the (scope, name) tuple, otherwise (None, None). """
+        # first find index of starting point
+        plist = self._taskParsObj.getParList()
+        start = 0
+        for i in range(len(plist)):
+            if scope == plist[i].scope and name == plist[i].name:
+                start = i
+                break
+        else:
+            print('WARNING: could not find starting par: '+scope+'.'+name)
+            return (None, None)
+
+        # now find first different (non-null) scope in a par, after start
+        for i in range(start, len(plist)):
+            if len(plist[i].scope) > 0 and plist[i].scope != scope:
+                return (plist[i].scope, plist[i].name)
+        # else didn't find it
+        return (None, None)
 
 
     def _setTaskParsObj(self, theTask):
@@ -503,7 +547,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # Immediately make a copy of it's un-tampered internal dict.
         # The dict() method returns a deep-copy dict of the keyvals.
         self._lastSavedState = self._taskParsObj.dict()
-        # do this here ??!!! or before _lastSavedState ??!!!
+        # do this here ??!! or before _lastSavedState ??!!
 #       self._taskParsObj.strictUpdate(self._overrides)
 
 
@@ -514,7 +558,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         envVarName = APP_NAME.upper()+'_CFG'
         if envVarName in os.environ:
             upx = os.environ[envVarName]
-            if len(upx) > 0:  filt = upx+"/*.cfg" 
+            if len(upx) > 0:  filt = upx+"/*.cfg"
         return filt
 
 
@@ -722,6 +766,23 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                         if len(settingMsg) > 0: settingMsg += ", "
                         settingMsg += '"'+self.paramList[i].name+'" to "'+\
                                       outval+'"'
+                    elif depType == 'is_disabled_by':
+                        # this one is only used with boolean types
+                        on = self.entryNo[i].convertToNative(outval)
+                        if on:
+                            # do not activate whole section or change
+                            # any values, only activate this one
+                            self.entryNo[i].setActiveState(True)
+                        else:
+                            # for off, set the bool par AND grey WHOLE section
+                            self.entryNo[i].forceValue(outval, noteEdited=True)
+                            self.entryNo[i].setActiveState(False)
+                            # we'd need this if the par had no _section_switch_
+#                           self._toggleSectionActiveState(
+#                                self.paramList[i].scope, False, None)
+                            if len(settingMsg) > 0: settingMsg += ", "
+                            settingMsg += '"'+self.paramList[i].name+'" to "'+\
+                                          outval+'"'
                     else:
                         raise RuntimeError('Unknown dependency: "'+depType+ \
                                            '" for par: "'+scopedName+'"')
@@ -733,9 +794,9 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                 scope = absName[:-10]
                 depType = depParsDict[absName]
                 if depType == 'active_if':
-                    self._toggleSectionActiveState(scope, outval, () )
+                    self._toggleSectionActiveState(scope, outval, None)
                 elif depType == 'inactive_if':
-                    self._toggleSectionActiveState(scope, not outval, () )
+                    self._toggleSectionActiveState(scope, not outval, None)
                 used = True
 
             # Help to debug the .cfgspc rules
@@ -744,5 +805,5 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                       str({absName:depParsDict[absName]}))
 
         if len(settingMsg) > 0:
-            self.freshenFocus()
+# why ?!    self.freshenFocus()
             self.showStatus('Automatically set '+settingMsg, keep=1)

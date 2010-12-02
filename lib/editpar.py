@@ -543,8 +543,9 @@ class EditParDialog(object):
             inactive.  sectionName is the same as the param's scope. """
         for i in range(self.numParams):
             if self.paramList[i].scope == sectionName:
-                if self.paramList[i].name in skipList:
-                    self.entryNo[i].setActiveState(True) # these always active
+                if skipList and self.paramList[i].name in skipList:
+#                   self.entryNo[i].setActiveState(True) # these always active
+                    pass # if it started active, we don't need to reactivate it
                 else:
                     self.entryNo[i].setActiveState(state)
 
@@ -1478,6 +1479,7 @@ class EditParDialog(object):
         if len(msg) > 0:
             msg = '  '+msg
             # right here would be the place to collect a history of msgs...
+#           print(msg) # DBG: debug line
 
         # see if we can show it
         now = time.time()
@@ -1500,7 +1502,7 @@ class EditParDialog(object):
                 # simply skip, but on the other hand we can't show it yet...
                 # So we add it to _statusMsgsToShow and show it later (asap)
                 if (msg,keep) not in self._statusMsgsToShow:
-                    if len(self._statusMsgsToShow) < 5:
+                    if len(self._statusMsgsToShow) < 7:
                         self._statusMsgsToShow.append( (msg,keep) ) # tuple
                         # kick off timer loop to get this one pushed through
                         if len(self._statusMsgsToShow) == 1:
