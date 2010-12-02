@@ -145,6 +145,9 @@ class EparOption(object):
                                  bg=self.bkgColor)
         self.promptLabel.pack(side=RIGHT, fill=X, expand=TRUE)
 
+        # Settings for subclasses to override in the makeInputWidget method
+        self.isSelectable = True # ie widget has text (num or str) to select
+
         # Default is none of items on popup menu are activated
         # These can be changed by the makeInputWidget method to customize
         # behavior for each widget.
@@ -223,6 +226,9 @@ class EparOption(object):
 
     def focusOut(self, event=None):
         """Clear selection (if text is selected in this widget)"""
+        # do nothing if this isn't a text-enabled widget
+        if not self.isSelectable:
+            return
         if self.entryCheck(event) is None:
             # Entry value is OK
             # Save the last selection so it can be restored if we
@@ -283,7 +289,7 @@ class EparOption(object):
     # If valid, changes the value of the parameter (note that this
     # is a copy, so change is not permanent until save)
     # Parameter change also sets the isChanged flag.
-    def entryCheck(self, event = None, repair = True):
+    def entryCheck(self, event=None, repair=True):
 
         # Make sure the input is legal
         value = self.choice.get()
@@ -436,6 +442,7 @@ class EnumEparOption(EparOption):
     def makeInputWidget(self):
 
         self.unlearnEnabled = NORMAL
+        self.isSelectable = False
 
         # Set the initial value for the button
         self.choice.set(self.value)
@@ -555,6 +562,7 @@ class BooleanEparOption(EparOption):
     def makeInputWidget(self):
 
         self.unlearnEnabled = NORMAL
+        self.isSelectable = False
 
         # Need to buffer the value width so the radio buttons and
         # the adjoining labels are aligned properly
