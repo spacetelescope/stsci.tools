@@ -674,6 +674,17 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self.freshenFocus()
 
 
+    def _handleParListMismatch(self):
+        """ Override to include ConfigObj filename. """
+            
+        errmsg = 'ERROR: mismatch between default and current par lists ' + \
+                 'for task "'+self.taskName+'".\nTry editing/deleting: "' + \
+                 self._taskParsObj.filename+'" (or, if in PyRAF: "unlearn ' + \
+                 self.taskName+'").'
+        print(errmsg)
+        return False
+
+
     def _setToDefaults(self):
         """ Load the default parameter settings into the GUI. """
 

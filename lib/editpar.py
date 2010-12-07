@@ -72,8 +72,9 @@ class EditParDialog(object):
         # Ignore the last parameter which is $nargs
         self.numParams = len(self.paramList) - 1
 
-        # Get default parameter values for unlearn
-        self._setupDefaultParamList()
+        # Get default parameter values for unlearn - watch return value
+        if not self._setupDefaultParamList():
+            return
 
         # Set all default master GUI settings, then
         # allow subclasses to override them
@@ -461,14 +462,25 @@ class EditParDialog(object):
         return TRUE
 
 
+    def _handleParListMismatch(self):
+        """ Handle the situation where two par lists do not match.
+        This is meant to allow subclasses to override. """
+
+        errmsg = 'ERROR: mismatch between default and current par lists ' + \
+               'for task "'+self.taskName+'" (try: "unlearn '+self.taskName+'")'
+        print(errmsg)
+        return False
+#       raise ValueError(errmsg)
+
+
     def _setupDefaultParamList(self):
 
         # Obtain the default parameter list
         dlist = self._taskParsObj.getDefaultParList()
         if len(dlist) != len(self.paramList):
             # whoops, lengths don't match
-            raise ValueError("Mismatch between default, current par lists"
-                " for task %s (try unlearn)" % self.taskName)
+            if not self._handleParListMismatch():
+                return False
         # convert it to a dict
         dict = {}
         for par in dlist:
@@ -479,9 +491,12 @@ class EditParDialog(object):
             for par in self.paramList:
                 dsort.append(dict[par.name])
         except KeyError:
-            raise ValueError("Mismatch between default, current par lists"
-                " for task %s (try unlearn)" % self.taskName)
+            if not self._handleParListMismatch():
+                return False
         self.defaultParamList = dsort
+
+        # return value indicates that all is well to continue
+        return True
 
 
     # Method to create the parameter entries
