@@ -138,7 +138,7 @@ def fitsdiff (input1, input2, comment_excl_list='', value_excl_list='', field_ex
     # compare numbers of extensions
     nexten1, nexten2 = len(im1), len(im2)
     if nexten1 != nexten2:
-        raise "Different no. of HDU's: file1 has %d, file2 has %d" % (nexten1, nexten2)
+        raise RuntimeError("Different no. of HDU's: file1 has %d, file2 has %d" % (nexten1, nexten2))
 
     # compare extension header and data
     for i in range(nexten1):
