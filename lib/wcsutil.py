@@ -61,7 +61,7 @@ DEFAULT_PREFIX = 'O'
 
 
 
-__version__ = '1.2.2 (03-Aug-2010)'
+__version__ = '1.2.3 (11-Feb-2011)'
 
 def help():
     print 'wcsutil Version '+str(__version__)+':\n'
@@ -290,7 +290,7 @@ class WCSObject:
             # for this exposure/chip.
             _header = header
 
-        if _exists:
+        if _exists or header:
             # Initialize WCS object with keyword values...
             try:
                 _dkey = 'orientat'
