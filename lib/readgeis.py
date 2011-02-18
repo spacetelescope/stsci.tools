@@ -68,12 +68,9 @@
 
 from __future__ import division # confidence high
 
-__version__ = "2.1 (30 June, 2008), \xa9 AURA"
+__version__ = "2.2 (18 Feb, 2011), \xa9 AURA"
 
-import numerixenv
-numerixenv.check()
-
-import os, sys, string
+import os, sys, string, shutil
 import pyfits
 import numpy
 from numpy import memmap
@@ -318,6 +315,153 @@ def readgeis(input):
     stsci(hdulist)
     return hdulist
 
+def convert(input,output,clobber=True):
+
+    """Input GEIS files "input" will be read and converted to a new GEIS file 
+    whose byte-order has been swapped from its original state.  
+    
+    """
+
+    global dat
+    cardLen = pyfits.Card.length
+
+    # input file(s) must be of the form *.??h and *.??d
+    if input[-1] != 'h' or input[-4] != '.':
+        raise "Illegal input GEIS file name %s" % input
+    
+    data_file = input[:-1]+'d'
+
+    out_data = output[:-1]+'d'
+    if os.path.exists(output) and not clobber:
+        errstr = 'Output file already exists! Please remove or rename and start again...'
+        raise IOError,errstr
+
+    _os = sys.platform
+    if _os[:5] == 'linux' or _os[:5] == 'win32' or _os[:5] == 'sunos' or _os[:3] == 'osf' or _os[:6] == 'darwin':
+        bytes_per_line = cardLen+1
+    else:
+        raise "Platform %s is not supported (yet)." % _os
+
+    geis_fmt = {'REAL':'f', 'INTEGER':'i', 'LOGICAL':'i','CHARACTER':'S'}
+    end_card = 'END'+' '* (cardLen-3)
+
+    # open input file
+    im = open(input)
+
+    # Generate the primary HDU so we can have access to keywords which describe
+    # the number of groups and shape of each group's array
+    #
+    cards = []
+    while 1:
+        line = im.read(bytes_per_line)[:cardLen]
+        line = line[:8].upper() + line[8:]
+        if line == end_card:
+            break
+        cards.append(pyfits.Card('').fromstring(line))
+
+    phdr = pyfits.Header(pyfits.CardList(cards))
+    im.close()
+
+    _naxis0 = phdr.get('NAXIS', 0)
+    _naxis = [phdr['NAXIS'+`j`] for j in range(1, _naxis0+1)]
+    _naxis.insert(0, _naxis0)
+    _bitpix = phdr['BITPIX']
+    _psize = phdr['PSIZE']
+    if phdr['DATATYPE'][:4] == 'REAL':
+        _bitpix = -_bitpix
+    if _naxis0 > 0:
+        size = reduce(lambda x,y:x*y, _naxis[1:])
+        data_size = abs(_bitpix) * size // 8
+    else:
+        data_size = 0
+    group_size = data_size + _psize // 8
+
+    # decode the group parameter definitions,
+    # group parameters will become extension header
+    groups = phdr['GROUPS']
+    gcount = phdr['GCOUNT']
+    pcount = phdr['PCOUNT']
+
+    formats = []
+    bools = []
+    floats = []
+    _range = range(1, pcount+1)
+    key = [phdr['PTYPE'+`j`] for j in _range]
+    comm = [phdr.ascard['PTYPE'+`j`].comment for j in _range]
+
+    # delete group parameter definition header keywords
+    _list = ['PTYPE'+`j` for j in _range] + \
+            ['PDTYPE'+`j` for j in _range] + \
+            ['PSIZE'+`j` for j in _range] + \
+            ['DATATYPE', 'PSIZE', 'GCOUNT', 'PCOUNT', 'BSCALE', 'BZERO']
+
+    # Construct record array formats for the group parameters
+    # as interpreted from the Primary header file
+    for i in range(1, pcount+1):
+        ptype = key[i-1]
+        pdtype = phdr['PDTYPE'+`i`]
+        star = pdtype.find('*')
+        _type = pdtype[:star]
+        _bytes = pdtype[star+1:]
+
+        # collect boolean keywords since they need special attention later
+        
+        if _type == 'LOGICAL':
+            bools.append(i)
+        if pdtype == 'REAL*4':
+            floats.append(i)
+       
+        fmt = geis_fmt[_type] + _bytes
+        formats.append((ptype,fmt))
+
+    _shape = _naxis[1:]
+    _shape.reverse()
+    _code = pyfits.core._ImageBaseHDU.NumCode[_bitpix]
+    _bscale = phdr.get('BSCALE', 1)
+    _bzero = phdr.get('BZERO', 0)
+    if phdr['DATATYPE'][:10] == 'UNSIGNED*2':
+        _uint16 = 1
+        _bzero = 32768
+    else:
+        _uint16 = 0
+
+    
+    # Use copy-on-write for all data types since byteswap may be needed
+    # in some platforms.
+    f1 = open(data_file, mode='rb')
+    dat = f1.read()
+    f1.close()
+
+    errormsg = ""
+    
+    loc = 0
+    outdat = ""
+    for k in range(gcount):
+        ext_dat = numpy.fromstring(dat[loc:loc+data_size], dtype=_code)
+        ext_dat = ext_dat.reshape(_shape).byteswap()
+        outdat += ext_dat.tostring()
+        
+        ext_hdu = pyfits.ImageHDU(data=ext_dat)
+
+        rec = numpy.fromstring(dat[loc+data_size:loc+group_size], dtype=formats).byteswap()
+        outdat += rec.tostring()
+        
+        loc += group_size
+
+    print 'len(outdat): ',len(outdat)
+
+
+    if os.path.exists(output):
+        os.remove(output)
+    if os.path.exists(out_data):
+        os.remove(out_data)
+        
+    shutil.copy(input,output)
+    outfile = open(out_data,mode='wb')
+    outfile.write(outdat)
+    outfile.close()
+    print 'Finished converting ',input,' to ',output
+    
 #-------------------------------------------------------------------------------
 def parse_path(f1, f2):
 
