@@ -256,12 +256,15 @@ def getHelpFileAsString(taskname,taskpath):
 
     """
     #get the local library directory where the code is stored
-    localDir=os.path.split(taskpath) # taskpath should be task's __file__
+    pathsplit=os.path.split(taskpath) # taskpath should be task's __file__
     if taskname.find('.') > -1: # if taskname is given as package.taskname...
         helpname=taskname.split(".")[1]    # taskname should be __taskname__ from task's module
     else:
         helpname = taskname
-    helpfile=rglob(localDir[0],helpname+".help")[0]
+    localdir = pathsplit[0]
+    if localdir == '':
+       localdir = '.'
+    helpfile=rglob(localdir,helpname+".help")[0]
 
     if os.access(helpfile,os.R_OK):
         fh=open(helpfile,'r')
