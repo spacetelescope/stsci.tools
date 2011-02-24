@@ -1,5 +1,8 @@
 from __future__ import division # confidence high
 
+# Don't copy this as an example - use any other package is stsci_python,
+# such as sample_package
+
 pkg = [ 'pytools', 'pytools.tests' ]
 
 setupargs = {
