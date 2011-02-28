@@ -88,12 +88,8 @@
         easier to change the behavior of fitsdiff on a global level,
         such as in a set of regression tests.
 """
-import numerixenv
-numerixenv.check()
-
-# This version needs python 2.2 and numarray 0.6, or later.
 # Developed by Science Software Group, STScI, USA.
-__version__ = "1.4 (23 August 2006)"
+__version__ = "1.5 (28 Feb 2011)"
 
 import os, sys, types
 import pyfits
@@ -248,14 +244,13 @@ def keyword_dict(header, neglect_blanks=1):
     dict_value = {}
     dict_comment = {}
 
-    for i in range(len(header)):
-        keyword = header[i].key
-        value = header[i].value
+    for key in header.keys():
+        keyword = key
+        value = header[key].value
         try:
-            comment = header[i].comment
+            comment = header[key].comment
         except:
             comment = ''
-
         # keep trailing blanks for a string value?
         if type(value) == types.StringType and neglect_blanks:
             value = value.rstrip()
