@@ -179,9 +179,17 @@ def execTriggerCode(SCOPE, NAME, VAL, codeStr):
               SCOPE, NAME, VAL
         The code string itself is expected to set a var named OUT
     """
+    # This was all we needed in Python 2.x
+#   OUT = None
+#   exec codeStr
+#   return OUT
+
+    # In Python 3 (& 2.x) be more explicit:  http://bugs.python.org/issue4831
     OUT = None
-    exec codeStr
-    return OUT
+    ldict = locals() # will have OUT in it
+    exec(codeStr, globals(), ldict)
+    return ldict['OUT']
+
 
 
 def print_tasknames(pkgName, aDir, term_width=80, always=False):
