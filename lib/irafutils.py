@@ -349,7 +349,12 @@ def tkreadline(file=None):
         file = sys.stdin
     if not hasattr(file, "readline"):
         raise TypeError("file must be a filehandle with a readline method")
-    if hasattr(file, 'fileno'):
+
+    # Call tkread now...
+    # BUT, if we get in here for something not GUI-related (e.g. terminal-
+    # focused code in a sometimes-GUI app) then skip tkread and simply call
+    # readline on the input eg. stdin.  Otherwise we'd fail in _TkRead().read()
+    if hasattr(file, 'fileno') and capable.OF_GRAPHICS:
         fd = file.fileno()
         tkread(fd, 0)
         # if EOF was encountered on a tty, avoid reading again because
