@@ -365,7 +365,7 @@ class _TkRead:
     def read(self, file, nbytes):
         """Read nbytes characters from file while running Tk mainloop"""
         if not capable.OF_GRAPHICS:
-            raise RuntimeError("Cannot run this command with graphics")
+            raise RuntimeError("Cannot run this command without graphics")
         if isinstance(file, types.IntType):
             fd = file
         elif hasattr(file, "fileno"):
