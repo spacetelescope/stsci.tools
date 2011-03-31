@@ -1,4 +1,4 @@
-""" Main module for the ConfigObj version of the parameter task editor
+""" Main module for the ConfigObj version of the parameter task editor: TEAL.
 $Id$
 """
 from __future__ import division # confidence high
