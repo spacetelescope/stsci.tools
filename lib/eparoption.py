@@ -468,7 +468,9 @@ class EnumEparOption(EparOption):
                                  fg='black',
                                  bg=self.bkgColor)
 
-        self.entry.menu = Menu(self.entry, tearoff=0, postcommand=self.postcmd,
+        self.entry.menu = Menu(self.entry, tearoff=0,
+                               postcommand=self.postcmd,
+                               fg = 'black',
                                bg=self.bkgColor)
 
         # Generate the dictionary of shortcuts using first letter,
