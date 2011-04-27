@@ -63,7 +63,7 @@ import pyfits
 
 from pydrizzle import drutil
 from pydrizzle.distortion import models,mutil
-from pytools import fileutil, wcsutil, parseinput
+from stsci.tools import fileutil, wcsutil, parseinput
 import numpy as N
 
 yes = True

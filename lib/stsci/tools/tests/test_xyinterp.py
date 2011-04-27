@@ -1,6 +1,6 @@
 from __future__ import division # confidence high
 
-from pytools.xyinterp import xyinterp
+from stsci.tools.xyinterp import xyinterp
 import numpy as N
 
 x=N.array((1,2,3,4,5))

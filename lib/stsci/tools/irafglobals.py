@@ -1,7 +1,7 @@
 """module irafglobals.py -- widely used IRAF constants and objects
 
 NOTE!  This module does NOT require the installation of IRAF.  It's location
-in pytools is safe because it is intended to remain free of such dependency.
+in stsci.tools is safe because it is intended to remain free of such dependency.
 
 yes, no         Boolean values
 IrafError       Standard IRAF exception

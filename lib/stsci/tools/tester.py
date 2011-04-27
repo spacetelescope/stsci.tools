@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Package: pytools
+Package: stsci.tools
 Author: Christopher Hanley
 
 Purpose:
@@ -15,12 +15,12 @@ Dependencies:
 
 Usage Example:
 ==============
-All packages will need to import pytools.tester and add the following
+All packages will need to import stsci.tools.tester and add the following
 function to the __init__.py of their package:
 
-import pytools.tester
+import stsci.tools.tester
 def test(*args,**kwds):
-    pytools.tester.test(modname=__name__, *args, **kwds)
+    stsci.tools.tester.test(modname=__name__, *args, **kwds)
 
 
 This assumes that all software packages are installed with the structure:

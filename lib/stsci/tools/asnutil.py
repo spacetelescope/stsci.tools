@@ -30,7 +30,7 @@ def readASNTable(fname, output=None, prodonly=False):
     ========
     An association table can be read from a file using the following commands::
     
-        >>> from pytools import asnutil
+        >>> from stsci.tools import asnutil
         >>> asntab = asnutil.readASNTable('j8bt06010_shifts_asn.fits', prodonly=False)
     
     The `asntab` object can now be passed to other code to provide relationships

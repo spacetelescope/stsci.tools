@@ -38,7 +38,7 @@ def printVersionInfo():
                 'pyraf',
                 'multidrizzle',
                 'pydrizzle',
-                'pytools',
+                'stsci.tools',
                 'calcos',
                 'convolve',
                 'image',

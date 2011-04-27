@@ -28,7 +28,7 @@ from irafglob import irafglob
 # PyDrizzle provides the ability to read association tables ('_asn.fits', '_asc.fits')
 #import pydrizzle
 import fileutil
-from pytools.asnutil import readASNTable
+from stsci.tools.asnutil import readASNTable
 
 def parseinput(inputlist,outputname=None, atfile=None):
     """
@@ -65,7 +65,7 @@ def parseinput(inputlist,outputname=None, atfile=None):
         
     See Also
     --------
-    pytools.irafglob
+    stsci.tools.irafglob
     
     """
 

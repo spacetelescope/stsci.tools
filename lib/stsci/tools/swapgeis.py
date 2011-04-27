@@ -6,7 +6,7 @@
         swapgeis: Read GEIS file, byteswap it and write out to a new GEIS file.
 
         License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
-        
+
         Usage:
 
                 swapgeis.py [options] GEISname newGEISname
@@ -22,9 +22,9 @@
                 abc.xyh will have an output name of abc_swap.xyh
 
         :Options:
-        
+
         -h     print the help (this text)
-        
+
         -n     do NOT clobber pre-existing output files
 
         :Example:
@@ -35,14 +35,14 @@
             >>> swapgeis.byteswap(GEISFileName)
 
         The most basic usage from the command line::
-        
+
             swapgeis.py test1.hhh test1_swap.hhh
 
         This command will convert the input GEIS file test1.hhh written
         out on one platform (Solaris?) to a byteswapped version test1_linux.hhh.
 
 
-        From the command line:: 
+        From the command line::
 
             swapgeis.py .
 
@@ -52,8 +52,8 @@
 
 
         Another example of usage from the command line::
-        
-            swapgeis.py "u*" 
+
+            swapgeis.py "u*"
 
         this will convert all `u*.??h` files in the current directory
         to byteswapped files (of corresponding names) and write them in the
@@ -74,28 +74,30 @@ import os, sys, string, shutil
 import pyfits
 import numpy
 
+dat = None
+
 def byteswap(input,output=None,clobber=True):
 
-    """Input GEIS files "input" will be read and converted to a new GEIS file 
-    whose byte-order has been swapped from its original state.  
-    
+    """Input GEIS files "input" will be read and converted to a new GEIS file
+    whose byte-order has been swapped from its original state.
+
     Parameters
     ----------
     input - str
         Full filename with path of input GEIS image header file
-    
+
     output - str
         Full filename with path of output GEIS image header file
         If None, a default name will be created as input_swap.??h
-    
+
     clobber - bool
         Overwrite any pre-existing output file? [Default: True]
-        
+
     Notes
     -----
-    This function will automatically read and write out the data file using the 
+    This function will automatically read and write out the data file using the
     GEIS image naming conventions.
-    
+
     """
 
     global dat
@@ -104,13 +106,13 @@ def byteswap(input,output=None,clobber=True):
     # input file(s) must be of the form *.??h and *.??d
     if input[-1] != 'h' or input[-4] != '.':
         raise "Illegal input GEIS file name %s" % input
-    
+
     data_file = input[:-1]+'d'
 
     # Create default output name if no output name was specified by the user
     if output is None:
         output = input.replace('.','_swap.')
-        
+
     out_data = output[:-1]+'d'
     if os.path.exists(output) and not clobber:
         errstr = 'Output file already exists! Please remove or rename and start again...'
@@ -185,12 +187,12 @@ def byteswap(input,output=None,clobber=True):
         _bytes = pdtype[star+1:]
 
         # collect boolean keywords since they need special attention later
-        
+
         if _type == 'LOGICAL':
             bools.append(i)
         if pdtype == 'REAL*4':
             floats.append(i)
-       
+
         fmt = geis_fmt[_type] + _bytes
         formats.append((ptype,fmt))
 
@@ -205,7 +207,7 @@ def byteswap(input,output=None,clobber=True):
     else:
         _uint16 = 0
 
-    
+
     # Use copy-on-write for all data types since byteswap may be needed
     # in some platforms.
     f1 = open(data_file, mode='rb')
@@ -213,32 +215,32 @@ def byteswap(input,output=None,clobber=True):
     f1.close()
 
     errormsg = ""
-    
+
     loc = 0
     outdat = ""
     for k in range(gcount):
         ext_dat = numpy.fromstring(dat[loc:loc+data_size], dtype=_code)
         ext_dat = ext_dat.reshape(_shape).byteswap()
         outdat += ext_dat.tostring()
-        
+
         ext_hdu = pyfits.ImageHDU(data=ext_dat)
 
         rec = numpy.fromstring(dat[loc+data_size:loc+group_size], dtype=formats).byteswap()
         outdat += rec.tostring()
-        
+
         loc += group_size
 
     if os.path.exists(output):
         os.remove(output)
     if os.path.exists(out_data):
         os.remove(out_data)
-        
+
     shutil.copy(input,output)
     outfile = open(out_data,mode='wb')
     outfile.write(outdat)
     outfile.close()
     print 'Finished byte-swapping ',input,' to ',output
-    
+
 #-------------------------------------------------------------------------------
 
 
@@ -280,12 +282,12 @@ def byteswap(input,output=None,clobber=True):
 
     phdr = pyfits.Header(pyfits.CardList(cards))
     im.close()
-    
+
     phdr.update('FILENAME',input,after='DATE')
 
     # Determine starting point for adding Group Parameter Block keywords to Primary header
     phdr_indx = phdr.ascard.index_of('PSIZE')
-    
+
 
     _naxis0 = phdr.get('NAXIS', 0)
     _naxis = [phdr['NAXIS'+`j`] for j in range(1, _naxis0+1)]
@@ -311,7 +313,7 @@ def byteswap(input,output=None,clobber=True):
     bools = []
     floats = []
     cols = [] # column definitions used for extension table
-    cols_dict = {} # provides name access to Column defs 
+    cols_dict = {} # provides name access to Column defs
     _range = range(1, pcount+1)
     key = [phdr['PTYPE'+`j`] for j in _range]
     comm = [phdr.ascard['PTYPE'+`j`].comment for j in _range]
@@ -332,16 +334,16 @@ def byteswap(input,output=None,clobber=True):
         _bytes = pdtype[star+1:]
 
         # collect boolean keywords since they need special attention later
-        
+
         if _type == 'LOGICAL':
             bools.append(i)
         if pdtype == 'REAL*4':
-            floats.append(i)        
-        
+            floats.append(i)
+
         # identify keywords which require conversion to special units
         if ptype in kw_DOUBLE:
             _type = 'DOUBLE'
-        
+
         fmt = geis_fmt[_type] + _bytes
         formats.append((ptype,fmt))
 
@@ -390,12 +392,12 @@ def byteswap(input,output=None,clobber=True):
     f1 = open(data_file, mode='rb')
     dat = f1.read()
     errormsg = ""
-    
-    # Define data array for all groups 
+
+    # Define data array for all groups
     arr_shape = _naxis[:]
     arr_shape[0] = gcount
     arr_stack = numpy.zeros(arr_shape,dtype=_code)
-    
+
     loc = 0
     for k in range(gcount):
         ext_dat = numpy.fromstring(dat[loc:loc+data_size], dtype=_code)
@@ -403,7 +405,7 @@ def byteswap(input,output=None,clobber=True):
         if _uint16:
             ext_dat += _bzero
         # Check to see whether there are any NaN's or infs which might indicate
-        # a byte-swapping problem, such as being written out on little-endian 
+        # a byte-swapping problem, such as being written out on little-endian
         #   and being read in on big-endian or vice-versa.
         if _code.find('float') >= 0 and \
             (numpy.any(numpy.isnan(ext_dat)) or numpy.any(numpy.isinf(ext_dat))):
@@ -429,9 +431,9 @@ def byteswap(input,output=None,clobber=True):
 
         arr_stack[k] = ext_dat
         #ext_hdu = pyfits.ImageHDU(data=ext_dat)
-        
+
         rec = numpy.fromstring(dat[loc+data_size:loc+group_size], dtype=formats)
-        
+
         loc += group_size
 
         # Add data from this GPB to table
@@ -443,7 +445,7 @@ def byteswap(input,output=None,clobber=True):
                 else:
                     val = 'F'
             cols[i-1].array[k] = val
-            
+
         # Based on the first group, add GPB keywords to PRIMARY header
         if k == 0:
             # Create separate PyFITS Card objects for each entry in 'rec'
@@ -451,13 +453,13 @@ def byteswap(input,output=None,clobber=True):
             for i in range(1, pcount+1):
                 #val = rec.field(i-1)[0]
                 val = rec[0][i-1]
-                
+
                 if i in bools:
                     if val:
                         val = pyfits.TRUE
                     else:
                         val = pyfits.FALSE
-                
+
                 if i in floats:
                     # use fromstring, format in Card is deprecated in pyfits 0.9
                     _str = '%-8s= %20.13G / %s' % (key[i-1], val, comm[i-1])
@@ -495,7 +497,7 @@ def byteswap(input,output=None,clobber=True):
 
     hdulist = pyfits.HDUList([pyfits.PrimaryHDU(header=phdr, data=arr_stack)])
     hdulist.append(ext_table)
-    
+
     return hdulist
 
 def parse_path(f1, f2):

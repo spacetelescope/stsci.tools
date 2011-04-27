@@ -2,7 +2,7 @@
 from __future__ import division # confidence high
 
 import unittest
-import pytools.stpyfits as stpyfits
+import stsci.tools.stpyfits as stpyfits
 import pyfits
 from pyfits.tests.util import CaptureStdout
 import numpy as np

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# pytools documentation build configuration file, created by
+# stsci.tools documentation build configuration file, created by
 # sphinx-quickstart on Thu Oct  7 13:09:39 2010.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -46,7 +46,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'pytools'
+project = u'stsci.tools'
 copyright = u'2010, SSB'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -168,7 +168,7 @@ html_static_path = ['_static']
 #html_file_suffix = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'pytoolsdoc'
+htmlhelp_basename = 'stsci.toolsdoc'
 
 
 # -- Options for LaTeX output --------------------------------------------------
@@ -182,7 +182,7 @@ htmlhelp_basename = 'pytoolsdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'pytools.tex', u'pytools Documentation',
+  ('index', 'stsci.tools.tex', u'pytools Documentation',
    u'SSB', 'manual'),
 ]
 

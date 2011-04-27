@@ -6,10 +6,10 @@
 #
 # The new standard stsci module setup.py is just 
 #
-#   import pytools.stsci_distutils_hack
-#   pytools.stsci_distutils_hack.run( pytools_version = "XX" )
+#   import stsci.tools.stsci_distutils_hack
+#   stsci.tools.stsci_distutils_hack.run( pytools_version = "XX" )
 #
-# where XX is the version of pytools you expect for the install to work
+# where XX is the version of stsci.tools you expect for the install to work
 #
 
 from __future__ import division # confidence high
@@ -38,7 +38,7 @@ __docformat__ = 'restructuredtext'
 #
 # actually perform the install
 #
-# NOTE: This is not used to install pytools itself!
+# NOTE: This is not used to install stsci.tools itself!
 
 import sys
 
@@ -52,8 +52,8 @@ def run( pytools_version = None ) :
 
     usage: 
 
-        import pytools.stsci_distutils_hack
-        pytools.stsci_distutils_hack.run(pytools_version = "3.0")
+        import stsci.tools.stsci_distutils_hack
+        stsci.tools.stsci_distutils_hack.run(pytools_version = "3.0")
 
     """
 
@@ -61,17 +61,17 @@ def run( pytools_version = None ) :
         raise SystemExit, "Python 2.3 or later required."
 
     if pytools_version :
-        # Only try to import pytools if we are asked to check for a version.
+        # Only try to import stsci.tools if we are asked to check for a version.
         #
-        # ( We may have been extracted from pytools and bundled with a package.
-        # In that case, we do not want to risk finding some _other_ pytools
+        # ( We may have been extracted from stsci.tools and bundled with a package.
+        # In that case, we do not want to risk finding some _other_ stsci.tools
         # and comparing that version. )
-        import pytools
+        import stsci.tools
 
         # bug: should use distutils version comparator to perform ">" comparisons
-        if ( pytools.__version__ != pytools_version ) :
-            print "wrong version of pytools!"
-            print "have ",pytools.__version__ 
+        if ( stsci.tools.__version__ != pytools_version ) :
+            print "wrong version of stsci.tools!"
+            print "have ",stsci.tools.__version__ 
             print "want ",pytools_version
             sys.exit(1)
 

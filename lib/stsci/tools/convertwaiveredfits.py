@@ -54,7 +54,7 @@
 
     :Python Syntax: You can run this code interactively from within Python using the syntax:
 
-        >>> from pytools import convertwaiveredfits
+        >>> from stsci.tools import convertwaiveredfits
         >>> fobj = convertwaiveredfits.convertwaiveredfits(waiveredObject, 
         >>>                    outputFileName=None, 
         >>>                    forceFileOutput=False, 

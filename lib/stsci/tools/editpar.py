@@ -14,7 +14,7 @@ if capable.OF_GRAPHICS:
     from Tkinter import *
     from tkMessageBox import askokcancel, askyesno, showwarning
 
-# pytools modules
+# stsci.tools modules
 from irafglobals import userWorkingHome
 import basicpar, eparoption, filedlg, irafutils, listdlg, taskpars
 
