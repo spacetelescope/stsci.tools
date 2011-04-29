@@ -150,36 +150,36 @@ class WCSObject:
         from pixels to RA/Dec and back.
 
         :Syntax: The basic syntax for using this object is::
-        
+
             >>> wcs = wcsutil.WCSObject(rootname,header=None,shape=None,
             >>>                        pa_key='PA_V3',new=no,prefix=None)
-                                    
+
         This will create a WCSObject which provides basic WCS functions.
-        
+
         Parameters
         ==========
         rootname: string
             filename in a format supported by IRAF, specifically::
-            
+
                 filename.hhh[group] -or-
                 filename.fits[ext] -or-
                 filename.fits[extname,extver]
 
-        header: object  
+        header: object
             PyFITS header object from which WCS keywords can be read
-        shape:    tuple 
+        shape:    tuple
             tuple giving (nx,ny,pscale)
-        pa_key: string   
+        pa_key: string
             name of keyword to read in telescopy orientation
         new: boolean
             specify a new object rather than creating one by
             reading in keywords from an existing image
-        prefix: string 
+        prefix: string
             string to use as prefix for creating archived versions
             of WCS keywords, if such keywords do not already exist
 
         Notes
-        ======        
+        ======
         Setting 'new=yes' will create a WCSObject from scratch
         regardless of any input rootname.  This avoids unexpected
         filename collisions.
@@ -188,27 +188,27 @@ class WCSObject:
         =======
         print_archive(format=True)
             print out archive keyword values
-        get_archivekw(keyword)     
+        get_archivekw(keyword)
             return archived value for WCS keyword
-        set_pscale()               
+        set_pscale()
             set pscale attribute for object
-        compute_pscale(cd11,cd21)  
+        compute_pscale(cd11,cd21)
             compute pscale value
-        get_orient()               
+        get_orient()
             return orient computed from CD matrix
         updateWCS(pixel_scale=None,orient=None,refpos=None,refval=None,size=None)
             reset entire WCS based on given values
-        xy2rd(pos)                 
+        xy2rd(pos)
             compute RA/Dec position for given (x,y) tuple
-        rd2xy(skypos,hour=no)      
+        rd2xy(skypos,hour=no)
             compute X,Y position for given (RA,Dec)
-        rotateCD(orient)           
+        rotateCD(orient)
             rotate CD matrix to new orientation given by 'orient'
-        recenter()                 
+        recenter()
             Reset reference position to X,Y center of frame
         write(fitsname=None,archive=True,overwrite=False,quiet=True)
             write out values of WCS to specified file
-        restore()                  
+        restore()
             reset WCS keyword values to those from archived values
         read_archive(header,prepend=None)
             read any archive WCS keywords from PyFITS header
@@ -216,14 +216,14 @@ class WCSObject:
             create archived copies of WCS keywords.
         write_archive(fitsname=None,overwrite=no,quiet=yes)
             write out the archived WCS values to the file
-        restoreWCS(prepend=None) 
+        restoreWCS(prepend=None)
             resets WCS values in file to original values
         createReferenceWCS(refname,overwrite=yes)
             write out values of WCS keywords to NEW FITS
             file without any image data
-        copy(deep=True)            
+        copy(deep=True)
             create a copy of the WCSObject.
-        help()                     
+        help()
             prints out this help message
 
     """
@@ -348,7 +348,7 @@ class WCSObject:
             self.new = yes
             for key in self.wcsdef.keys():
                 self.__dict__[key] = self.wcsdef[key]
-            
+
             if shape != None:
                 # ... and update with user values.
                 self.naxis1 = int(shape[0])
@@ -457,7 +457,7 @@ class WCSObject:
     def get_orient(self):
         """ Return the computed orientation based on CD matrix. """
         return RADTODEG(N.arctan2(self.cd12,self.cd22))
-    
+
     def set_orient(self):
         """ Return the computed orientation based on CD matrix. """
         self.orient = RADTODEG(N.arctan2(self.cd12,self.cd22))
@@ -466,7 +466,7 @@ class WCSObject:
         """ Update computed values of WCS based on current CD matrix."""
         self.set_pscale()
         self.set_orient()
-        
+
     def updateWCS(self, pixel_scale=None, orient=None,refpos=None,refval=None,size=None):
         """
         Create a new CD Matrix from the absolute pixel scale
@@ -536,23 +536,23 @@ class WCSObject:
             self.cd21 = self.cd12
             self.cd22 = -self.cd11
 
-        # Now make sure that all derived values are really up-to-date based 
+        # Now make sure that all derived values are really up-to-date based
         # on these changes
         self.update()
 
     def scale_WCS(self,pixel_scale,retain=True):
         ''' Scale the WCS to a new pixel_scale. The 'retain' parameter
-        [default value: True] controls whether or not to retain the original 
+        [default value: True] controls whether or not to retain the original
         distortion solution in the CD matrix.
         '''
         _ratio = pixel_scale / self.pscale
-        
-        # Correct the size of the image and CRPIX values for scaled WCS 
+
+        # Correct the size of the image and CRPIX values for scaled WCS
         self.naxis1 /= _ratio
         self.naxis2 /= _ratio
         self.crpix1 = self.naxis1/2.
         self.crpix2 = self.naxis2/2.
-        
+
         if retain:
             # Correct the WCS while retaining original distortion information
             self.cd11 *= _ratio
@@ -565,11 +565,11 @@ class WCSObject:
             self.cd12 = pscale * N.sin(pa)
             self.cd21 = self.cd12
             self.cd22 = -self.cd11
-            
-        # Now make sure that all derived values are really up-to-date based 
+
+        # Now make sure that all derived values are really up-to-date based
         # on these changes
         self.update()
-        
+
     def xy2rd(self,pos):
         """
         This method would apply the WCS keywords to a position to
@@ -755,7 +755,7 @@ class WCSObject:
         self.update()
 
     def write(self,fitsname=None,wcs=None,archive=True,overwrite=False,quiet=True):
-        """ 
+        """
         Write out the values of the WCS keywords to the
         specified image.
 
@@ -764,19 +764,19 @@ class WCSObject:
         FITS copy of the GEIS and update that file. Otherwise, it
         throw an Exception if the user attempts to directly update
         a GEIS image header.
-        
+
         If archive=True, also write out archived WCS keyword values to file.
         If overwrite=True, replace archived WCS values in file with new values.
-        
-        If a WCSObject is passed through the 'wcs' keyword, then the WCS keywords 
+
+        If a WCSObject is passed through the 'wcs' keyword, then the WCS keywords
         of this object are copied to the header of the image to be updated. A use case
-        fo rthis is updating the WCS of a WFPC2 data quality (_c1h.fits) file 
+        fo rthis is updating the WCS of a WFPC2 data quality (_c1h.fits) file
         in order to be in sync with the science (_c0h.fits) file.
-        
+
         """
         ## Start by making sure all derived values are in sync with CD matrix
         self.update()
-        
+
         image = self.rootname
         _fitsname = fitsname
 
@@ -802,7 +802,7 @@ class WCSObject:
             _dkey = _wcsobj.wcstrans[key]
             if _dkey != 'pscale':
                 _extn.header.update(key,_wcsobj.__dict__[_dkey])
-                
+
         # Close the file
         fimg.close()
         del fimg
@@ -1100,7 +1100,7 @@ class WCSObject:
             return copy.deepcopy(self)
         else:
             return copy.copy(self)
-        
+
     def help(self):
         """ Prints out help message."""
         print 'wcsutil Version '+str(__version__)+':\n'
