@@ -126,14 +126,14 @@ class LogTestCase(unittest.TestCase):
       except AttributeError:
          pass
 
-      if status == 'E': 
-          f.write("%s:: tra_Trace=%s\n"%(name,str(self._exc_info()))) 
- 
+      if status == 'E':
+          f.write("%s:: tra_Trace=%s\n"%(name,str(self._exc_info())))
+
       f.write("END\n")
       f.close()
-              
-              
-      
+
+
+
 
 
 class FPTestCase(unittest.TestCase):
@@ -185,7 +185,7 @@ class LogTextRunner(unittest.TextTestRunner):
         else:
             self.stream.writeln("OK")
             test.log("P")
-            
+
         return result
 
 def buildsuite(module):

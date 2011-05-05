@@ -224,7 +224,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         """Test the getdata convience function in both the pyfits and
            stpyfits namespace."""
 
-        d = stpyfits.getdata(os.path.join('cdva2.fits'))
+        d = stpyfits.getdata(os.path.join(test_dir, 'cdva2.fits'))
         self.assertEqual(d.all(), np.array([[1,1,1,1,1,1,1,1,1,1],
                                             [1,1,1,1,1,1,1,1,1,1],
                                             [1,1,1,1,1,1,1,1,1,1],
@@ -238,7 +238,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
                                             dtype=np.int32).all())
 
         try:
-            d1 = pyfits.getdata(os.path.join('cdva2.fits'))
+            d1 = pyfits.getdata(os.path.join(test_dir, 'cdva2.fits'))
         except IndexError:
             pass
         else:
