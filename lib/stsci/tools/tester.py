@@ -31,7 +31,7 @@ package/
     test/
     test/__init__.py
     test/test_whatever.py
-    
+
 Where the /test subdirectory containts the python files that nose will
 recognize as tests.
 
@@ -45,7 +45,7 @@ import sys
 
 pytools_tester_active = False
 
-def test(modname,*args,**kwds):
+def test(modname, *args, **kwds):
     """
     Purpose:
     ========
@@ -54,30 +54,34 @@ def test(modname,*args,**kwds):
 
     """
 
-    if modname != None :
+    if modname is not None :
         curdir = sys.modules[modname].__file__
         curdir = os.path.abspath(curdir)
         curdir = os.path.dirname(curdir)
-    DIRS=[ curdir + '/test', curdir + '/tests' ]
+    else:
+        raise ValueError('name of module to test not given')
 
-    args=[]
-    found_one = 0
+    DIRS = [os.path.join(curdir, testdir) for testdir in ['test', 'tests']]
+
+    # First arg is blank, since it's skipped by nose
+    # --exe is needed because easy_install sets all .py files as executable for
+    # some reason
+    args = ['', '--exe']
+    found_one = False
     for dirname in DIRS:
         if os.path.isdir(dirname) :
             args.append('-w')
             args.append(dirname)
-            found_one = 1
+            found_one = True
 
     if not found_one :
-        print "no tests found in:"
-        for x in DIRS :
-            print "  ",x
+        print 'no tests found in: %s' % repr(dirs)
         return False
 
     result = False
 
     try:
-        import nose, nose.core
+        import nose
     except ImportError:
         print "Nose 0.10.4 or greater is required for running tests."
         raise
