@@ -64,7 +64,8 @@ class EparOption(object):
     choiceClass = StringVar
 
     def __init__(self, master, statusBar, paramInfo, defaultParamInfo,
-                 doScroll, fieldWidths, defaultsVerb, bg, indent=False):
+                 doScroll, fieldWidths, defaultsVerb, bg,
+                 indent=False, helpCallbackObj=None):
 
         # Connect to the information/status Label
         self.status = statusBar
@@ -92,6 +93,7 @@ class EparOption(object):
                      prompt = 0)
         self.previousValue = self.value
         self._editedCallbackObj = None
+        self._helpCallbackObj = helpCallbackObj
         self._lastWidgetEditedVal = None
 
         # DISABLE any indent for now - not sure why but this causes odd text
@@ -154,9 +156,13 @@ class EparOption(object):
         self.browserEnabled = DISABLED
         self.clearEnabled = DISABLED
         self.unlearnEnabled = DISABLED
+        self.helpEnabled = DISABLED
+        if self._helpCallbackObj != None:
+            self.helpEnabled = NORMAL
 
         # Generate the input widget depending upon the datatype
         self.makeInputWidget()
+#       print(self.name, self.__class__) # DBG line
 
         self.entry.bind('<FocusOut>', self.focusOut, "+")
         self.entry.bind('<FocusIn>', self.focusIn, "+")
@@ -295,6 +301,7 @@ class EparOption(object):
         value = self.choice.get()
         try:
             if value != self.previousValue:
+                # THIS will likely get into IrafPar's _coerceOneValue()
                 self.paramInfo.set(value)
             # fire any applicable triggers, whether value has changed or not
             self.widgetEdited(action='entry')
@@ -323,7 +330,6 @@ class EparOption(object):
             None, it will use the GUI entry's current value via choice.get().
             See teal.py for a description of action.
         """
-
 
         # be as lightweight as possible if obj doesn't care about this stuff
         if not self._editedCallbackObj: return
@@ -354,13 +360,12 @@ class EparOption(object):
     def popupChoices(self, event=None):
         """Popup right-click menu of special parameter operations
 
-        Relies on browserEnabled, clearEnabled, unlearnEnabled
+        Relies on browserEnabled, clearEnabled, unlearnEnabled, helpEnabled
         instance attributes to determine which items are available.
         """
         # don't bother if all items are disabled
-        if NORMAL not in [self.browserEnabled,
-                          self.clearEnabled,
-                          self.unlearnEnabled]:
+        if NORMAL not in (self.browserEnabled, self.clearEnabled,
+                          self.unlearnEnabled, self.helpEnabled):
             return
 
         self.menu = Menu(self.entry, tearoff = 0)
@@ -375,6 +380,9 @@ class EparOption(object):
         self.menu.add_command(label   = self.defaultsVerb,
                               state   = self.unlearnEnabled,
                               command = self.unlearnValue)
+        self.menu.add_command(label   = 'Help',
+                              state   = self.helpEnabled,
+                              command = self.helpOnParam)
 
         # Get the current y-coordinate of the Entry
         ycoord = self.entry.winfo_rooty()
@@ -421,6 +429,11 @@ class EparOption(object):
         defaultValue = self.defaultParamInfo.get(field = "p_filename",
                             native = 0, prompt = 0)
         self.choice.set(defaultValue)
+
+    def helpOnParam(self):
+        """ Try to display help specific to this parameter. """
+        if self._helpCallbackObj != None:
+            self._helpCallbackObj.showParamHelp(self.name)
 
     def setEditedCallbackObj(self, ecbo):
         """ Sets a callback object to be triggred when this option/parameter
@@ -693,6 +706,7 @@ class NumberEparOption(EparOption):
 
     def makeInputWidget(self):
 
+        self.browserEnabled = DISABLED
         self.clearEnabled = NORMAL
         self.unlearnEnabled = NORMAL
 
@@ -728,7 +742,9 @@ class FloatEparOption(NumberEparOption):
 # EparOption values for non-string types
 _eparOptionDict = { "b": BooleanEparOption,
                     "r": FloatEparOption,
+                    "R": FloatEparOption,
                     "d": FloatEparOption,
+                    "I": NumberEparOption,
                     "i": NumberEparOption,
                     "ar": FloatEparOption,
                     "ai": NumberEparOption,
@@ -737,6 +753,7 @@ _eparOptionDict = { "b": BooleanEparOption,
 def eparOptionFactory(master, statusBar, param, defaultParam,
                       doScroll, fieldWidths,
                       plugIn=None, editedCallbackObj=None,
+                      helpCallbackObj=None,
                       defaultsVerb="Default", bg=None, indent=False):
 
     """Return EparOption item of appropriate type for the parameter param"""
@@ -755,6 +772,7 @@ def eparOptionFactory(master, statusBar, param, defaultParam,
 
     # Create it
     eo = eparOption(master, statusBar, param, defaultParam, doScroll,
-                    fieldWidths, defaultsVerb, bg, indent=indent)
+                    fieldWidths, defaultsVerb, bg,
+                    indent=indent, helpCallbackObj=helpCallbackObj)
     eo.setEditedCallbackObj(editedCallbackObj)
     return eo

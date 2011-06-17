@@ -50,13 +50,14 @@ class _VerboseClass:
     def __init__(self, value=0): self.value = value
     def set(self, value): self.value = value
     def get(self): return self.value
-    def __lt__(self, other): return self.value < other
-    def __le__(self, other): return self.value <= other
-    def __gt__(self, other): return self.value > other
-    def __ge__(self, other): return self.value >= other
-    def __eq__(self, other): return self.value == other
-    def __cmp__(self, other): return cmp(self.value, other)
-    def __nonzero__(self): return (self.value != 0)
+    def __lt__(self, other): return self.value < int(other)
+    def __le__(self, other): return self.value <= int(other)
+    def __gt__(self, other): return self.value > int(other)
+    def __ge__(self, other): return self.value >= int(other)
+    def __eq__(self, other): return self.value == int(other)
+    def __ne__(self, other): return self.value != int(other)
+#   def __cmp__(self, other): return cmp(self.value, other)
+    def __nonzero__(self): return self.value != 0
     def __str__(self): return str(self.value)
 
 Verbose = _VerboseClass()

@@ -111,7 +111,7 @@ def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
                     pkgName = matches[0]
                     thePkg = sys.modules[pkgName]
                     throwIt = False
-            
+
             if throwIt:
                 raise NoCfgFileError("Unfound package or "+ext+" file via: "+\
                                      "import "+str(pkgName))
@@ -204,7 +204,7 @@ def getParsObjForPyPkg(pkgName):
 
 
 def getUsrCfgFilesForPyPkg(pkgName):
-    """ See if the user has one of their own local .cfg files for this task, 
+    """ See if the user has one of their own local .cfg files for this task,
         such as might be created automatically during the save of a read-only
         package, and return their names. """
     # Get the python package and it's .cfg file
@@ -315,10 +315,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         if ans != True:
             flatStr = "All values are invalid!"
             if ans != False:
-                flatStr = str(configobj.flatten_errors(self, ans))
+                flatStr = flattened2str(configobj.flatten_errors(self, ans))
             raise RuntimeError("Validation errors for: "+\
-                               os.path.splitext(cfgFileName)[0]+"\n\n"+\
-                               flatStr.replace(', (',', \n('))
+                         os.path.realpath(cfgFileName)+"\n\n"+flatStr)
 
         # get the initial param list out of the ConfigObj dict
         self.syncParamList(True)
@@ -399,7 +398,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             if ans != True:
                 flatStr = "All values are invalid!"
                 if ans != False:
-                    flatStr = str(configobj.flatten_errors(self, ans))
+                    flatStr = flattened2str(configobj.flatten_errors(self, ans))
                 raise RuntimeError("Validation error: "+flatStr)
 
         # Note - this design needs work.  Right now there are two copies
@@ -561,9 +560,11 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     # rm spaces, extra quotes; rm kywd arg pairs
                     x = [i.strip("' ") for i in x if i.find('=')<0]
                     choicesOrMin = '|'+'|'.join(x)+'|' # IRAF format for enums
-                elif chk_func_name.find('boolean') >= 0: dtype = 'b'
-                elif chk_func_name.find('float') >= 0:   dtype = 'r'
-                elif chk_func_name.find('integer') >= 0: dtype = 'i'
+                elif chk_func_name.find('boolean') >= 0:     dtype = 'b'
+                elif chk_func_name.find('float_or_') >= 0:   dtype = 'r'
+                elif chk_func_name.find('float') >= 0:       dtype = 'R'
+                elif chk_func_name.find('integer_or_') >= 0: dtype = 'i'
+                elif chk_func_name.find('integer') >= 0:     dtype = 'I'
                 fields.append(dtype)
                 fields.append('a')
                 if type(val)==bool:
@@ -709,7 +710,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         """ Return a dict of all normal dict parameters - that is, all
             parameters NOT marked with "pos=N" in the .cfgspc file.  This will
             also exclude all hidden parameters (metadata, rules, etc). """
-         
+
         # Start with a full deep-copy.  What complicates this method is the
         # idea of sub-sections.  This dict can have dicts as values, and so on.
         dcopy = self.dict() # ConfigObj docs say this is a deep-copy
@@ -776,10 +777,36 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         if ans != True:
             flatStr = "All values are invalid!"
             if ans != False:
-                flatStr = str(configobj.flatten_errors(self, ans))
+                flatStr = flattened2str(configobj.flatten_errors(self, ans))
             errStr = "Validation error: "+flatStr # for now this info is unused
 
         # Done
         if len(errStr): return (False, oldVal) # was an error
         else:           return (True, None)    # val is OK
 
+
+def flattened2str(flattened):
+    """ Return a pretty-printed multi-line string version of the output of
+    flatten_errors. Know that flattened comes in the form of a list
+    of keys that failed. Each member of the list is a tuple::
+
+        ([list of sections...], key, result)
+
+    so we turn that into a string. """
+
+    if flattened == None or len(flattened) < 1:
+        return 'No errors found'
+    retval = ''
+    for sections, key, result in flattened:
+        if sections == None or len(sections) == 0:
+            retval += '\t"'+key+'"'
+        elif len(sections) == 1:
+            retval += '\t"'+sections[0]+'.'+key+'"'
+        else: # len > 1
+            retval +=  '\t"'+key+'" from '+str(sections)
+        if isinstance(result, bool):
+            retval += ' has an invalid value'
+        else:
+            retval += ' is invalid, '+result.message
+        retval += '\n\n'
+    return retval.rstrip()

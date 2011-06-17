@@ -153,7 +153,7 @@ the "Execute" button.
 
 # Starts a GUI session
 def teal(theTask, parent=None, loadOnly=False, returnDict=True,
-         canExecute=True):
+         canExecute=True, raiseUnfound=False, errorsToTerm=False):
 #        overrides=None):
     """ Start the GUI session, or simply load a task's ConfigObj. """
     if loadOnly:
@@ -161,19 +161,52 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
 #       obj.strictUpdate(overrides) # !! does this skip verify step?? need it!
         return obj
     else:
-        dlg = ConfigObjEparDialog(theTask, parent=parent,
-                                  returnDict=returnDict, canExecute=canExecute)
-#                                 overrides=overrides)
+        dlg = None
+        try:
+            dlg = ConfigObjEparDialog(theTask, parent=parent,
+                                      returnDict=returnDict,
+                                      canExecute=canExecute)
+#                                     overrides=overrides)
+        except cfgpars.NoCfgFileError, ncf:
+            if raiseUnfound:
+                raise
+            elif errorsToTerm:
+                print(str(ncf).replace('\n\n','\n'))
+            else:
+                popUpErr(parent=parent,message=str(ncf),title="Unfound Task")
+        except RuntimeError, re:
+            if errorsToTerm:
+                print(str(re).replace('\n\n','\n'))
+            else:
+                popUpErr(parent=parent,message=str(re),title="Bad Parameters")
+
         # Return, depending on the mode in which we are operating
         if not returnDict:
             return
-        if dlg.canceled():
+        if dlg is None or dlg.canceled():
             return None
         else:
             return dlg.getTaskParsObj()
 
 
-def execTriggerCode(SCOPE, NAME, VAL, codeStr):
+def popUpErr(parent=None, message="", title="Error"):
+    # withdraw root, could standardize w/ EditParDialog.__init__()
+    if parent == None:
+        import Tkinter
+        root = Tkinter.Tk()
+#       root.lift()
+        root.after_idle(root.withdraw)
+    tkMessageBox.showerror(message=message, title=title, parent=parent)
+
+# We'd love to somehow force the dialog to the front here in popUpErr (on OSX)
+# butt cannot since the Python process started from the Terminal is not an
+# Aqua app (unless it became so within PyRAF).  This thread
+#    http://objectmix.com/python/350288-tkinter-osx-lift.html
+# describes it well.
+
+
+
+def execTriggerCode(SCOPE, NAME, VAL, PARENT, codeStr):
     """ .cfgspc embedded code execution is done here, in a relatively confined
         space.  The variables available to the code to be executed are:
               SCOPE, NAME, VAL
@@ -316,6 +349,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self._canExecute = canExecute
 
         # Init base - calls _setTaskParsObj(), sets self.taskName, etc
+        # Note that this calls _overrideMasterSettings()
         editpar.EditParDialog.__init__(self, theTask, parent, isChild,
                                        title, childList,
                                        resourceDir=cfgpars.getAppDir())
@@ -349,6 +383,20 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self._entsColor = cod.get('entriesColor', ltblu)
 
         self._showExecuteButton = self._canExecute
+
+        # check on the help string - just to see if it is HTML
+        # (could use HTMLParser here if need be, be quick and simple tho)
+        hhh = self.getHelpString(self.pkgName+'.'+self.taskName)
+        if hhh:
+            hhh = hhh.lower()
+            if hhh.find('<html') >= 0 or hhh.find('</html>') > 0:
+                self._knowTaskHelpIsHtml = True
+            elif hhh.startswith('http:') or hhh.startswith('https:'):
+                self._knowTaskHelpIsHtml = True
+            elif hhh.startswith('file:') and \
+                 (hhh.endswith('.htm') or hhh.endswith('.html')):
+                self._knowTaskHelpIsHtml = True
+
 
     def _preMainLoop(self):
         """ Override so that we can do some things right before activating. """
@@ -510,7 +558,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                     self.showStatus("Evaluating "+triggerName+' ...') #dont keep
                     self.top.update_idletasks() #allow msg to draw prior to exec
                     # execute it and retrieve the outcome
-                    outval = execTriggerCode(scope, name, newVal, codeStr)
+                    outval = execTriggerCode(scope, name, newVal, self.top, codeStr)
                     # Leave this debug line in until it annoys someone
                     msg = 'Value of "'+name+'" triggered "'+triggerName+'"'
                     stroutval = str(outval)
@@ -694,7 +742,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
 
     def _handleParListMismatch(self):
         """ Override to include ConfigObj filename. """
-            
+
         errmsg = 'ERROR: mismatch between default and current par lists ' + \
                  'for task "'+self.taskName+'".\nTry editing/deleting: "' + \
                  self._taskParsObj.filename+'" (or, if in PyRAF: "unlearn ' + \

@@ -73,6 +73,7 @@ __version__ = "1.0 (25 Feb, 2011), \xa9 AURA"
 import os, sys, string, shutil
 import pyfits
 import numpy
+dat = None
 
 dat = None
 
@@ -251,7 +252,7 @@ def byteswap(input,output=None,clobber=True):
        a FITS file.
     """
 
-    global dat
+#   global dat  # !!! (looks like this is a function missing its head)
     cardLen = pyfits.Card.length
 
     # input file(s) must be of the form *.??h and *.??d

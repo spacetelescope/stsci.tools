@@ -428,7 +428,7 @@ def launchBrowser(url, brow_bin='mozilla', subj=None):
 
     # Tries to use webbrowser module on most OSes, unless a system command
     # is needed.  (E.g. win, linux, sun, etc)
-    if sys.platform not in ('darwin'):
+    if sys.platform not in ('os2warp, iphone'): # try webbrowser w/ everything?
         import webbrowser
         if not webbrowser.open(url):
             print "Error opening URL: "+url
@@ -440,7 +440,7 @@ def launchBrowser(url, brow_bin='mozilla', subj=None):
     pid = os.fork()
     if pid == 0: # child
         if sys.platform == 'darwin':
-            if 0 != os.system("open "+url):
+            if 0 != os.system('open "'+url+'"'): # does not seem to keep '#.*'
                 print "Error opening URL: "+url
         os._exit(0)
 #       The following retries if "-remote" doesnt work, opening a new browser

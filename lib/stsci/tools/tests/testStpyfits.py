@@ -4,12 +4,11 @@ from __future__ import division # confidence high
 import unittest
 import stsci.tools.stpyfits as stpyfits
 import pyfits
-from pyfits.tests.util import CaptureStdout
 import numpy as np
 import exceptions,os,sys
 import os.path
 
-test_dir = os.path.dirname(__file__)
+test_dir = os.path.dirname(__file__) + "/"
 
 class TestStpyfitsFunctions(unittest.TestCase):
 
@@ -24,15 +23,15 @@ class TestStpyfitsFunctions(unittest.TestCase):
         pass
 
     def testInfoConvienceFunction(self):
-        """Test the info convience function in both the pyfits and stpyfits
+        """Test the info convience function in both the pyfits and stpyfits 
            namespace."""
 
         tmpfile = open(self.tmpfilename,'w')
         sys.stdout = tmpfile
-        stpyfits.info(os.path.join(test_dir, 'o4sp040b0_raw.fits'))
-        pyfits.info(os.path.join(test_dir, 'o4sp040b0_raw.fits'))
-        stpyfits.info(os.path.join(test_dir,'cdva2.fits'))
-        pyfits.info(os.path.join(test_dir, 'cdva2.fits'))
+        stpyfits.info(test_dir+'o4sp040b0_raw.fits')
+        pyfits.info(test_dir+'o4sp040b0_raw.fits')
+        stpyfits.info(test_dir+'cdva2.fits')
+        pyfits.info(test_dir+'cdva2.fits')
         sys.stdout = sys.__stdout__
         tmpfile.close()
         tmpfile = open(self.tmpfilename,'r')
@@ -41,43 +40,43 @@ class TestStpyfitsFunctions(unittest.TestCase):
         os.remove(self.tmpfilename)
 
         self.assertEqual(output,[
-        "Filename: "+test_dir+"/o4sp040b0_raw.fits\n",
+        "Filename: "+test_dir+"o4sp040b0_raw.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU     215   ()           int16\n",
-        "1    SCI         ImageHDU       141   (62, 44)     int16\n",
-        "2    ERR         ImageHDU        71   (62, 44)     int16\n",
-        "3    DQ          ImageHDU        71   (62, 44)     int16\n",
-        "4    SCI         ImageHDU       141   (62, 44)     int16\n",
-        "5    ERR         ImageHDU        71   (62, 44)     int16\n",
-        "6    DQ          ImageHDU        71   (62, 44)     int16\n",
-        "Filename: "+test_dir+"/o4sp040b0_raw.fits\n",
+        "0    PRIMARY     PrimaryHDU     215  ()            int16\n",
+        "1    SCI         ImageHDU       141  (62, 44)      int16\n",
+        "2    ERR         ImageHDU        71  (62, 44)      int16\n",
+        "3    DQ          ImageHDU        71  (62, 44)      int16\n",
+        "4    SCI         ImageHDU       141  (62, 44)      int16\n",
+        "5    ERR         ImageHDU        71  (62, 44)      int16\n",
+        "6    DQ          ImageHDU        71  (62, 44)      int16\n",
+        "Filename: "+test_dir+"o4sp040b0_raw.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU     215   ()           int16\n",
-        "1    SCI         ImageHDU       141   (62, 44)     int16\n",
-        "2    ERR         ImageHDU        71   ()           int16\n",
-        "3    DQ          ImageHDU        71   ()           int16\n",
-        "4    SCI         ImageHDU       141   (62, 44)     int16\n",
-        "5    ERR         ImageHDU        71   ()           int16\n",
-        "6    DQ          ImageHDU        71   ()           int16\n",
-        "Filename: "+test_dir+"/cdva2.fits\n",
+        "0    PRIMARY     PrimaryHDU     215  ()            int16\n",
+        "1    SCI         ImageHDU       141  (62, 44)      int16\n",
+        "2    ERR         ImageHDU        71  ()            int16\n",
+        "3    DQ          ImageHDU        71  ()            int16\n",
+        "4    SCI         ImageHDU       141  (62, 44)      int16\n",
+        "5    ERR         ImageHDU        71  ()            int16\n",
+        "6    DQ          ImageHDU        71  ()            int16\n",
+        "Filename: "+test_dir+"cdva2.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       7   (10, 10)     int32\n",
-        "Filename: "+test_dir+"/cdva2.fits\n",
+        "0    PRIMARY     PrimaryHDU       7  (10, 10)      int32\n",
+        "Filename: "+test_dir+"cdva2.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       7   ()           int32\n"])
+        "0    PRIMARY     PrimaryHDU       7  ()            int32\n"])
 
 
     def testOpenConvienceFunction(self):
-        """Test the open convience function in both the pyfits and stpyfits
+        """Test the open convience function in both the pyfits and stpyfits 
            namespace."""
 
-        hdul = stpyfits.open(os.path.join(test_dir, 'cdva2.fits'))
-        hdul1 = pyfits.open(os.path.join(test_dir, 'cdva2.fits'))
+        hdul = stpyfits.open(test_dir+'cdva2.fits')
+        hdul1 = pyfits.open(test_dir+'cdva2.fits')
 
-        self.assertEqual(hdul[0].header['NAXIS'], 2)
-        self.assertEqual(hdul1[0].header['NAXIS'], 0)
-        self.assertEqual(hdul[0].header['NAXIS1'], 10)
-        self.assertEqual(hdul[0].header['NAXIS2'], 10)
+        self.assertEqual(hdul[0].header['NAXIS'],2)
+        self.assertEqual(hdul1[0].header['NAXIS'],0)
+        self.assertEqual(hdul[0].header['NAXIS1'],10)
+        self.assertEqual(hdul[0].header['NAXIS2'],10)
 
         try:
             val = hdul1[0].header['NAXIS1']
@@ -86,7 +85,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NAXIS1 in pyfits namespace")
-
+       
         try:
             val = hdul1[0].header['NAXIS2']
         except KeyError:
@@ -102,7 +101,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NPIX1 in stpyfits namespace")
-
+       
         try:
             val = hdul[0].header['NPIX2']
         except KeyError:
@@ -131,11 +130,11 @@ class TestStpyfitsFunctions(unittest.TestCase):
         hdul1.close()
 
     def testGetHeaderConvienceFunction(self):
-        """Test the getheader convience function in both the pyfits and
+        """Test the getheader convience function in both the pyfits and 
            stpyfits namespace."""
 
-        hd = stpyfits.getheader(os.path.join(test_dir, 'cdva2.fits'))
-        hd1 = pyfits.getheader(os.path.join(test_dir, 'cdva2.fits'))
+        hd = stpyfits.getheader(test_dir+'cdva2.fits')
+        hd1 = pyfits.getheader(test_dir+'cdva2.fits')
 
         self.assertEqual(hd['NAXIS'],2)
         self.assertEqual(hd1['NAXIS'],0)
@@ -149,7 +148,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NAXIS1 in pyfits namespace")
-
+       
         try:
             val = hd1['NAXIS2']
         except KeyError:
@@ -165,7 +164,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NPIX1 in stpyfits namespace")
-
+       
         try:
             val = hd['NPIX2']
         except KeyError:
@@ -177,8 +176,8 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hd1['NPIX1'],10)
         self.assertEqual(hd1['NPIX2'],10)
 
-        hd = stpyfits.getheader(os.path.join(test_dir, 'o4sp040b0_raw.fits') ,2)
-        hd1 = pyfits.getheader(os.path.join(test_dir, 'o4sp040b0_raw.fits'), 2)
+        hd = stpyfits.getheader(test_dir+'o4sp040b0_raw.fits',2)
+        hd1 = pyfits.getheader(test_dir+'o4sp040b0_raw.fits',2)
 
         self.assertEqual(hd['NAXIS'],2)
         self.assertEqual(hd1['NAXIS'],0)
@@ -192,7 +191,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NAXIS1 in pyfits namespace")
-
+       
         try:
             val = hd1['NAXIS2']
         except KeyError:
@@ -208,7 +207,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NPIX1 in stpyfits namespace")
-
+       
         try:
             val = hd['NPIX2']
         except KeyError:
@@ -221,7 +220,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hd1['NPIX2'],44)
 
     def testGetDataConvienceFunction(self):
-        """Test the getdata convience function in both the pyfits and
+        """Test the getdata convience function in both the pyfits and 
            stpyfits namespace."""
 
         d = stpyfits.getdata(os.path.join(test_dir, 'cdva2.fits'))
@@ -246,20 +245,20 @@ class TestStpyfitsFunctions(unittest.TestCase):
              "expected an IndexError exception for getdata in pyfits namespace")
 
     def testGetValConvienceFunction(self):
-        """Test the getval convience function in both the pyfits and
+        """Test the getval convience function in both the pyfits and 
            stpyfits namespace."""
 
-        val = stpyfits.getval(os.path.join(test_dir, 'cdva2.fits'), 'NAXIS', 0)
-        val1 = pyfits.getval(os.path.join(test_dir, 'cdva2.fits'), 'NAXIS', 0)
+        val = stpyfits.getval(test_dir+'cdva2.fits','NAXIS',0)
+        val1 = pyfits.getval(test_dir+'cdva2.fits','NAXIS',0)
         self.assertEqual(val, 2)
-        self.assertEqual(val1, 0)
+        self.assertEqual(val1,0)
 
     def testwritetoConvienceFunction(self):
-        """Test the writeto convience function in both the pyfits and stpyfits
+        """Test the writeto convience function in both the pyfits and stpyfits 
            namespace."""
 
-        hdul = stpyfits.open(os.path.join(test_dir, 'cdva2.fits'))
-        hdul1 = pyfits.open(os.path.join(test_dir, 'cdva2.fits'))
+        hdul = stpyfits.open(test_dir+'cdva2.fits')
+        hdul1 = pyfits.open(test_dir+'cdva2.fits')
 
         stpyfits.writeto('new.fits',hdul[0].data,hdul[0].header,clobber=True)
         pyfits.writeto('new1.fits',hdul1[0].data,hdul1[0].header,clobber=True)
@@ -283,23 +282,23 @@ class TestStpyfitsFunctions(unittest.TestCase):
 
         self.assertEqual(output,["Filename: new.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       6   ()           int32\n",
+        "0    PRIMARY     PrimaryHDU       6  ()            int32\n",
         "Filename: new.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       6   (10, 10)     int32\n",
+        "0    PRIMARY     PrimaryHDU       6  (10, 10)      int32\n",
         "Filename: new1.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       6   ()           uint8\n",
+        "0    PRIMARY     PrimaryHDU       6  ()            uint8\n",
         "Filename: new1.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       6   (10, 10)     uint8\n"])
+        "0    PRIMARY     PrimaryHDU       6  (10, 10)      uint8\n"])
 
     def testappendConvienceFunction(self):
-        """Test the append convience function in both the pyfits and stpyfits
+        """Test the append convience function in both the pyfits and stpyfits 
            namespace."""
 
-        hdul = stpyfits.open(os.path.join(test_dir, 'cdva2.fits'))
-        hdul1 = pyfits.open(os.path.join(test_dir, 'cdva2.fits'))
+        hdul = stpyfits.open(test_dir+'cdva2.fits')
+        hdul1 = pyfits.open(test_dir+'cdva2.fits')
 
         stpyfits.writeto('new.fits',hdul[0].data,hdul[0].header,clobber=True)
         pyfits.writeto('new1.fits',hdul1[0].data,hdul1[0].header,clobber=True)
@@ -340,20 +339,20 @@ class TestStpyfitsFunctions(unittest.TestCase):
 
         self.assertEqual(output,["Filename: new.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       7   (10, 10)     int32\n",
-        "1                ImageHDU         8   (10, 10)     int32\n",
+        "0    PRIMARY     PrimaryHDU       7  (10, 10)      int32\n",
+        "1                ImageHDU         8  (10, 10)      int32\n",
         "Filename: new1.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       7   (10, 10)     uint8\n",
-        "1                ImageHDU         8   (10, 10)     uint8\n",
+        "0    PRIMARY     PrimaryHDU       7  (10, 10)      uint8\n",
+        "1                ImageHDU         8  (10, 10)      uint8\n",
         "Filename: new.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       7   ()           int32\n",
-        "1                ImageHDU         8   ()           int32\n",
+        "0    PRIMARY     PrimaryHDU       7  ()            int32\n",
+        "1                ImageHDU         8  ()            int32\n",
         "Filename: new1.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       7   ()           uint8\n",
-        "1                ImageHDU         8   ()           uint8\n"])
+        "0    PRIMARY     PrimaryHDU       7  ()            uint8\n",
+        "1                ImageHDU         8  ()            uint8\n"])
 
         hdul5 = stpyfits.open('new.fits')
         hdul6 = pyfits.open('new1.fits')
@@ -369,7 +368,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NAXIS1 in pyfits namespace")
-
+       
         try:
             val = hdul6[1].header['NAXIS2']
         except KeyError:
@@ -385,7 +384,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NPIX1 in stpyfits namespace")
-
+       
         try:
             val = hdul5[1].header['NPIX2']
         except KeyError:
@@ -418,11 +417,11 @@ class TestStpyfitsFunctions(unittest.TestCase):
         os.remove('new1.fits')
 
     def testupdateConvienceFunction(self):
-        """Test the update convience function in both the pyfits and stpyfits
+        """Test the update convience function in both the pyfits and stpyfits 
            namespace."""
 
-        hdul = stpyfits.open(os.path.join(test_dir, 'cdva2.fits'))
-        hdul1 = pyfits.open(os.path.join(test_dir, 'cdva2.fits'))
+        hdul = stpyfits.open(test_dir+'cdva2.fits')
+        hdul1 = pyfits.open(test_dir+'cdva2.fits')
 
         stpyfits.writeto('new.fits',hdul[0].data,hdul[0].header,clobber=True)
 
@@ -462,19 +461,19 @@ class TestStpyfitsFunctions(unittest.TestCase):
 
         self.assertEqual(output,["Filename: new.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       7   ()           int32\n",
-        "1                ImageHDU         8   ()           int32\n",
+        "0    PRIMARY     PrimaryHDU       7  ()            int32\n",
+        "1                ImageHDU         8  ()            int32\n",
         "Filename: new.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       7   (10, 10)     int32\n",
-        "1                ImageHDU         8   (10, 10)     int32\n"])
+        "0    PRIMARY     PrimaryHDU       7  (10, 10)      int32\n",
+        "1                ImageHDU         8  (10, 10)      int32\n"])
 
         hdul7 = stpyfits.open('new.fits')
         self.assertEqual(hdul7[1].header['NAXIS'],2)
         self.assertEqual(hdul7[1].header['NAXIS1'],10)
         self.assertEqual(hdul7[1].header['NAXIS2'],10)
         self.assertEqual(hdul7[1].header['PIXVALUE'],0)
-
+        
         try:
             val = hdul7[1].header['NPIX1']
         except KeyError:
@@ -482,7 +481,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NPIX1 in stpyfits namespace")
-
+       
         try:
             val = hdul7[1].header['NPIX2']
         except KeyError:
@@ -508,7 +507,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hdul8[1].header['NPIX1'],10)
         self.assertEqual(hdul8[1].header['NPIX2'],10)
         self.assertEqual(hdul8[1].header['PIXVALUE'],0)
-
+        
         try:
             val = hdul8[1].header['NAXIS1']
         except KeyError:
@@ -516,7 +515,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NAXIS1 in pyfits namespace")
-
+       
         try:
             val = hdul8[1].header['NAXIS2']
         except KeyError:
@@ -524,7 +523,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NAXIS2 in pyfits namespace")
-
+        
         self.assertEqual(hdul8[1].data, None)
 
         hdul7.close()
@@ -534,37 +533,36 @@ class TestStpyfitsFunctions(unittest.TestCase):
         os.remove('new.fits')
 
     def testImageHDUConstructor(self):
-        """Test the ImageHDU constructor in both the pyfits and stpyfits
+        """Test the ImageHDU constructor in both the pyfits and stpyfits 
            namespace."""
 
         hdu = stpyfits.ImageHDU()
-        self.assert_(isinstance(hdu, stpyfits.ConstantValueImageHDU))
+        self.assertEqual(hdu.header._hdutype,stpyfits.st_ImageHDU)
         hdu1 = pyfits.ImageHDU()
-        self.assert_(isinstance(hdu, pyfits.ImageHDU))
+        self.assertEqual(hdu1.header._hdutype,pyfits.core.ImageHDU)
+        self.assertEqual(type(hdu),stpyfits.st_ImageHDU)
+        self.assertEqual(type(hdu1),pyfits.core.ImageHDU)
 
     def testPrimaryHDUConstructor(self):
-        """Test the PrimaryHDU constructor in both the pyfits and stpyfits
-           namespace.  Although stpyfits does not reimplement the
-           constructor, it does add _ConstantValueImageBaseHDU to the
-           inheritance hierarchy of pyfits.PrimaryHDU when accessed through the
-           stpyfits namespace.  This method tests that that inheritance is
-           working"""
+        """Test the PrimaryHDU constructor in both the pyfits and stpyfits 
+           namespace.  Although stpyfits does not reimplement the 
+           constructor, it does add st_ImageBaseHDU to the inheritance
+           hierarchy of pyfits.PrimaryHDU when accessed through the stpyfits
+           namespace.  This method tests that that inheritance is working"""
 
         n = np.zeros(10)
         n = n + 1
-
+        
         hdu = stpyfits.PrimaryHDU(n)
-        hdu.header.update('PIXVALUE', 1.0, 'Constant pixel value',
-                          after='EXTEND')
-        hdu.header.update('NAXIS', 0)
-        stpyfits.writeto('new.fits', hdu.data, hdu.header, clobber=True)
+        hdu.header.update('PIXVALUE',1.,'Constant pixel value',after='EXTEND')
+        stpyfits.writeto('new.fits',hdu.data,hdu.header,clobber=True)
         hdul = stpyfits.open('new.fits')
         hdul1 = pyfits.open('new.fits')
 
         self.assertEqual(hdul[0].header['NAXIS'],1)
         self.assertEqual(hdul[0].header['NAXIS1'],10)
         self.assertEqual(hdul[0].header['PIXVALUE'],1.0)
-
+        
         try:
             val = hdul[0].header['NPIX1']
         except KeyError:
@@ -572,7 +570,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NPIX1 in stpyfits namespace")
-
+       
         self.assertEqual(hdul[0].data.all(), np.array(
                          [[1.,1.,1.,1.,1.,1.,1.,1.,1.,1.]],
                          dtype=np.float32).all())
@@ -580,7 +578,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hdul1[0].header['NAXIS'],0)
         self.assertEqual(hdul1[0].header['NPIX1'],10)
         self.assertEqual(hdul1[0].header['PIXVALUE'],1.0)
-
+        
         try:
             val = hdul1[0].header['NAXIS1']
         except KeyError:
@@ -588,7 +586,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NAXIS1 in pyfits namespace")
-
+       
         self.assertEqual(hdul1[0].data, None)
 
         hdul.close()
@@ -596,7 +594,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         os.remove('new.fits')
 
     def testHDUListWritetoMethod(self):
-        """Test the writeto method of HDUList in both the pyfits and stpyfits
+        """Test the writeto method of HDUList in both the pyfits and stpyfits 
            namespace."""
 
         hdu = stpyfits.PrimaryHDU()
@@ -642,12 +640,12 @@ class TestStpyfitsFunctions(unittest.TestCase):
 
         self.assertEqual(output,["Filename: new.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       7   (10, 10)     int32\n",
-        "1                ImageHDU         8   (10, 10)     int32\n",
+        "0    PRIMARY     PrimaryHDU       7  (10, 10)      int32\n",
+        "1                ImageHDU         8  (10, 10)      int32\n",
         "Filename: new.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       7   ()           int32\n",
-        "1                ImageHDU         8   ()           int32\n"])
+        "0    PRIMARY     PrimaryHDU       7  ()            int32\n",
+        "1                ImageHDU         8  ()            int32\n"])
 
         hdul1 = stpyfits.open('new.fits')
         hdul2 = pyfits.open('new.fits')
@@ -656,7 +654,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hdul1[0].header['NAXIS1'],10)
         self.assertEqual(hdul1[0].header['NAXIS2'],10)
         self.assertEqual(hdul1[0].header['PIXVALUE'],0)
-
+        
         try:
             val = hdul1[0].header['NPIX1']
         except KeyError:
@@ -664,7 +662,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NPIX1 in stpyfits namespace")
-
+       
         try:
             val = hdul1[0].header['NPIX2']
         except KeyError:
@@ -689,7 +687,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hdul1[1].header['NAXIS1'],10)
         self.assertEqual(hdul1[1].header['NAXIS2'],10)
         self.assertEqual(hdul1[1].header['PIXVALUE'],2)
-
+        
         try:
             val = hdul1[1].header['NPIX1']
         except KeyError:
@@ -697,7 +695,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NPIX1 in stpyfits namespace")
-
+       
         try:
             val = hdul1[1].header['NPIX2']
         except KeyError:
@@ -722,7 +720,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hdul2[0].header['NPIX1'],10)
         self.assertEqual(hdul2[0].header['NPIX2'],10)
         self.assertEqual(hdul2[0].header['PIXVALUE'],0)
-
+        
         try:
             val = hdul2[0].header['NAXIS1']
         except KeyError:
@@ -730,7 +728,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NAXIS1 in pyfits namespace")
-
+       
         try:
             val = hdul2[0].header['NAXIS2']
         except KeyError:
@@ -745,7 +743,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hdul2[1].header['NPIX1'],10)
         self.assertEqual(hdul2[1].header['NPIX2'],10)
         self.assertEqual(hdul2[1].header['PIXVALUE'],2)
-
+        
         try:
             val = hdul2[1].header['NAXIS1']
         except KeyError:
@@ -753,7 +751,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NAXIS1 in pyfits namespace")
-
+       
         try:
             val = hdul2[1].header['NAXIS2']
         except KeyError:
@@ -767,12 +765,12 @@ class TestStpyfitsFunctions(unittest.TestCase):
         os.remove('new.fits')
 
     def testHDUList__getitem__Method(self):
-        """Test the __getitem__ method of st_HDUList in the stpyfits
+        """Test the __getitem__ method of st_HDUList in the stpyfits 
            namespace."""
 
         n = np.zeros(10)
         n = n + 1
-
+  
         hdu = stpyfits.PrimaryHDU(n)
         hdu.header.update('PIXVALUE',1.,'constant pixel value',after='EXTEND')
 
@@ -787,7 +785,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hdu.header['NAXIS'],1)
         self.assertEqual(hdu.header['NAXIS1'],10)
         self.assertEqual(hdu.header['PIXVALUE'],1.0)
-
+        
         try:
             val = hdu.header['NPIX1']
         except KeyError:
@@ -795,7 +793,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NPIX1 in stpyfits namespace")
-
+       
         self.assertEqual(hdu.data.all(), np.array(
                          [[1.,1.,1.,1.,1.,1.,1.,1.,1.,1.]],
                          dtype=np.float32).all())
@@ -803,7 +801,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hdu1.header['NAXIS'],0)
         self.assertEqual(hdu1.header['NPIX1'],10)
         self.assertEqual(hdu1.header['PIXVALUE'],1.0)
-
+        
         try:
             val = hdu1.header['NAXIS1']
         except KeyError:
@@ -811,7 +809,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NAXIS1 in pyfits namespace")
-
+       
         self.assertEqual(hdu1.data, None)
 
         hdul.close()
@@ -819,7 +817,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         os.remove('new.fits')
 
     def testHDUListFlushMethod(self):
-        """Test the flush method of HDUList in both the pyfits and stpyfits
+        """Test the flush method of HDUList in both the pyfits and stpyfits 
            namespace."""
 
         hdu = stpyfits.PrimaryHDU()
@@ -873,12 +871,12 @@ class TestStpyfitsFunctions(unittest.TestCase):
 
         self.assertEqual(output,["Filename: new.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       6   (10,)        int32\n",
-        "1                ImageHDU         8   (10, 10)     int32\n",
+        "0    PRIMARY     PrimaryHDU       6  (10,)         int32\n",
+        "1                ImageHDU         8  (10, 10)      int32\n",
         "Filename: new.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       6   ()           int32\n",
-        "1                ImageHDU         8   ()           int32\n"])
+        "0    PRIMARY     PrimaryHDU       6  ()            int32\n",
+        "1                ImageHDU         8  ()            int32\n"])
 
         hdul1 = stpyfits.open('new.fits')
         hdul2 = pyfits.open('new.fits')
@@ -886,7 +884,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hdul1[0].header['NAXIS'],1)
         self.assertEqual(hdul1[0].header['NAXIS1'],10)
         self.assertEqual(hdul1[0].header['PIXVALUE'],3)
-
+        
         try:
             val = hdul1[0].header['NPIX1']
         except KeyError:
@@ -894,14 +892,14 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NPIX1 in stpyfits namespace")
-
+       
         self.assertEqual(hdul1[0].data.all(), np.array([[3,3,3,3,3,3,3,3,3,3]],
                                                         dtype=np.int32).all())
 
         self.assertEqual(hdul2[0].header['NAXIS'],0)
         self.assertEqual(hdul2[0].header['NPIX1'],10)
         self.assertEqual(hdul2[0].header['PIXVALUE'],3)
-
+        
         try:
             val = hdul2[0].header['NAXIS1']
         except KeyError:
@@ -909,12 +907,12 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NAXIS1 in pyfits namespace")
-
+       
         self.assertEqual(hdul2[0].data, None)
 
         hdul1.close()
         hdul2.close()
-
+        
         hdul3 = stpyfits.open('new.fits', 'update')
         d = np.arange(15, dtype=np.int32)
         d = d*0
@@ -935,12 +933,12 @@ class TestStpyfitsFunctions(unittest.TestCase):
 
         self.assertEqual(output,["Filename: new.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       6   (15,)        int32\n",
-        "1                ImageHDU         8   (10, 10)     int32\n",
+        "0    PRIMARY     PrimaryHDU       6  (15,)         int32\n",
+        "1                ImageHDU         8  (10, 10)      int32\n",
         "Filename: new.fits\n",
         "No.    Name         Type      Cards   Dimensions   Format\n",
-        "0    PRIMARY     PrimaryHDU       6   ()           int32\n",
-        "1                ImageHDU         8   ()           int32\n"])
+        "0    PRIMARY     PrimaryHDU       6  ()            int32\n",
+        "1                ImageHDU         8  ()            int32\n"])
 
         hdul1 = stpyfits.open('new.fits')
         hdul2 = pyfits.open('new.fits')
@@ -948,7 +946,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hdul1[0].header['NAXIS'],1)
         self.assertEqual(hdul1[0].header['NAXIS1'],15)
         self.assertEqual(hdul1[0].header['PIXVALUE'],4)
-
+        
         try:
             val = hdul1[0].header['NPIX1']
         except KeyError:
@@ -956,7 +954,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NPIX1 in stpyfits namespace")
-
+       
         self.assertEqual(hdul1[0].data.all(), np.array(
                          [[4,4,4,4,4,4,4,4,4,4,4,4,4,4,4]],
                          dtype=np.int32).all())
@@ -964,7 +962,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hdul2[0].header['NAXIS'],0)
         self.assertEqual(hdul2[0].header['NPIX1'],15)
         self.assertEqual(hdul2[0].header['PIXVALUE'],4)
-
+        
         try:
             val = hdul2[0].header['NAXIS1']
         except KeyError:
@@ -972,19 +970,19 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NAXIS1 in pyfits namespace")
-
+       
         self.assertEqual(hdul2[0].data, None)
 
         hdul1.close()
         hdul2.close()
         os.remove('new.fits')
-
+        
     def testImageBaseHDU__getattr__Method(self):
-        """Test the __getattr__ method of ImageBaseHDU in both the pyfits
+        """Test the __getattr__ method of ImageBaseHDU in both the pyfits 
            and stpyfits namespace."""
 
-        hdul = stpyfits.open(os.path.join(test_dir, 'cdva2.fits'))
-        hdul1 = pyfits.open(os.path.join(test_dir, 'cdva2.fits'))
+        hdul = stpyfits.open(test_dir+'cdva2.fits')
+        hdul1 = pyfits.open(test_dir+'cdva2.fits')
 
         hdu = hdul[0]
         hdu1 = hdul1[0]
@@ -1006,12 +1004,12 @@ class TestStpyfitsFunctions(unittest.TestCase):
         hdul1.close()
 
     def testImageBaseHDUWriteToMethod(self):
-        """Test the writeto method of _ConstantValueImageBaseHDU in the
-        stpyfits namespace."""
+        """Test the writeto method of st_ImageBaseHDU in the stpyfits 
+           namespace."""
 
         n = np.zeros(10)
         n = n + 1
-
+  
         hdu = stpyfits.PrimaryHDU(n)
         hdu.header.update('PIXVALUE',1.,'constant pixel value',after='EXTEND')
 
@@ -1023,7 +1021,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hdul[0].header['NAXIS'],1)
         self.assertEqual(hdul[0].header['NAXIS1'],10)
         self.assertEqual(hdul[0].header['PIXVALUE'],1.0)
-
+        
         try:
             val = hdul[0].header['NPIX1']
         except KeyError:
@@ -1031,7 +1029,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NPIX1 in stpyfits namespace")
-
+       
         self.assertEqual(hdul[0].data.all(), np.array(
                          [[1.,1.,1.,1.,1.,1.,1.,1.,1.,1.]],
                          dtype=np.float32).all())
@@ -1039,7 +1037,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hdul1[0].header['NAXIS'],0)
         self.assertEqual(hdul1[0].header['NPIX1'],10)
         self.assertEqual(hdul1[0].header['PIXVALUE'],1.0)
-
+        
         try:
             val = hdul1[0].header['NAXIS1']
         except KeyError:
@@ -1047,7 +1045,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         else:
             self.fail(
              "expected a KeyError exception for NAXIS1 in pyfits namespace")
-
+       
         self.assertEqual(hdul1[0].data, None)
 
         hdul.close()

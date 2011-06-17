@@ -54,8 +54,12 @@ def parFactory(fields, strict=0):
     type = fields[1]
     if type in _string_types:
         return IrafParS(fields,strict)
+    elif type == 'R':
+        return StrictParR(fields,1)
     elif type in _real_types:
         return IrafParR(fields,strict)
+    elif type == "I":
+        return StrictParI(fields,1)
     elif type == "i":
         return IrafParI(fields,strict)
     elif type == "b":
@@ -1354,6 +1358,57 @@ class IrafParAI(_IntMixin,IrafArrayPar):
     pass
 
 # -----------------------------------------------------
+# Strict integer parameter mixin class
+# -----------------------------------------------------
+
+class _StrictIntMixin(_IntMixin):
+
+    """Strict integer parameter mixin class"""
+
+    #--------------------------------------------
+    # public methods
+    #--------------------------------------------
+
+    def toString(self, value, quoted=0):
+        return str(value)
+
+    #--------------------------------------------
+    # private methods
+    #--------------------------------------------
+
+    # coerce value to integer
+    def _coerceOneValue(self,value,strict=0):
+        if value is None or isinstance(value,int):
+            return value
+        elif isinstance(value,str):
+            s2 = irafutils.stripQuotes(value.strip())
+            if s2[-1:] == "x":
+                # hexadecimal
+                return int(s2[:-1],16)
+            elif s2 == '':
+                raise ValueError('Parameter '+self.name+ \
+                      ': illegal empty integer value')
+            else:
+                # see if it is a stringified int
+                try:
+                    return int(s2)
+                except ValueError:
+                    pass
+        # otherwise it is not a strict integer
+        raise ValueError("Parameter %s: illegal integer value %s" %
+                (self.name, `value`))
+
+# -----------------------------------------------------
+# Strict integer parameter class
+# -----------------------------------------------------
+
+class StrictParI(_StrictIntMixin,IrafPar):
+
+    """Strict integer parameter class"""
+    pass
+
+
+# -----------------------------------------------------
 # IRAF real parameter mixin class
 # -----------------------------------------------------
 
@@ -1446,7 +1501,7 @@ class _RealMixin:
 # -----------------------------------------------------
 
 class IrafParR(_RealMixin,IrafPar):
-    
+
     """IRAF real parameter class"""
     pass
 
@@ -1458,6 +1513,85 @@ class IrafParAR(_RealMixin,IrafArrayPar):
 
     """IRAF real array parameter class"""
     pass
+
+# -----------------------------------------------------
+# Strict real parameter mixin class
+# -----------------------------------------------------
+
+class _StrictRealMixin(_RealMixin):
+
+    """Strict real parameter mixin class"""
+
+    #--------------------------------------------
+    # public methods
+    #--------------------------------------------
+
+    def toString(self, value, quoted=0):
+        return str(value)
+
+    #--------------------------------------------
+    # private methods
+    #--------------------------------------------
+
+    # coerce value to real
+    def _coerceOneValue(self,value,strict=0):
+        if value is None or isinstance(value,float):
+            return value
+        elif isinstance(value, (int,long)):
+            return float(value)
+        elif isinstance(value,str):
+            s2 = irafutils.stripQuotes(value.strip())
+            if s2 == '':
+                raise ValueError('Parameter '+self.name+ \
+                      ': illegal empty float value')
+            # allow +dd:mm:ss.s sexagesimal format for floats
+            fvalue = 0.0
+            vscale = 1.0
+            vsign = 1
+            i1 = 0
+            mm = _re_colon.search(s2)
+            if mm is not None:
+                if s2[0:1] == "-":
+                    i1 = 1
+                    vsign = -1
+                elif s2[0:1] == "+":
+                    i1 = 1
+                while mm is not None:
+                    i2 = mm.start()
+                    fvalue = fvalue + int(s2[i1:i2])/vscale
+                    i1 = i2+1
+                    vscale = vscale*60.0
+                    mm = _re_colon.search(s2,i1)
+            # special handling for d exponential notation
+            mm = _re_d.search(s2,i1)
+            try:
+                if mm is None:
+                    return vsign*(fvalue + float(s2[i1:])/vscale)
+                else:
+                    return vsign*(fvalue + \
+                            float(s2[i1:mm.start()]+"E"+s2[mm.end():])/vscale)
+            except ValueError:
+                pass
+            # see if it's a stringified float
+            try:
+                return float(s2)
+            except ValueError:
+                raise ValueError("Parameter %s: illegal float value %s" %
+                                 (self.name, `value`))
+        # Otherwise it is not a strict float
+        raise ValueError("Parameter %s: illegal float value %s" %
+                         (self.name, `value`))
+
+
+# -----------------------------------------------------
+# Strict real parameter class
+# -----------------------------------------------------
+
+class StrictParR(_StrictRealMixin,IrafPar):
+
+    """Strict real parameter class"""
+    pass
+
 
 # -----------------------------------------------------
 # Utility routine for parsing choice string

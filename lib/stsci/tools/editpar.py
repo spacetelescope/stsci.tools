@@ -86,6 +86,7 @@ class EditParDialog(object):
         self._saveAndCloseOnExec  = True
         self._showExtraHelpButton = False
         self._showHelpInBrowser   = False
+        self._knowTaskHelpIsHtml  = False
         self._unpackagedTaskTitle = "Task"
         self._writeProtectOnSaveAs= False
         self._defaultsButtonTitle = "Defaults"
@@ -526,10 +527,14 @@ class EditParDialog(object):
             eparOpt = self._nonStandardEparOptionFor(self.paramList[i].type)
             cbo = self._defineEditedCallbackObjectFor(scope,
                                                       self.paramList[i].name)
+            hcbo = None
+            if self._knowTaskHelpIsHtml:
+                hcbo = self
             self.entryNo[i] = eparoption.eparOptionFactory(master, statusBar,
                                   self.paramList[i], self.defaultParamList[i],
                                   self.doScroll, self.fieldWidths,
                                   plugIn=eparOpt, editedCallbackObj=cbo,
+                                  helpCallbackObj=hcbo,
                                   defaultsVerb=dfltsVerb, bg=self._entsColor,
                                   indent = scope not in (None, '', '.') )
 
@@ -554,7 +559,7 @@ class EditParDialog(object):
 
 
     def _toggleSectionActiveState(self, sectionName, state, skipList):
-        """ Make an entire section (minus skipList items) either active or 
+        """ Make an entire section (minus skipList items) either active or
             inactive.  sectionName is the same as the param's scope. """
         for i in range(self.numParams):
             if self.paramList[i].scope == sectionName:
@@ -720,10 +725,10 @@ class EditParDialog(object):
         optionButton.pack(side=LEFT, padx=2)
         optionButton.menu = Menu(optionButton, tearoff=0)
         optionButton.menu.add_radiobutton(label="Display Task Help in a Window",
-                                     value="WINDOW", command=self.setHelpWin,
+                                     value="WINDOW", command=self.setHelpType,
                                      variable=self._helpChoice)
         optionButton.menu.add_radiobutton(label="Display Task Help in a Browser",
-                                     value="BROWSER", command=self.setHelpWin,
+                                     value="BROWSER", command=self.setHelpType,
                                      variable=self._helpChoice)
 
         if self._showExecuteButton and self._showSaveCloseOnExec:
@@ -833,18 +838,23 @@ class EditParDialog(object):
         self._saveAndCloseOnExec = bool(self._execChoice.get())
 
 
-    # Determine which method of displaying the help pages was
-    # chosen by the user.  WINDOW displays in a task generated scrollable
-    # window.  BROWSER invokes the task's HTML help pages and displays
-    # in a browser.
-    def setHelpWin(self, event=None):
+    def setHelpType(self, event=None):
+        """ Determine which method of displaying the help pages was
+        chosen by the user.  WINDOW displays in a task generated scrollable
+        window.  BROWSER invokes the task's HTML help pages and displays
+        in a browser. """
         self._showHelpInBrowser = bool(self._helpChoice.get() == "BROWSER")
 
-    def showTaskHelp(self, event=None):
-        if self._showHelpInBrowser:
-            self.htmlHelp()
+
+    def showTaskHelp(self, tag=None, event=None):
+        if self._showHelpInBrowser or self._knowTaskHelpIsHtml:
+            self.htmlHelp(istask=True, tag=tag)
         else:
             self.help()
+
+
+    def showParamHelp(self, parName):
+        self.showTaskHelp(tag=parName)
 
 
     #
@@ -1018,6 +1028,9 @@ class EditParDialog(object):
         changes here must be coordinated with the corresponding tpar save_as
         function. """
 
+        # On Linux Pers..Dlg causes the cwd to change, so get a copy of current
+        curdir = os.getcwd()
+
         # The user wishes to save to a different name
         # (could use Tkinter's FileDialog, but this one is prettier)
         # initWProtState is only used in the 1st call of a session
@@ -1026,6 +1039,7 @@ class EditParDialog(object):
                      initWProtState=self._writeProtectOnSaveAs)
         if fd.Show() != 1:
             fd.DialogCleanup()
+            os.chdir(curdir) # in case file dlg moved us
             return
         fname = fd.GetFileName()
         self._writeProtectOnSaveAs = fd.GetWriteProtectChoice()
@@ -1034,6 +1048,7 @@ class EditParDialog(object):
         # First check the child parameters, aborting save if
         # invalid entries were encountered
         if self.checkSetSaveChildren():
+            os.chdir(curdir) # in case file dlg moved us
             return
 
         # Run any subclass-specific steps right before the save
@@ -1047,7 +1062,9 @@ class EditParDialog(object):
         if self.badEntriesList:
             ansOKCANCEL = self.processBadEntries(self.badEntriesList,
                           self.taskName)
-            if not ansOKCANCEL: return
+            if not ansOKCANCEL:
+                os.chdir(curdir) # in case file dlg moved us
+                return
 
         # If there were no invalid entries or the user says OK, finally
         # save to their stated file.  Since we have already processed the
@@ -1055,10 +1072,13 @@ class EditParDialog(object):
         mstr = "TASKMETA: task="+self.taskName+" package="+self.pkgName
         if self.checkSetSaveEntries(doSave=True, filename=fname, comment=mstr,
                                     set_ro=self._writeProtectOnSaveAs):
+            os.chdir(curdir) # in case file dlg moved us
             raise Exception("Unexpected bad entries for: "+self.taskName)
 
         # Run any subclass-specific steps right after the save
         self._saveAsPostSave_Hook(fname)
+
+        os.chdir(curdir) # in case file dlg moved us
 
 
     # EXECUTE: save the parameter settings and run the task
@@ -1155,12 +1175,12 @@ class EditParDialog(object):
 
 
     # HTMLHELP: invoke the HTML help
-    def htmlHelp(self, helpString=None, title=None):
+    def htmlHelp(self, helpString=None, title=None, istask=False, tag=None):
         """ Pop up the help in a browser window.  By default, this tries to
         show the help for the current task.  With the option arguments, it can
         be used to show any help string. """
-        # Check the help string.  If it turns out to b a URL, launch that, if
-        # not, dump it to a quick and dirty tmp html file to make it
+        # Check the help string.  If it turns out to be a URL, launch that,
+        # if not, dump it to a quick and dirty tmp html file to make it
         # presentable, and pass that file name as the URL.
         if not helpString:
             helpString = self.getHelpString(self.pkgName+'.'+self.taskName)
@@ -1169,21 +1189,28 @@ class EditParDialog(object):
         lwr = helpString.lower()
         if lwr.startswith("http:") or lwr.startswith("https:") or \
            lwr.startswith("file:"):
-            irafutils.launchBrowser(helpString, subj=title)
+            url = helpString
+            if tag and url.find('#') < 0:
+                url += '#'+tag
+#           print('LAUNCHING:', url) # DBG
+            irafutils.launchBrowser(url, subj=title)
         else:
+            # Write it to a temp HTML file to display
             (fd, fname) = tempfile.mkstemp(suffix='.html', prefix='editpar_')
             os.close(fd)
             f = open(fname, 'w')
-            f.write('<html><head><title>'+title+'</title></head>\n')
-            f.write('<body><h3>'+title+'</h3>\n')
-            f.write('<pre>\n'+helpString+'\n</pre></body></html>')
+            if istask and self._knowTaskHelpIsHtml:
+                f.write(helpString)
+            else:
+                f.write('<html><head><title>'+title+'</title></head>\n')
+                f.write('<body><h3>'+title+'</h3>\n')
+                f.write('<pre>\n'+helpString+'\n</pre></body></html>')
             f.close()
             irafutils.launchBrowser("file://"+fname, subj=title)
 
 
-    # HELP: invoke help and put the page in a window
     def help(self, event=None):
-
+        """ Invoke task help and put the page in a window. """
         try:
             if self.irafHelpWin.state() != NORMAL:
                 self.irafHelpWin.deiconify()
@@ -1195,11 +1222,12 @@ class EditParDialog(object):
         # Need to include the package name for the task to
         # avoid name conflicts with tasks from other packages. WJH
         helpString = self.getHelpString(self.pkgName+'.'+self.taskName)
-        self.irafHelpWin = self.helpBrowser(helpString)
+        self.irafHelpWin = self.makeHelpWin(helpString)
 
 
-    # EPAR HELP: invoke help and put the epar help page in a window
     def eparHelp(self, event=None):
+        """ Invoke help and put the epar help page in a window. """
+        # Note this is the same basic logic as in self.help (consolidate?)
         if self._showHelpInBrowser:
             self.htmlHelp(helpString=self._appHelpString,
                           title='Parameter Editor Help')
@@ -1211,7 +1239,7 @@ class EditParDialog(object):
                 return
             except (AttributeError, TclError):
                 pass
-            self.eparHelpWin = self.helpBrowser(self._appHelpString,
+            self.eparHelpWin = self.makeHelpWin(self._appHelpString,
                                                 title='Parameter Editor Help')
 
 
@@ -1227,7 +1255,7 @@ class EditParDialog(object):
 
 
     # Set up the help dialog (browser)
-    def helpBrowser(self, helpString, title="Parameter Editor Help Browser"):
+    def makeHelpWin(self, helpString, title="Parameter Editor Help Browser"):
 
         # Generate a new Toplevel window for the browser
         # hb = Toplevel(self.top, bg="SlateGray3")
