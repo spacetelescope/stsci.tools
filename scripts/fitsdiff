@@ -1,0 +1,5 @@
+#! python
+
+import sys
+import stsci.tools.fitsdiff
+sys.exit(stsci.tools.fitsdiff.main())

@@ -1,6 +1,0 @@
-#! python
-from __future__ import division # confidence high
-
-import pytools.convertwaiveredfits 
-pytools.convertwaiveredfits.main()
-

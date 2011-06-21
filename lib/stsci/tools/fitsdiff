@@ -1,5 +1,0 @@
-#! python
-
-import sys
-import pytools.fitsdiff
-sys.exit(pytools.fitsdiff.main())
