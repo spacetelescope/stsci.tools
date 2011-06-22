@@ -838,11 +838,23 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                         self.entryNo[i].setActiveState(not outval)
                     elif depType == 'is_set_by':
                         self.entryNo[i].forceValue(outval, noteEdited=True)
-                        # WARNING! since we use True for noteEdited above, any
-                        # triggers IT has will now also run - watch recursion!
+                        # WARNING! noteEdited=True may start recursion!
                         if len(settingMsg) > 0: settingMsg += ", "
                         settingMsg += '"'+self.paramList[i].name+'" to "'+\
                                       outval+'"'
+                    elif depType in ('set_yes_if', 'set_no_if'):
+                        if bool(outval):
+                            newval = 'yes'
+                            if depType == 'set_no_if': newval = 'no'
+                            self.entryNo[i].forceValue(newval, noteEdited=True)
+                            # WARNING! noteEdited=True may start recursion!
+                            if len(settingMsg) > 0: settingMsg += ", "
+                            settingMsg += '"'+self.paramList[i].name+'" to "'+\
+                                          newval+'"'
+                        else:
+                            if len(settingMsg) > 0: settingMsg += ", "
+                            settingMsg += '"'+self.paramList[i].name+\
+                                          '" (no change)'
                     elif depType == 'is_disabled_by':
                         # this one is only used with boolean types
                         on = self.entryNo[i].convertToNative(outval)

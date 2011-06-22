@@ -322,7 +322,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # get the initial param list out of the ConfigObj dict
         self.syncParamList(True)
 
-#       print(self.triggerLogicToStr()) # DBG: for debugging
+        if 'TEAL_DEBUG' in os.environ:
+            print(self.triggerLogicToStr())
 
         # see if we are using a package with it's own run() function
         self._runFunc = None
@@ -646,6 +647,12 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                         depName = chk_args_dict.get(depType)
                     if not depName:
                         depType = 'is_set_by'
+                        depName = chk_args_dict.get(depType)
+                    if not depName:
+                        depType = 'set_yes_if'
+                        depName = chk_args_dict.get(depType)
+                    if not depName:
+                        depType = 'set_no_if'
                         depName = chk_args_dict.get(depType)
                     if not depName:
                         depType = 'is_disabled_by'
