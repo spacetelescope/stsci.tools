@@ -14,6 +14,7 @@ from __future__ import division
 from pyfits import *
 import pyfits
 import re
+import numpy as np
 
 try:
    numpyVersion = np.__version__
