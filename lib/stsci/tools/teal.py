@@ -698,8 +698,13 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             if fname == None: return # canceled
 
         # load it into a tmp object (use associatedPkg if we have one)
-        tmpObj = cfgpars.ConfigObjPars(fname, associatedPkg=\
-                                       self._taskParsObj.getAssocPkg())
+        try:
+            tmpObj = cfgpars.ConfigObjPars(fname, associatedPkg=\
+                                           self._taskParsObj.getAssocPkg())
+        except Exception, ex:
+            tkMessageBox.showerror(message=str(ex),
+                title="Error in "+os.path.basename(fname))
+            return
 
         # check it to make sure it is a match
         if not self._taskParsObj.isSameTaskAs(tmpObj):
