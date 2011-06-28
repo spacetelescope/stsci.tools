@@ -86,7 +86,7 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
     __doc__ += pyfits.hdu.image._ImageBaseHDU.__doc__
 
     def __init__(self, data=None, header=None, do_not_scale_image_data=False,
-                 uint=False):
+                 uint=False, **kwargs):
         if header and 'PIXVALUE' in header and header['NAXIS'] == 0:
             header = header.copy()
             # Add NAXISn keywords for each NPIXn keyword in the header and
