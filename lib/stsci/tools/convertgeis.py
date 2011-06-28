@@ -215,7 +215,7 @@ def convert(input):
 
     _shape = _naxis[1:]
     _shape.reverse()
-    _code = pyfits.core._ImageBaseHDU.NumCode[_bitpix]
+    _code = pyfits.core.ImageHDU.NumCode[_bitpix]
     _bscale = phdr.get('BSCALE', 1)
     _bzero = phdr.get('BZERO', 0)
         

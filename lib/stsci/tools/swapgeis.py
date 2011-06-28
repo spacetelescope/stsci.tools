@@ -77,6 +77,17 @@ dat = None
 
 dat = None
 
+# definitions used to convert GEIS record into numpy objects
+geis_fmt = {'REAL':'f', 'DOUBLE': 'f', 'INTEGER':'i', 'LOGICAL':'i','CHARACTER':'S'}
+# definitions used to convert data into numpy array for use in pyfits.Column
+cols_fmt = {'REAL':'float', 'DOUBLE':'float', 'INTEGER':'int', 'LOGICAL':'S', 'CHARACTER': 'S'}
+# definitions used to define print format for pyfits.Column
+cols_pfmt = {'REAL':'E', 'DOUBLE': 'D', 'INTEGER': 'J', 'LOGICAL':'A', 'CHARACTER': 'A'}
+
+# Keywords which require special unit conversion
+# keywords which are output as long-floats without using exponential formatting
+kw_DOUBLE = ['CRVAL1','CRVAL2','FPKTTIME','LPKTTIME'] 
+
 def byteswap(input,output=None,clobber=True):
 
     """Input GEIS files "input" will be read and converted to a new GEIS file
@@ -125,7 +136,6 @@ def byteswap(input,output=None,clobber=True):
     else:
         raise "Platform %s is not supported (yet)." % _os
 
-    geis_fmt = {'REAL':'f', 'INTEGER':'i', 'LOGICAL':'i','CHARACTER':'S'}
     end_card = 'END'+' '* (cardLen-3)
 
     # open input file
@@ -199,7 +209,7 @@ def byteswap(input,output=None,clobber=True):
 
     _shape = _naxis[1:]
     _shape.reverse()
-    _code = pyfits.core._ImageBaseHDU.NumCode[_bitpix]
+    _code = pyfits.core.ImageHDU.NumCode[_bitpix]
     _bscale = phdr.get('BSCALE', 1)
     _bzero = phdr.get('BZERO', 0)
     if phdr['DATATYPE'][:10] == 'UNSIGNED*2':
@@ -366,7 +376,7 @@ def byteswap(input,output=None,clobber=True):
 
     _shape = _naxis[1:]
     _shape.reverse()
-    _code = pyfits.core._ImageBaseHDU.NumCode[_bitpix]
+    _code = pyfits.core.ImageHDU.NumCode[_bitpix]
     _bscale = phdr.get('BSCALE', 1)
     _bzero = phdr.get('BZERO', 0)
     if phdr['DATATYPE'][:10] == 'UNSIGNED*2':
