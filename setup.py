@@ -9,7 +9,7 @@ except ImportError:
 
 setup(
     setup_requires=['d2to1>=0.2.3'],
-    namespace_packages=['stsci'],
+    namespace_packages=['stsci'], packages=['stsci'],
     d2to1=True,
     use_2to3=True,
     zip_safe=False
