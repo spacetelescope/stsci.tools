@@ -237,7 +237,7 @@ def isFits(input):
         data0 = f[0].data
         if data0 != None:
             try:
-                if isinstance(f[1],pyfits.TableHDU):
+                if isinstance(f[1],pyfits.pyfits.TableHDU):
                     fitstype = 'waiver'
             except IndexError:
                 #if len(data0.shape) == 2:
