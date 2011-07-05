@@ -4,8 +4,7 @@ try:
     # annoying warnings (even though the namespace mechanism will still
     # otherwise work without it).
     # Get rid of this as soon as setuptools/distribute is dead.
-    from pkg_resources import declare_namespace
-    declare_namespace(__name__)
+    __import__('pkg_resources').declare_namespace(__name__)
 except ImportError:
-    from pkgutil import extend_path
-    __path__ = extend_path(__path__, __name__)
+    pass
+__path__ = __import__('pkgutil').extend_path(__path__, __name__)
