@@ -1,15 +1,22 @@
 # from __future__ import absolute_import
 from __future__ import division # confidence high
 
-__version__ = "3.0"
+__version__ = ''
+__svn_version__ = 'Unable to determine SVN revision'
+__full_svn_info__ = ''
+__setup_datetime__ = None
 
-#revision based svn info
 try:
-    # from .svn_version import __svn_version__, __full_svn_info__
-    from svn_version import __svn_version__, __full_svn_info__
+    __version__ = __import__('pkg_resources').\
+                      get_distribution('stsci.tools').version
 except:
-    __svn_version__ = 'Unable to determine SVN revision'
-    __full_svn_info__ = __svn_version__
+    pass
+
+try:
+    from stsci.tools.svninfo import (__svn_version__, __full_svn_info__,
+                                     __setup_datetime__)
+except ImportError:
+    pass
 
 import stsci.tools.tester
 def test(*args,**kwds):
