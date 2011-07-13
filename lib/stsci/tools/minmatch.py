@@ -261,16 +261,17 @@ def test():
     d['tes'] = 3
     print "d.items()", d.items()
     try:
-        print "Trying ambiguous assignment to d['te']"
+        print "Ambiguous assignment to d['te'] - expecting exception"
         d['te'] = 5
     except AmbiguousKeyError, e:
         print str(e)
         print '---'
     print "d.get('tes')", d.get('tes')
-    print "d.get('teq')", d.get('teq')
+    print "d.get('teq'), expect None: ", d.get('teq')
     print "d.getall('t')", d.getall('t')
     try:
-        print "d.get('t')", d.get('t')
+        print "d.get('t') - expecting exception"
+        d.get('t')
     except AmbiguousKeyError, e:
         print str(e)
         print '---'
@@ -278,12 +279,13 @@ def test():
     d.add('tesseract',100)
     print "d.items()", d.items()
     try:
-        print "d.get('tes')", d.get('tes')
+        print "d.get('tes') - expecting exception"
+        d.get('tes')
     except AmbiguousKeyError, e:
         print str(e)
         print '---'
     try:
-        print "del d['tes']"
+        print "del d['tes'] - expecting exception"
         del d['tes']
     except AmbiguousKeyError, e:
         print str(e)
@@ -303,7 +305,8 @@ def test():
     print "d.items()", d.items()
     print "d['a']", d['a']
     try:
-        print "d['t']", d['t']
+        print "d['t'] - expecting exception"
+        d['t']
     except KeyError, e:
         print str(e)
         print '---'
