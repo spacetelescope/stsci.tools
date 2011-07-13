@@ -106,8 +106,8 @@ class MinMatchDict(UserDict):
 
     def resolve(self, key, keylist):
         """Hook to resolve ambiguities in selected keys"""
-        raise AmbiguousKeyError("Ambiguous key "+ `key` +
-                ", could be any of " + `keylist`)
+        raise AmbiguousKeyError("Ambiguous key "+ repr(key) +
+                ", could be any of " + repr(keylist))
 
     def add(self, key, item):
         """Add a new key/item pair to the dictionary.  Resets an existing
@@ -270,8 +270,7 @@ def test():
     print "d.get('teq')", d.get('teq')
     print "d.getall('t')", d.getall('t')
     try:
-        print "d.get('t')",
-        print d.get('t')
+        print "d.get('t')", d.get('t')
     except AmbiguousKeyError, e:
         print str(e)
         print '---'
@@ -279,13 +278,12 @@ def test():
     d.add('tesseract',100)
     print "d.items()", d.items()
     try:
-        print "d.get('tes')",
-        print d.get('tes')
+        print "d.get('tes')", d.get('tes')
     except AmbiguousKeyError, e:
         print str(e)
         print '---'
     try:
-        print "del d['tes']",
+        print "del d['tes']"
         del d['tes']
     except AmbiguousKeyError, e:
         print str(e)
@@ -305,8 +303,7 @@ def test():
     print "d.items()", d.items()
     print "d['a']", d['a']
     try:
-        print "d['t']",
-        print d['t'],
+        print "d['t']", d['t']
     except KeyError, e:
         print str(e)
         print '---'
