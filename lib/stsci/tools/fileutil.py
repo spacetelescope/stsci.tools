@@ -386,18 +386,24 @@ def buildRootname(filename,ext=None):
         rootname = buildRootname(filename,ext=['_dth.fits'])
 
     """
+    if filename in ['',' ',None]:
+        return None
+    fpath,froot = os.path.split(filename)
+    if fpath in ['',' ',None]:
+        fpath = os.curdir
     # Get complete list of filenames from current directory
-    flist = os.listdir(os.curdir)
+    flist = os.listdir(fpath)
+
     #First, assume given filename is complete and verify
     # it exists...
     rootname = None
 
     for name in flist:
-        if name == filename:
-            rootname = filename
+        if name == froot:
+            rootname = froot
             break
-        elif name == filename+'.fits':
-            rootname = filename+'.fits'
+        elif name == froot+'.fits':
+            rootname = froot+'.fits'
             break
     # If we have an incomplete filename, try building a default
     # name and seeing if it exists...
@@ -416,7 +422,7 @@ def buildRootname(filename,ext=None):
         for extn in _extlist:
             # Start by looking for filename with exactly
             # the same case a provided in ASN table...
-            rname = filename + extn
+            rname = froot + extn
             for name in flist:
                 if rname == name:
                     rootname = name
@@ -425,7 +431,7 @@ def buildRootname(filename,ext=None):
                 # Try looking for all lower-case filename
                 # instead of a mixed-case filename as required
                 # by the pipeline.
-                rname = filename.lower() + extn
+                rname = froot.lower() + extn
                 for name in flist:
                     if rname == name:
                         rootname = name
@@ -438,12 +444,14 @@ def buildRootname(filename,ext=None):
     # info to build one...
     if rootname == None and ext != None:
         # Check to see if we have a full filename to start with...
-        _indx = string.find(filename,'.')
+        _indx = string.find(froot,'.')
         if _indx > 0:
-            rootname = filename[:_indx]+ext[0]
+            rootname = froot[:_indx]+ext[0]
         else:
-            rootname = filename + ext[0]
+            rootname = froot + ext[0]
 
+    if fpath not in ['.','',' ',None]:
+        rootname = os.path.join(fpath,rootname)
     # It will be up to the calling routine to verify
     # that a valid rootname, rather than 'None', was returned.
     return rootname
