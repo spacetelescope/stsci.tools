@@ -370,7 +370,6 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self._showHelpInBrowser    = cfgGetBool(cod, 'showHelpInBrowser', False)
         self._writeProtectOnSaveAs = cfgGetBool(cod, 'writeProtectOnSaveAs', False)
         self._optFile              = APP_NAME.lower()+".optionDB"
-        self._triggerAlways        = 'TEAL_SKIP_TRIGS_ON_LOAD' not in os.environ
 
         # our own colors
         # prmdrss teal: #00ffaa, pure cyan (teal) #00ffff (darker) #008080
@@ -526,12 +525,12 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                 # make sure this is an action that is allowed to cause a trigger
                 ruleSig = self._taskParsObj['_RULES_'].configspec[triggerName]
                 chkArgsDict = vtor_checks.sigStrToKwArgsDict(ruleSig)
-                codeStr = chkArgsDict.get('code') # or None
-                when2run = chkArgsDict.get('when') # or None
+                codeStr = chkArgsDict.get('code') # or None if didn't specify
+                when2run = chkArgsDict.get('when') # or None if didn't specify
 
-                greenlight = False
-                if self._triggerAlways or when2run is None:
-                    greenlight = True
+                greenlight = False # do we have a green light to eval the rule?
+                if when2run is None:
+                    greenlight = True # means run rule for any possible action
                 else: # 'when' was set to something so we need to check action
                     # check value of action (poor man's enum)
                     assert action in editpar.GROUP_ACTIONS, \
