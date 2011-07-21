@@ -25,7 +25,17 @@ INPUTWIDTH  = 10
 VALUEWIDTH  = 21
 PROMPTWIDTH = 55
 DFT_OPT_FILE = "epar.optionDB"
+
+# The following action types are used within the GUI code.  They define what
+# kind of GUI action actually caused a parameter's value to be adjusted.
+# This is meant to be like an enum.  These values may appear in a task's
+# task.cfgspc file in a rule.  In that file, the value 'always' may be used, in
+# addition to these values, to indicate a match to all possible action types.
 GROUP_ACTIONS = ('defaults','init','fopen','entry')
+# init     -> startup of the GUI
+# defaults -> the user clicked the Defaults or Reset button
+# fopen    -> the user loaded a config file
+# entry    -> the user actually edited a parameter (via mouse or keyboard)
 
 # Use these values for startup geometry ***for now***
 # PARENT is the main editor window
