@@ -37,20 +37,17 @@ class AmbiguousKeyError(KeyError):
 
 class MinMatchDict(UserDict):
 
-    def __init__(self,dict=None,minkeylength=1):
+    def __init__(self,indict=None,minkeylength=1):
         self.data = {}
         # use lazy instantiation for min-match dictionary
         # it may never be created if full keys are always used
         self.mmkeys = None
         if minkeylength<1: minkeylength = 1
         self.minkeylength = minkeylength
-        if dict is not None:
+        if indict is not None:
             add = self.add
-            for key in dict.keys(): add(key,dict[key])
-
-    def __contains__(self, key):
-        """For the "in" operator. Raise an exception if key is ambiguous"""
-        return self.has_key(key, exact=False)
+            for key in indict.keys():
+                add(key, indict[key])
 
     def __deepcopy__(self, memo=None):
         """Deep copy of dictionary"""
@@ -166,7 +163,13 @@ class MinMatchDict(UserDict):
         self.mmkeys = None
         self.data.clear()
 
-    def has_key(self, key, exact=0):
+    def __contains__(self, key):
+        """For the "in" operator. Raise an exception if key is ambiguous"""
+        return self._has(key)
+
+    def has_key(self, key, exact=0): return self._has(key, exact)
+
+    def _has(self, key, exact=0):
         """Raises an exception if key is ambiguous"""
         if not exact:
             key = self.getfullkey(key,new=1)
@@ -234,7 +237,7 @@ class QuietMinMatchDict(MinMatchDict):
         return self.data.get(key,failobj)
 
 
-    def has_key(self, key, exact=0):
+    def _has(self, key, exact=0):
 
         """Returns false if key is not found or is ambiguous"""
 

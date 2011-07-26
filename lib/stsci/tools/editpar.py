@@ -493,14 +493,14 @@ class EditParDialog(object):
             if not self._handleParListMismatch():
                 return False
         # convert it to a dict
-        dict = {}
+        pardict = {}
         for par in dlist:
-            dict[par.name] = par
+            pardict[par.name] = par
         # Build default list sorted into same order as current list
         try:
             dsort = []
             for par in self.paramList:
-                dsort.append(dict[par.name])
+                dsort.append(pardict[par.name])
         except KeyError:
             if not self._handleParListMismatch():
                 return False
