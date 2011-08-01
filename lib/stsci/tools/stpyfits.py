@@ -130,7 +130,7 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
                 # There is a PIXVALUE keyword but NAXIS is not 0 and the data
                 # does not match the PIXVALUE.
                 # Must remove the PIXVALUE and NPIXn keywords so we recognize
-                # tha there is non-constant data in the file.
+                # that there is non-constant data in the file.
                 del header['PIXVALUE']
                 for card in header.ascard['NPIX*']:
                     try:
@@ -201,6 +201,8 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
 
     def _writeheader(self, fileobj, checksum=False):
         if 'PIXVALUE' in self._header and self._header['NAXIS'] > 0:
+            super(_ConstantValueImageBaseHDU, self).update_header()
+
             # This is a Constant Value Data Array.  Verify that the data
             # actually matches the PIXVALUE
             pixval = self._header['PIXVALUE']
@@ -226,11 +228,16 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
 
             old_header = self._header
             self._header = new_header
+            data = self.data
+            # Temporarily set self.data to None to prevent update_header() from
+            # being being called again by the superclass
+            self.data = None
             try:
                 offset = super(_ConstantValueImageBaseHDU, self).\
                     _writeheader(fileobj, checksum)
             finally:
                 self._header = old_header
+                self.data = data
         else:
             # All elements in array are not the same value.
             # so this is no longer a constant data value array
@@ -251,7 +258,7 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
     def _check_constant_value_data(self, data):
         """Verify that the HDU's data is a constant value array."""
 
-        arrayval = np.reshape(data, (data.size,))[0]
+        arrayval = data.flat[0]
         if np.all(data == arrayval):
             return arrayval
         return None
