@@ -153,12 +153,25 @@ the "Execute" button.
 
 # Starts a GUI session
 def teal(theTask, parent=None, loadOnly=False, returnDict=True,
-         canExecute=True, raiseUnfound=False, errorsToTerm=False):
+         canExecute=True, strict=False, errorsToTerm=False):
 #        overrides=None):
     """ Start the GUI session, or simply load a task's ConfigObj. """
     if loadOnly:
-        obj = cfgpars.getObjectFromTaskArg(theTask)
-#       obj.strictUpdate(overrides) # !! does this skip verify step?? need it!
+        obj = None
+        try:
+            obj = cfgpars.getObjectFromTaskArg(theTask)
+#           obj.strictUpdate(overrides) # !!does it skip verify step?? need it!
+            errs = obj.checkIntegrity()
+            if errs:
+                raise RuntimeError( \
+                      'Mismatch between default and current parameter sets:\n'+\
+                      '\n'.join(errs))
+        except RuntimeError, re:
+            # Since we are loadOnly, don't pop up the GUI for this
+            if strict:
+                raise
+            else:
+                print(str(re).replace('\n\n','\n'))
         return obj
     else:
         dlg = None
@@ -168,7 +181,7 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
                                       canExecute=canExecute)
 #                                     overrides=overrides)
         except cfgpars.NoCfgFileError, ncf:
-            if raiseUnfound:
+            if strict:
                 raise
             elif errorsToTerm:
                 print(str(ncf).replace('\n\n','\n'))
