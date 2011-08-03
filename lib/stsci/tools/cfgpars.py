@@ -594,8 +594,14 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     if dscrp0 != dscrp1: # allow override if different
                         dscrp = dscrp1+eparoption.DSCRPTN_FLAG # flag it
                         if initialPass:
-                            print 'Description of "'+key+'" overridden; '+\
-                             'from:\n\t'+repr(dscrp0)+', to:\n\t'+repr(dscrp1)
+                            if dscrp0 == '' and cspc == None:
+                                # this is a case where this par isn't in the
+                                # .cfgspc; ignore, it is caught/error later
+                                pass
+                            else:
+                                print 'Description of "'+key+'" overridden; '+\
+                                      'from:\n\t'+repr(dscrp0)+\
+                                      ', to:\n\t'+repr(dscrp1)
                     fields.append(dscrp)
                 else:
                     # set the field for the GUI
@@ -795,6 +801,42 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # Done
         if len(errStr): return (False, oldVal) # was an error
         else:           return (True, None)    # val is OK
+
+
+    def checkIntegrity(self):
+        """ Check the loaded dict against the default dict, and report on
+        unknown or missing items.  Returns a list of error lines. """
+        # if the following list is empty at the end, then we match perfectly
+        errs = []
+        # get defaults from .cfgspc, and current pars, both in a list
+        deflist = self.getDefaultParList()
+        curlist = self.getParList()
+        defids = [par.fullName() for par in deflist]
+        curids = [par.fullName() for par in curlist]
+        # convert to dicts (in 2.7 could do via a dict comp.)
+        defdict = {}
+        for par in deflist: defdict[par.fullName()] = par
+#       curdict = {}
+#       for par in curlist: curdict[par.fullName()] = par
+        # check make sure all cur items are allowed and the right type
+        for cur in curlist:
+            curid = cur.fullName()
+            if curid not in defids:
+                errs.append('Parameter "'+curid+'" is unknown to task')
+            else:
+                default = defdict[curid]
+                if cur.type != default.type:
+                    errs.append('Par "'+curid+ \
+                         '" is of a different type than the task expects')
+                if cur.mode != default.mode:
+                    errs.append('Par "'+curid+ \
+                         '" is of a different mode than the task expects')
+        for dft in deflist:
+            dftid = dft.fullName()
+            if dftid not in curids:
+                errs.append('Missing parameter "'+dftid+'" is expected by task')
+            # else it was already checked in the loop above
+        return errs
 
 
 def flattened2str(flattened):
