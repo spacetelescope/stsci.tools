@@ -427,6 +427,15 @@ class IrafPar:
         s = "%s = %s" % (self.name, sval)
         return s
 
+    def fullName(self):
+        """ Return the fully-qualified name (inclues scope if used) """
+        # Skip scope (and leading dot) if no scope, even in cases where scope
+        # IS used for other pars in the same task.
+        if self.scope:
+            return self.scope+'.'+self.name
+        else:
+            return self.name
+
     def pretty(self,verbose=0):
         """Return pretty list description of parameter"""
         # split prompt lines and add blanks in later lines to align them
@@ -538,7 +547,7 @@ class IrafPar:
             raise AttributeError("No attribute %s for parameter %s" %
                     (attr, self.name))
 
-    def __deepcopy__(self, memo=None):
+    def __deepcopy__(self, memo):
         """Deep copy of this parameter object"""
         new = _EmptyClass()
         # shallow copy of dictionary suffices for most attributes
