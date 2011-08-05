@@ -223,29 +223,36 @@ def isFits(input):
     names = ['fits','fit', 'FITS','FIT']
     #determine if input is a fits file based on extension
     # Only check type of FITS file if filename ends in valid FITS string
-    isfits = True in [input.endswith(l) for l in names]
+    f = None
+    fileclose = False
+    if isinstance(input, pyfits.HDUList):
+        isfits = True
+        f = input
+    else:
+        isfits = True in [input.endswith(l) for l in names]
 
     # if input is a fits file determine what kind of fits it is
     #waiver fits len(shape) == 3
     if isfits:
-        try:
-            f = None
-            f = pyfits.open(input,mode='readonly')
-        except Exception, e:
-            if f is not None: f.close()
-            raise
+        if not f:
+            try:
+                f = pyfits.open(input,mode='readonly')
+                fileclose = True
+            except Exception, e:
+                if f is not None: f.close()
+                raise
         data0 = f[0].data
         if data0 != None:
             try:
                 if isinstance(f[1],pyfits.pyfits.TableHDU):
                     fitstype = 'waiver'
             except IndexError:
-                #if len(data0.shape) == 2:
                 fitstype = 'simple'
 
         else:
             fitstype = 'mef'
-        f.close()
+        if fileclose:
+            f.close()
 
     return isfits, fitstype
 
