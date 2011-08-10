@@ -160,12 +160,7 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
         obj = None
         try:
             obj = cfgpars.getObjectFromTaskArg(theTask)
-#           obj.strictUpdate(overrides) # !!does it skip verify step?? need it!
-            errs = obj.checkIntegrity()
-            if errs:
-                raise RuntimeError( \
-                      'Mismatch between default and current parameter sets:\n'+\
-                      '\n'.join(errs))
+#           obj.strictUpdate(overrides) # ! would need to re-verify after this !
         except RuntimeError, re:
             # Since we are loadOnly, don't pop up the GUI for this
             if strict:
@@ -758,10 +753,14 @@ class ConfigObjEparDialog(editpar.EditParDialog):
 
 
     def _handleParListMismatch(self):
-        """ Override to include ConfigObj filename. """
+        """ Override to include ConfigObj filename and specific errors. """
 
+        # find the actual errors, and then add that to the generic message
+        probs = '\n'
+        # !! add code here to self-test for errors, fill in 'probs'
         errmsg = 'ERROR: mismatch between default and current par lists ' + \
-                 'for task "'+self.taskName+'".\nTry editing/deleting: "' + \
+                 'for task "'+self.taskName+'".'+probs+ \
+                 'Try editing/deleting: "' + \
                  self._taskParsObj.filename+'" (or, if in PyRAF: "unlearn ' + \
                  self.taskName+'").'
         print(errmsg)

@@ -4,7 +4,7 @@ $Id$
 """
 from __future__ import division # confidence high
 
-import glob, os, stat, sys
+import copy, glob, os, stat, sys
 
 # ConfigObj modules
 import configobj, validate
@@ -274,7 +274,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     """ This represents a task's dict of ConfigObj parameters. """
 
     def __init__(self, cfgFileName, forUseWithEpar=True,
-                 setAllToDefaults=False,
+                 setAllToDefaults=False, strict=False,
                  associatedPkg=None, forceReadOnly=False):
 
         self._forUseWithEpar = forUseWithEpar
@@ -303,26 +303,66 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             if forceReadOnly:
                 checkSetReadOnly(cfgFileName)
 
-        cfgSpecPath = self._findAssociatedConfigSpecFile(cfgFileName)
+        # Find the associated .cfgspc file (first make sure we weren't
+        # given one by mistake)
+        if not cfgFileName.endswith('.cfg') and \
+           self.__taskName.find('(default=') >= 0:
+            # Handle case where they gave us a .cfgspc by mistake (no .cfg)
+            # (basically reset a few things)
+            cfgSpecPath = os.path.realpath(cfgFileName)
+            setAllToDefaults = True
+            cfgFileName = ''
+            sigStr  = getEmbeddedKeyVal(cfgSpecPath, '_task_name_', '')
+            self.__taskName = vtor_checks.sigStrToKwArgsDict(sigStr)['default']
+        else:
+            cfgSpecPath = self._findAssociatedConfigSpecFile(cfgFileName)
         assert os.path.exists(cfgSpecPath), \
                "Matching configspec not found!  Expected: "+cfgSpecPath
+
+        # Run the ConfigObj ctor.  The result of this (if !setAllToDefaults)
+        # is the exact copy of the input file as a dict (ConfigObj).  If the
+        # infile had extra pars or missing pars, they are still that way here.
         if setAllToDefaults:
             configobj.ConfigObj.__init__(self, configspec=cfgSpecPath)
         else:
             configobj.ConfigObj.__init__(self, os.path.abspath(cfgFileName),
                                          configspec=cfgSpecPath)
 
+        # Before we validate (and fill in missing pars), find any lost pars
+        # via this (somewhat kludgy) method suggested by ConfigObj folks.
+        missing = '' # assume no .cfg file
+        if not setAllToDefaults:
+            missing = findTheLost(os.path.abspath(cfgFileName), cfgSpecPath)
+
         # Validate it here.  We can't skip this step even if we are just
         # setting all to defaults, since this sets the values.
+        # NOTE - this fills in values for any missing pars !  AND, if our
+        # .cfgspc sets defaults vals, then missing pars are not an error...
         self._vtor = validate.Validator(vtor_checks.FUNC_DICT)
+        # 'ans' will be True, False, or a dict (anything but True is bad)
         ans = self.validate(self._vtor, preserve_errors=True,
                             copy=setAllToDefaults)
-        if ans != True:
-            flatStr = "All values are invalid!"
+        extra = self.listTheExtras()
+
+        # Deal with any errors
+        if extra or missing or ans != True:
+            flatStr = ''
+            forceErr = ans != True
+            if ans == False:
+                flatStr = "All values are invalid!"
             if ans != False:
                 flatStr = flattened2str(configobj.flatten_errors(self, ans))
-            raise RuntimeError("Validation errors for: "+\
-                         os.path.realpath(cfgFileName)+"\n\n"+flatStr)
+            if missing:
+                flatStr += "\n\n"+missing
+            if extra:
+                flatStr += "\n\n"+extra
+            msg = "Validation errors for: "+os.path.realpath(cfgFileName)+\
+                  "\n\n"+flatStr.strip('\n')
+            if strict or forceErr:
+                raise RuntimeError(msg)
+            else:
+                # just inform them, but don't throw anything
+                print msg
 
         # get the initial param list out of the ConfigObj dict
         self.syncParamList(True)
@@ -365,6 +405,13 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # adds a tenth of a second to startup.  It's not clear how much this
         # is used.  Clicking "Defaults" in the GUI does not call this.  This
         # data is only used in the individual widget pop-up menus.
+
+        # But first check for rare case of no cfg file name
+        if self.filename == None:
+            # this is a .cfgspc-only kind of object so far
+            self.filename = self._rcDir+os.sep+self.__taskName+'_stub.cfg'
+            return copy.deepcopy(self.__paramList)
+
         tmpObj = ConfigObjPars(self.filename, associatedPkg=self.__assocPkg,
                                setAllToDefaults=True)
         return tmpObj.getParList()
@@ -803,62 +850,89 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         else:           return (True, None)    # val is OK
 
 
-    def checkIntegrity(self):
-        """ Check the loaded dict against the default dict, and report on
-        unknown or missing items.  Returns a list of error lines. """
-        # if the following list is empty at the end, then we match perfectly
-        errs = []
-        # get defaults from .cfgspc, and current pars, both in a list
-        deflist = self.getDefaultParList()
-        curlist = self.getParList()
-        defids = [par.fullName() for par in deflist]
-        curids = [par.fullName() for par in curlist]
-        # convert to dicts (in 2.7 could do via a dict comp.)
-        defdict = {}
-        for par in deflist: defdict[par.fullName()] = par
-#       curdict = {}
-#       for par in curlist: curdict[par.fullName()] = par
-        # check make sure all cur items are allowed and the right type
-        for cur in curlist:
-            curid = cur.fullName()
-            if curid not in defids:
-                errs.append('Parameter "'+curid+'" is unknown to task')
-            else:
-                default = defdict[curid]
-                if cur.type != default.type:
-                    errs.append('Par "'+curid+ \
-                         '" is of a different type than the task expects')
-                if cur.mode != default.mode:
-                    errs.append('Par "'+curid+ \
-                         '" is of a different mode than the task expects')
-        for dft in deflist:
-            dftid = dft.fullName()
-            if dftid not in curids:
-                errs.append('Missing parameter "'+dftid+'" is expected by task')
-            # else it was already checked in the loop above
-        return errs
+    def listTheExtras(self):
+        """ Use ConfigObj's get_extra_values() call to find any extra/unknown
+        parameters we may have loaded.  Return a string similar to findTheLost.
+        """
+        extras = configobj.get_extra_values(self)
+        # extras is in format: [(sections, key), (sections, key), ]
+        # but we need: [(sections, key, result), ...] - set all result = False
+        expanded = [ (x+(False,)) for x in extras]
+        if expanded:
+            return flattened2str(expanded, extra=1)
+        else:
+            return ''
 
 
-def flattened2str(flattened):
+# ---------------------------- helper functions --------------------------------
+
+
+def findTheLost(config_file, configspec_file):
+    """ Find any lost/missing parameters in this cfg file, compared to what
+    the .cfgspc says should be there. This method is recommended by the
+    ConfigObj docs. Return a list of item errors. """
+    # do some sanity checking, but don't (yet) make this a serious error
+    if not os.path.exists(config_file):
+        print "ERROR: Config file not found: "+config_file
+        return []
+    if not os.path.exists(configspec_file):
+        print "ERROR: Configspec file not found: "+configspec_file
+        return []
+    tmpObj = configobj.ConfigObj(config_file, configspec=configspec_file)
+    simval = configobj.SimpleVal()
+    test = tmpObj.validate(simval)
+    if test == True:
+        return []
+    # If we get here, there is a dict returned of {key1: bool, key2: bool}
+    # which matches the shape of the config obj.  We need to walk it to
+    # find the Falses, since they are the missing pars.
+    missing = []
+    flattened = configobj.flatten_errors(tmpObj, test)
+    flatStr = flattened2str(flattened, missing=True)
+    return flatStr
+
+
+def flattened2str(flattened, missing=False, extra=False):
     """ Return a pretty-printed multi-line string version of the output of
     flatten_errors. Know that flattened comes in the form of a list
     of keys that failed. Each member of the list is a tuple::
 
         ([list of sections...], key, result)
 
-    so we turn that into a string. """
+    so we turn that into a string. Set missing to True if all the input
+    problems are from missing items.  Set extra to True if all the input
+    problems are from extra items. """
 
     if flattened == None or len(flattened) < 1:
-        return 'No errors found'
+        return ''
     retval = ''
     for sections, key, result in flattened:
+        # Name the section and item, to start the message line
         if sections == None or len(sections) == 0:
             retval += '\t"'+key+'"'
         elif len(sections) == 1:
-            retval += '\t"'+sections[0]+'.'+key+'"'
+            if key == None:
+                # a whole section is missing at the top-level; see if hidden
+                junk = sections[0]
+                if junk.startswith('_') and junk.endswith('_'):
+                    continue # this missing or extra section is not an error
+                else:
+                    retval += '\tSection "'+sections[0]+'"'
+            else:
+                retval += '\t"'+sections[0]+'.'+key+'"'
         else: # len > 1
-            retval +=  '\t"'+key+'" from '+str(sections)
-        if isinstance(result, bool):
+            joined = '.'.join(sections)
+            joined = '"'+joined+'"'
+            if key == None:
+                retval +=  '\tSection '+joined
+            else:
+                retval +=  '\t"'+key+'" from '+joined
+        # End the msg line with "what seems to be the trouble" with this one
+        if missing and result==False:
+            retval += ' is missing.'
+        elif extra:
+            retval += ' is an extra or unknown parameter.'
+        elif isinstance(result, bool):
             retval += ' has an invalid value'
         else:
             retval += ' is invalid, '+result.message
