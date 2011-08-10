@@ -362,7 +362,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 raise RuntimeError(msg)
             else:
                 # just inform them, but don't throw anything
-                print msg
+                print msg.replace('\n\n','\n')
 
         # get the initial param list out of the ConfigObj dict
         self.syncParamList(True)
@@ -599,7 +599,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 choicesOrMin = None
                 fields.append(key) # name
                 dtype = 's'
-                cspc = cfgObj.configspec.get(key) # None if not found
+                cspc = None
+                if cfgObj.configspec:
+                    cspc = cfgObj.configspec.get(key) # None if not found
                 chk_func_name = ''
                 chk_args_dict = {}
                 if cspc:
