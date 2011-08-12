@@ -151,7 +151,7 @@ the "Execute" button.
 """
 
 
-# Starts a GUI session
+# Starts a GUI session, or simply loads a file
 def teal(theTask, parent=None, loadOnly=False, returnDict=True,
          canExecute=True, strict=False, errorsToTerm=False):
 #        overrides=None):
@@ -159,7 +159,7 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
     if loadOnly:
         obj = None
         try:
-            obj = cfgpars.getObjectFromTaskArg(theTask)
+            obj = cfgpars.getObjectFromTaskArg(theTask, strict=strict)
 #           obj.strictUpdate(overrides) # ! would need to re-verify after this !
         except RuntimeError, re:
             # Since we are loadOnly, don't pop up the GUI for this
@@ -173,6 +173,7 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
         try:
             dlg = ConfigObjEparDialog(theTask, parent=parent,
                                       returnDict=returnDict,
+                                      strict=strict,
                                       canExecute=canExecute)
 #                                     overrides=overrides)
         except cfgpars.NoCfgFileError, ncf:
@@ -195,6 +196,13 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
             return None
         else:
             return dlg.getTaskParsObj()
+
+
+def load(theTask, canExecute=True, strict=True):
+    """ Shortcut to load TEAL .cfg files for non-GUI access where
+    loadOnly=True. """
+    return teal(theTask, parent=None, loadOnly=True, returnDict=True,
+                canExecute=canExecute, strict=strict, errorsToTerm=True)
 
 
 def popUpErr(parent=None, message="", title="Error"):
@@ -344,7 +352,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
 
     def __init__(self, theTask, parent=None, title=APP_NAME,
                  isChild=0, childList=None, returnDict=True,
-                 canExecute=True):
+                 strict=False, canExecute=True):
 #                overrides=None,
 
         # returnDict is fundamental to this GUI.  If True, then a dict is
@@ -352,9 +360,10 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # is Canceled).  If False, we operate in an auto-close mode (like EPAR)
         self._returnDict = returnDict
 
-        # Keep track of any passed-in keyvals before creating the _taskParsObj
+        # Keep track of any passed-in args before creating the _taskParsObj
 #       self._overrides = overrides
         self._canExecute = canExecute
+        self._strict = strict
 
         # Init base - calls _setTaskParsObj(), sets self.taskName, etc
         # Note that this calls _overrideMasterSettings()
@@ -609,7 +618,8 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         """ Overridden version for ConfigObj. theTask can be either
             a .cfg file name or a ConfigObjPars object. """
         # Create the ConfigObjPars obj
-        self._taskParsObj = cfgpars.getObjectFromTaskArg(theTask)
+        self._taskParsObj = cfgpars.getObjectFromTaskArg(theTask,
+                                                         strict=self._strict)
         # Immediately make a copy of it's un-tampered internal dict.
         # The dict() method returns a deep-copy dict of the keyvals.
         self._lastSavedState = self._taskParsObj.dict()
@@ -707,7 +717,8 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # load it into a tmp object (use associatedPkg if we have one)
         try:
             tmpObj = cfgpars.ConfigObjPars(fname, associatedPkg=\
-                                           self._taskParsObj.getAssocPkg())
+                                           self._taskParsObj.getAssocPkg(),
+                                           strict=self._strict)
         except Exception, ex:
             tkMessageBox.showerror(message=str(ex),
                 title="Error in "+os.path.basename(fname))
@@ -775,7 +786,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             tmpObj = cfgpars.ConfigObjPars(self._taskParsObj.filename,
                                            associatedPkg=\
                                            self._taskParsObj.getAssocPkg(),
-                                           setAllToDefaults=True)
+                                           setAllToDefaults=True, strict=False)
         except Exception, ex:
             msg = "Error Determining Defaults"
             tkMessageBox.showerror(message=msg+'\n\n'+str(ex),

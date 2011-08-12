@@ -36,17 +36,18 @@ def getAppDir():
     return theDir
 
 
-def getObjectFromTaskArg(theTask):
+def getObjectFromTaskArg(theTask, strict):
     """ Take the arg (usually called theTask), which can be either a subclass
     of ConfigObjPars, or a string package name, or a .cfg filename - no matter
-    what it is - take it and return a ConfigObjPars object. """
+    what it is - take it and return a ConfigObjPars object.  The "strict"
+    arg is passed to the ConfigObjPars() ctor. """
 
     # Already in the form we need (instance of us or of subclass)
     if isinstance(theTask, ConfigObjPars):
         # If it is an existing object, make sure it's internal param list is
         # up to date with it's ConfigObj dict, since the user may have manually
         # edited the dict before calling us.
-        theTask.syncParamList(False)
+        theTask.syncParamList(False) # use strict somehow?
         # Note - some validation is done here in IrafPar creation, but it is
         # not the same validation done by the ConfigObj s/w (no check funcs).
         # Do we want to do that too here?
@@ -54,10 +55,10 @@ def getObjectFromTaskArg(theTask):
 
     # For example, a .cfg file
     if os.path.isfile(str(theTask)):
-        return ConfigObjPars(theTask)
+        return ConfigObjPars(theTask, strict=strict)
 
     # Else it must be a Python package name to load
-    return getParsObjForPyPkg(theTask)
+    return getParsObjForPyPkg(theTask, strict)
 
 
 def getEmbeddedKeyVal(cfgFileName, kwdName, dflt=None):
@@ -183,7 +184,7 @@ def getCfgFilesInDirForTask(aDir, aTask, recurse=False):
         return flist
 
 
-def getParsObjForPyPkg(pkgName):
+def getParsObjForPyPkg(pkgName, strict):
     """ Locate the appropriate ConfigObjPars (or subclass) within the given
         package. NOTE this begins the same way as getUsrCfgFilesForPyPkg() """
     # Get the python package and it's .cfg file
@@ -205,7 +206,8 @@ def getParsObjForPyPkg(pkgName):
             theFile = ftups[-1][1]
     # Create a stand-in instance from this file.  Force a read-only situation
     # if we are dealing with the installed, (expected to be) unwritable file.
-    return ConfigObjPars(theFile, associatedPkg=thePkg, forceReadOnly=noLocals)
+    return ConfigObjPars(theFile, associatedPkg=thePkg,
+                         forceReadOnly=noLocals, strict=strict)
 
 
 def getUsrCfgFilesForPyPkg(pkgName):
@@ -274,7 +276,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     """ This represents a task's dict of ConfigObj parameters. """
 
     def __init__(self, cfgFileName, forUseWithEpar=True,
-                 setAllToDefaults=False, strict=False,
+                 setAllToDefaults=False, strict=True,
                  associatedPkg=None, forceReadOnly=False):
 
         self._forUseWithEpar = forUseWithEpar
@@ -413,7 +415,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             return copy.deepcopy(self.__paramList)
 
         tmpObj = ConfigObjPars(self.filename, associatedPkg=self.__assocPkg,
-                               setAllToDefaults=True)
+                               setAllToDefaults=True, strict=False)
         return tmpObj.getParList()
 
     def getFilename(self): return self.filename
