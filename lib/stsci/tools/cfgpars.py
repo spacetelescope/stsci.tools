@@ -575,7 +575,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             val = cfgObj[key]
 
             # Do we need to skip this - if not a par, like a rule or something
-            toBeHidden = key.startswith('_') and key.endswith('_')
+            toBeHidden = isHiddenName(key)
 
             # a section
             if isinstance(val, dict):
@@ -792,7 +792,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
         # Then go through the dict removing all hidden items ('_item_name_')
         for k in dcopy.keys():
-            if k.startswith('_') and k.endswith('_'):
+            if isHiddenName(k):
                 dcopy.pop(k)
 
         # Done with the nominal operation
@@ -871,7 +871,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 # ---------------------------- helper functions --------------------------------
 
 
-def findTheLost(config_file, configspec_file):
+def findTheLost(config_file, configspec_file, skipHidden=True):
     """ Find any lost/missing parameters in this cfg file, compared to what
     the .cfgspc says should be there. This method is recommended by the
     ConfigObj docs. Return a list of item errors. """
@@ -892,8 +892,32 @@ def findTheLost(config_file, configspec_file):
     # find the Falses, since they are the missing pars.
     missing = []
     flattened = configobj.flatten_errors(tmpObj, test)
+    # But, before we move on, skip/eliminate any 'hidden' items from our list,
+    # since hidden items are really supposed to be missing from the .cfg file.
+    if len(flattened) > 0 and skipHidden:
+        keepers = []
+        for tup in flattened:
+            keep = True
+            # hidden section
+            if len(tup[0])>0 and isHiddenName(tup[0][-1]):
+                keep = False
+            # hidden par (in a section, or at the top level)
+            elif tup[1] != None and isHiddenName(tup[1]):
+                keep = False
+            if keep:
+                keepers.append(tup)
+        flattened = keepers
     flatStr = flattened2str(flattened, missing=True)
     return flatStr
+
+
+def isHiddenName(astr):
+    """ Return True if this string name denotes a hidden par or section """
+    if astr != None and len(astr) > 2 and astr.startswith('_') and \
+       astr.endswith('_'):
+        return True
+    else:
+        return False
 
 
 def flattened2str(flattened, missing=False, extra=False):
@@ -918,7 +942,7 @@ def flattened2str(flattened, missing=False, extra=False):
             if key == None:
                 # a whole section is missing at the top-level; see if hidden
                 junk = sections[0]
-                if junk.startswith('_') and junk.endswith('_'):
+                if isHiddenName(junk):
                     continue # this missing or extra section is not an error
                 else:
                     retval += '\tSection "'+sections[0]+'"'
