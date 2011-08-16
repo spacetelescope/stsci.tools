@@ -142,6 +142,8 @@ class EditParDialog(object):
 
         # Generate the top epar window
         self.top = top = Toplevel(self.parent,bg=self._frmeColor,visual="best")
+        self.top.withdraw() # hide it while we fill it up with stuff
+
         if len(self.pkgName):
             self.updateTitle(self.pkgName+"."+self.taskName)
         else:
@@ -325,6 +327,10 @@ class EditParDialog(object):
 
         # Set focus to first parameter
         self.setViewAtTop()
+
+        # Finally show it
+        self.top.update()
+        self.top.deiconify()
 
         # Enable interactive resizing in height
         self.top.resizable(width=FALSE, height=TRUE)
