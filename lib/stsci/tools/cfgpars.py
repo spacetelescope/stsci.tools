@@ -333,7 +333,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # Before we validate (and fill in missing pars), find any lost pars
         # via this (somewhat kludgy) method suggested by ConfigObj folks.
         missing = '' # assume no .cfg file
-        if not setAllToDefaults:
+        if strict and (not setAllToDefaults):
+            # don't even populate this if not strict
             missing = findTheLost(os.path.abspath(cfgFileName), cfgSpecPath)
 
         # Validate it here.  We can't skip this step even if we are just
@@ -344,12 +345,26 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # 'ans' will be True, False, or a dict (anything but True is bad)
         ans = self.validate(self._vtor, preserve_errors=True,
                             copy=setAllToDefaults)
+        hasTypeErr = ans != True
         extra = self.listTheExtras()
 
-        # Deal with any errors
-        if extra or missing or ans != True:
+        # DEAL WITH ERRORS (in this way)
+        #
+        # wrong par type:
+        #     strict -> severe error*
+        #     not -> severe error
+        # extra par(s) found:
+        #     strict -> severe error
+        #     not -> warn*
+        # missing par(s):
+        #     strict -> warn
+        #     not - be silent
+        #
+        # *severe - if in GUI, pop up error & stop (e.g. file load), else raise
+        # *warn - if in GUI, pop up warning, else print it to screen
+
+        if extra or missing or hasTypeErr:
             flatStr = ''
-            forceErr = ans != True
             if ans == False:
                 flatStr = "All values are invalid!"
             if ans != False:
@@ -358,9 +373,12 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 flatStr += "\n\n"+missing
             if extra:
                 flatStr += "\n\n"+extra
-            msg = "Validation errors for: "+os.path.realpath(cfgFileName)+\
+            msg = "Validation warnings for: "
+            if hasTypeErr or (strict and extra):
+                msg = "Validation errors for: "
+            msg = msg+os.path.realpath(cfgFileName)+\
                   "\n\n"+flatStr.strip('\n')
-            if strict or forceErr:
+            if hasTypeErr or (strict and extra):
                 raise RuntimeError(msg)
             else:
                 # just inform them, but don't throw anything
@@ -874,7 +892,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 def findTheLost(config_file, configspec_file, skipHidden=True):
     """ Find any lost/missing parameters in this cfg file, compared to what
     the .cfgspc says should be there. This method is recommended by the
-    ConfigObj docs. Return a list of item errors. """
+    ConfigObj docs. Return a stringified list of item errors. """
     # do some sanity checking, but don't (yet) make this a serious error
     if not os.path.exists(config_file):
         print "ERROR: Config file not found: "+config_file

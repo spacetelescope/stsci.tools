@@ -79,12 +79,13 @@ class EditParDialog(object):
         # setting _tmwm=1 is the slowest motion, 7 seems OK, 10 maybe too fast
         self._tmwm = int(os.getenv('TEAL_MOUSE_WHEEL_MULTIPLIER', 7))
 
-        # Ignore the last parameter which is $nargs
-        self.numParams = len(self.paramList) - 1
-
         # Get default parameter values for unlearn - watch return value
+        # NOTE - this may edit self.paramList
         if not self._setupDefaultParamList():
             return
+
+        # Ignore the last parameter which is $nargs
+        self.numParams = len(self.paramList) - 1
 
         # Set all default master GUI settings, then
         # allow subclasses to override them
@@ -479,39 +480,54 @@ class EditParDialog(object):
         return TRUE
 
 
-    def _handleParListMismatch(self):
+    def _handleParListMismatch(self, probStr, extra=False):
         """ Handle the situation where two par lists do not match.
-        This is meant to allow subclasses to override. """
+        This is meant to allow subclasses to override. Note that this only
+        handles "missing" pars and "extra" pars, not wrong-type pars. """
 
         errmsg = 'ERROR: mismatch between default and current par lists ' + \
-               'for task "'+self.taskName+'" (try: "unlearn '+self.taskName+'")'
+               'for task "'+self.taskName+'"'
+        if probStr:
+            errmsg += '\n\t'+probStr
+        errmsg += '\n(try: "unlearn '+self.taskName+'")'
         print(errmsg)
         return False
-#       raise ValueError(errmsg)
 
 
     def _setupDefaultParamList(self):
 
         # Obtain the default parameter list
-        dlist = self._taskParsObj.getDefaultParList()
-        if len(dlist) != len(self.paramList):
-            # whoops, lengths don't match
-            if not self._handleParListMismatch():
+        dparlist = self._taskParsObj.getDefaultParList()
+        if len(dparlist) != len(self.paramList):
+            # whoa, lengths don't match (could be some missing or some extra)
+            pmsg = 'Current list not same length as default list'
+            if not self._handleParListMismatch(pmsg):
                 return False
         # convert it to a dict
-        pardict = {}
-        for par in dlist:
-            pardict[par.name] = par
-        # Build default list sorted into same order as current list
-        try:
-            dsort = []
-            for par in self.paramList:
-                dsort.append(pardict[par.name])
-        except KeyError:
-            if not self._handleParListMismatch():
-                return False
-        self.defaultParamList = dsort
+        dpardict = {}
+        for par in dparlist:
+            dpardict[par.fullName()] = par
 
+        # Build default list sorted into same order as current list
+        dsort = []
+        todel = []
+        for par in self.paramList:
+            if par.fullName() in dpardict:
+                dsort.append(dpardict[par.fullName()])
+            else: # this is an extra/unknown par - let subclass handle it
+                if not self._handleParListMismatch('Unexpected par: "'+\
+                            par.fullName()+'"', extra=True):
+                    return False
+                todel.append(par.fullName())
+
+        # handle if there are any to ignore/delete
+        if len(todel) > 0:
+            newList = [p for p in self.paramList if p.fullName() not in todel]
+            self.paramList = newList
+            for p in todel:
+                print('Ignoring unexpected par: "'+p+'"')
+
+        self.defaultParamList = dsort
         # return value indicates that all is well to continue
         return True
 
