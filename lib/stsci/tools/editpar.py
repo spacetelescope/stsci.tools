@@ -25,6 +25,7 @@ INPUTWIDTH  = 10
 VALUEWIDTH  = 21
 PROMPTWIDTH = 55
 DFT_OPT_FILE = "epar.optionDB"
+TIP = "rollover"
 
 # The following action types are used within the GUI code.  They define what
 # kind of GUI action actually caused a parameter's value to be adjusted.
@@ -896,42 +897,41 @@ class EditParDialog(object):
     def clearInfo(self, event):
         self.showStatus("")
 
-    def printHelpViewInfo(self, event):
-        self.showStatus(
-            "Choice of display for the help page: a window or a browser")
-
     def printHelpInfo(self, event):
-        self.showStatus("Display the help page")
+        self.showStatus("Display the help page", cat=TIP)
 
     def printUnlearnInfo(self, event):
-        self.showStatus("Set all parameter values to their default settings")
+        self.showStatus("Set all parameter values to their default settings",
+                        cat=TIP)
 
     def printSaveQuitInfo(self, event):
         if self._useSimpleAutoClose:
-            self.showStatus("Save current entries and exit this edit session")
+            self.showStatus("Save current entries and exit this edit session",
+                            cat=TIP)
         else:
             self.showStatus("Save the current entries to "+ \
-                            self._taskParsObj.getFilename())
-
-    def printSaveAsInfo(self, event):
-        self.showStatus("Save the current entries to a user-specified file")
+                            self._taskParsObj.getFilename(), cat=TIP)
 
     def printOpenInfo(self, event):
         self.showStatus(
-            "Load and edit parameter values from a user-specified file")
+            "Load and edit parameter values from a user-specified file",
+            cat=TIP)
 
     def printCloseInfo(self, event):
-        self.showStatus("Close this edit session.  Save first?")
+        self.showStatus("Close this edit session.  Save first?", cat=TIP)
 
     def printAbortInfo(self, event):
         self.showStatus(
-            "Abort this edit session, discarding any unsaved changes.")
+            "Abort this edit session, discarding any unsaved changes.",cat=TIP)
 
     def printExecuteInfo(self, event):
         if self._saveAndCloseOnExec:
-            self.showStatus("Execute the task, and save and exit this edit session")
+            self.showStatus(
+                 "Execute the task, and save and exit this edit session",
+                 cat=TIP)
         else:
-            self.showStatus("Execute the task; this window will remain open")
+            self.showStatus("Execute the task; this window will remain open",
+                            cat=TIP)
 
 
     # Process invalid input values and invoke a query dialog
@@ -1545,16 +1545,21 @@ class EditParDialog(object):
             self.top.after(200, self._pushMessages)
 
 
-    def showStatus(self, msg, keep=0):
+    def showStatus(self, msg, keep=0, cat=None):
         """ Show the given status string, but not until any given delay from
             the previous message has expired. keep is a time (secs) to force
-            the message to remain without being overwritten or cleared. """
+            the message to remain without being overwritten or cleared. cat
+            is a string category used only in the historical log. """
         # prep it, space-wise
         msg = msg.strip()
         if len(msg) > 0:
+            # right here is the ideal place to collect a history of messages
+            forhist = msg
+            if cat: forhist = '['+cat+'] '+msg
+            forhist = time.strftime("%a %T")+': '+forhist
+#           print forhist # DBG: debug line
+            # now set the spacing
             msg = '  '+msg
-            # right here would be the place to collect a history of msgs...
-#           print(msg) # DBG: debug line
 
         # see if we can show it
         now = time.time()
@@ -1564,7 +1569,7 @@ class EditParDialog(object):
             if len(msg) < 1 and len(self._statusMsgsToShow) > 0:
                 msg, keep = self._statusMsgsToShow[0] # overwrite both args
                 del self._statusMsgsToShow[0]
-            # print the status out
+            # now actuall print the status out to the status widget
             self.top.status.config(text = msg)
             # reset our delay flag
             self._leaveStatusMsgUntil = 0
