@@ -76,6 +76,7 @@ class EditParDialog(object):
         self.paramList = self._taskParsObj.getParList(docopy=1)
         self._rcDir = resourceDir
         self._leaveStatusMsgUntil = 0
+        self._msgHistory = [] # all msgs, of all kinds, since we opened
         self._statusMsgsToShow = [] # keep a *small* number of late msgs
         # setting _tmwm=1 is the slowest motion, 7 seems OK, 10 maybe too fast
         self._tmwm = int(os.getenv('TEAL_MOUSE_WHEEL_MULTIPLIER', 7))
@@ -136,8 +137,9 @@ class EditParDialog(object):
             self.iconLabel = "EPAR Parent"
 
         # help windows do not exist yet
-        self.irafHelpWin = None
         self.eparHelpWin = None
+        self.irafHelpWin = None
+        self.logHistWin = None
 
         # no last focus widget
         self.lastFocusWidget = None
@@ -790,6 +792,9 @@ class EditParDialog(object):
                                 command=self.showTaskHelp)
         button.menu.add_command(label=self._appName+" Help",
                                 command=self.eparHelp)
+        button.menu.add_separator()
+        button.menu.add_command(label='Show '+self._appName+' Log',
+                                command=self.showLogHist)
         button["menu"] = button.menu
         return button
 
@@ -879,15 +884,10 @@ class EditParDialog(object):
         self._showHelpInBrowser = bool(self._helpChoice.get() == "BROWSER")
 
 
-    def showTaskHelp(self, tag=None, event=None):
-        if self._showHelpInBrowser or self._knowTaskHelpIsHtml:
-            self.htmlHelp(istask=True, tag=tag)
-        else:
-            self.help()
-
-
-    def showParamHelp(self, parName):
-        self.showTaskHelp(tag=parName)
+    def eparHelp(self, event=None):     self._showAnyHelp('epar')
+    def showTaskHelp(self, event=None): self._showAnyHelp('task')
+    def showParamHelp(self, parName):   self._showAnyHelp('task', tag=parName)
+    def showLogHist(self, event=None):  self._showAnyHelp('log')
 
 
     #
@@ -1241,38 +1241,58 @@ class EditParDialog(object):
             irafutils.launchBrowser("file://"+fname, subj=title)
 
 
-    def help(self, event=None):
-        """ Invoke task help and put the page in a window. """
+    def _showAnyHelp(self, kind, tag=None):
+        """ Invoke task/epar/etc. help and put the page in a window.
+        This same logic is used for GUI help, task help, log msgs, etc. """
+
+        # sanity check
+        assert kind in ('epar', 'task', 'log'), 'Unknown help kind: '+str(kind)
+
+        #-----------------------------------------
+        # See if they'd like to view in a browser
+        #-----------------------------------------
+        if self._showHelpInBrowser or (kind == 'task' and
+                                       self._knowTaskHelpIsHtml):
+            if kind == 'epar':
+                self.htmlHelp(helpString=self._appHelpString,
+                              title='Parameter Editor Help')
+            if kind == 'task':
+                self.htmlHelp(istask=True, tag=tag)
+            if kind == 'log':
+                self.htmlHelp(helpString='\n'.join(self._msgHistory),
+                              title=self._appName+' Event Log')
+            return
+
+        #-----------------------------------------
+        # Now try to pop up the regular Tk window
+        #-----------------------------------------
+        wins = {'epar':self.eparHelpWin,
+                'task':self.irafHelpWin,
+                'log': self.logHistWin, }
+        window = wins[kind]
         try:
-            if self.irafHelpWin.state() != NORMAL:
-                self.irafHelpWin.deiconify()
-            self.irafHelpWin.tkraise()
+            if window.state() != NORMAL:
+                window.deiconify()
+            window.tkraise()
             return
         except (AttributeError, TclError):
             pass
-        # Acquire the task help as a string
-        # Need to include the package name for the task to
-        # avoid name conflicts with tasks from other packages. WJH
-        helpString = self.getHelpString(self.pkgName+'.'+self.taskName)
-        self.irafHelpWin = self.makeHelpWin(helpString)
 
-
-    def eparHelp(self, event=None):
-        """ Invoke help and put the epar help page in a window. """
-        # Note this is the same basic logic as in self.help (consolidate?)
-        if self._showHelpInBrowser:
-            self.htmlHelp(helpString=self._appHelpString,
-                          title='Parameter Editor Help')
-        else:
-            try:
-                if self.eparHelpWin.state() != NORMAL:
-                    self.eparHelpWin.deiconify()
-                self.eparHelpWin.tkraise()
-                return
-            except (AttributeError, TclError):
-                pass
+        #---------------------------------------------------------
+        # That didn't succeed (window is still None), so build it
+        #---------------------------------------------------------
+        if kind == 'epar':
             self.eparHelpWin = self.makeHelpWin(self._appHelpString,
                                                 title='Parameter Editor Help')
+        if kind == 'task':
+            # Acquire the task help as a string
+            # Need to include the package name for the task to
+            # avoid name conflicts with tasks from other packages. WJH
+            self.irafHelpWin = self.makeHelpWin(self.getHelpString(
+                                                self.pkgName+'.'+self.taskName))
+        if kind == 'log':
+            self.logHistWin = self.makeHelpWin('\n'.join(self._msgHistory),
+                                               title=self._appName+' Event Log')
 
 
     def canceled(self):
@@ -1558,6 +1578,7 @@ class EditParDialog(object):
             if cat: forhist = '['+cat+'] '+msg
             forhist = time.strftime("%a %T")+': '+forhist
 #           print forhist # DBG: debug line
+            self._msgHistory.append(forhist)
             # now set the spacing
             msg = '  '+msg
 

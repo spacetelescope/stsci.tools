@@ -134,6 +134,10 @@ Help menu:
              be displayed in a web browser by modifying the Options.
     TEAL Help
              Display this help.
+    Show Log
+             Display the historical log of all the status messages that so
+             far have been displayed in the status area at the very bottom
+             of the user interface.
 
 
 Toolbar Buttons
