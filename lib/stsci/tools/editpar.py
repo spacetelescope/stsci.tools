@@ -26,6 +26,7 @@ VALUEWIDTH  = 21
 PROMPTWIDTH = 55
 DFT_OPT_FILE = "epar.optionDB"
 TIP = "rollover"
+DBG = "debug"
 
 # The following action types are used within the GUI code.  They define what
 # kind of GUI action actually caused a parameter's value to be adjusted.
@@ -62,7 +63,7 @@ class UnfoundParamError(Exception): pass
 class EditParDialog(object):
 
     def __init__(self, theTask, parent=None, isChild=0,
-                 title="PyTools Parameter Editor", childList=None,
+                 title="Parameter Editor", childList=None,
                  resourceDir='.'):
 
         # Call our (or a subclass's) _setTaskParsObj() method
@@ -343,6 +344,8 @@ class EditParDialog(object):
         width = self.top.winfo_width()
         height = self.top.winfo_height() + height - viewHeight
         self.top.maxsize(width=width, height=height)
+
+        self.debug('showing '+self._appName+' main window')
 
         # run the mainloop
         if not self.isChild:
@@ -1060,6 +1063,7 @@ class EditParDialog(object):
         changes here must be coordinated with the corresponding tpar save_as
         function. """
 
+        self.debug('Clicked Save as...')
         # On Linux Pers..Dlg causes the cwd to change, so get a copy of current
         curdir = os.getcwd()
 
@@ -1116,6 +1120,7 @@ class EditParDialog(object):
     # EXECUTE: save the parameter settings and run the task
     def execute(self, event=None):
 
+        self.debug('Clicked Execute')
         # first save the child parameters, aborting save if
         # invalid entries were encountered
         if self.checkSetSaveChildren():
@@ -1201,6 +1206,7 @@ class EditParDialog(object):
     # back to the system default
     def unlearn(self, event=None):
 
+        self.debug('Clicked Unlearn')
         # Reset the values of the parameters
         self.unlearnAllEntries(self.top.f.canvas.entries)
         self.freshenFocus()
@@ -1224,7 +1230,7 @@ class EditParDialog(object):
             url = helpString
             if tag and url.find('#') < 0:
                 url += '#'+tag
-#           print('LAUNCHING:', url) # DBG
+#           print('LAUNCHING: '+url) # DBG
             irafutils.launchBrowser(url, subj=title)
         else:
             # Write it to a temp HTML file to display
@@ -1512,6 +1518,7 @@ class EditParDialog(object):
 
         # SAVE: Save results to the given file
         if doSave:
+            self.debug('Saving...')
             out = self._doActualSave(filename, comment, set_ro=set_ro)
             if len(out):
                 self.showStatus(out, keep=2) # inform user on saves
@@ -1565,6 +1572,11 @@ class EditParDialog(object):
             self.top.after(200, self._pushMessages)
 
 
+    def debug(self, msg):
+        """ Convenience function.  Use showStatus without puting into GUI. """
+        self.showStatus(msg, cat=DBG)
+
+
     def showStatus(self, msg, keep=0, cat=None):
         """ Show the given status string, but not until any given delay from
             the previous message has expired. keep is a time (secs) to force
@@ -1577,10 +1589,13 @@ class EditParDialog(object):
             forhist = msg
             if cat: forhist = '['+cat+'] '+msg
             forhist = time.strftime("%a %T")+': '+forhist
-#           print forhist # DBG: debug line
             self._msgHistory.append(forhist)
             # now set the spacing
             msg = '  '+msg
+
+        # stop here if it is a category not shown in the GUI
+        if cat == 'debug':
+            return
 
         # see if we can show it
         now = time.time()

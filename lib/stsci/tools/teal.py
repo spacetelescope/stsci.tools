@@ -452,6 +452,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
     def _doActualSave(self, fname, comment, set_ro=False):
         """ Override this so we can handle case of file not writable, as
             well as to make our _lastSavedState copy. """
+        self.debug('Saving, file name given: '+str(fname))
         try:
             rv=self._taskParsObj.saveParList(filename=fname,comment=comment)
         except IOError:
@@ -649,6 +650,9 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # Create the ConfigObjPars obj
         self._taskParsObj = cfgpars.getObjectFromTaskArg(theTask,
                                                          strict=self._strict)
+        # Tell it that we can be used for catching debug lines
+        self._taskParsObj.setDebugLogger(self)
+
         # Immediately make a copy of it's un-tampered internal dict.
         # The dict() method returns a deep-copy dict of the keyvals.
         self._lastSavedState = self._taskParsObj.dict()
@@ -743,6 +747,8 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             fd.DialogCleanup()
             if fname == None: return # canceled
 
+        self.debug('Loading from: '+fname)
+
         # load it into a tmp object (use associatedPkg if we have one)
         try:
             tmpObj = cfgpars.ConfigObjPars(fname, associatedPkg=\
@@ -788,6 +794,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
 
     def unlearn(self, event=None):
         """ Override this so that we can set to default values our way. """
+        self.debug('Clicked defaults')
         self._setToDefaults()
         self.freshenFocus()
 

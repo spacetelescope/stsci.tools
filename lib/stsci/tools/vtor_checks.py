@@ -138,4 +138,5 @@ FUNC_DICT = {'boolean_kw':         boolean_check_kw,
              'integer_or_none_kw': integer_or_none_check_kw,
              'float_kw':           float_check_kw,
              'float_or_none_kw':   float_or_none_check_kw,
-             'string_kw':          string_check_kw }
+             'string_kw':          string_check_kw,
+             'action_kw':          string_check_kw }

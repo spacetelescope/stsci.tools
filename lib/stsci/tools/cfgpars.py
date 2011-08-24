@@ -14,7 +14,8 @@ import basicpar, eparoption, irafutils, taskpars, vtor_checks
 
 # Globals and useful functions
 
-APP_NAME = "TEAL"
+APP_NAME = 'TEAL'
+TASK_NAME_KEY = '_task_name_'
 
 class DuplicateKeyError(Exception):
     pass
@@ -141,10 +142,10 @@ def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
         # A .cfg file gets checked for _task_name_ = val, but a .cfgspc file
         # will have a string check function signature as the val.
         if ext == '.cfg':
-           itsTask = getEmbeddedKeyVal(f, '_task_name_', '')
+           itsTask = getEmbeddedKeyVal(f, TASK_NAME_KEY, '')
         else: # .cfgspc
-           sigStr  = getEmbeddedKeyVal(f, '_task_name_', '')
-           # the .cfgspc file MUST have an entry for _task_name_ w/ a default
+           sigStr  = getEmbeddedKeyVal(f, TASK_NAME_KEY, '')
+           # the .cfgspc file MUST have an entry for TASK_NAME_KEY w/ a default
            itsTask = vtor_checks.sigStrToKwArgsDict(sigStr)['default']
         if itsTask == taskName:
             # We've found the correct file in an installation area.  Return
@@ -161,7 +162,7 @@ def findAllCfgTasksUnderDir(aDir):
     """
     retval = {}
     for f in irafutils.rglob(aDir, '*.cfg'):
-        retval[f] = getEmbeddedKeyVal(f, '_task_name_', '')
+        retval[f] = getEmbeddedKeyVal(f, TASK_NAME_KEY, '')
     return retval
 
 
@@ -179,7 +180,7 @@ def getCfgFilesInDirForTask(aDir, aTask, recurse=False):
         flist = glob.glob(aDir+os.sep+'*.cfg')
     if aTask:
         return [f for f in flist if \
-                getEmbeddedKeyVal(f, '_task_name_', '') == aTask]
+                getEmbeddedKeyVal(f, TASK_NAME_KEY, '') == aTask]
     else:
         return flist
 
@@ -191,7 +192,7 @@ def getParsObjForPyPkg(pkgName, strict):
     thePkg, theFile = findCfgFileForPkg(pkgName, '.cfg')
     # See if the user has any of their own local .cfg files for this task
     noLocals = True
-    tname = getEmbeddedKeyVal(theFile, '_task_name_')
+    tname = getEmbeddedKeyVal(theFile, TASK_NAME_KEY)
     flist = getCfgFilesInDirForTask(getAppDir(), tname)
     if len(flist) > 0:
         noLocals = False
@@ -217,7 +218,7 @@ def getUsrCfgFilesForPyPkg(pkgName):
     # Get the python package and it's .cfg file
     thePkg, theFile = findCfgFileForPkg(pkgName, '.cfg')
     # See if the user has any of their own local .cfg files for this task
-    tname = getEmbeddedKeyVal(theFile, '_task_name_')
+    tname = getEmbeddedKeyVal(theFile, TASK_NAME_KEY)
     flist = getCfgFilesInDirForTask(getAppDir(), tname)
     return flist
 
@@ -283,6 +284,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         self._rcDir = getAppDir()
         self._allTriggers = None # all known triggers in this object
         self._allDepdcs = None   # all known dependencies in this object
+        self._neverWrite = []    # all keys which are NOT written out to .cfg
+        self._debugLogger = None
         self.__assocPkg = associatedPkg
 
         # Set up ConfigObj stuff
@@ -295,13 +298,13 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             # finding and reading the file.
             possible = os.path.splitext(os.path.basename(cfgFileName))[0]
             if os.path.isfile(cfgFileName):
-                self.__taskName = getEmbeddedKeyVal(cfgFileName, '_task_name_',
+                self.__taskName = getEmbeddedKeyVal(cfgFileName, TASK_NAME_KEY,
                                                     possible)
             else:
                 self.__taskName = possible
         else:
             # this is the real deal, expect a real file name
-            self.__taskName = getEmbeddedKeyVal(cfgFileName, '_task_name_')
+            self.__taskName = getEmbeddedKeyVal(cfgFileName, TASK_NAME_KEY)
             if forceReadOnly:
                 checkSetReadOnly(cfgFileName)
 
@@ -314,7 +317,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             cfgSpecPath = os.path.realpath(cfgFileName)
             setAllToDefaults = True
             cfgFileName = ''
-            sigStr  = getEmbeddedKeyVal(cfgSpecPath, '_task_name_', '')
+            sigStr  = getEmbeddedKeyVal(cfgSpecPath, TASK_NAME_KEY, '')
             self.__taskName = vtor_checks.sigStrToKwArgsDict(sigStr)['default']
         else:
             cfgSpecPath = self._findAssociatedConfigSpecFile(cfgFileName)
@@ -367,7 +370,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             flatStr = ''
             if ans == False:
                 flatStr = "All values are invalid!"
-            if ans != False:
+            if ans != True and ans != False:
                 flatStr = flattened2str(configobj.flatten_errors(self, ans))
             if missing:
                 flatStr += "\n\n"+missing
@@ -399,6 +402,14 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             if hasattr(self.__assocPkg, 'getHelpAsString'):
                 self._helpFunc = self.__assocPkg.getHelpAsString
 
+
+    def setDebugLogger(self, obj):
+        self._debugLogger = obj
+
+    def debug(self, msg):
+        if self._debugLogger:
+            self._debugLogger.debug(msg)
+        # othrwise this info is dropped/ignored
 
     def syncParamList(self, firstTime):
         """ Set or reset the internal __paramList from the dict's contents. """
@@ -504,10 +515,24 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         numpars = len(self.__paramList)
         if self._forUseWithEpar: numpars -= 1
         if not self.final_comment: self.final_comment = [''] # force \n at EOF
-        self.write(fh) # delegate to ConfigObj
+        # Empty the ConfigObj version of section.defaults since that is based
+        # on an assumption incorrect for us, and override with our own list.
+        # THIS IS A BIT OF MONKEY-PATCHING!  WATCH FUTURE VERSION CHANGES!
+        # See Trac ticket #762.
+        while len(self.defaults):
+            self.defaults.pop(-1) # empty it, keeping ref
+        for key in self._neverWrite:
+            self.defaults.append(key)
+        # Note also that we are only overwriting the top/main section's
+        # "defaults" list, but EVERY [sub-]section has such an attribute...
+
+        # Now write to file, delegating work to ConfigObj (note that ConfigObj
+        # write() skips any items listed by name in the self.defaults list)
+        self.write(fh)
         fh.close()
         retval = str(numpars) + " parameters written to " + absFileName
         self.filename = absFileName # reset our own ConfigObj filename attr
+        self.debug('Keys not written: '+str(self.defaults))
         return retval
 
     def run(self, *args, **kw):
@@ -596,6 +621,10 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
             # Do we need to skip this - if not a par, like a rule or something
             toBeHidden = isHiddenName(key)
+            if toBeHidden:
+                if key not in self._neverWrite and key != TASK_NAME_KEY:
+                    self._neverWrite.append(key)
+                    # yes TASK_NAME_KEY is hidden, but it IS output to the .cfg
 
             # a section
             if isinstance(val, dict):
