@@ -1594,7 +1594,7 @@ class EditParDialog(object):
             msg = '  '+msg
 
         # stop here if it is a category not shown in the GUI
-        if cat == 'debug':
+        if cat == DBG:
             return
 
         # see if we can show it
