@@ -855,13 +855,12 @@ def getExtn(fimg,extn=None):
                 else:
                     i = 0
                     for hdu in fimg:
-                        isimg = isinstance(hdu,pyfits.ImageHDU)
+                        isimg = 'extname' in hdu.header
                         if isimg and extn.lower() == hdu.header['extname'].lower():
-                            print
                             _nextn = i
                             break
                         i += 1
-
+            
             if _nextn < len(fimg):
                 _extn = fimg[_nextn]
             else:
