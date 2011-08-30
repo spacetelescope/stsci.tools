@@ -36,7 +36,7 @@ def warning(msg, strict=0, exception=SyntaxError, level=0):
 # basic parameter factory
 # -----------------------------------------------------
 
-_string_types = [ 's', 'f', 'struct' ]
+_string_types = [ 's', 'f', 'struct', 'z' ]
 _real_types = [ 'r', 'd' ]
 
 def parFactory(fields, strict=0):

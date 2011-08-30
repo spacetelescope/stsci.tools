@@ -691,6 +691,45 @@ class StringEparOption(EparOption):
         self.entry.pack(side = LEFT, fill = X, expand = TRUE)
 #       self.extraBindingsForSelectableText() # do not use yet
 
+
+class ActionEparButton(EparOption):
+
+    def getButtonLabel(self):
+        return self.value
+
+    def makeInputWidget(self):
+#       self.choice.set(self.value)
+
+        self.browserEnabled = DISABLED
+        self.clearEnabled = DISABLED
+        self.unlearnEnabled = DISABLED
+        self.helpEnabled = NORMAL
+
+        # Need to adjust the value width so the button is aligned properly
+        if USING_X:
+            self.valueWidth = self.valueWidth - 3
+        else:
+            self.valueWidth = self.valueWidth - 6
+
+        self.isSelectable = False
+
+        # Generate the button
+        self.entry = Button(self.master_frame,
+                            width   = self.valueWidth,
+                            text    = self.getButtonLabel(),
+                            relief  = RAISED,
+                            background = self.bkgColor,
+                            highlightbackground = self.bkgColor,
+                            command = self.clicked)
+        self.entry.pack(side = LEFT)
+
+    def clicked(self):
+        print 'CLICKED ME!'
+
+    def unlearnValue(self):
+        pass
+
+
 # widget class that works for numbers and arrays of numbers
 
 class NumberEparOption(EparOption):
@@ -746,6 +785,7 @@ _eparOptionDict = { "b": BooleanEparOption,
                     "d": FloatEparOption,
                     "I": NumberEparOption,
                     "i": NumberEparOption,
+                    "z": ActionEparButton,
                     "ar": FloatEparOption,
                     "ai": NumberEparOption,
                   }

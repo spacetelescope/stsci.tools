@@ -615,6 +615,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             # _allDepdcs, are collected ONLY from the .cfgspc file
             self._allTriggers = {}
             self._allDepdcs = {}
+
         # start walking ("tell yer story walkin, buddy")
         for key in cfgObj:
             val = cfgObj[key]
@@ -671,6 +672,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 elif chk_func_name.find('float') >= 0:       dtype = 'R'
                 elif chk_func_name.find('integer_or_') >= 0: dtype = 'i'
                 elif chk_func_name.find('integer') >= 0:     dtype = 'I'
+                elif chk_func_name.find('action') >= 0:      dtype = 'z'
                 fields.append(dtype)
                 fields.append('a')
                 if type(val)==bool:
@@ -718,10 +720,12 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                                repr(irafutils.stripQuotes(dscrp1.strip()))+")"
                     dumpCfgspcTo.write(junk+'\n')
                 # Create the par
-                if not toBeHidden:
+                if not toBeHidden or chk_func_name.find('action')==0:
                     par = basicpar.parFactory(fields, True)
                     par.setScope(scopePrefix)
                     retval.append(par)
+                # else this is a hidden key
+
                 # The next few items require a fully scoped name
                 absKeyName = scopePrefix+'.'+key # assumed to be unique
                 # Check for pars marked to be positional args
