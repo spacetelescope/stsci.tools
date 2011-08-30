@@ -854,7 +854,11 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # Put the settings into a ConfigObj dict (don't use a config-spec)
         rcFile = self._rcDir+os.sep+APP_NAME.lower()+'.cfg'
         if os.path.exists(rcFile):
-            return configobj.ConfigObj(rcFile)
+            try:
+                return configobj.ConfigObj(rcFile)
+            except:
+                raise RuntimeError('Error parsing: '+os.path.realpath(rcFile))
+
             # tho, for simple types, unrepr=True eliminates need for .cfgspc
             # also, if we turn unrepr on, we don't need cfgGetBool
         else:
@@ -868,7 +872,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         rcFile = self._rcDir+os.sep+APP_NAME.lower()+'.cfg'
         #
         if os.path.exists(rcFile): os.remove(rcFile)
-        co = configobj.ConfigObj(rcFile)
+        co = configobj.ConfigObj(rcFile) # can skip try-block, won't read file
 
         co['showHelpInBrowser']    = self._showHelpInBrowser
         co['saveAndCloseOnExec']   = self._saveAndCloseOnExec

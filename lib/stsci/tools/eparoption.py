@@ -105,7 +105,7 @@ class EparOption(object):
             self.spacer.pack(side=LEFT, fill=X, expand=TRUE)
 
         # Generate the input label
-        if (self.paramInfo.get(field = "p_mode") == "h"):
+        if self.paramInfo.get(field = "p_mode") == "h":
             self.inputLabel = Label(self.master_frame, anchor = W,
                                     text  = "(" + self.name + ")",
                                     width = self.inputWidth, bg=self.bkgColor)

@@ -56,7 +56,14 @@ def getObjectFromTaskArg(theTask, strict):
 
     # For example, a .cfg file
     if os.path.isfile(str(theTask)):
-        return ConfigObjPars(theTask, strict=strict)
+        try:
+            return ConfigObjPars(theTask, strict=strict)
+        except KeyError:
+            # this might just be caused by a file sitting in the local cwd with
+            # the same exact name as the package we want to import, let's see
+            if theTask.find('.') > 0: # it has an extension, like '.cfg'
+                raise # this really was an error
+            # else we drop down to the next step - try it as a pkg name
 
     # Else it must be a Python package name to load
     return getParsObjForPyPkg(theTask, strict)
@@ -71,7 +78,12 @@ def getEmbeddedKeyVal(cfgFileName, kwdName, dflt=None):
     # Only use ConfigObj here as a tool to generate a dict from a file - do
     # not use the returned object as a ConfigObj per se.  As such, we can call
     # with "simple" format, ie. no cfgspc, no val'n, and "list_values"=False.
-    junkObj = configobj.ConfigObj(cfgFileName, list_values=False)
+    try:
+        junkObj = configobj.ConfigObj(cfgFileName, list_values=False)
+    except:
+        raise KeyError('Unfound key "'+kwdName+'" while parsing: '+ \
+                       os.path.realpath(cfgFileName))
+
     if kwdName in junkObj:
         retval = junkObj[kwdName]
         del junkObj
@@ -81,7 +93,8 @@ def getEmbeddedKeyVal(cfgFileName, kwdName, dflt=None):
         del junkObj
         return dflt
     else:
-        raise KeyError('Unfound item: "'+kwdName+'" in: '+cfgFileName)
+        raise KeyError('Unfound key "'+kwdName+'" while parsing: '+ \
+                       os.path.realpath(cfgFileName))
 
 
 def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
