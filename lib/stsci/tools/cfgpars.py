@@ -37,14 +37,19 @@ def getAppDir():
     return theDir
 
 
-def getObjectFromTaskArg(theTask, strict):
+def getObjectFromTaskArg(theTask, strict, setAllToDefaults):
     """ Take the arg (usually called theTask), which can be either a subclass
     of ConfigObjPars, or a string package name, or a .cfg filename - no matter
-    what it is - take it and return a ConfigObjPars object.  The "strict"
-    arg is passed to the ConfigObjPars() ctor. """
+    what it is - take it and return a ConfigObjPars object.
+    strict - bool - warning severity, passed to the ConfigObjPars() ctor
+    setAllToDefaults - bool - if theTask is a pkg name, force all to defaults
+    """
 
     # Already in the form we need (instance of us or of subclass)
     if isinstance(theTask, ConfigObjPars):
+        if setAllToDefaults:
+            raise RuntimeError('Called getObjectFromTaskArg with existing'+\
+                  ' object AND setAllToDefaults - is unexpected use case.')
         # If it is an existing object, make sure it's internal param list is
         # up to date with it's ConfigObj dict, since the user may have manually
         # edited the dict before calling us.
@@ -57,7 +62,8 @@ def getObjectFromTaskArg(theTask, strict):
     # For example, a .cfg file
     if os.path.isfile(str(theTask)):
         try:
-            return ConfigObjPars(theTask, strict=strict)
+            return ConfigObjPars(theTask, strict=strict,
+                                 setAllToDefaults=setAllToDefaults)
         except KeyError:
             # this might just be caused by a file sitting in the local cwd with
             # the same exact name as the package we want to import, let's see
@@ -66,7 +72,11 @@ def getObjectFromTaskArg(theTask, strict):
             # else we drop down to the next step - try it as a pkg name
 
     # Else it must be a Python package name to load
-    return getParsObjForPyPkg(theTask, strict)
+    if isinstance(theTask, str) and setAllToDefaults:
+        # NOTE how we pass the task name string in setAllToDefaults
+        return ConfigObjPars('', setAllToDefaults=theTask, strict=strict)
+    else:
+        return getParsObjForPyPkg(theTask, strict)
 
 
 def getEmbeddedKeyVal(cfgFileName, kwdName, dflt=None):
@@ -292,6 +302,14 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     def __init__(self, cfgFileName, forUseWithEpar=True,
                  setAllToDefaults=False, strict=True,
                  associatedPkg=None, forceReadOnly=False):
+        """
+        cfgFileName - string path/name of .cfg file
+        forUseWithEpar - bool - will this be used in EPAR?
+        setAllToDefaults - <True, False, or string> string is pkg name to import
+        strict - bool - level of error/warning severity
+        associatedPkg - loaded package object
+        forceReadOnly - bool - make the .cfg file read-only
+        """
 
         self._forUseWithEpar = forUseWithEpar
         self._rcDir = getAppDir()
@@ -309,12 +327,20 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             # they may not have given us a real file name here since they
             # just want defaults (in .cfgspc) so don't be too picky about
             # finding and reading the file.
-            possible = os.path.splitext(os.path.basename(cfgFileName))[0]
-            if os.path.isfile(cfgFileName):
-                self.__taskName = getEmbeddedKeyVal(cfgFileName, TASK_NAME_KEY,
-                                                    possible)
+            if isinstance(setAllToDefaults, str):
+                # here they have very clearly said to load only the defaults
+                # using the given name as the package name - below we will
+                # have it imported in _findAssociatedConfigSpecFile()
+                self.__taskName = setAllToDefaults
+                setAllToDefaults = True
+                cfgFileName = '' # don't try to use a .cfg file, don't need one
             else:
-                self.__taskName = possible
+                possible = os.path.splitext(os.path.basename(cfgFileName))[0]
+                if os.path.isfile(cfgFileName):
+                    self.__taskName = getEmbeddedKeyVal(cfgFileName,
+                                      TASK_NAME_KEY, possible)
+                else:
+                    self.__taskName = possible
         else:
             # this is the real deal, expect a real file name
             self.__taskName = getEmbeddedKeyVal(cfgFileName, TASK_NAME_KEY)

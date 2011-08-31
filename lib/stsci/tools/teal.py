@@ -157,13 +157,13 @@ the "Execute" button.
 
 # Starts a GUI session, or simply loads a file
 def teal(theTask, parent=None, loadOnly=False, returnDict=True,
-         canExecute=True, strict=False, errorsToTerm=False):
+         canExecute=True, strict=False, errorsToTerm=False, defaults=False):
 #        overrides=None):
     """ Start the GUI session, or simply load a task's ConfigObj. """
     if loadOnly:
         obj = None
         try:
-            obj = cfgpars.getObjectFromTaskArg(theTask, strict=strict)
+            obj = cfgpars.getObjectFromTaskArg(theTask, strict, defaults)
 #           obj.strictUpdate(overrides) # ! would need to re-verify after this !
         except RuntimeError, re:
             # Since we are loadOnly, don't pop up the GUI for this
@@ -175,6 +175,10 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
     else:
         dlg = None
         try:
+            # if setting to all defaults, go ahead and load it here, pre-GUI
+            if defaults:
+                theTask = cfgpars.getObjectFromTaskArg(theTask, strict, True)
+            # now create/run the dialog
             dlg = ConfigObjEparDialog(theTask, parent=parent,
                                       returnDict=returnDict,
                                       strict=strict,
@@ -202,11 +206,12 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
             return dlg.getTaskParsObj()
 
 
-def load(theTask, canExecute=True, strict=True):
+def load(theTask, canExecute=True, strict=True, defaults=False):
     """ Shortcut to load TEAL .cfg files for non-GUI access where
     loadOnly=True. """
     return teal(theTask, parent=None, loadOnly=True, returnDict=True,
-                canExecute=canExecute, strict=strict, errorsToTerm=True)
+                canExecute=canExecute, strict=strict, errorsToTerm=True,
+                defaults=defaults)
 
 
 def unlearn(taskPkgName, deleteAll=False):
@@ -649,7 +654,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             a .cfg file name or a ConfigObjPars object. """
         # Create the ConfigObjPars obj
         self._taskParsObj = cfgpars.getObjectFromTaskArg(theTask,
-                                                         strict=self._strict)
+                                    self._strict, False)
         # Tell it that we can be used for catching debug lines
         self._taskParsObj.setDebugLogger(self)
 
