@@ -333,7 +333,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 # have it imported in _findAssociatedConfigSpecFile()
                 self.__taskName = setAllToDefaults
                 setAllToDefaults = True
-                cfgFileName = '' # don't try to use a .cfg file, don't need one
+                cfgFileName = '' # ignore any given .cfg file, don't need one
             else:
                 possible = os.path.splitext(os.path.basename(cfgFileName))[0]
                 if os.path.isfile(cfgFileName):
@@ -633,7 +633,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # file in that directory
         x, theFile = findCfgFileForPkg(self.__taskName, '.cfgspc',
                                        taskName = self.__taskName)
-        return theFile
+        if os.path.exists(theFile):
+            return theFile
 
         # unfound
         raise NoCfgFileError('Unfound config-spec file for task: "'+ \

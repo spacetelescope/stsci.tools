@@ -185,9 +185,7 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
                                       canExecute=canExecute)
 #                                     overrides=overrides)
         except cfgpars.NoCfgFileError, ncf:
-            if strict:
-                raise
-            elif errorsToTerm:
+            if errorsToTerm:
                 print(str(ncf).replace('\n\n','\n'))
             else:
                 popUpErr(parent=parent,message=str(ncf),title="Unfound Task")
@@ -836,7 +834,8 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             tmpObj = cfgpars.ConfigObjPars(self._taskParsObj.filename,
                                            associatedPkg=\
                                            self._taskParsObj.getAssocPkg(),
-                                           setAllToDefaults=True, strict=False)
+                                           setAllToDefaults=self.taskName,
+                                           strict=False)
         except Exception, ex:
             msg = "Error Determining Defaults"
             tkMessageBox.showerror(message=msg+'\n\n'+str(ex),
