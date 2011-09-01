@@ -91,8 +91,12 @@ def getEmbeddedKeyVal(cfgFileName, kwdName, dflt=None):
     try:
         junkObj = configobj.ConfigObj(cfgFileName, list_values=False)
     except:
-        raise KeyError('Unfound key "'+kwdName+'" while parsing: '+ \
-                       os.path.realpath(cfgFileName))
+        if kwdName == TASK_NAME_KEY:
+            raise KeyError('Can not parse as a parameter config file: '+ \
+                           '\n\t'+os.path.realpath(cfgFileName))
+        else:
+            raise KeyError('Unfound key "'+kwdName+'" while parsing: '+ \
+                           '\n\t'+os.path.realpath(cfgFileName))
 
     if kwdName in junkObj:
         retval = junkObj[kwdName]
@@ -103,8 +107,12 @@ def getEmbeddedKeyVal(cfgFileName, kwdName, dflt=None):
         del junkObj
         return dflt
     else:
-        raise KeyError('Unfound key "'+kwdName+'" while parsing: '+ \
-                       os.path.realpath(cfgFileName))
+        if kwdName == TASK_NAME_KEY:
+            raise KeyError('Can not parse as a parameter config file: '+ \
+                           '\n\t'+os.path.realpath(cfgFileName))
+        else:
+            raise KeyError('Unfound key "'+kwdName+'" while parsing: '+ \
+                           '\n\t'+os.path.realpath(cfgFileName))
 
 
 def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):

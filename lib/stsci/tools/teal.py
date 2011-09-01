@@ -170,7 +170,7 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
             if strict:
                 raise
             else:
-                print(str(re).replace('\n\n','\n'))
+                print(re.message.replace('\n\n','\n'))
         return obj
     else:
         dlg = None
@@ -191,9 +191,10 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
                 popUpErr(parent=parent,message=str(ncf),title="Unfound Task")
         except Exception, re: # catches RuntimeError and KeyError and ...
             if errorsToTerm:
-                print(str(re).replace('\n\n','\n'))
+                print(re.message.replace('\n\n','\n'))
             else:
-                popUpErr(parent=parent,message=str(re),title="Bad Parameters")
+                popUpErr(parent=parent, message=re.message,
+                         title="Bad Parameters")
 
         # Return, depending on the mode in which we are operating
         if not returnDict:
@@ -758,7 +759,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                                            self._taskParsObj.getAssocPkg(),
                                            strict=self._strict)
         except Exception, ex:
-            tkMessageBox.showerror(message=str(ex),
+            tkMessageBox.showerror(message=ex.message,
                 title="Error in "+os.path.basename(fname))
             return
 
@@ -838,7 +839,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                                            strict=False)
         except Exception, ex:
             msg = "Error Determining Defaults"
-            tkMessageBox.showerror(message=msg+'\n\n'+str(ex),
+            tkMessageBox.showerror(message=msg+'\n\n'+ex.message,
                                    title="Error Determining Defaults")
             return
 
