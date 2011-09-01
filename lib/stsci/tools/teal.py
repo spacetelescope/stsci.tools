@@ -165,7 +165,7 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
         try:
             obj = cfgpars.getObjectFromTaskArg(theTask, strict, defaults)
 #           obj.strictUpdate(overrides) # ! would need to re-verify after this !
-        except RuntimeError, re:
+        except Exception, re: # catches RuntimeError and KeyError and ...
             # Since we are loadOnly, don't pop up the GUI for this
             if strict:
                 raise
@@ -189,7 +189,7 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
                 print(str(ncf).replace('\n\n','\n'))
             else:
                 popUpErr(parent=parent,message=str(ncf),title="Unfound Task")
-        except RuntimeError, re:
+        except Exception, re: # catches RuntimeError and KeyError and ...
             if errorsToTerm:
                 print(str(re).replace('\n\n','\n'))
             else:
