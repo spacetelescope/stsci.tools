@@ -529,6 +529,17 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             return None
 
 
+    def _nonStandardEparOptionFor(self, paramTypeStr):
+        """ Override to allow use of TealActionParButton.
+        Return None or a class which derives from EparOption. """
+
+        if paramTypeStr == 'z':
+            import teal_bttn
+            return teal_bttn.TealActionParButton
+        else:
+            return None
+
+
     def edited(self, scope, name, lastSavedVal, newVal, action):
         """ This is the callback function invoked when an item is edited.
             This is only called for those items which were previously

@@ -87,10 +87,9 @@ class EparOption(object):
         self.promptWidth  = fieldWidths.get('promptWidth')
 
         self.choice = self.choiceClass(self.master_frame)
-
-        self.name  = self.paramInfo.name
+        self.name = self.paramInfo.name
         self.value = self.paramInfo.get(field = "p_filename", native = 0,
-                     prompt = 0)
+                                        prompt = 0)
         self.previousValue = self.value
         self._editedCallbackObj = None
         self._helpCallbackObj = helpCallbackObj
@@ -100,18 +99,18 @@ class EparOption(object):
         # field sizes in other (unrelated and unindented) parameters...  Maybe
         # because it messes with the total width of the window...
         if 0 and indent:
-            self.spacer = Label(self.master_frame, anchor=W,
+            self.spacer = Label(self.master_frame, anchor=W, takefocus=0,
                                 text="", width=3, bg=self.bkgColor)
             self.spacer.pack(side=LEFT, fill=X, expand=TRUE)
 
         # Generate the input label
         if self.paramInfo.get(field = "p_mode") == "h":
             self.inputLabel = Label(self.master_frame, anchor = W,
-                                    text  = "(" + self.name + ")",
+                                    text  = "("+self.getShowName()+")",
                                     width = self.inputWidth, bg=self.bkgColor)
         else:
             self.inputLabel = Label(self.master_frame, anchor = W,
-                                    text  = self.name,
+                                    text  = self.getShowName(),
                                     width = self.inputWidth, bg=self.bkgColor)
         self.inputLabel.pack(side = LEFT, fill = X, expand = TRUE)
 
@@ -215,8 +214,12 @@ class EparOption(object):
             self.master.infoText.pack(side = TOP, anchor = W)
 
 
+    def getShowName(self):
+        """ Return the name to be shown in the GUI for this par/option. """
+        return self.name
+
     def extraBindingsForSelectableText(self):
-        ' Collect in one place the bindings needed for watchTextSelection()'
+        """ Collect in 1 place the bindings needed for watchTextSelection() """
         # See notes in watchTextSelection
         self.entry.bind('<FocusIn>', self.watchTextSelection, "+")
         self.entry.bind('<ButtonRelease-1>', self.watchTextSelection, "+")
@@ -465,7 +468,8 @@ class EnumEparOption(EparOption):
         if USING_X:
             self.valueWidth = self.valueWidth - 4
         else:
-            self.valueWidth = self.valueWidth - 9 # looks right on Aqua
+            pass
+#           self.valueWidth = self.valueWidth - 0 # looks right on Aqua
 
         # Generate the button
         self.entry = Menubutton(self.master_frame,
@@ -583,9 +587,9 @@ class BooleanEparOption(EparOption):
         # the adjoining labels are aligned properly
         self.valueWidth = self.valueWidth + 10
         if USING_X:
-            self.padWidth = (self.valueWidth // 2) + 5  # looks right
+            self.padWidth = (self.valueWidth // 2) + 5 # looks right
         else:
-            self.padWidth = (self.valueWidth // 2) - 2 # looks right
+            self.padWidth = 2 # looks right on Aqua
 
         # boolean parameters have 3 values: yes, no & undefined
         # Just display two choices (but variable may initially be
@@ -599,6 +603,10 @@ class BooleanEparOption(EparOption):
                            highlightthickness = 1,
                            bg=self.bkgColor,
                            highlightbackground=self.bkgColor)
+        if not USING_X:
+            spacerL= Label(self.entry, takefocus=0, text="", width=2,
+                           bg=self.bkgColor)
+            spacerL.pack(side=LEFT, fill=X, expand=TRUE)
         self.rbyes = Radiobutton(self.entry, text = "Yes",
                                  variable    = self.choice,
                                  value       = "yes",
@@ -607,7 +615,14 @@ class BooleanEparOption(EparOption):
                                  underline   = 0,
                                  bg = self.bkgColor,
                                  highlightbackground=self.bkgColor)
-        self.rbyes.pack(side = LEFT, ipadx = self.padWidth)
+        self.rbyes.pack(side=LEFT, ipadx=self.padWidth)
+        if not USING_X:
+            spacerM= Label(self.entry, takefocus=0, text="", width=3,
+                           bg=self.bkgColor)
+            spacerM.pack(side=LEFT, fill=X, expand=TRUE)
+            spacerR = Label(self.entry, takefocus=0, text="", width=2,
+                           bg=self.bkgColor)
+            spacerR.pack(side=RIGHT, fill=X, expand=TRUE)
         self.rbno  = Radiobutton(self.entry, text = "No",
                                  variable    = self.choice,
                                  value       = "no",
@@ -636,6 +651,7 @@ class BooleanEparOption(EparOption):
         else:
             self.rbno.bind('<Button-2>', self.popupChoices)
             self.rbyes.bind('<Button-2>', self.popupChoices)
+            spacerM.bind('<Button-2>', self.popupChoices)
 
         # Regular selection - allow immediate trigger/check
         self.rbyes.bind('<Button-1>', self.boolWidgetEditedYes)
@@ -709,7 +725,7 @@ class ActionEparButton(EparOption):
         if USING_X:
             self.valueWidth = self.valueWidth - 3
         else:
-            self.valueWidth = self.valueWidth - 6
+            self.valueWidth = self.valueWidth - 2
 
         self.isSelectable = False
 
@@ -724,7 +740,7 @@ class ActionEparButton(EparOption):
         self.entry.pack(side = LEFT)
 
     def clicked(self):
-        print 'CLICKED ME!'
+        raise RuntimeError('ActionEparButton.clicked must be implemented')
 
     def unlearnValue(self):
         pass
