@@ -258,7 +258,7 @@ def popUpErr(parent=None, message="", title="Error"):
 def execTriggerCode(SCOPE, NAME, VAL, PARENT, codeStr):
     """ .cfgspc embedded code execution is done here, in a relatively confined
         space.  The variables available to the code to be executed are:
-              SCOPE, NAME, VAL
+              SCOPE, NAME, VAL, PARENT
         The code string itself is expected to set a var named OUT
     """
     # This was all we needed in Python 2.x

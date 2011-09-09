@@ -66,6 +66,12 @@ class EditParDialog(object):
                  title="Parameter Editor", childList=None,
                  resourceDir='.'):
 
+        # Initialize status message stuff first thing
+        self._leaveStatusMsgUntil = 0
+        self._msgHistory = [] # all msgs, of all kinds, since we opened
+        self._statusMsgsToShow = [] # keep a *small* number of late msgs
+        self.debug('Starting up the GUI!')
+
         # Call our (or a subclass's) _setTaskParsObj() method
         self._setTaskParsObj(theTask)
 
@@ -76,9 +82,8 @@ class EditParDialog(object):
         self.pkgName = self._taskParsObj.getPkgname()
         self.paramList = self._taskParsObj.getParList(docopy=1)
         self._rcDir = resourceDir
-        self._leaveStatusMsgUntil = 0
-        self._msgHistory = [] # all msgs, of all kinds, since we opened
-        self._statusMsgsToShow = [] # keep a *small* number of late msgs
+        self.debug('TASK: '+self.taskName+', PKG: '+self.pkgName+ \
+                   ', RC: '+self._rcDir)
         # setting _tmwm=1 is the slowest motion, 7 seems OK, 10 maybe too fast
         self._tmwm = int(os.getenv('TEAL_MOUSE_WHEEL_MULTIPLIER', 7))
 

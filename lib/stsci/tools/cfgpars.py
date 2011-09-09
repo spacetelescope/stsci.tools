@@ -325,6 +325,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         self._allDepdcs = None   # all known dependencies in this object
         self._neverWrite = []    # all keys which are NOT written out to .cfg
         self._debugLogger = None
+        self._debugYetToPost = []
         self.__assocPkg = associatedPkg
 
         # Set up ConfigObj stuff
@@ -370,6 +371,10 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             cfgSpecPath = self._findAssociatedConfigSpecFile(cfgFileName)
         assert os.path.exists(cfgSpecPath), \
                "Matching configspec not found!  Expected: "+cfgSpecPath
+
+        self.debug('ConfigObjPars: .cfg='+str(cfgFileName)+ \
+                   ', .cfgspc='+str(cfgSpecPath)+ \
+                   ', defaults='+str(setAllToDefaults)+', strict='+str(strict))
 
         # Run the ConfigObj ctor.  The result of this (if !setAllToDefaults)
         # is the exact copy of the input file as a dict (ConfigObj).  If the
@@ -437,8 +442,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # get the initial param list out of the ConfigObj dict
         self.syncParamList(True)
 
-        if 'TEAL_DEBUG' in os.environ:
-            print(self.triggerLogicToStr())
+        # take note of all trigger logic
+        self.debug(self.triggerLogicToStr())
 
         # see if we are using a package with it's own run() function
         self._runFunc = None
@@ -451,12 +456,21 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
 
     def setDebugLogger(self, obj):
+        # set the object we can use to post debugging info
         self._debugLogger = obj
+        # now that we have one, post anything we have saved up (and clear list)
+        if obj and len(self._debugYetToPost) > 0:
+            for msg in self._debugYetToPost:
+                self._debugLogger.debug(msg)
+        self._debugYetToPost = []
 
     def debug(self, msg):
         if self._debugLogger:
             self._debugLogger.debug(msg)
-        # othrwise this info is dropped/ignored
+        else:
+            # else just hold onto it until we do have a logger -during the
+            # init phase we may not yet have a logger, yet have stuff to log
+            self._debugYetToPost.append(msg) # add to our little cache
 
     def syncParamList(self, firstTime):
         """ Set or reset the internal __paramList from the dict's contents. """
@@ -599,7 +613,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         """ Print all the trigger logic to a string and return it. """
         import json
         retval = "TRIGGERS:\n"+json.dumps(self._allTriggers, indent=3)
-        retval += "\n\nDEPENDENCIES:\n"+json.dumps(self._allDepdcs, indent=3)
+        retval += "\nDEPENDENCIES:\n"+json.dumps(self._allDepdcs, indent=3)
         retval += "\n"
         return retval
 
@@ -749,9 +763,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                                 # .cfgspc; ignore, it is caught/error later
                                 pass
                             else:
-                                print 'Description of "'+key+'" overridden; '+\
-                                      'from:\n\t'+repr(dscrp0)+\
-                                      ', to:\n\t'+repr(dscrp1)
+                                self.debug('Description of "'+key+ \
+                                    '" overridden, from:  '+repr(dscrp0)+\
+                                    '  to:  '+repr(dscrp1))
                     fields.append(dscrp)
                 else:
                     # set the field for the GUI
@@ -785,10 +799,12 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 # Check for triggers and/or dependencies
                 if initialPass:
                     # What triggers what? (thats why theres an 's' in the kwd)
+                    # try "trigger" (old)
                     if chk_args_dict.get('trigger'):
                         print "WARNING: outdated version of .cfgspc!! for "+\
                               self.__taskName+", 'trigger' unused for "+\
                               absKeyName
+                    # try "triggers"
                     trgs = chk_args_dict.get('triggers')
                     if trgs and len(trgs)>0:
                         # eg. _allTriggers['STEP2.xy'] == ('_rule1_','_rule3_')
@@ -799,6 +815,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                             self._allTriggers[absKeyName] = trgs
                         else:
                             self._allTriggers[absKeyName] = (trgs,)
+                    # try "executes" # !!!
+
                     # Dependencies? (besides these used here, may someday
                     # add: 'range_from', 'warn_if', etc.)
                     depName = None
