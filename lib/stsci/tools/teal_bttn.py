@@ -1,7 +1,7 @@
 """teal_bttn.py: for defining the action "parameter" button widget
    to be used in TEAL.
 
-$Id: teal_bttn.py 1 2011-08-30 03:19:02Z sontag $
+$Id$
 """
 from __future__ import division # confidence high
 
