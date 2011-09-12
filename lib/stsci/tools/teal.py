@@ -248,17 +248,17 @@ def popUpErr(parent=None, message="", title="Error"):
     tkMessageBox.showerror(message=message, title=title, parent=parent)
 
 # We'd love to somehow force the dialog to the front here in popUpErr (on OSX)
-# butt cannot since the Python process started from the Terminal is not an
+# but cannot since the Python process started from the Terminal is not an
 # Aqua app (unless it became so within PyRAF).  This thread
 #    http://objectmix.com/python/350288-tkinter-osx-lift.html
 # describes it well.
 
 
 
-def execTriggerCode(SCOPE, NAME, VAL, PARENT, codeStr):
+def execEmbCode(SCOPE, NAME, VAL, TEAL, codeStr):
     """ .cfgspc embedded code execution is done here, in a relatively confined
         space.  The variables available to the code to be executed are:
-              SCOPE, NAME, VAL, PARENT
+              SCOPE, NAME, VAL, PARENT, TEAL
         The code string itself is expected to set a var named OUT
     """
     # This was all we needed in Python 2.x
@@ -267,6 +267,9 @@ def execTriggerCode(SCOPE, NAME, VAL, PARENT, codeStr):
 #   return OUT
 
     # In Python 3 (& 2.x) be more explicit:  http://bugs.python.org/issue4831
+    PARENT = None
+    if TEAL:
+        PARENT = TEAL.top
     OUT = None
     ldict = locals() # will have OUT in it
     exec(codeStr, globals(), ldict)
@@ -619,7 +622,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                     self.showStatus("Evaluating "+triggerName+' ...') #dont keep
                     self.top.update_idletasks() #allow msg to draw prior to exec
                     # execute it and retrieve the outcome
-                    outval = execTriggerCode(scope, name, newVal, self.top, codeStr)
+                    outval = execEmbCode(scope, name, newVal, self, codeStr)
                     # Leave this debug line in until it annoys someone
                     msg = 'Value of "'+name+'" triggered "'+triggerName+'"'
                     stroutval = str(outval)

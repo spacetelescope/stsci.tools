@@ -65,7 +65,7 @@ class EparOption(object):
 
     def __init__(self, master, statusBar, paramInfo, defaultParamInfo,
                  doScroll, fieldWidths, defaultsVerb, bg,
-                 indent=False, helpCallbackObj=None):
+                 indent=False, helpCallbackObj=None, mainGuiObj=None):
 
         # Connect to the information/status Label
         self.status = statusBar
@@ -93,6 +93,7 @@ class EparOption(object):
         self.previousValue = self.value
         self._editedCallbackObj = None
         self._helpCallbackObj = helpCallbackObj
+        self._mainGuiObj = mainGuiObj
         self._lastWidgetEditedVal = None
 
         # DISABLE any indent for now - not sure why but this causes odd text
@@ -809,7 +810,7 @@ _eparOptionDict = { "b": BooleanEparOption,
 def eparOptionFactory(master, statusBar, param, defaultParam,
                       doScroll, fieldWidths,
                       plugIn=None, editedCallbackObj=None,
-                      helpCallbackObj=None,
+                      helpCallbackObj=None, mainGuiObj=None,
                       defaultsVerb="Default", bg=None, indent=False):
 
     """Return EparOption item of appropriate type for the parameter param"""
@@ -829,6 +830,7 @@ def eparOptionFactory(master, statusBar, param, defaultParam,
     # Create it
     eo = eparOption(master, statusBar, param, defaultParam, doScroll,
                     fieldWidths, defaultsVerb, bg,
-                    indent=indent, helpCallbackObj=helpCallbackObj)
+                    indent=indent, helpCallbackObj=helpCallbackObj,
+                    mainGuiObj=mainGuiObj)
     eo.setEditedCallbackObj(editedCallbackObj)
     return eo

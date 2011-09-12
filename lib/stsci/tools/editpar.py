@@ -577,7 +577,7 @@ class EditParDialog(object):
                                   self.paramList[i], self.defaultParamList[i],
                                   self.doScroll, self.fieldWidths,
                                   plugIn=eparOpt, editedCallbackObj=cbo,
-                                  helpCallbackObj=hcbo,
+                                  helpCallbackObj=hcbo, mainGuiObj=self,
                                   defaultsVerb=dfltsVerb, bg=self._entsColor,
                                   indent = scope not in (None, '', '.') )
 
