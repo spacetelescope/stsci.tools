@@ -6,7 +6,7 @@ $Id$
 from __future__ import division # confidence high
 
 import sys, traceback
-import eparoption
+import eparoption, vtor_checks
 
 class TealActionParButton(eparoption.ActionEparButton):
 
@@ -26,15 +26,28 @@ class TealActionParButton(eparoption.ActionEparButton):
     def clicked(self):
         """ Called when this button is clicked. Execute code from .cfgspc """
         try:
+            # start drilling down into the tpo to get the code
             tealGui = self._mainGuiObj
-            code = 'print "Need to get code from .cfgspc..."'
             tealGui.showStatus('Clicked "'+self.getButtonLabel()+'"', keep=1)
-            import teal
-            teal.execEmbCode(self.paramInfo.scope,
-                             self.paramInfo.name,
-                             self.getButtonLabel(),
-                             tealGui,
-                             code)
+            pscope = self.paramInfo.scope
+            pname = self.paramInfo.name
+            tpo = tealGui._taskParsObj
+            tup = tpo.getExecuteStrings(pscope, pname)
+            if not tup:
+                teal.popUpErr(tealGui.top, "No action to perform",
+                              "Action Button Error")
+                return
+            for exname in tup:
+                if '_RULES_' in tpo and exname in tpo['_RULES_'].configspec:
+                    ruleSig = tpo['_RULES_'].configspec[exname]
+                    chkArgsDict = vtor_checks.sigStrToKwArgsDict(ruleSig)
+                    code = chkArgsDict.get('code') # a string or None
+                    # now go ahead and execute it
+                    import teal
+                    teal.execEmbCode(pscope, pname, self.getButtonLabel(),
+                                     tealGui, code)
+            # done
+            tealGui.debug('Finished: "'+self.getButtonLabel()+'"')
         except Exception, ex:
             msg = 'Error executing: "'+self.getButtonLabel()+'"\n'+ex.message
             msgFull = msg+'\n'+''.join(traceback.format_exc())

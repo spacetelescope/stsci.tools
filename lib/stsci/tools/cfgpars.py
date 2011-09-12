@@ -323,6 +323,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         self._rcDir = getAppDir()
         self._allTriggers = None # all known triggers in this object
         self._allDepdcs = None   # all known dependencies in this object
+        self._allExecutes = None # all known codes-to-execute in this object
         self._neverWrite = []    # all keys which are NOT written out to .cfg
         self._debugLogger = None
         self._debugYetToPost = []
@@ -614,6 +615,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         import json
         retval = "TRIGGERS:\n"+json.dumps(self._allTriggers, indent=3)
         retval += "\nDEPENDENCIES:\n"+json.dumps(self._allDepdcs, indent=3)
+        retval += "\nTO EXECUTE:\n"+json.dumps(self._allExecutes, indent=3)
         retval += "\n"
         return retval
 
@@ -673,10 +675,12 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         retval = []
         if initialPass and len(scopePrefix) < 1:
             self._posArgs = [] # positional args [2-tuples]: (index,scopedName)
-            # FOR SECURITY: the following two chunks of data, _allTriggers and
-            # _allDepdcs, are collected ONLY from the .cfgspc file
+            # FOR SECURITY: the following 3 chunks of data,
+            #     _allTriggers, _allDepdcs, _allExecutes,
+            # are collected ONLY from the .cfgspc file
             self._allTriggers = {}
             self._allDepdcs = {}
+            self._allExecutes = {}
 
         # start walking ("tell yer story walkin, buddy")
         for key in cfgObj:
@@ -815,7 +819,17 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                             self._allTriggers[absKeyName] = trgs
                         else:
                             self._allTriggers[absKeyName] = (trgs,)
-                    # try "executes" # !!!
+                    # try "executes"
+                    excs = chk_args_dict.get('executes')
+                    if excs and len(excs)>0:
+                        # eg. _allExecutes['STEP2.xy'] == ('_rule1_','_rule3_')
+                        assert absKeyName not in self._allExecutes, \
+                            'More than 1 of these in .cfgspc?: '+absKeyName
+                        # we force this to always be a sequence
+                        if isinstance(excs, (list,tuple)):
+                            self._allExecutes[absKeyName] = excs
+                        else:
+                            self._allExecutes[absKeyName] = (excs,)
 
                     # Dependencies? (besides these used here, may someday
                     # add: 'range_from', 'warn_if', etc.)
@@ -878,6 +892,15 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # The data structure of _allDepdcs was chosen for how easily/quickly
         # this particular access can be made here.
         return self._allDepdcs.get(ruleName)
+
+
+    def getExecuteStrings(self, parScope, parName):
+        """ For a given item (scope + name), return all strings (in a tuple)
+        that it is meant to execute, if any exist.  Returns None is none. """
+        # The data structure of _allExecutes was chosen for how easily/quickly
+        # this particular access can be made here.
+        fullName = parScope+'.'+parName
+        return self._allExecutes.get(fullName) # returns None if unfound
 
 
     def getPosArgs(self):
