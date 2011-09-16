@@ -271,7 +271,8 @@ def checkSetReadOnly(fname, raiseOnErr = False):
 def flattenDictTree(aDict):
     """ Takes a dict of vals and dicts (so, a tree) as input, and returns
     a flat dict (only one level) as output.  All key-vals are moved to
-    the top level.  If there are name collisions, an error is raised. """
+    the top level.  Sub-section dict names (keys) are ignored/dropped.
+    If there are name collisions, an error is raised. """
     retval = {}
     for k in aDict:
         val = aDict[k]
@@ -297,11 +298,80 @@ def flattenDictTree(aDict):
     return retval
 
 
-def _find(theDict, scope, name):
-    """ Find the given par.  Return its value and its own (sub-)dict. """
+def countKey(theDict, name):
+    """ Return the number of times the given par exists in this dict-tree,
+    since the same key name may be used in differetn sections/sub-sections. """
+
+    retval = 0
+    for key in theDict:
+        val = theDict[key]
+        if isinstance(val, dict):
+            retval += countKey(val, name) # recurse
+        else:
+            if key == name:
+                retval += 1
+                # can't break, even tho we found a hit, other items on
+                # this level will not be named "name", but child dicts
+                # may have further counts
+    return retval
+
+
+def findFirstPar(theDict, name, _depth=0):
+    """ Find the given par.  Return tuple: (its own (sub-)dict, its value).
+    Returns the first match found, without checking whether the given key name
+    is unique or whether it is used in multiple sections. """
+
+    for key in theDict:
+        val = theDict[key]
+#       print _depth*'   ', key, str(val)[:40]
+        if isinstance(val, dict):
+            retval = findFirstPar(val, name, _depth=_depth+1) # recurse
+            if retval != None:
+                return retval
+            # else keep looking
+        else:
+            if key == name:
+                return theDict, theDict[name]
+            # else keep looking
+    # if we get here then we have searched this whole (sub)-section and its
+    # descendants, and found no matches.  only raise if we are at the top.
+    if _depth == 0:
+        raise KeyError(name)
+    else:
+        return None
+
+
+def findScopedPar(theDict, scope, name):
+    """ Find the given par.  Return tuple: (its own (sub-)dict, its value). """
+    # Do not search (like findFirstPar), but go right to the correct
+    # sub-section, and pick it up.  Assume it is there as stated.
     if len(scope):
         theDict = theDict[scope] # ! only goes one level deep - enhance !
     return theDict, theDict[name] # KeyError if unfound
+
+
+def setPar(theDict, name, value):
+    """ Sets a par's value without having to give its scope/section. """
+    section, previousVal = findFirstPar(theDict, name)
+    # "section" is the actual object, not a copy
+    section[name] = value
+
+
+def mergeConfigObj(configObj, inputDict):
+    """ Merge the inputDict values into an existing given configObj instance.
+    The inputDict is a "flat" dict - it has no sections/sub-sections.  The
+    configObj may have sub-sections nested to any depth.  This will raise a
+    DuplicateKeyError if one of the inputDict keys is used more than once in
+    configObj (e.g. within two different sub-sections). """
+    # Expanded upon Warren's version in astrodrizzle
+
+    # Verify that all inputDict keys in configObj are unique within configObj
+    for key in inputDict:
+        if countKey(configObj, key) > 1:
+            raise DuplicateKeyError(key)
+    # Now update configObj with each inputDict item
+    for key in inputDict:
+        setPar(configObj, key, inputDict[key])
 
 
 class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
@@ -530,7 +600,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
     def setParam(self, name, val, scope='', check=1, idxHint=None):
         """ Find the ConfigObj entry.  Update the __paramList. """
-        theDict, oldVal = _find(self, scope, name)
+        theDict, oldVal = findScopedPar(self, scope, name)
 
         # Set the value, even if invalid.  It needs to be set before
         # the validation step (next).
@@ -667,8 +737,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
     def _getParamsFromConfigDict(self, cfgObj, scopePrefix='',
                                  initialPass=False, dumpCfgspcTo=None):
-        """ Walk the ConfigObj dict pulling out IRAF-like parameters into a
-        list. Since this operates on a dict this can be called recursively.
+        """ Walk the given ConfigObj dict pulling out IRAF-like parameters into
+        a list. Since this operates on a dict this can be called recursively.
         This is also our chance to find and pull out triggers and such
         dependencies. """
         # init
@@ -912,7 +982,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # Build a return list
         retval = []
         for idx, scope, name in self._posArgs:
-            theDict, val = _find(self, scope, name)
+            theDict, val = findScopedPar(self, scope, name)
             retval.append(val)
         return retval
 
@@ -928,7 +998,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
         # First go through the dict removing all positional args
         for idx,scope,name in self._posArgs:
-            theDict, val = _find(dcopy, scope, name)
+            theDict, val = findScopedPar(dcopy, scope, name)
             # 'theDict' may be dcopy, or it may be a dict under it
             theDict.pop(name)
 
@@ -970,7 +1040,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
         # Set the value, even if invalid.  It needs to be set before
         # the validation step (next).
-        theDict, oldVal = _find(self, scope, name)
+        theDict, oldVal = findScopedPar(self, scope, name)
         if oldVal == val: return (True, None) # assume oldVal is valid
         theDict[name] = val
 
