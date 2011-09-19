@@ -954,7 +954,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             used = False
             # For each dep par, loop to find the widget for that scope.name
             for i in range(self.numParams):
-                scopedName = self.paramList[i].scope+'.'+self.paramList[i].name
+                scopedName = self.paramList[i].scope+'.'+self.paramList[i].name # diff from makeFullName!!
                 if absName == scopedName: # a match was found
                     depType = depParsDict[absName]
                     if depType == 'active_if':

@@ -78,6 +78,19 @@ def parFactory(fields, strict=0):
         raise SyntaxError("Cannot handle parameter type %s" % type)
 
 
+# --------------------------------------------------------
+# Publish the (simple) algorithm for combining scope+name
+# --------------------------------------------------------
+
+def makeFullName(parScope, parName):
+    """ Create the fully-qualified name (inclues scope if used) """
+    # Skip scope (and leading dot) if no scope, even in cases where scope
+    # IS used for other pars in the same task.
+    if parScope:
+        return parScope+'.'+parName
+    else:
+        return parName
+
 # -----------------------------------------------------
 # Set up minmatch dictionaries for parameter fields
 # -----------------------------------------------------
@@ -429,12 +442,7 @@ class IrafPar:
 
     def fullName(self):
         """ Return the fully-qualified name (inclues scope if used) """
-        # Skip scope (and leading dot) if no scope, even in cases where scope
-        # IS used for other pars in the same task.
-        if self.scope:
-            return self.scope+'.'+self.name
-        else:
-            return self.name
+        return makeFullName(self.scope, self.name) # scope can be None or ''
 
     def pretty(self,verbose=0):
         """Return pretty list description of parameter"""
