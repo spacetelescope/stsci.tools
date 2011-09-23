@@ -255,6 +255,7 @@ class QuietMinMatchDict(MinMatchDict):
 
 def test():
     d = MinMatchDict()
+    print "a few d.add() calls"
     d.add('test',1)
     d.add('text',2)
     d.add('ten',10)
