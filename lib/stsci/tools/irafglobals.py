@@ -57,7 +57,7 @@ class _VerboseClass:
     def __eq__(self, other): return self.value == int(other)
     def __ne__(self, other): return self.value != int(other)
 #   def __cmp__(self, other): return cmp(self.value, other)
-    def __nonzero__(self): return self.value != 0
+    def __nonzero__(self): return self.value != 0 # need bool return type
     def __str__(self): return str(self.value)
 
 Verbose = _VerboseClass()
@@ -120,7 +120,7 @@ class _Boolean:
             # value like an integer
             return cmp(self.__value, other)
 
-    def __nonzero__(self): return self.__value
+    def __nonzero__(self): return self.__value != 0 # need bool return type
     def __repr__(self): return self.__strvalue
     def __str__(self): return self.__strvalue
     def __int__(self): return self.__value
@@ -231,7 +231,7 @@ class _INDEFClass(object):
     def __long__(self): return _INDEF_int
     def __float__(self): return _INDEF_float
 
-    def __nonzero__(self): return 0
+    def __nonzero__(self): return False # need bool return type
 
     # all operations on INDEF return INDEF
 
@@ -361,7 +361,7 @@ class _EPSILONClass(object):
     def __long__(self): return 0
     def __float__(self): return self._value
 
-    def __nonzero__(self): return 1
+    def __nonzero__(self): return True # need bool return type
 
     def __add__(self, other):
         return self._value + other
