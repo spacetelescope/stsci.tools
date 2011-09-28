@@ -47,26 +47,30 @@ class UnitTestClass(ComparableMixin):
     def __str__(self):
         return str(self.val)
 
-#
-# main routine
-#
-if __name__=='__main__': # in case something else imports this file
 
+def test():
     a = UnitTestClass('a')
     b = UnitTestClass('b')
     c = UnitTestClass('c')
     two = UnitTestClass(2)
 
-    print('a > b? '+str(a>b))
-    print('a < b? '+str(a<b))
-    print('a <= b? '+str(a<=b))
-    print('a == b? '+str(a==b))
-    print('a < c? '+str(a<c))
-    print('a <= c? '+str(a<=c))
-    print('a != c? '+str(a!=c))
-    print('c != c? '+str(c!=c))
-    print('c == c? '+str(c==c))
-    print('b < 2? '+str(b<two))
-    print('b >= 2? '+str(b>=two))
-    print('b == 2? '+str(b==two))
-    print('sorted([b,a,two,c])? '+str([str(x) for x in sorted([b,a,two,c])]))
+    print('a > b ? '+str(a>b))
+    print('a < b ? '+str(a<b))
+    print('a <= b ? '+str(a<=b))
+    print('a == b ? '+str(a==b))
+    print('a < c ? '+str(a<c))
+    print('a <= c ? '+str(a<=c))
+    print('a != c ? '+str(a!=c))
+    print('c != c ? '+str(c!=c))
+    print('c == c ? '+str(c==c))
+    print('b < 2 ? '+str(b<two))
+    print('b >= 2 ? '+str(b>=two))
+    print('b == 2 ? '+str(b==two))
+    print('sorted([b,a,two,c]) ? '+str([str(x) for x in sorted([b,a,two,c])]))
+
+
+#
+# main routine
+#
+if __name__=='__main__': # in case something else imports this file
+    test()
