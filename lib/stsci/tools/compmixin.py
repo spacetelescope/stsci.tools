@@ -6,7 +6,7 @@
        http://regebro.wordpress.com/2010/12/13/
               python-implementing-rich-comparison-the-correct-way/
 
-   It is intended that this will no longer be necessary after th functools
+   It is intended that this will no longer be necessary after the functools
    total_ordering decorator (Python v2.7) is available on all supported
    versions of our software.
 """
@@ -37,6 +37,18 @@ class ComparableMixin(object):
 
     def __ne__(self, other):
         return self._compare(other, lambda s,o: s != o)
+
+
+class ComparableIntBaseMixin(ComparableMixin):
+    """ For those classes which, at heart, are comparable to integers. """
+    def _compare(self, other, method):
+        try:
+            if isinstance(other, self.__class__): # two objects of same class
+                return method(self._cmpkey(), other._cmpkey())
+            else:
+                return method(self._cmpkey(), int(other))
+        except (AttributeError, TypeError):
+            return NotImplemented
 
 
 class UnitTestClass(ComparableMixin):
