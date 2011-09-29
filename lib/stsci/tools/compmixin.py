@@ -64,13 +64,19 @@ class ComparableMixin(object):
 class ComparableIntBaseMixin(ComparableMixin):
     """ For those classes which, at heart, are comparable to integers. """
     def _compare(self, other, method):
-        try:
-            if isinstance(other, self.__class__): # two objects of same class
-                return method(self._cmpkey(), other._cmpkey())
-            else:
-                return method(int(self._cmpkey()), int(other))
-        except (AttributeError, TypeError):
-            return NotImplemented
+        if isinstance(other, self.__class__): # two objects of same class
+            return method(self._cmpkey(), other._cmpkey())
+        else:
+            return method(int(self._cmpkey()), int(other))
+
+
+class ComparableFloatBaseMixin(ComparableMixin):
+    """ For those classes which, at heart, are comparable to floats. """
+    def _compare(self, other, method):
+        if isinstance(other, self.__class__): # two objects of same class
+            return method(self._cmpkey(), other._cmpkey())
+        else:
+            return method(float(self._cmpkey()), float(other))
 
 
 # -----------------------------------------------------------------------------
