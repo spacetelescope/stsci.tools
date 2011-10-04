@@ -28,8 +28,10 @@ Taken from pyraf.irafglobals, originally signed "R. White, 2000 Jan 5"
 from __future__ import division
 
 import os
+import compmixin
 _os = os
-del os
+_compmixin = compmixin
+del os, compmixin
 
 class IrafError(Exception):
     def __init__(self, msg, errno=-1, errmsg="", errtask=""):
@@ -45,18 +47,12 @@ class IrafError(Exception):
 # make Verbose an instance of a class so it can be imported
 # into other modules and changed by them
 
-class _VerboseClass:
+class _VerboseClass(_compmixin.ComparableIntBaseMixin):
     """Container class for verbosity (or other) value"""
     def __init__(self, value=0): self.value = value
     def set(self, value): self.value = value
     def get(self): return self.value
-    def __lt__(self, other): return self.value < int(other)
-    def __le__(self, other): return self.value <= int(other)
-    def __gt__(self, other): return self.value > int(other)
-    def __ge__(self, other): return self.value >= int(other)
-    def __eq__(self, other): return self.value == int(other)
-    def __ne__(self, other): return self.value != int(other)
-#   def __cmp__(self, other): return cmp(self.value, other)
+    def _cmpkey(self): return self.value
     def __nonzero__(self): return self.value != 0 # need bool return type
     def __str__(self): return str(self.value)
 
@@ -87,7 +83,7 @@ else:
 # Boolean constant class
 # -----------------------------------------------------
 
-class _Boolean:
+class _Boolean(_compmixin.ComparableMixin):
     """Class of boolean constant object"""
     def __init__(self, value):
         # change value to 1 or 0
@@ -105,20 +101,23 @@ class _Boolean:
         """Don't bother to make a copy"""
         return self
 
-    def __cmp__(self, other):
-        if isinstance(other,str):
-            # If a string, compare with string value of this parameter
-            # Allow uppercase "YES", "NO" as well as lowercase
-            # Also allows single letter abbrevation "y" or "n"
+    def _compare(self, other, method):
+        # _Boolean vs. _Boolean
+        if isinstance(other, self.__class__):
+            return method(self.__value, other.__value)
+        # _Boolean vs. string:
+        # If a string, compare with string value of this parameter.
+        # Allow uppercase "YES", "NO" as well as lowercase.
+        # Also allows single letter abbrevation "y" or "n".
+        if isinstance(other, (str,unicode)):
             ovalue = other.lower()
-            if len(ovalue) == 1:
-                return cmp(self.__strvalue[0], ovalue)
+            if len(ovalue)==1:
+                return method(self.__strvalue[0], ovalue)
             else:
-                return cmp(self.__strvalue, ovalue)
-        else:
-            # for all other types (int, float, bool, etc) treat this
-            # value like an integer
-            return cmp(self.__value, other)
+                return method(self.__strvalue, ovalue)
+        # _Boolean vs. all other types (int, float, bool, etc) - treat this
+        # value like an integer
+        return method(self.__value, other)
 
     def __nonzero__(self): return self.__value != 0 # need bool return type
     def __repr__(self): return self.__strvalue
@@ -140,7 +139,7 @@ no = _Boolean(0)
 # nature is not really essential
 # -----------------------------------------------------
 
-class _EOFClass:
+class _EOFClass(_compmixin.ComparableMixin):
     """Class of singleton EOF (end-of-file) object"""
     def __init__(self):
         global EOF
@@ -156,19 +155,19 @@ class _EOFClass:
         """Not allowed to make a copy"""
         return self
 
-    def __cmp__(self, other):
+    def _compare(self, other, method):
         if isinstance(other, self.__class__):
             # Despite trying to create only one EOF object, there
             # could be more than one.  All EOFs are equal.
-            return 0
-        elif isinstance(other,str):
+            return method(1, 1)
+        if isinstance(other, (str,unicode)):
             # If a string, compare with 'EOF'
-            return cmp("EOF", other)
-        elif isinstance(other,(int,float,long)):
+            return method("EOF", other)
+        if isinstance(other, (int,float,long)):
             # If a number, compare with -2
-            return cmp(-2, other)
-        else:
-            return 1
+            return method(-2, other)
+        # what else could it be?
+        return NotImplemented
 
     def __repr__(self): return "EOF"
     def __str__(self): return "EOF"
@@ -288,7 +287,7 @@ _INDEF_float = _INDEFClass_float()
 # define IRAF-like EPSILON object
 # -----------------------------------------------------
 
-class _EPSILONClass(object):
+class _EPSILONClass(_compmixin.ComparableFloatBaseMixin):
     """Class of singleton EPSILON object, for floating-point comparison"""
 
     def __new__(cls):
@@ -348,8 +347,7 @@ class _EPSILONClass(object):
         """Not allowed to delete the value"""
         pass
 
-    def __cmp__(self, other):
-        return cmp(self._value, other)
+    def _cmpkey(self): return self._value
 
     def __repr__(self): return "%.6g" % self._value
     def __str__(self): return "%.6g" % self._value
