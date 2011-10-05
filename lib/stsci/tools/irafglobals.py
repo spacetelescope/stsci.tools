@@ -85,7 +85,7 @@ else:
 
 class _Boolean(_compmixin.ComparableMixin):
     """Class of boolean constant object"""
-    def __init__(self, value):
+    def __init__(self, value=None):
         # change value to 1 or 0
         if value:
             self.__value = 1
