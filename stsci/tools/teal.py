@@ -9,7 +9,17 @@ from cfgpars import APP_NAME
 from irafutils import rglob
 import capable
 if capable.OF_GRAPHICS:
-    import tkMessageBox
+    try:
+        import tkMessageBox
+    except ImportError:
+        # TODO: Provide fallbacks based on whether or not HAS_TKINTER is true;
+        # for now this just allows import Tkinter to fail more
+        # gracefully--software will crash later if it actually tries to use
+        # Tkinter
+        # Since the entire point of TEAL is that it's a GUI, this should
+        # probably result in just a relatively friendly error message and an
+        # exit.
+        pass
 
 # tool help
 tealHelpString = """\

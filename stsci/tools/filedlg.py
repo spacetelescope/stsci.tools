@@ -25,9 +25,18 @@ from __future__ import division # confidence high
 import os, commands
 import capable
 if capable.OF_GRAPHICS:
-    import Tkinter
-    import alert
-    from dialog import *
+    try:
+        import Tkinter
+        import alert
+        from dialog import *
+        HAS_TKINTER = True
+    except ImportError:
+        HAS_TKINTER = False
+        ModalDialog = object
+        # TODO: Provide fallbacks based on whether or not HAS_TKINTER is true;
+        # for now this just allows import Tkinter to fail more
+        # gracefully--software will crash later if it actually tries to use
+        # Tkinter
 else:
     ModalDialog = object
 
