@@ -58,9 +58,9 @@ def printVersionInfo():
             except:
                 print "__version__ attribute is not defined"
             try:
-                print "SVN version -> ",package.__svn_version__
+                print "SVN revision -> ",package.__svn_revision__
             except:
-                print "__svn_version__ attribute is not defined"
+                print "__svn_revision__ attribute is not defined"
             try:
                 pathName = package.__path__
             except:
