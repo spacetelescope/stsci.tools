@@ -619,7 +619,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
                           after='NAXIS')
         hdu.header.update('NAXIS2',10,'length of constant array axis 2',
                           after='NAXIS1')
-        hdu.header.update('PIXVALUE',0,'Constant pixel value',after='NAXIS2')
+        hdu.header.update('PIXVALUE',0,'Constant pixel value')
         hdu1.header.update('PIXVALUE',2,'Constant pixel value',after='GCOUNT')
         hdu1.header.update('NAXIS',2)
         hdu1.header.update('NAXIS1',10,'length of constant array axis 1',
@@ -842,7 +842,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
                           after='NAXIS')
         hdu.header.update('NAXIS2',10,'length of constant array axis 2',
                           after='NAXIS1')
-        hdu.header.update('PIXVALUE',0,'Constant pixel value',after='NAXIS2')
+        hdu.header.update('PIXVALUE',0,'Constant pixel value')
         hdu1.header.update('PIXVALUE',2,'Constant pixel value',after='GCOUNT')
         hdu1.header.update('NAXIS',2)
         hdu1.header.update('NAXIS1',10,'length of constant array axis 1',
