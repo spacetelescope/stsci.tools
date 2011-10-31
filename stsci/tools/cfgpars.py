@@ -126,62 +126,64 @@ def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
     ext = theExt
     if ext[0] != '.': ext = '.'+theExt
 
-    # do the import, if needed
-    if pkgObj == None:
+    # Do the import, if needed
+    pkgsToTry = {}
+    if pkgObj:
+        pkgsToTry[pkgObj.__name__] = pkgObj
+    else:
         # First try something simple like a regular or dotted import
         try:
             fl = []
             if pkgName.find('.') > 0:
                 fl = [ pkgName[:pkgName.rfind('.')], ]
-            thePkg = __import__(str(pkgName), fromlist=fl)
+            pkgsToTry[str(pkgName)] = __import__(str(pkgName), fromlist=fl)
         except:
             throwIt = True
             # One last case to try is something like "csc_kill" from
             # "acstools.csc_kill", but this convenience capability will only be
             # allowed if the parent pkg (acstools) has already been imported.
-            if pkgName.find('.') < 0:
+            if isinstance(pkgName, (str,unicode)) and pkgName.find('.') < 0:
                 matches = [x for x in sys.modules.keys() \
                            if x.endswith("."+pkgName)]
-                if len(matches) > 1:
-                    raise NoCfgFileError("Unfound package or "+ext+ \
-                       " file for: "+pkgName+", ambiguous -> "+str(matches))
-                if len(matches) == 1:
-                    pkgName = matches[0]
-                    thePkg = sys.modules[pkgName]
+                if len(matches)>0:
                     throwIt = False
-
+                    for mmm in matches:
+                        pkgsToTry[mmm] = sys.modules[mmm]
             if throwIt:
                 raise NoCfgFileError("Unfound package or "+ext+" file via: "+\
                                      "import "+str(pkgName))
-    else:
-        thePkg = pkgObj
-        pkgName = pkgObj.__name__
 
-    # Now that we have the package object, find the .cfg or .cfgspc file
-    path = os.path.dirname(thePkg.__file__)
-    if len(path) < 1: path = '.'
-    flist = irafutils.rglob(path, "*"+ext)
-    if len(flist) < 1:
-        raise NoCfgFileError("Found no "+ext+" files under package: "+pkgName)
+    # Now that we have the package object (or a few of them to try), for each
+    # one find the .cfg or .cfgspc file, and return
+    # Return as soon as ANY match is found.
+    for aPkgName in pkgsToTry:
+        aPkg = pkgsToTry[aPkgName]
+        path = os.path.dirname(aPkg.__file__)
+        if len(path) < 1: path = '.'
+        flist = irafutils.rglob(path, "*"+ext)
+        if len(flist) < 1:
+            continue
 
-    # Now go through these and find the first one for the assumed or given
-    # task name.  The task name for 'BigBlackBox.drizzle' would be 'drizzle'.
-    if taskName == None:
-        taskName = pkgName.split(".")[-1]
-    flist.sort()
-    for f in flist:
-        # A .cfg file gets checked for _task_name_ = val, but a .cfgspc file
-        # will have a string check function signature as the val.
-        if ext == '.cfg':
-           itsTask = getEmbeddedKeyVal(f, TASK_NAME_KEY, '')
-        else: # .cfgspc
-           sigStr  = getEmbeddedKeyVal(f, TASK_NAME_KEY, '')
-           # the .cfgspc file MUST have an entry for TASK_NAME_KEY w/ a default
-           itsTask = vtor_checks.sigStrToKwArgsDict(sigStr)['default']
-        if itsTask == taskName:
-            # We've found the correct file in an installation area.  Return
-            # the package object and the found file.
-            return thePkg, f
+        # Go through these and find the first one for the assumed or given task
+        # name.  The task name for 'BigBlackBox.drizzle' would be 'drizzle'.
+        if taskName == None:
+            taskName = aPkgName.split(".")[-1]
+        flist.sort()
+        for f in flist:
+            # A .cfg file gets checked for _task_name_=val, but a .cfgspc file
+            # will have a string check function signature as the val.
+            if ext == '.cfg':
+               itsTask = getEmbeddedKeyVal(f, TASK_NAME_KEY, '')
+            else: # .cfgspc
+               sigStr  = getEmbeddedKeyVal(f, TASK_NAME_KEY, '')
+               # .cfgspc file MUST have an entry for TASK_NAME_KEY w/ a default
+               itsTask = vtor_checks.sigStrToKwArgsDict(sigStr)['default']
+            if itsTask == taskName:
+                # We've found the correct file in an installation area.  Return
+                # the package object and the found file.
+                return aPkg, f
+
+    # What, are you still here?
     raise NoCfgFileError('No valid '+ext+' files found in package: "'+pkgName+\
                          '" for task: "'+taskName+'"')
 
@@ -189,7 +191,7 @@ def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
 def findAllCfgTasksUnderDir(aDir):
     """ Finds all installed tasks by examining any .cfg files found on disk
         at and under the given directory, as an installation might be.
-        This returns a dict of { filename : taskname }
+        This returns a dict of { file name : task name }
     """
     retval = {}
     for f in irafutils.rglob(aDir, '*.cfg'):
@@ -726,7 +728,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                                            taskName = self.__taskName)
             return theFile
 
-        # Finally try to import the taskname and see if there is a .cfgspc
+        # Finally try to import the task name and see if there is a .cfgspc
         # file in that directory
         x, theFile = findCfgFileForPkg(self.__taskName, '.cfgspc',
                                        taskName = self.__taskName)

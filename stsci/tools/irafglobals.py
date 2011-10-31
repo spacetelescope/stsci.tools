@@ -103,7 +103,7 @@ class _Boolean(_compmixin.ComparableMixin):
 
     def _compare(self, other, method):
         # _Boolean vs. _Boolean
-        if isinstance(other, self.__class__):
+        if isinstance(other, _Boolean):
             return method(self.__value, other.__value)
         # _Boolean vs. string:
         # If a string, compare with string value of this parameter.
@@ -156,7 +156,7 @@ class _EOFClass(_compmixin.ComparableMixin):
         return self
 
     def _compare(self, other, method):
-        if isinstance(other, self.__class__):
+        if isinstance(other, _EOFClass):
             # Despite trying to create only one EOF object, there
             # could be more than one.  All EOFs are equal.
             return method(1, 1)

@@ -142,6 +142,7 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
         super(_ConstantValueImageBaseHDU, self).__init__(
             data, header, do_not_scale_image_data, uint)
 
+    @property
     def size(self):
         """
         The HDU's size should always come up as zero so long as there's no
@@ -151,7 +152,7 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
         if 'PIXVALUE' in self._header:
             return 0
         else:
-            return super(_ConstantValueImageBaseHDU, self).size()
+            return super(_ConstantValueImageBaseHDU, self).size
 
 
     @pyfits.util.lazyproperty
