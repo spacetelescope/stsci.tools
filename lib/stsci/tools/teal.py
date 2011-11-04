@@ -6,7 +6,7 @@ from __future__ import division # confidence high
 import glob, os, sys
 import configobj, cfgpars, editpar, filedlg, vtor_checks
 from cfgpars import APP_NAME
-from irafutils import rglob
+from irafutils import rglob, printColsAuto
 import capable
 if capable.OF_GRAPHICS:
     import tkMessageBox
@@ -304,20 +304,8 @@ def print_tasknames(pkgName, aDir, term_width=80, always=False):
         else:
             tlines = 'The following tasks in the '+pkgName+\
                      ' package can be run with TEAL:\n'
-        # Pad list for len == 1, 2, 3
-        if len(sortedUniqTasks) in (2, 3):
-            sortedUniqTasks.insert(0, '')
-        elif len(sortedUniqTasks) == 1:
-            sortedUniqTasks = ['', ''] + sortedUniqTasks
-        # Loop over tasks
-        i = 0
-        for ttt in sortedUniqTasks:
-            if i >= 5:
-                i = 0
-                tlines += '\n'
-            tlines += ttt.center(term_width//5)
-            i += 1
-
+        tlines += printColsAuto(sortedUniqTasks, term_width=term_width,
+                                min_pad=2)
         print(tlines)
 
 def getHelpFileAsString(taskname,taskpath):
