@@ -864,7 +864,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         badList = self.checkSetSaveEntries(doSave=False)
         if badList:
             self.processBadEntries(badList, self.taskName, canCancel=False)
-        return self._taskParsObj
+        return self._taskParsObj.dict()
 
     def loadDict(self, theDict):
         """ Load the parameter settings from a given dict into the GUI. """
