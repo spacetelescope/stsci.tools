@@ -1,26 +1,30 @@
 #!/usr/local/bin/python
 
-""" This file holds our own over-rides for the standard Validator check
-    functions.  We over-ride them so that we may add our own special keywords
-    to them in the config_spec.
-
-$Id$
 """
-from __future__ import division # confidence high
+This file holds our own over-rides for the standard Validator check functions.
+We over-ride them so that we may add our own special keywords to them in the
+config_spec.
+"""
 
-import configobj, validate
-import irafutils
+# $Id$
+
+from __future__ import division  # confidence high
+
+from . configobj, irafutils, validate
 
 STANDARD_KEYS = ['min', 'max', 'missing', 'default']
 OVCDBG = False
 
 
 def sigStrToKwArgsDict(checkFuncSig):
-    """ Take a check function signature (string), and parse it to get a dict
-        of the keyword args and their values. """
+    """
+    Take a check function signature (string), and parse it to get a dict of the
+    keyword args and their values.
+    """
+
     p1 = checkFuncSig.find('(')
     p2 = checkFuncSig.rfind(')')
-    assert p1 > 0 and p2 > 0 and p2 > p1, "Invalid signature: "+checkFuncSig
+    assert p1 > 0 and p2 > 0 and p2 > p1, "Invalid signature: " + checkFuncSig
     argParts = irafutils.csvSplit(checkFuncSig[p1+1:p2], ',', True)
     argParts = [x.strip() for x in argParts]
     retval = {}
@@ -36,7 +40,7 @@ def sigStrToKwArgsDict(checkFuncSig):
             else:
                 retval[argSpl[0]] = irafutils.stripQuotes(argSpl[1]) # 1st in
         else:
-            retval[argSpl[0]] = None #  eg. found "triggers=, max=6, ..."
+            retval[argSpl[0]] = None  #  eg. found "triggers=, max=6, ..."
     return retval
 
 
