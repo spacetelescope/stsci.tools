@@ -212,10 +212,11 @@ class _INDEFClass(object):
     def __eq__(self, other):
         # Despite trying to create only one INDEF object, there
         # could be more than one.  All INDEFs are equal.
-        return isinstance(other, _INDEFClass)
+        # Also allow "INDEF" - CDS 17Nov2011
+        return isinstance(other, _INDEFClass) or (other and str(other)=="INDEF")
 
     def __ne__(self, other):
-        return not isinstance(other, _INDEFClass)
+        return not self.__eq__(other)
 
     def __repr__(self): return "INDEF"
     def __str__(self): return "INDEF"
