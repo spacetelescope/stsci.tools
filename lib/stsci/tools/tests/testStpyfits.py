@@ -177,7 +177,7 @@ class TestStpyfitsFunctions(unittest.TestCase):
         self.assertEqual(hd1['NPIX1'],10)
         self.assertEqual(hd1['NPIX2'],10)
 
-        hd = stpyfits.getheader(os.path.join(test_dir, 'o4sp040b0_raw.fits') ,2)
+        hd = stpyfits.getheader(os.path.join(test_dir, 'o4sp040b0_raw.fits'), 2)
         hd1 = pyfits.getheader(os.path.join(test_dir, 'o4sp040b0_raw.fits'), 2)
 
         self.assertEqual(hd['NAXIS'],2)

@@ -256,7 +256,7 @@ def keyword_dict(header, neglect_blanks=1):
             value = value.rstrip()
 
         # existing keyword
-        if dict_value.has_key(keyword):
+        if keyword in dict_value:
             dict_value[keyword].append(value)
             dict_comment[keyword].append(comment)
 
@@ -689,7 +689,7 @@ def main() :
         optlist_argv = os.environ['FITSDIFF_SETTINGS'].split()
         optlist_env, optlist_args = getopt.getopt(optlist_argv, 'c:k:f:n:d:o:bh')
         optlist += optlist_env
-        
+
     # initialize default values
     help = 0
     comment_excl_list = ''

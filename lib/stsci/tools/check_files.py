@@ -2,7 +2,7 @@ from __future__ import division # confidence high
 
 from stsci.tools import parseinput, fileutil, readgeis, asnutil,irafglob
 import pyfits
-import os 
+import os
 
 def checkFiles(filelist,ivmlist = None):
     """
@@ -12,74 +12,74 @@ def checkFiles(filelist,ivmlist = None):
     - Removes files with EXPTIME=0 and the corresponding ivm files
     - Removes files with NGOODPIX == 0 (to exclude saturated images)
     - Removes files with missing PA_V3 keyword
-    
+
     The list of science files should match the list of ivm files at the end.
     """
-   
+
     if ivmlist == None:
         ivmlist = [None for l in filelist]
 
     sci_ivm = zip(filelist, ivmlist)
-    
+
     removed_files, translated_names, newivmlist = convert2fits(sci_ivm)
     newfilelist, ivmlist = update_input(filelist, ivmlist, removed_files)
 
     if newfilelist == [] and translated_names == []:
         return [], []
-    
+
     elif translated_names != []:
         newfilelist.extend(translated_names)
         ivmlist.extend(newivmlist)
-    
-    
-    # check for STIS association files. This must be done before 
-    # the other checks in order to handle correctly stis 
+
+
+    # check for STIS association files. This must be done before
+    # the other checks in order to handle correctly stis
     # assoc files
     #if pyfits.getval(newfilelist[0], 'INSTRUME') == 'STIS':
     newfilelist, ivmlist = checkStisFiles(newfilelist, ivmlist)
     if newfilelist == []:
         return [], []
     removed_expt_files = check_exptime(newfilelist)
-    
+
     newfilelist, ivmlist = update_input(newfilelist, ivmlist, removed_expt_files)
     if newfilelist == []:
         return [], []
     removed_ngood_files = checkNGOODPIX(newfilelist)
     newfilelist, ivmlist = update_input(newfilelist, ivmlist, removed_ngood_files)
     if newfilelist == []:
-        return [], []    
-    
+        return [], []
+
     removed_pav3_files = checkPA_V3(newfilelist)
     newfilelist, ivmlist = update_input(newfilelist, ivmlist, removed_pav3_files)
 
     checkPhotKeywords(newfilelist)
     newfilelist, ivmlist = update_input(newfilelist, ivmlist,[])
-    
+
     if newfilelist == []:
-        return [], []    
-            
+        return [], []
+
     return newfilelist, ivmlist
-    
+
 def checkPhotKeywords(filelist):
-        """ Insure that the SCI headers contains all the necessary photometry 
+        """ Insure that the SCI headers contains all the necessary photometry
         keywords, moving them into the extension header if necessary.
         This only moves keywords from the PRIMARY header if the keywords
         do not already exist in the SCI header.
         """
         PHOTKEYS = ['PHOTFLAM','PHOTPLAM','PHOTBW','PHOTZPT','PHOTMODE']
         for f in filelist:
-            handle = fileutil.openImage(f,mode='update',memmap=0) 
+            handle = fileutil.openImage(f,mode='update',memmap=0)
             phdr = handle['PRIMARY'].header
             # Look for all SCI extensions in input file
             for extn in handle:
                 hdr = extn.header
                 # When we find the SCI extension, check for PHOT keywords
-                if hdr.has_key('extname') and hdr['extname'] == 'SCI':
+                if 'extname' in hdr and hdr['extname'] == 'SCI':
                     for pkey in PHOTKEYS:
-                        if not hdr.has_key(pkey):
+                        if pkey not in hdr:
                             print 'Keyword ',pkey,' not found in SCI,1 of ',f
-                            # Make sure there is a copy PRIMARY header, if so, copy it 
-                            if phdr.has_key(pkey):
+                            # Make sure there is a copy PRIMARY header, if so, copy it
+                            if pkey in phdr:
                                 print 'Keyword ',pkey,' found in PRIMARY header.'
                                 # Copy keyword from PRIMARY header
                                 hdr.update(pkey,phdr[pkey])
@@ -99,14 +99,14 @@ def checkStisFiles(filelist, ivmlist=None):
     removed_files = []
     assoc_files = []
     assoc_ilist = []
-    
+
     if len(filelist) != len(ivmlist):
         errormsg = "Input file list and ivm list have different lenghts\n"
         errormsg += "Quitting ...\n"
         raise ValueError, errormsg
-        
+
     for t in zip(filelist, ivmlist):
-        
+
         if pyfits.getval(t[0], 'INSTRUME') != 'STIS':
             newflist.append(t[0])
             newilist.append(t[1])
@@ -129,9 +129,9 @@ def checkStisFiles(filelist, ivmlist=None):
         else:
             errormesg = "No valid 'SCI extension in STIS file\n"
             raise ValueError, errormsg
-    
+
         stisExt2PrimKw([t[0]])
-    
+
     newflist.extend(assoc_files)
     newilist.extend(assoc_ilist)
     return newflist, newilist
@@ -151,9 +151,9 @@ def check_exptime(filelist):
         if exptime <= 0:
             removed_files.append(f)
             print "Warning:  There are files with zero exposure time: keyword EXPTIME = 0.0"
-        
+
     if removed_files != []:
-        print "Warning:  Removing the following files from input list" 
+        print "Warning:  Removing the following files from input list"
         for f in removed_files:
             print '\t',f
     return removed_files
@@ -162,7 +162,7 @@ def checkNGOODPIX(filelist):
     """
     Only for ACS, and STIS, check NGOODPIX
     If all pixels are 'bad' on all chips, exclude this image
-    from further processing. 
+    from further processing.
     Similar checks requiring comparing 'driz_sep_bits' against
     WFPC2 c1f.fits arrays and NICMOS DQ arrays will need to be
     done separately (and later).
@@ -170,23 +170,23 @@ def checkNGOODPIX(filelist):
     removed_files = []
     for inputfile in filelist:
         if (fileutil.getKeyword(inputfile,'instrume') == 'ACS') \
-           or fileutil.getKeyword(inputfile,'instrume') == 'STIS': 
+           or fileutil.getKeyword(inputfile,'instrume') == 'STIS':
             file = pyfits.open(inputfile)
             ngood = 0
             for extn in file:
-                if extn.header.has_key('EXTNAME') and extn.header['EXTNAME'] == 'SCI':
+                if 'EXTNAME' in extn.header and extn.header['EXTNAME'] == 'SCI':
                     ngood += extn.header['NGOODPIX']
             file.close()
-            
+
             if (ngood == 0):
                 removed_files.append(inputfile)
-                
+
     if removed_files != []:
         print "Warning:  Files without valid pixels detected: keyword NGOODPIX = 0.0"
-        print "Warning:  Removing the following files from input list" 
+        print "Warning:  Removing the following files from input list"
         for f in removed_files:
             print '\t',f
-        
+
     return removed_files
 
 def update_input(filelist, ivmlist=None, removed_files=None):
@@ -202,10 +202,10 @@ def update_input(filelist, ivmlist=None, removed_files=None):
         sci_ivm = zip(filelist, ivmlist)
         for f in removed_files:
             result=[sci_ivm.remove(t) for t in sci_ivm if t[0] == f ]
-        ivmlist = [el[1] for el in sci_ivm] 
-        newfilelist = [el[0] for el in sci_ivm] 
-        return newfilelist, ivmlist 
-  
+        ivmlist = [el[1] for el in sci_ivm]
+        newfilelist = [el[0] for el in sci_ivm]
+        return newfilelist, ivmlist
+
 
 def stisObsCount(input):
     """
@@ -215,7 +215,7 @@ def stisObsCount(input):
     count = 0
     f = pyfits.open(input)
     for ext in f:
-        if ext.header.has_key('extname'):
+        if 'extname' in ext.header:
             if (ext.header['extname'].upper() == 'SCI'):
                 count += 1
     f.close()
@@ -224,24 +224,24 @@ def stisObsCount(input):
 def splitStis(stisfile, sci_count):
     """
     :Purpose: Split a STIS association file into multiple imset MEF files.
-    
+
     Split the corresponding spt file if present into single spt files.
     If an spt file can't be split or is missing a Warning is printed.
-    
+
     Returns
     -------
     names: list
         a list with the names of the new flt files.
-        
+
     """
     newfiles = []
-    
+
     f = pyfits.open(stisfile)
     hdu0 = f[0].copy()
 
 
     for count in range(1,sci_count+1):
-        fitsobj = pyfits.HDUList()            
+        fitsobj = pyfits.HDUList()
         fitsobj.append(hdu0)
         hdu = f[('sci',count)].copy()
         fitsobj.append(hdu)
@@ -268,16 +268,16 @@ def splitStis(stisfile, sci_count):
             print 'Extension version %d of the input file %s does not' %(count, stisfile)
             print 'contain all required image extensions. Each must contain'
             print 'populates SCI, ERR and DQ arrays.'
-            
+
             continue
-            
-        
+
+
         # Determine if the file you wish to create already exists on the disk.
         # If the file does exist, replace it.
         if (os.path.exists(newfilename)):
             os.remove(newfilename)
             print "       Replacing "+newfilename+"..."
-            
+
             # Write out the new file
         fitsobj.writeto(newfilename)
         newfiles.append(newfilename)
@@ -289,12 +289,12 @@ def splitStis(stisfile, sci_count):
     except IOError:
         print 'SPT file not found %s \n' % sptfilename
         return newfiles
-    
+
     if sptfile:
         hdu0 = sptfile[0].copy()
         try:
             for count in range(1,sci_count+1):
-                fitsobj = pyfits.HDUList()            
+                fitsobj = pyfits.HDUList()
                 fitsobj.append(hdu0)
                 hdu = sptfile[count].copy()
                 fitsobj.append(hdu)
@@ -304,18 +304,18 @@ def splitStis(stisfile, sci_count):
                 if (os.path.exists(newfilename)):
                     os.remove(newfilename)
                     print "       Replacing "+newfilename+"..."
-            
+
                 # Write out the new file
                 fitsobj.writeto(newfilename)
         except:
             print "Warning: Unable to split spt file %s " % sptfilename
         sptfile.close()
-    
-    return newfiles 
+
+    return newfiles
 
 def stisExt2PrimKw(stisfiles):
     """
-        Several kw which are usuall yin the primary header 
+        Several kw which are usuall yin the primary header
         are in the extension header for STIS. They are copied to
         the primary header for convenience.
         List if kw:
@@ -323,25 +323,25 @@ def stisExt2PrimKw(stisfiles):
     """
 
     kw_list = ['DATE-OBS', 'EXPEND', 'EXPSTART', 'EXPTIME']
-    
+
     for sfile in stisfiles:
         d = {}
         for k in kw_list:
             d[k] = pyfits.getval(sfile, k, ext=1)
-        
+
         for item in d.items():
             pyfits.setval(sfile, key=item[0], value=item[1], comment='Copied from extension header')
-        
+
 
 def isSTISSpectroscopic(fname):
-    
+
     if pyfits.getval(fname, 'OBSTYPE') == 'SPECTROSCOPIC':
         print "Warning:  STIS spectroscopic files detected"
         print "Warning:  Removing %s from input list" % fname
         return True
     else:
-        return False   
-    
+        return False
+
 def checkPA_V3(fnames):
     removed_files = []
     for f in fnames:
@@ -361,11 +361,11 @@ def checkPA_V3(fnames):
                 print "Warning:  Files without keyword PA_V3 detected"
                 removed_files.append(f)
     if removed_files != []:
-        print "Warning:  Removing the following files from input list" 
+        print "Warning:  Removing the following files from input list"
         for f in removed_files:
             print '\t',f
     return removed_files
-    
+
 def convert2fits(sci_ivm):
     """
     Checks if a file is in WAIVER of GEIS format and converts it to MEF
@@ -373,7 +373,7 @@ def convert2fits(sci_ivm):
     removed_files = []
     translated_names = []
     newivmlist = []
-    
+
     for file in sci_ivm:
         #find out what the input is
         # if science file is not found on disk, add it to removed_files for removal
@@ -384,7 +384,7 @@ def convert2fits(sci_ivm):
             print "Warning:  Removing file %s from input list" %file[0]
             removed_files.append(file[0])
             continue
-        
+
         # Check for existence of waiver FITS input, and quit if found.
         # Or should we print a warning and continue but not use that file
         if imgfits and imgtype == 'waiver':
@@ -397,9 +397,9 @@ def convert2fits(sci_ivm):
                 translated_names.append(newfilename)
                 newivmlist.append(file[1])
 
-        # If a GEIS image is provided as input, create a new MEF file with 
+        # If a GEIS image is provided as input, create a new MEF file with
         # a name generated using 'buildFITSName()'
-        # Convert the corresponding data quality file if present    
+        # Convert the corresponding data quality file if present
         if not imgfits:
             newfilename = geis2mef(file[0], convert_dq=True)
             if newfilename == None:
@@ -409,17 +409,17 @@ def convert2fits(sci_ivm):
                 removed_files.append(file[0])
                 translated_names.append(newfilename)
                 newivmlist.append(file[1])
-    
+
     return removed_files, translated_names, newivmlist
 
 def waiver2mef(sciname, newname=None, convert_dq=True):
     """
-    Converts a GEIS science file and its corresponding 
+    Converts a GEIS science file and its corresponding
     data quality file (if present) to MEF format
     Writes out both files to disk.
     Returns the new name of the science image.
     """
-    
+
     def convert(file):
         newfilename = fileutil.buildNewRootname(file, extn='_c0h.fits')
         try:
@@ -428,40 +428,40 @@ def waiver2mef(sciname, newname=None, convert_dq=True):
             del newimage
             return newfilename
         except IOError:
-            print 'Warning: File %s could not be found' % file     
+            print 'Warning: File %s could not be found' % file
             return None
-        
+
     newsciname = convert(sciname)
     if convert_dq:
         dq_name = convert(fileutil.buildNewRootname(sciname, extn='_c1h.fits'))
-        
-    return newsciname   
+
+    return newsciname
 
 
 
 def geis2mef(sciname, convert_dq=True):
     """
-    Converts a GEIS science file and its corresponding 
+    Converts a GEIS science file and its corresponding
     data quality file (if present) to MEF format
     Writes out both files to disk.
     Returns the new name of the science image.
     """
-        
+
     def convert(file):
         newfilename = fileutil.buildFITSName(file)
         try:
             newimage = fileutil.openImage(file,writefits=True,
-                fitsname=newfilename, clobber=True)            
+                fitsname=newfilename, clobber=True)
             del newimage
             return newfilename
         except IOError:
-            print 'Warning: File %s could not be found' % file     
+            print 'Warning: File %s could not be found' % file
             return None
 
     newsciname = convert(sciname)
     if convert_dq:
         dq_name = convert(sciname.split('.')[0] + '.c1h')
-        
+
     return newsciname
 
 def countInput(input):

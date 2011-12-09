@@ -503,7 +503,7 @@ class EnumEparOption(EparOption):
             for option in trylist:
                 # shortcuts dictionary is case-insensitive
                 letter = option[i:i+1].lower()
-                if self.shortcuts.has_key(letter):
+                if letter in self.shortcuts:
                     # will try again with next letter
                     trylist2.append(option)
                 elif letter:
@@ -564,7 +564,7 @@ class EnumEparOption(EparOption):
 
 #   def setActiveState(self, active):
 #       [...]
-#       for i in range(len(self.paramInfo.choice)):  # this doesn't seem to 
+#       for i in range(len(self.paramInfo.choice)):  # this doesn't seem to
 #           self.entry.menu.entryconfig(i, state=st) # make the menu text grey
 #       [...]
 

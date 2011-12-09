@@ -1369,11 +1369,11 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
         nprint = len(x)
         print "Iter ", ('%6i' % iter),"   CHI-SQUARE = ",('%.10g' % fnorm)," DOF = ", ('%i' % dof)
         for i in range(nprint):
-            if (parinfo != None) and (parinfo[i].has_key('parname')):
+            if (parinfo != None) and ('parname' in parinfo[i]):
                 p = '   ' + parinfo[i]['parname'] + ' = '
             else:
                 p = '   P' + str(i) + ' = '
-            if (parinfo != None) and (parinfo[i].has_key('mpprint')):
+            if (parinfo != None) and ('mpprint' in parinfo[i]):
                 iprint = parinfo[i]['mpprint']
             else:
                 iprint = 1
@@ -1408,7 +1408,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         values = []
         for i in range(n):
-            if ((parinfo != None) and (parinfo[i].has_key(key))):
+            if ((parinfo != None) and (key in parinfo[i])):
                 values.append(parinfo[i][key])
             else:
                 values.append(default)

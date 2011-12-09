@@ -110,7 +110,7 @@ del flist, field
 def isParField(s):
     """Returns true if string s appears to be a parameter field"""
     try:
-        return (s[:2] == "p_") and _getFieldDict.has_key(s)
+        return (s[:2] == "p_") and s in _getFieldDict
     except minmatch.AmbiguousKeyError, e:
         # If ambiguous match, assume it is a parameter field.
         # An exception will doubtless be raised later, but
@@ -412,7 +412,7 @@ class IrafPar:
         elif v == "":
             # most parameters treat null string as omitted value
             return None
-        elif self.choice is not None and not self.choiceDict.has_key(v):
+        elif self.choice is not None and v not in self.choiceDict:
             schoice = map(self.toString, self.choice)
             schoice = "|".join(schoice)
             raise ValueError("Parameter %s: "
@@ -546,7 +546,7 @@ class IrafPar:
 
     def __setattr__(self,attr,value):
         # don't allow any new parameters to be added
-        if self.__dict__.has_key(attr):
+        if attr in self.__dict__:
             self.__dict__[attr] = value
         elif isParField(attr):
             #XXX should check=0 be used here?

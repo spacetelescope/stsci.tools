@@ -20,7 +20,7 @@
 
     -v, --verbose                    turn on verbose output
 
-    -m, --multiExtensionConversion   convert to multi-extension 
+    -m, --multiExtensionConversion   convert to multi-extension
                                      FITS format (Default)
 
     -o, --outputFileName             comma separated list of
@@ -35,7 +35,7 @@
     ========
     Conversion of a WFPC2 waivered FITS file obtained from the HST archive::
 
-        convertwaiveredfits u9zh010bm_c0f.fits 
+        convertwaiveredfits u9zh010bm_c0f.fits
 
     This will convert the waivered FITS file `u9zh010bm_c0f.fits`
     to multi-extension FITS format and generate the output file
@@ -43,7 +43,7 @@
 
 
     Conversion of multiple FITS files can be done using::
-    
+
         convertwaiveredfits -o out1.fits,out2.fits
                              u9zh010bm_c0f.fits u9zh010bm_c1f.fits
 
@@ -55,32 +55,32 @@
     :Python Syntax: You can run this code interactively from within Python using the syntax:
 
         >>> from stsci.tools import convertwaiveredfits
-        >>> fobj = convertwaiveredfits.convertwaiveredfits(waiveredObject, 
-        >>>                    outputFileName=None, 
-        >>>                    forceFileOutput=False, 
-        >>>                    convertTo='multiExtension', 
+        >>> fobj = convertwaiveredfits.convertwaiveredfits(waiveredObject,
+        >>>                    outputFileName=None,
+        >>>                    forceFileOutput=False,
+        >>>                    convertTo='multiExtension',
         >>>                    verbose=False)
 
     The returned object `fobj` is a PyFITS object using the multi-extension FITS format.
-    
+
 
     Parameters
     ==========
     waiveredObject: obj
-        input object representing a waivered FITS 
-        file; either a pyfits.HDUList object, a file 
+        input object representing a waivered FITS
+        file; either a pyfits.HDUList object, a file
         object, or a file specification
 
     outputFileName : string
         file specification for the output file
         Default: None - do not generate an output file
 
-    forceFileOutput: boolean 
-        force the generation of an output file when 
-        the outputFileName parameter is None; the 
+    forceFileOutput: boolean
+        force the generation of an output file when
+        the outputFileName parameter is None; the
         output file specification will be the same as
-        the input file specification with the last 
-        character of the base name replaced with the 
+        the input file specification with the last
+        character of the base name replaced with the
         character `h` in multi-extension FITS format.
 
         Default: False
@@ -92,10 +92,10 @@
     verbose: boolean
         provide verbose output
         Default: False
-             
+
     Returns
     =======
-    hduList         
+    hduList
         pyfits.HDUList (PyFITS multi-extension FITS object) containing converted output
 
     Examples
@@ -106,7 +106,7 @@
 
     this will convert the waivered FITS file u9zh010bm_c0f.fits
     to multi-extension FITS format and write the output to the
-    file u9zh010bm_c0h.fits;  the returned HDUList is in 
+    file u9zh010bm_c0h.fits;  the returned HDUList is in
     multi-extension FITS format
 
 
@@ -117,17 +117,17 @@
 
     this will convert the waivered FITS file u9zh010bm_c0f.fits
     to multi-extension FITS format and write the output to the
-    file out.fits; the returned HDUList is in multi-extension 
+    file out.fits; the returned HDUList is in multi-extension
     FITS format
 
       >>> import pyfits
       >>> import convertwaiveredfits
       >>> inHdul = pyfits.open('u9zh010bm_c0f.fits')
       >>> hdulist = convertwaiveredfits.convertwaiveredfits(inHdul)
-      
+
     this will convert the waivered FITS file u9zh010bm_c0f.fits
     to multi-extension FITS format; no output file is generated;
-    the returned HDUList is in multi-extension format 
+    the returned HDUList is in multi-extension format
 """
 
 # Developed by Science Software Branch, STScI, USA.
@@ -175,7 +175,7 @@ def _processCommandLineArgs():
 
            files            list of file specifications to be converted
 
-           outputFileNames  list of output file specifications 
+           outputFileNames  list of output file specifications
                              (one per input file)
                              Default: a list of None values (one per input file)
 
@@ -270,7 +270,7 @@ def _verify(waiveredHdul):
     """
         Verify that the input HDUList is for a waivered FITS file.
 
-        Parameters: 
+        Parameters:
 
            waiveredHdul     HDUList object to be verified
 
@@ -278,7 +278,7 @@ def _verify(waiveredHdul):
 
         Exceptions:
 
-           ValueError       Input HDUList is not for a waivered FITS file 
+           ValueError       Input HDUList is not for a waivered FITS file
     """
 
     if len(waiveredHdul) == 2:
@@ -298,7 +298,7 @@ def _verify(waiveredHdul):
                    waiveredHdul[1].data.shape[0] == 1:
                     #
                     # The number of arrays in the Primary HDU must match
-                    # the number of rows in the TableHDU.  This includes 
+                    # the number of rows in the TableHDU.  This includes
                     # the case where there is only a single array and row.
                     #
                     return
@@ -313,8 +313,8 @@ def toMultiExtensionFits(waiveredObject,
                          forceFileOutput=False,
                          verbose=False):
     """
-        Convert the input waivered FITS object to a multi-extension FITS 
-        HDUList object.  Generate an output multi-extension FITS file if 
+        Convert the input waivered FITS object to a multi-extension FITS
+        HDUList object.  Generate an output multi-extension FITS file if
         requested.
 
         Parameters:
@@ -336,13 +336,13 @@ def toMultiExtensionFits(waiveredObject,
           verbose         provide verbose output
                           Default: False
 
-        Returns: 
+        Returns:
 
-          mhdul           an HDUList object in multi-extension FITS format. 
+          mhdul           an HDUList object in multi-extension FITS format.
 
         Exceptions:
 
-          TypeError       Input object is not a HDUList, a file object or a 
+          TypeError       Input object is not a HDUList, a file object or a
                           file name
     """
 
@@ -384,7 +384,7 @@ def toMultiExtensionFits(waiveredObject,
         # Be careful only to delete the first card that matches
         # the keyword, not all of the cards
         #
-        if mPHeader.has_key(keyword):
+        if keyword in mPHeader:
             del mPHeader[mPHeader.ascardlist().index_of(keyword)]
     #
     # Get the columns from the secondary HDU table
@@ -395,7 +395,7 @@ def toMultiExtensionFits(waiveredObject,
     # column names in the secondary HDU table
     #
     for keyword in wcols.names:
-        if mPHeader.has_key(keyword):
+        if keyword in mPHeader:
             del mPHeader[keyword]
     #
     # Create the PrimaryHDU
@@ -465,7 +465,7 @@ def toMultiExtensionFits(waiveredObject,
         #
         if originalDataType == 'USHORT':
             mhdul[i+1].scale('int16','',bscale=1,bzero=32768)
-            mhdul[i+1].header.update('BSCALE',1,before='BZERO') 
+            mhdul[i+1].header.update('BSCALE',1,before='BZERO')
         #
         # For WFPC2 and FOS instruments require additional header cards
         #
@@ -512,7 +512,7 @@ def toMultiExtensionFits(waiveredObject,
     if multiExtensionFileName:
         if instrument in ('WFPC2','FOC'):
             #
-            # write the FILENAME card to the header for the WFPC2 and FOC 
+            # write the FILENAME card to the header for the WFPC2 and FOC
             # instruments
             #
             head,tail = os.path.split(multiExtensionFileName)
@@ -551,7 +551,7 @@ def convertwaiveredfits(waiveredObject,
                           outputFileName parameter is None; the output file
                           specification will be the same as the input file
                           specification with the last character of the base
-                          name replaced with the character `h` in 
+                          name replaced with the character `h` in
                           multi-extension FITS format.
 
                           Default: False
@@ -562,9 +562,9 @@ def convertwaiveredfits(waiveredObject,
           verbose         provide verbose output
                           Default: False
 
-        Returns: 
+        Returns:
 
-          hdul            an HDUList object in the requested format. 
+          hdul            an HDUList object in the requested format.
 
         Exceptions:
 
