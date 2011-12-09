@@ -556,7 +556,7 @@ def getHeader(filename,handle=None):
 
     if _extn > 0:
         # Append correct extension/chip/group header to PRIMARY...
-        for _card in getExtn(_fimg,_extn).header.ascardlist():
+        for _card in getExtn(_fimg,_extn).header.ascard:
             _hdr.ascard.append(_card)
 
     if not handle:
