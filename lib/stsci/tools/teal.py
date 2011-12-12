@@ -238,6 +238,36 @@ def unlearn(taskPkgName, deleteAll=False):
         return flist # let the caller know this is an issue
 
 
+def diffFromDefaults(theTask, report=False):
+    """ Load the given file (or existing object), and return a dict
+    of its values which are different from the default values.  If report
+    is set, print to stdout the differences. """
+    # get the 2 dicts (trees: dicts of dicts)
+    defaultTree = load(theTask, canExecute=False, strict=True, defaults=True)
+    thisTree    = load(theTask, canExecute=False, strict=True, defaults=False)
+    # they must be flattenable
+    defaultFlat = cfgpars.flattenDictTree(defaultTree)
+    thisFlat    = cfgpars.flattenDictTree(thisTree)
+    # use the "set" operations till there is a dict.diff()
+    # thanks to:  http://stackoverflow.com/questions/715234
+    diffFlat = dict( set(thisFlat.iteritems()) - \
+                     set(defaultFlat.iteritems()) )
+    if report:
+        defaults_of_diffs_only = \
+        { k:defaultFlat[k] for k in diffFlat.keys() }
+        msg = 'Non-default values of "'+str(theTask)+'":\n'+ \
+              _flat2str(diffFlat)+ \
+              '\n\nDefault values:\n'+ \
+              _flat2str(defaults_of_diffs_only)
+        print(msg)
+    return diffFlat
+
+def _flat2str(fd): # waiting for a nice pretty-print
+    rv = '{\n'
+    for k in fd.keys(): rv += repr(k)+': '+repr(fd[k])+'\n'
+    return rv+'}'
+
+
 def popUpErr(parent=None, message="", title="Error"):
     # withdraw root, could standardize w/ EditParDialog.__init__()
     if parent == None:
@@ -453,9 +483,9 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         except IOError:
             # User does not have privs to write to this file. Get name of local
             # choice and try to use that.
-            if not fname:
-                fname = self._taskParsObj.filename
-            fname = self._rcDir+os.sep+os.path.basename(fname)
+#           if not fname: fname = self._taskParsObj.filename
+#           fname = self._rcDir+os.sep+os.path.basename(fname)
+            fname = self._rcDir+os.sep+self._taskParsObj.getName()+".cfg"
             # Tell them the context is changing, and where we are saving
             msg = 'Installed config file for task "'+ \
                   self._taskParsObj.getName()+'" is not to be overwritten.'+ \
