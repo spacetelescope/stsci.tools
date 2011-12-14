@@ -253,8 +253,10 @@ def diffFromDefaults(theTask, report=False):
     diffFlat = dict( set(thisFlat.iteritems()) - \
                      set(defaultFlat.iteritems()) )
     if report:
-        defaults_of_diffs_only = \
-        { k:defaultFlat[k] for k in diffFlat.keys() }
+        defaults_of_diffs_only = {}
+#       { k:defaultFlat[k] for k in diffFlat.keys() }
+        for k in diffFlat.keys():
+            defaults_of_diffs_only[k] = defaultFlat[k]
         msg = 'Non-default values of "'+str(theTask)+'":\n'+ \
               _flat2str(diffFlat)+ \
               '\n\nDefault values:\n'+ \
