@@ -1222,9 +1222,9 @@ def flattened2str(flattened, missing=False, extra=False):
             retval += ' is missing.'
         elif extra:
             if result:
-                retval += ' is an extra or unknown section.'
+                retval += ' is an unexpected section. Is your file out of date?'
             else:
-                retval += ' is an extra or unknown parameter.'
+                retval += ' is an unexpected parameter. Is your file out of date?'
         elif isinstance(result, bool):
             retval += ' has an invalid value'
         else:
