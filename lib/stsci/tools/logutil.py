@@ -191,7 +191,7 @@ def teardown_logging():
 # http://www.astropython.org/snippet/2010/2/Easier-python-logging
 def create_logger(name, format='%(levelname)s: %(message)s', datefmt=None,
                   stream=None, level=logging.INFO, filename=None, filemode='w',
-                  filelevel=None, propagate=False):
+                  filelevel=None, propagate=True):
     """
     Do basic configuration for the logging system. Similar to
     logging.basicConfig but the logger ``name`` is configurable and both a file
@@ -213,7 +213,7 @@ def create_logger(name, format='%(levelname)s: %(message)s', datefmt=None,
     :param filename: add a FileHandler using ``filename`` (default=None)
     :param filemode: open ``filename`` with specified filemode ('w' or 'a')
     :param filelevel: logger level for file logger (default=``level``)
-    :param propagate: propagate message to parent (default=False)
+    :param propagate: propagate message to parent (default=True)
 
     :returns: logging.Logger object
     """
