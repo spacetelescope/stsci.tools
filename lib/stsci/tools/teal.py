@@ -702,10 +702,11 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         """ Return a string to be used as the filter arg to the save file
             dialog during Save-As. """
         # figure the dir to use, start with the one from the file
-        thedir = os.path.dirname(self._taskParsObj.filename)
-        # decide to skip if not writeable
-        if not os.access(thedir, os.W_OK) or os.path.exists(self._rcDir):
-            thedir = self._rcDir
+        absRcDir = os.path.abspath(self._rcDir)
+        thedir = os.path.abspath(os.path.dirname(self._taskParsObj.filename))
+        # skip if not writeable, or if is _rcDir
+        if thedir == absRcDir or not os.access(thedir, os.W_OK):
+            thedir = os.path.curdir
         # create save-as filter string
         filt = thedir+'/*.cfg'
         envVarName = APP_NAME.upper()+'_CFG'
