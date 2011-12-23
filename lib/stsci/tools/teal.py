@@ -706,7 +706,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         thedir = os.path.abspath(os.path.dirname(self._taskParsObj.filename))
         # skip if not writeable, or if is _rcDir
         if thedir == absRcDir or not os.access(thedir, os.W_OK):
-            thedir = os.path.curdir
+            thedir = os.path.abspath(os.path.curdir)
         # create save-as filter string
         filt = thedir+'/*.cfg'
         envVarName = APP_NAME.upper()+'_CFG'
