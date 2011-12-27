@@ -212,8 +212,14 @@ def getCfgFilesInDirForTask(aDir, aTask, recurse=False):
     else:
         flist = glob.glob(aDir+os.sep+'*.cfg')
     if aTask:
-        return [f for f in flist if \
-                getEmbeddedKeyVal(f, TASK_NAME_KEY, '') == aTask]
+        retval = []
+        for f in flist:
+            try:
+                if aTask == getEmbeddedKeyVal(f, TASK_NAME_KEY, ''):
+                    retval.append(f)
+            except Exception, e:
+                print 'Warning: '+str(e)
+        return retval
     else:
         return flist
 
