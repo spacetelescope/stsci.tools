@@ -4,6 +4,20 @@
 import textwrap
 
 
+def wrap(text, width, *args, **kwargs):
+    """
+    Like :func:`textwrap.wrap` but preserves existing newlines which
+    :func:`textwrap.wrap` does not otherwise handle well.
+
+    See Also
+    --------
+    :func:`textwrap.wrap`
+    """
+
+    return sum([textwrap.wrap(line, width, *args, **kwargs)
+                if line else [''] for line in text.splitlines()], [])
+
+
 def textbox(text, width=78, boxchar='#'):
     """
     Outputs line-wrapped text wrapped in a box drawn with a repeated (usually
@@ -46,7 +60,7 @@ def textbox(text, width=78, boxchar='#'):
     top_padding  = boxchar + ' ' * (width - len(boxchar) * 2) + boxchar
 
     lines = ['%s %s %s' % (boxchar, line.ljust(wrap_width), boxchar)
-             for line in textwrap.wrap(text, wrap_width)]
+             for line in wrap(text, wrap_width)]
     top = [top_border, top_padding]
     bottom = [top_padding, top_border]
     return '\n'.join(top + lines + bottom)
