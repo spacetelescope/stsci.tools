@@ -454,6 +454,9 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self._bboxColor = cod.get('buttonBoxColor', ltblu)
         self._entsColor = cod.get('entriesColor', ltblu)
 
+        # double check _canExecute, but only if it is still set to the default
+        if self._canExecute and self._taskParsObj: # default _canExecute=True
+            self._canExecute = self._taskParsObj.canExecute()
         self._showExecuteButton = self._canExecute
 
         # check on the help string - just to see if it is HTML

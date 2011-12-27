@@ -615,6 +615,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
     def getAssocPkg(self): return self.__assocPkg
 
+    def canExecute(self): return self._runFunc != None
+
     def isSameTaskAs(self, aCfgObjPrs):
         """ Return True if the passed in object is for the same task as
         we are. """
