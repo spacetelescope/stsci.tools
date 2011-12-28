@@ -30,3 +30,13 @@ if OF_GRAPHICS and sys.platform == 'darwin':
    # If we are the console user, we own /dev/console and can read from it.
    #
    OF_GRAPHICS = os.access("/dev/console", os.R_OK)
+
+# After all that, we may have decided that we want graphics.  Now
+# that we know it is ok to try to import Tkinter, we can test if it
+# is there.  If it is not, we are not capable of graphics.
+if OF_GRAPHICS :
+    try :
+        import Tkinter
+    except ImportError :
+        OF_GRAPHICS = False
+
