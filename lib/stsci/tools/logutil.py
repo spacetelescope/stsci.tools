@@ -16,50 +16,88 @@ except ImportError:
     from StringIO import StringIO
 
 
-logging_started = False
+global_logging_started = False
 
 
-class LogFileTee(object):
+class StreamTeeLogger(logging.Logger):
     """
-    File-like object meant to replace stdout/stderr or any other file-like
-    object so that it writes to a given logger instead.
+    A Logger implementation that is meant to replace an I/O stream such as
+    `sys.stdout`, `sys.stderr`, or any other stream-like object that supports a
+    `write()` method and a `flush()` method.
+
+    When `StreamTeeLogger.write` is called, the written strings are
+    line-buffered, and each line is logged through the normal Python logging
+    interface.  The `StreamTeeLogger` has two handlers:
+
+     * The LogTeeHandler redirects all log messages to a logger with the same
+       name as the module in which the `write()` method was called.  For
+       example, if this logger is used to replace `sys.stdout`, all `print`
+       statements in the module `foo.bar` will be logged to a logger called
+       ``foo.bar``.
+
+    * If the ``stream`` argument was provided, this logger also attaches a
+      `logging.StreamHandler` to itself for the given ``stream``.  For example,
+      if ``stream=sys.stdout`` then messages sent to this logger will be output
+      to `sys.stdout`.  However, only messages created through the `write()`
+      method call will re-output to the given stream.
 
     Parameters
     ----------
-    fileobj : file-like object (optional)
-        The file-like object to tee to; should be the same file object being
-        replaced (i.e. sys.stdout).  If `None` (the default) all writes to this
-        file will be sent to the logger only.
-
-    logger : string, logger (optional)
-        A `logging.Logger` object or the name of a logger that can be used with
-        `logging.getLogger`.  Uses the root logger by default.
+    name : string
+        The name of this logger, as in `logging.Logger`
 
     level : int (optional)
-        The log level with which to log all messages sent to this file.  Uses
-        `logging.INFO` by default.
+        The minimum level at which to log messages sent to this logger; also
+        used as the default level for messages logged through the `write()`
+        interface (default: `logging.INFO`).
+
+    stream : stream-like object (optional)
+        The stream-like object (an object with `write()` and `flush()`
+        methods) to tee to; should be the same file object being replaced (i.e.
+        sys.stdout).  If `None` (the default) writes to this file will not be
+        sent to a stream logger.
+
+    See Also
+    --------
+    `EchoFilter` is a logger filter that can control which modules' output is
+    sent to the screen via the `StreamHandler` on this logger.
     """
 
-    def __init__(self, fileobj=None, logger=None, level=logging.INFO):
-        self.fileobj = fileobj
-
-        if isinstance(logger, basestring):
-            self.logger = logging.getLogger(logger)
-        elif isinstance(logger, logging.Logger):
-            self.logger = logger
-        else:
-            raise TypeError('logger must be a string or logging.Logger '
-                            'object; got %r' % logger)
-
-        if not self.logger.handlers:
-            self.logger.addHandler(logging.NullHandler())
-
-        self.level = level
+    def __init__(self, name, level=logging.INFO, stream=None):
+        logging.Logger.__init__(self, name, level)
+        self.propagate = False
         self.buffer = StringIO()
 
+        self.stream = None
+        self.set_stream(stream)
+
+        self.addHandler(_LogTeeHandler())
+
+    def set_stream(self, stream):
+        """
+        Set the stream that this logger is meant to replace.  Usually this will
+        be either `sys.stdout` or `sys.stderr`, but can be any object with
+        `write()` and `flush()` methods, as supported by
+        `logging.StreamHandler`.
+        """
+
+        for handler in self.handlers[:]:
+            if isinstance(handler, logging.StreamHandler):
+                self.handlers.remove(handler)
+
+        if stream is not None:
+            stream_handler = logging.StreamHandler(stream)
+            stream_handler.addFilter(_StreamHandlerEchoFilter())
+            stream_handler.setFormatter(logging.Formatter('%(message)s'))
+            self.addHandler(stream_handler)
+
+        self.stream = stream
+
     def write(self, message):
-        if self.fileobj is not None:
-            self.fileobj.write(message)
+        """
+        Buffers each message until a newline is reached.  Each complete line is
+        then published to the logging system through ``self.log()``.
+        """
 
         self.buffer.write(message)
         # For each line in the buffer ending with \n, output that line to the
@@ -71,20 +109,33 @@ class LogFileTee(object):
                 self.buffer.write(line)
                 return
             else:
-                caller_info = self.find_caller()
-
-                self.logger.log(self.level, line.rstrip(),
-                                extra={'actual_caller': caller_info})
+                modname, path, lno, func = self.find_actual_caller()
+                self.log(self.level, line.rstrip(),
+                        extra={'orig_name': modname, 'orig_pathname': path,
+                               'orig_lineno': lno, 'orig_func': func,
+                               'echo': True})
         self.buffer.truncate(0)
 
     def flush(self):
-        if self.fileobj is not None:
-            self.fileobj.flush()
+        """
+        Flushes all handlers attached to this logger; this includes flushing
+        any attached stream-like object (e.g. `sys.stdout`).
+        """
+
+        if self.buffer.tell():
+
 
         for handler in self.logger.handlers:
             handler.flush()
 
-    def find_caller(self):
+    def find_actual_caller(self):
+        """
+        Returns the full-qualified module name, full pathname, line number, and
+        function in which `StreamTeeLogger.write()` was called.  For example,
+        if this instance is used to replace `sys.stdout`, this will return the
+        location of any print statement.
+        """
+
         # Gleaned from code in the logging module itself...
         f = inspect.currentframe(1)
         # On some versions of IronPython, currentframe() returns None if
@@ -105,30 +156,56 @@ class LogFileTee(object):
         return rv
 
 
-class LogTeeHandler(logging.Handler):
-    def emit(self, record):
-        if not hasattr(record, 'actual_caller'):
-            return
-        modname, path, lno, func = record.actual_caller
-        if modname == '(unknown module)':
-            modname = 'root'
-        record.name = modname
-        record.pathname = path
-        try:
-            record.filename = os.path.basename(path)
-            record.module = os.path.splitext(record.filename)[0]
-        except (TypeError, ValueError, AttributeError):
-            record.filename = path
-            record.module = 'Unknown module'
-        record.lineno = lno
-        record.funcName = func
+class EchoFilter(object):
+    """
+    A logger filter primarily for use with `StreamTeeLogger`.  Adding an
+    `EchoFilter` to a `StreamTeeLogger` instances allows control over which
+    modules' print statements, for example, are output to stdout.
 
-        # Hand off to the global logger with the name same as the module of
-        # origin for this record
-        logger = logging.getLogger(modname)
-        if not logger.handlers:
-            logger.addHandler(logging.NullHandler())
-        logger.handle(record)
+    For example, to allow only output from the 'foo' module to be printed to
+    the console:
+
+    >>> stdout_logger = logging.getLogger('stsci.tools.logutil.stdout')
+    >>> stdout_logger.addFilter(EchoFilter(include=['foo']))
+
+    Now only print statements in the 'foo' module (or any sub-modules if 'foo'
+    is a package) are printed to stdout.   Any other print statements are just
+    sent to the appropriate logger.
+
+    Parameters
+    ----------
+    include : iterable
+        Packages or modules to include in stream output.  If set, then only the
+        modules listed here are output to the stream.
+
+    exclude : iterable
+        Packages or modules to be excluded from stream output.  If set then all
+        modules except for those listed here are output to the stream.  If both
+        ``include`` and ``exclude`` are provided, ``include`` takes precedence
+        and ``exclude`` is ignored.
+    """
+
+    def __init__(self, include=None, exclude=None):
+        self.include = set(include) if include is not None else include
+        self.exclude = set(exclude) if exclude is not None else exclude
+
+    def filter(self, record):
+        if ((self.include is None and self.exclude is None) or
+            not hasattr(record, 'orig_name')):
+            return True
+
+        record_name = record.orig_name.split('.')
+        while record_name:
+            if self.include is not None:
+                if '.'.join(record_name) in self.include:
+                    return True
+            elif self.exclude is not None:
+                if '.'.join(record_name) not in self.exclude:
+                    return True
+            record_name.pop()
+
+        record.echo = False
+        return True
 
 
 class LoggingExceptionHook(object):
@@ -154,40 +231,48 @@ class LoggingExceptionHook(object):
         self._oldexcepthook(exc_type, exc_value, traceback)
 
 
-def setup_logging():
+def setup_global_logging():
     """
-    Initializes the root logger to capture console output, Python warnings,
-    and Numpy warnings in a sensible manner.
+    Initializes capture of stdout, Python warnings, and exceptions; redirecting
+    them to the loggers for the modules from which they originated.
     """
 
-    global logging_started
+    global global_logging_started
 
-    if logging_started:
+    if global_logging_started:
         return
 
-    stdout_logger = logging.getLogger(__name__ + '.stdout')
-    stdout_logger.addHandler(LogTeeHandler())
-    stdout_logger.setLevel(logging.INFO)
-    sys.stdout = LogFileTee(sys.stdout, logger=stdout_logger)
+    orig_logger_class = logging.getLoggerClass()
+    logging.setLoggerClass(StreamTeeLogger)
+    try:
+        stream_logger = logging.getLogger(__name__ + '.stdout')
+    finally:
+        logging.setLoggerClass(orig_logger_class)
+
+    stream_logger.setLevel(logging.INFO)
+    stream_logger.set_stream(sys.stdout)
+    sys.stdout = stream_logger
 
     exception_logger = logging.getLogger(__name__ + '.exc')
     sys.excepthook = LoggingExceptionHook(exception_logger)
 
     logging.captureWarnings(True)
 
-    logging_started = True
+    global_logging_started = True
 
 
-def teardown_logging():
-    global logging_started
-    if not logging_started:
+def teardown_global_logging():
+    """Disable global logging of stdout, warnings, and exceptions."""
+
+    global global_logging_started
+    if not global_logging_started:
         return
 
-    sys.stdout = sys.stdout.fileobj
+    sys.stdout = sys.stdout.stream
     del sys.excepthook
     logging.captureWarnings(False)
 
-    logging_started = False
+    global_logging_started = False
 
 
 # Cribbed, with a few tweaks from Tom Aldcroft at
@@ -251,6 +336,38 @@ def create_logger(name, format='%(levelname)s: %(message)s', datefmt=None,
         logger.addHandler(hdlr)
 
     return logger
+
+
+class _StreamHandlerEchoFilter(logging.Filter):
+    """
+    Filter used by the `logging.StreamHandler` internal to `StreamTeeLogger`;
+    any message logged through `StreamTeeLogger.write()` has an ``echo=True``
+    attribute attached to the `LogRecord`.  This ensures that the
+    `StreamHandler` only logs messages with this ``echo`` attribute set to
+    `True`.
+    """
+
+    def filter(self, record):
+        if hasattr(record, 'echo'):
+            return record.echo
+        return False
+
+
+class _LogTeeHandler(logging.Handler):
+    def emit(self, record):
+        # Hand off to the global logger with the name same as the module of
+        # origin for this record
+        if not hasattr(record, 'orig_name'):
+            return
+
+        record = logging.LogRecord(record.orig_name, record.levelno,
+                                   record.orig_pathname, record.orig_lineno,
+                                   record.msg, record.args, record.exc_info,
+                                   record.orig_func)
+        logger = logging.getLogger(record.name)
+        if not logger.handlers:
+            logger.addHandler(logging.NullHandler())
+        logger.handle(record)
 
 
 if sys.version_info[:2] < (2, 7):
