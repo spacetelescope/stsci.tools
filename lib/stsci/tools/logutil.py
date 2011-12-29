@@ -230,8 +230,8 @@ class LoggingExceptionHook(object):
 
 def setup_global_logging():
     """
-    Initializes capture of stdout, Python warnings, and exceptions; redirecting
-    them to the loggers for the modules from which they originated.
+    Initializes capture of stdout/stderr, Python warnings, and exceptions;
+    redirecting them to the loggers for the modules from which they originated.
     """
 
     global global_logging_started
@@ -242,13 +242,17 @@ def setup_global_logging():
     orig_logger_class = logging.getLoggerClass()
     logging.setLoggerClass(StreamTeeLogger)
     try:
-        stream_logger = logging.getLogger(__name__ + '.stdout')
+        stdout_logger = logging.getLogger(__name__ + '.stdout')
+        stderr_logger = logging.getLogger(__name__ + '.stderr')
     finally:
         logging.setLoggerClass(orig_logger_class)
 
-    stream_logger.setLevel(logging.INFO)
-    stream_logger.set_stream(sys.stdout)
-    sys.stdout = stream_logger
+    stdout_logger.setLevel(logging.INFO)
+    stderr_logger.setLevel(logging.ERROR)
+    stdout_logger.set_stream(sys.stdout)
+    stderr_logger.set_stream(sys.stderr)
+    sys.stdout = stdout_logger
+    sys.stderr = stderr_logger
 
     exception_logger = logging.getLogger(__name__ + '.exc')
     sys.excepthook = LoggingExceptionHook(exception_logger)
@@ -259,13 +263,19 @@ def setup_global_logging():
 
 
 def teardown_global_logging():
-    """Disable global logging of stdout, warnings, and exceptions."""
+    """Disable global logging of stdio, warnings, and exceptions."""
 
     global global_logging_started
     if not global_logging_started:
         return
 
-    sys.stdout = sys.stdout.stream
+    stdout_logger = logging.getLogger(__name__ + '.stdout')
+    stderr_logger = logging.getLogger(__name__ + '.stderr')
+    if sys.stdout is stdout_logger:
+        sys.stdout = sys.stdout.stream
+    if sys.stderr is stderr_logger:
+        sys.stderr = sys.stderr.stream
+
     del sys.excepthook
     logging.captureWarnings(False)
 
