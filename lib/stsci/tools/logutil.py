@@ -90,7 +90,7 @@ class LogFileTee(object):
         # IronPython isn't run with -X:Frames.
         if f is not None:
             f = f.f_back
-        rv = "(unknown file)", 0, "(unknown function)"
+        rv = "(unknown module"), "(unknown file)", 0, "(unknown function)"
         while hasattr(f, "f_code"):
             co = f.f_code
             filename = os.path.normcase(co.co_filename)
@@ -109,6 +109,8 @@ class LogTeeHandler(logging.Handler):
         if not hasattr(record, 'actual_caller'):
             return
         modname, path, lno, func = record.actual_caller
+        if modname == '(unknown module)':
+            modname = 'root'
         record.name = modname
         record.pathname = path
         try:
