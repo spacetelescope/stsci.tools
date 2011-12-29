@@ -122,9 +122,6 @@ class StreamTeeLogger(logging.Logger):
         any attached stream-like object (e.g. `sys.stdout`).
         """
 
-        if self.buffer.tell():
-
-
         for handler in self.logger.handlers:
             handler.flush()
 
