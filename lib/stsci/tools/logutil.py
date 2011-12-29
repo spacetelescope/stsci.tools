@@ -72,6 +72,7 @@ class LogFileTee(object):
                 return
             else:
                 caller_info = self.find_caller()
+
                 self.logger.log(self.level, line.rstrip(),
                                 extra={'actual_caller': caller_info})
         self.buffer.truncate(0)
@@ -90,7 +91,7 @@ class LogFileTee(object):
         # IronPython isn't run with -X:Frames.
         if f is not None:
             f = f.f_back
-        rv = "(unknown module"), "(unknown file)", 0, "(unknown function)"
+        rv = "(unknown module)", "(unknown file)", 0, "(unknown function)"
         while hasattr(f, "f_code"):
             co = f.f_code
             filename = os.path.normcase(co.co_filename)
