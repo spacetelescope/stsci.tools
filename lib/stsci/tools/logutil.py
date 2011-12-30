@@ -276,6 +276,16 @@ def teardown_global_logging():
     if sys.stderr is stderr_logger:
         sys.stderr = sys.stderr.stream
 
+    # If we still have an unhandled exception go ahead and handle it with the
+    # replacement excepthook before deleting it
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    if exc_type is not None:
+        sys.excepthook(exc_type, exc_value, exc_traceback)
+    del exc_type
+    del exc_value
+    del exc_traceback
+    sys.exc_clear()
+
     del sys.excepthook
     logging.captureWarnings(False)
 
