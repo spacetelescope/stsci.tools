@@ -122,7 +122,7 @@ class StreamTeeLogger(logging.Logger):
         any attached stream-like object (e.g. `sys.stdout`).
         """
 
-        for handler in self.logger.handlers:
+        for handler in self.handlers:
             handler.flush()
 
     def find_actual_caller(self):
