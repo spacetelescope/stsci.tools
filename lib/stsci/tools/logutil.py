@@ -199,6 +199,8 @@ class EchoFilter(object):
             elif self.exclude is not None:
                 if '.'.join(record_name) not in self.exclude:
                     return True
+                else:
+                    break
             record_name.pop()
 
         record.echo = False
