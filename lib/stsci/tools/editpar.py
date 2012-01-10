@@ -7,7 +7,7 @@ Taken from pyraf/lib/epar.py, originally signed "M.D. De La Pena, 2000 Feb. 4"
 from __future__ import division # confidence high
 
 #System level modules
-import os, tempfile, time
+import os, sys, tempfile, time
 import capable
 if capable.OF_GRAPHICS:
     from Tkinter import  _default_root
@@ -1165,6 +1165,11 @@ class EditParDialog(object):
         self.top.destroy()
 
         print "\nTask "+self.taskName+" is running...\n"
+
+        # Before running the task, clear any already-handled exceptions that
+        # will be erroneously picked up by the task's logger utility.
+        # !! (take this line out when that is fixed) !!
+        sys.exc_clear()
 
         # Run the task
         try:
