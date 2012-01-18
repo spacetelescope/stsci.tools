@@ -8,6 +8,7 @@ import inspect
 import logging
 import os
 import sys
+import threading
 
 
 try:
@@ -65,6 +66,8 @@ class StreamTeeLogger(logging.Logger):
 
     def __init__(self, name, level=logging.INFO, stream=None):
         logging.Logger.__init__(self, name, level)
+        self.__thread_local_ctx = threading.local()
+        self.__thread_local_ctx.write_count = 0
         self.propagate = False
         self.buffer = StringIO()
 
@@ -99,22 +102,30 @@ class StreamTeeLogger(logging.Logger):
         then published to the logging system through ``self.log()``.
         """
 
-        self.buffer.write(message)
-        # For each line in the buffer ending with \n, output that line to the
-        # logger
-        self.buffer.seek(0)
-        for line in self.buffer:
-            if line[-1] != '\n':
-                self.buffer.truncate(0)
-                self.buffer.write(line)
+        self.__thread_local_ctx.write_count += 1
+
+        try:
+            if self.__thread_local_ctx.write_count > 1:
                 return
-            else:
-                modname, path, lno, func = self.find_actual_caller()
-                self.log(self.level, line.rstrip(),
-                        extra={'orig_name': modname, 'orig_pathname': path,
-                               'orig_lineno': lno, 'orig_func': func,
-                               'echo': True})
-        self.buffer.truncate(0)
+
+            self.buffer.write(message)
+            # For each line in the buffer ending with \n, output that line to
+            # the logger
+            self.buffer.seek(0)
+            for line in self.buffer:
+                if line[-1] != '\n':
+                    self.buffer.truncate(0)
+                    self.buffer.write(line)
+                    return
+                else:
+                    modname, path, lno, func = self.find_actual_caller()
+                    self.log(self.level, line.rstrip(),
+                            extra={'orig_name': modname, 'orig_pathname': path,
+                                   'orig_lineno': lno, 'orig_func': func,
+                                   'echo': True})
+            self.buffer.truncate(0)
+        finally:
+            self.__thread_local_ctx.write_count -= 1
 
     def flush(self):
         """
@@ -374,6 +385,11 @@ class _StreamHandlerEchoFilter(logging.Filter):
 
 
 class _LogTeeHandler(logging.Handler):
+    def __init__(self, level=logging.NOTSET):
+        logging.Handler.__init__(self, level)
+        self.__thread_local_ctx = threading.local()
+        self.__thread_local_ctx.logger_handle_counts = {}
+
     def emit(self, record):
         # Hand off to the global logger with the name same as the module of
         # origin for this record
@@ -387,7 +403,31 @@ class _LogTeeHandler(logging.Handler):
         logger = logging.getLogger(record.name)
         if not logger.handlers:
             logger.addHandler(logging.NullHandler())
-        logger.handle(record)
+
+        counts = self.__thread_local_ctx.logger_handle_counts
+        if logger.name in counts:
+            counts[logger.name] += 1
+        else:
+            counts[logger.name] = 1
+            if self._search_stack():
+                return
+        try:
+            if counts[logger.name] > 1:
+                return
+            logger.handle(record)
+        finally:
+            counts[logger.name] -= 1
+
+    def _search_stack(self):
+        curr_frame = inspect.currentframe(3)
+        while curr_frame:
+            if 'self' in curr_frame.f_locals:
+                s = curr_frame.f_locals['self']
+                if (isinstance(s, logging.Logger) and not
+                    isinstance(s, StreamTeeLogger)):
+                    return True
+            curr_frame = curr_frame.f_back
+        return False
 
 
 if sys.version_info[:2] < (2, 7):
