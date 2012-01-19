@@ -1,5 +1,5 @@
 from __future__ import division
-import math, time
+import math, os, sys, time
 import unittest
 import numpy as N
 """ This module extends the built-in unittest capabilities to facilitate
@@ -210,3 +210,28 @@ def testall(module,verb=0):
 def testlog(module,verb=0):
     result=LogTextRunner(verbosity=verb).run(buildsuite(module))
     return result
+
+def dump_file(fname, hdrwidth=80):
+    """ Convenience function to dump a named file to the stdout, with
+    an optional header listing the filename.  This is easy to do without
+    a convenience function like this, but having one reduces code in the XML
+    test files. """
+    assert os.path.exists(fname), "dump_file could not find: "+fname
+    sys.stdout.flush()
+    if hdrwidth>0:
+        print("")
+        print("="*hdrwidth)
+        print(fname+':')
+        print("="*hdrwidth)
+    f = open(fname, 'r')
+    for line in f:
+        print(line)
+    f.close()
+
+def dump_all_log_files(hdrwidth=80):
+    """ Convenience function to dump all *.log files in cwd to the stdout,
+    with an optional header listing each filename. See dump_file. """
+    import glob
+    flist = glob.glob('*.log')
+    for f in flist:
+        dump_file(f, hdrwidth=hdrwidth)
