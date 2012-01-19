@@ -16,6 +16,11 @@ class WatchedProcess(object):
         self.process.start()
         self.state = 1
 
+    def join_process(self):
+        assert self.state >= 1, "Not started: "+str(self.process)
+        self.process.join()
+        self.state = 2
+
     def time_since_started(self):
         assert self.state > 0, "Not yet started: "+str(self.process)
         return time.time() - self._start_time
@@ -86,8 +91,14 @@ def launch_and_wait(mp_proc_list, pool_size):
 
     # Out of the launching loop, can now wait on all procs left.
     for p in procs:
-        p.process.join()
-    # done, can return
+        p.join_process()
+
+    # Check all exit codes before returning
+    for p in procs:
+        if 0 != p.process.exitcode:
+            raise RuntimeError("Problem during: "+str(p.process.name)+ \
+                  ', exitcode: '+str(p.process.exitcode)+'. Check log.')
+    # all is well, can return
 
 
 def takes_time(x):
@@ -116,7 +127,8 @@ def do_main():
     subprocs = []
     for item in [2,3,4,5,6,7,8,9]:
         print("mputil: instantiating Process for x = "+str(item))
-        p = multiprocessing.Process(target=takes_time, args=(item,))
+        p = multiprocessing.Process(target=takes_time, args=(item,),
+                                    name='takes_time()')
         subprocs.append(p)
 
     # launch em, pool-fashion
