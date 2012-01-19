@@ -240,6 +240,7 @@ class LoggingExceptionHook(object):
                         exc_info=(exc_type, exc_value, traceback))
         self._oldexcepthook(exc_type, exc_value, traceback)
 
+
 def setup_global_logging():
     """
     Initializes capture of stdout/stderr, Python warnings, and exceptions;
@@ -252,7 +253,7 @@ def setup_global_logging():
 
     if global_logging_started:
         return
-    
+
     orig_logger_class = logging.getLoggerClass()
     logging.setLoggerClass(StreamTeeLogger)
     try:
@@ -302,7 +303,7 @@ def teardown_global_logging():
 
     del sys.excepthook
     logging.captureWarnings(False)
-    
+
     global_logging_started = False
 
 
