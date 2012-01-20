@@ -225,7 +225,7 @@ def dump_file(fname, hdrwidth=80):
         print("="*hdrwidth)
     f = open(fname, 'r')
     for line in f:
-        print(line)
+        print(line.rstrip())
     f.close()
 
 def dump_all_log_files(hdrwidth=80):
