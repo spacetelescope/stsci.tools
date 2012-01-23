@@ -10,7 +10,7 @@ config_spec.
 
 from __future__ import division  # confidence high
 
-from . configobj, irafutils, validate
+from . import configobj, irafutils, validate
 
 STANDARD_KEYS = ['min', 'max', 'missing', 'default']
 OVCDBG = False

@@ -6,7 +6,7 @@ performance concerns.
 $Id$
 """
 
-from __future__ import division # confidence high
+from __future__ import division  # confidence high
 
 import os, sys
 
@@ -14,6 +14,13 @@ OF_GRAPHICS = True
 
 if 'PYRAF_NO_DISPLAY' in os.environ or 'PYTOOLS_NO_DISPLAY' in os.environ:
     OF_GRAPHICS = False
+
+try:
+    import Tkinter
+except ImportError:
+    OF_GRAPHICS = False
+else:
+    del Tkinter
 
 if OF_GRAPHICS and sys.platform == 'darwin':
    #
