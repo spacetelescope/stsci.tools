@@ -31,6 +31,17 @@ if OF_GRAPHICS and sys.platform == 'darwin':
    #
    OF_GRAPHICS = os.access("/dev/console", os.R_OK)
 
+   # Add a double-check for remote X11 users.  We *think* this is a smaller
+   # set of cases, so we do it last minute here:
+   if not OF_GRAPHICS:
+       # On OSX, but logged in remotely. Normally (with native build) this
+       # means there are no graphics.  But, what if they're calling an
+       # X11-linked Python?  Then we should allow graphics to be attempted.
+       # There will *usually* be PyObjC modules on sys.path on the natively-
+       # linked Python. (might also shell out a call to otool on exec)
+       junk = ",".join(sys.path)
+       OF_GRAPHICS = junk.lower().find('/pyobjc') < 0
+
 # After all that, we may have decided that we want graphics.  Now
 # that we know it is ok to try to import Tkinter, we can test if it
 # is there.  If it is not, we are not capable of graphics.
