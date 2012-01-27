@@ -422,10 +422,10 @@ def integrityTestAllPkgCfgFiles(pkgObj):
                integrityTestTaskCfgFile(taskName, fname)
         except Exception, e:
             errors.append(str(e))
-    if len(errors) > 0:
-        allerrs = '\n'.join(errors)
-        raise RuntimeError('Errors found while integrity testing .cfg '+ \
-              'file(s) found under "'+pkgObj.__name__+'":\n'+allerrs)
+
+    assert len(errors) == 0, 'Errors found while integrity testing .cfg '+ \
+              'file(s) found under "'+pkgObj.__name__+'":\n'+ \
+              ('\n'.join(errors))
 
 
 def integrityTestTaskCfgFile(taskName, cfgFileName=None):
