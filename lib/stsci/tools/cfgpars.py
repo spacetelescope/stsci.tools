@@ -406,6 +406,45 @@ def mergeConfigObj(configObj, inputDict):
         setPar(configObj, key, inputDict[key])
 
 
+def integrityTestAllPkgCfgFiles(pkgObj):
+    """ Given a package OBJECT, inspect it and find all installed .cfg file-
+    using tasks under it.  Then them one at a time via
+    integrityTestTaskCfgFile, and report any/all errors. """
+    assert type(pkgObj) == type(os), \
+           "Expected module arg, got: "+str(type(pkgObj))
+    taskDict = findAllCfgTasksUnderDir(os.path.dirname(pkgObj.__file__))
+    # taskDict is { cfgFileName : taskName }
+    errors = []
+    for fname in taskDict:
+        taskName = taskDict[fname]
+        try:
+            if taskName:
+               integrityTestTaskCfgFile(taskName, fname)
+        except Exception, e:
+            errors.append(str(e))
+    if len(errors) > 0:
+        allerrs = '\n'.join(errors)
+        raise RuntimeError('Errors found while integrity testing .cfg '+ \
+              'file(s) found under "'+pkgObj.__name__+'":\n'+allerrs)
+
+
+def integrityTestTaskCfgFile(taskName, cfgFileName=None):
+    """ For a given task, inspect the given .cfg file (or simply find/use its
+    installed .cfg file), and check those values against the defaults
+    found in the installed .cfgspc file.  They should be the same.
+    If the file name is not given, the installed one is found and used. """
+
+    import teal # don't import above, to avoid circular import (may need to mv)
+    if not cfgFileName:
+        ignored, cfgFileName = findCfgFileForPkg(taskName, '.cfg')
+    diffDict = teal.diffFromDefaults(cfgFileName, report=False)
+    if len(diffDict) < 1:
+        return # no error
+    msg = 'The following par:value pairs from "'+cfgFileName+ \
+          '" are not the correct defaults: '+str(diffDict)
+    raise RuntimeError(msg)
+
+
 class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     """ This represents a task's dict of ConfigObj parameters. """
 
