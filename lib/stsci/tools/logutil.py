@@ -20,6 +20,114 @@ except ImportError:
 global_logging_started = False
 
 
+PY3K = sys.version_info[:2] >= (3, 0)
+
+
+# The global_logging system replaces the raw_input builtin (input on Python 3)
+# for two reasons:
+#
+#  1) It's the easiest way to capture the raw_input prompt and subsequent user
+#     input to the log.
+#
+#  2) On Python 2.x raw_input() does not play nicely with GUI toolkits if
+#     sys.stdout has been replaced by a non-file object (as global_logging
+#     does).  The default raw_input() implementation first checks that
+#     sys.stdout and sys.stdin are connected to a terminal.  If so it uses the
+#     PyOS_Readline() implementation, which allows a GUI's event loop to run
+#     while waiting for user input via PyOS_InputHook().  However, if
+#     sys.stdout is not attached to a terminal, raw_input() uses
+#     PyFile_GetLine(), which blocks until a line is entered on sys.stdin,
+#     thus preventing the GUI from updating.  It doesn't matter if sys.stdin is
+#     still attached to the terminal even if sys.stdout isn't, nor does it
+#     automatically fall back on sys.__stdout__ and sys.__stdin__.
+#
+#     This replacement raw_input() reimplements most of the built in
+#     raw_input(), but is aware that sys.stdout may have been replaced and
+#     knows how to find the real stdout if so.
+#
+#     Note that this is a non-issue in Python 3 which has a new implementation
+#     in which it doesn't matter what sys.stdout points to--only that it has a
+#     fileno() method that returns the correct file descriptor for the
+#     console's stdout.
+if not PY3K:
+    import __builtin__ as builtins
+    from ctypes import pythonapi, py_object, c_void_p, c_char_p, c_int
+    pythonapi.PyFile_AsFile.argtypes = (py_object,)
+    pythonapi.PyFile_AsFile.restype = c_void_p
+    pythonapi.PyOS_Readline.argtypes = (c_void_p, c_void_p, c_char_p)
+    pythonapi.fileno.argtypes = (c_void_p,)
+    pythonapi.fileno.restype = c_int
+    pythonapi.isatty.argtypes = (c_int,)
+    pythonapi.isatty.restype = c_int
+    pythonapi.PyOS_Readline.restype = c_char_p
+
+    def global_logging_raw_input(prompt):
+        def get_stream(name):
+            if hasattr(sys, name):
+                stream = getattr(sys, name)
+                if isinstance(stream, file):
+                    return stream
+                elif isinstance(stream, StreamTeeLogger):
+                    return stream.stream
+            if hasattr(sys, '__%s__' % name):
+                stream = getattr(sys, '__%s__' % name)
+                if isinstance(stream, file):
+                    return stream
+            return None
+
+        def check_interactive(stream, name):
+            try:
+                fd = stream.fileno()
+            except:
+                # Could be an AttributeError, an OSError, and IOError, or who
+                # knows what else...
+                return False
+
+            try:
+                realfd = pythonapi.fileno(c_void_p.in_dll(pythonapi, name))
+            except ValueError:
+                return False
+
+            return fd == realfd and pythonapi.isatty(fd)
+
+
+        stdout = get_stream('stdout')
+        stdin = get_stream('stdin')
+        stderr = get_stream('stderr')
+
+        if stdout is None:
+            raise RuntimeError('raw_input(): lost sys.stdout')
+        if stdin is None:
+            raise RuntimeError('raw_input(): lost sys.stdin')
+        if stderr is None:
+            raise RuntimeError('raw_input(): lost sys.stderr')
+
+        if (not check_interactive(stdin, 'stdin') or
+            not check_interactive(stdout, 'stdout')):
+            # Use the built-in raw_input(); this will repeat some of the checks
+            # we just did, but will save us from having to reimplement
+            # raw_input() in its entirety
+            retval = builtins._original_raw_input(prompt)
+        else:
+            stdout.flush()
+            infd = pythonapi.PyFile_AsFile(stdin)
+            outfd = pythonapi.PyFile_AsFile(stdout)
+            retval = pythonapi.PyOS_Readline(infd, outfd, str(prompt))
+            retval = retval.rstrip('\n')
+
+        if isinstance(sys.stdout, StreamTeeLogger):
+            sys.stdout.log_orig(str(prompt) + retval, echo=False)
+
+        return retval
+else:
+    import builtins
+    def global_logging_raw_input(prompt):
+        retval = builtins._original_raw_input(prompt)
+        if isinstance(sys.stdout, StreamTeeLogger):
+            sys.stdout.log_orig(str(prompt) + retval, echo=False)
+        return retval
+
+
 class StreamTeeLogger(logging.Logger):
     """
     A Logger implementation that is meant to replace an I/O stream such as
@@ -118,11 +226,7 @@ class StreamTeeLogger(logging.Logger):
                     self.buffer.write(line)
                     return
                 else:
-                    modname, path, lno, func = self.find_actual_caller()
-                    self.log(self.level, line.rstrip(),
-                            extra={'orig_name': modname, 'orig_pathname': path,
-                                   'orig_lineno': lno, 'orig_func': func,
-                                   'echo': True})
+                    self.log_orig(line.rstrip(), echo=True)
             self.buffer.truncate(0)
         finally:
             self.__thread_local_ctx.write_count -= 1
@@ -135,6 +239,18 @@ class StreamTeeLogger(logging.Logger):
 
         for handler in self.handlers:
             handler.flush()
+
+    def fileno(self):
+        if self.stream and hasattr(self.stream, 'fileno'):
+            return self.stream.fileno()
+        raise IOError('fileno() not defined for logger stream %r' %
+                      self.stream)
+
+    def log_orig(self, message, echo=True):
+        modname, path, lno, func = self.find_actual_caller()
+        self.log(self.level, message,
+                 extra={'orig_name': modname, 'orig_pathname': path,
+                        'orig_lineno': lno, 'orig_func': func, 'echo': echo})
 
     def find_actual_caller(self):
         """
@@ -155,11 +271,18 @@ class StreamTeeLogger(logging.Logger):
             co = f.f_code
             filename = os.path.normcase(co.co_filename)
             mod = inspect.getmodule(f)
+
             if mod is None:
                 modname = '__main__'
             else:
                 modname = mod.__name__
-            rv = (modname, co.co_filename, f.f_lineno, co.co_name)
+
+            if modname == __name__:
+                # Crawl back until the first frame outside of this module
+                f = f.f_back
+                continue
+
+            rv = (modname, filename, f.f_lineno, co.co_name)
             break
         return rv
 
@@ -274,6 +397,10 @@ def setup_global_logging():
 
     logging.captureWarnings(True)
 
+    rawinput = 'input' if PY3K else 'raw_input'
+    builtins._original_raw_input = getattr(builtins, rawinput)
+    setattr(builtins, rawinput, global_logging_raw_input)
+
     global_logging_started = True
 
 
@@ -303,6 +430,11 @@ def teardown_global_logging():
 
     del sys.excepthook
     logging.captureWarnings(False)
+
+    rawinput = 'input' if PY3K else 'raw_input'
+    if hasattr(builtins, '_original_raw_input'):
+        setattr(builtins, rawinput, builtins._original_raw_input)
+        del builtins._original_raw_input
 
     global_logging_started = False
 
