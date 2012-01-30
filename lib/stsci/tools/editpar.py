@@ -12,11 +12,12 @@ import capable
 if capable.OF_GRAPHICS:
     from Tkinter import  _default_root
     from Tkinter import *
+    import tkFileDialog
     from tkMessageBox import askokcancel, askyesno, showwarning
 
 # stsci.tools modules
 from irafglobals import userWorkingHome
-import basicpar, eparoption, filedlg, irafutils, listdlg, taskpars
+import basicpar, eparoption, irafutils, listdlg, taskpars
 
 # Constants
 MINVIEW     = 500
@@ -110,6 +111,7 @@ class EditParDialog(object):
         self._writeProtectOnSaveAs= False
         self._defaultsButtonTitle = "Defaults"
         self._optFile             = DFT_OPT_FILE
+        self._defSaveAsExt        = '.cfg'
 
         # Colors
         self._frmeColor = None # frame of window
@@ -1073,18 +1075,29 @@ class EditParDialog(object):
         curdir = os.getcwd()
 
         # The user wishes to save to a different name
-        # (could use Tkinter's FileDialog, but this one is prettier)
-        # initWProtState is only used in the 1st call of a session
-        fd = filedlg.PersistSaveFileDialog(self.top,
-                     "Save Parameter File As", self._getSaveAsFilter(),
-                     initWProtState=self._writeProtectOnSaveAs)
-        if fd.Show() != 1:
+        if capable.OF_TKFD_IN_EPAR:
+            # Prompt using native looking dialog
+            fname = tkFileDialog.asksaveasfilename(parent=self.top,
+                    title='Save Parameter File As',
+                    defaultextension=self._defSaveAsExt,
+                    initialdir=os.path.dirname(self._getSaveAsFilter()))
+#                   self._writeProtectOnSaveAs does anyone use this??
+        else:
+            # Prompt. (could use Tkinter's FileDialog, but this one is prettier)
+            # initWProtState is only used in the 1st call of a session
+            import filedlg
+            fd = filedlg.PersistSaveFileDialog(self.top,
+                         "Save Parameter File As", self._getSaveAsFilter(),
+                         initWProtState=self._writeProtectOnSaveAs)
+            if fd.Show() != 1:
+                fd.DialogCleanup()
+                os.chdir(curdir) # in case file dlg moved us
+                return
+            fname = fd.GetFileName()
+            self._writeProtectOnSaveAs = fd.GetWriteProtectChoice()
             fd.DialogCleanup()
-            os.chdir(curdir) # in case file dlg moved us
-            return
-        fname = fd.GetFileName()
-        self._writeProtectOnSaveAs = fd.GetWriteProtectChoice()
-        fd.DialogCleanup()
+
+        if not fname: return # canceled
 
         # First check the child parameters, aborting save if
         # invalid entries were encountered

@@ -28,12 +28,9 @@ import os, sys, string, commands
 import capable
 if capable.OF_GRAPHICS:
     from Tkinter import *
-    import FileDialog, tkFileDialog
+    import tkFileDialog
 else:
     StringVar = None
-
-# Community modules
-import filedlg #, clipboard_helper
 
 # Are we using X? (see description of logic in pyraf's wutil.py)
 USING_X = True
@@ -398,15 +395,22 @@ class EparOption(object):
         self.menu.tk_popup(xcoord, ycoord)
 
     def fileBrowser(self):
-        """Invoke a Community Tkinter generic File Dialog"""
-        self.fd = filedlg.PersistLoadFileDialog(self.entry,
-                        "Directory Browser", "*")
-        if self.fd.Show() != 1:
+        """Invoke a Tkinter file dialog"""
+        if capable.OF_TKFD_IN_EPAR:
+           fname = tkFileDialog.askopenfilename(parent=self.entry,
+                                                title="Select File")
+        else:
+            import filedlg
+            self.fd = filedlg.PersistLoadFileDialog(self.entry,
+                              "Select File", "*")
+            if self.fd.Show() != 1:
+                self.fd.DialogCleanup()
+                return
+            fname = self.fd.GetFileName()
             self.fd.DialogCleanup()
-            return
-        self.fname = self.fd.GetFileName()
-        self.fd.DialogCleanup()
-        self.choice.set(self.fname)
+        if not fname: return # canceled
+
+        self.choice.set(fname)
         # don't select when we go back to widget to reduce risk of
         # accidentally typing over the filename
         self.lastSelection = None

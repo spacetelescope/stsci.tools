@@ -4,12 +4,12 @@ $Id$
 from __future__ import division # confidence high
 
 import glob, os, sys
-import configobj, cfgpars, editpar, filedlg, vtor_checks
+import configobj, cfgpars, editpar, vtor_checks
 from cfgpars import APP_NAME
 from irafutils import rglob, printColsAuto
 import capable
 if capable.OF_GRAPHICS:
-    import tkMessageBox
+    import tkFileDialog, tkMessageBox
 
 # tool help
 tealHelpString = """\
@@ -780,15 +780,21 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # Also allow them to simply find any file - do not check _task_name_...
         # (could use Tkinter's FileDialog, but this one is prettier)
         if fname[-3:] == '...':
-            fd = filedlg.PersistLoadFileDialog(self.top, "Load Config File",
-                                               self._getSaveAsFilter())
-            if fd.Show() != 1:
+            if capable.OF_TKFD_IN_EPAR:
+                fname = tkFileDialog.askopenfilename(title="Load Config File",
+                                                     parent=self.top)
+            else:
+                import filedlg
+                fd = filedlg.PersistLoadFileDialog(self.top,
+                                                   "Load Config File",
+                                                   self._getSaveAsFilter())
+                if fd.Show() != 1:
+                    fd.DialogCleanup()
+                    return
+                fname = fd.GetFileName()
                 fd.DialogCleanup()
-                return
-            fname = fd.GetFileName()
-            fd.DialogCleanup()
-            if fname == None: return # canceled
 
+        if not fname: return # canceled
         self.debug('Loading from: '+fname)
 
         # load it into a tmp object (use associatedPkg if we have one)
