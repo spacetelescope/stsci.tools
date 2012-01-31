@@ -406,7 +406,7 @@ def mergeConfigObj(configObj, inputDict):
         setPar(configObj, key, inputDict[key])
 
 
-def integrityTestAllPkgCfgFiles(pkgObj):
+def integrityTestAllPkgCfgFiles(pkgObj, output=True):
     """ Given a package OBJECT, inspect it and find all installed .cfg file-
     using tasks under it.  Then them one at a time via
     integrityTestTaskCfgFile, and report any/all errors. """
@@ -419,6 +419,8 @@ def integrityTestAllPkgCfgFiles(pkgObj):
         taskName = taskDict[fname]
         try:
             if taskName:
+               print 'In '+pkgObj.__name__+', checking task: '+ \
+                     taskName+', file: '+fname
                integrityTestTaskCfgFile(taskName, fname)
         except Exception, e:
             errors.append(str(e))
