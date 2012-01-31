@@ -419,9 +419,10 @@ def integrityTestAllPkgCfgFiles(pkgObj, output=True):
         taskName = taskDict[fname]
         try:
             if taskName:
-               print 'In '+pkgObj.__name__+', checking task: '+ \
-                     taskName+', file: '+fname
-               integrityTestTaskCfgFile(taskName, fname)
+                if output:
+                    print 'In '+pkgObj.__name__+', checking task: '+ \
+                           taskName+', file: '+fname
+                integrityTestTaskCfgFile(taskName, fname)
         except Exception, e:
             errors.append(str(e))
 
