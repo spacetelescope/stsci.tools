@@ -55,8 +55,6 @@ if not PY3K:
     pythonapi.PyFile_AsFile.argtypes = (py_object,)
     pythonapi.PyFile_AsFile.restype = c_void_p
     pythonapi.PyOS_Readline.argtypes = (c_void_p, c_void_p, c_char_p)
-    pythonapi.fileno.argtypes = (c_void_p,)
-    pythonapi.fileno.restype = c_int
     pythonapi.isatty.argtypes = (c_int,)
     pythonapi.isatty.restype = c_int
     pythonapi.PyOS_Readline.restype = c_char_p
@@ -83,10 +81,7 @@ if not PY3K:
                 # knows what else...
                 return False
 
-            try:
-                realfd = pythonapi.fileno(c_void_p.in_dll(pythonapi, name))
-            except ValueError:
-                return False
+            realfd = {'stdin': 0, 'stdout': 1, 'stderr': 2}[name]
 
             return fd == realfd and pythonapi.isatty(fd)
 
