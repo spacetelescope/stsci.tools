@@ -1634,7 +1634,7 @@ class EditParDialog(object):
             # right here is the ideal place to collect a history of messages
             forhist = msg
             if cat: forhist = '['+cat+'] '+msg
-            forhist = time.strftime("%a %T")+': '+forhist
+            forhist = time.strftime("%a %H:%M:%S")+': '+forhist
             self._msgHistory.append(forhist)
             # now set the spacing
             msg = '  '+msg
