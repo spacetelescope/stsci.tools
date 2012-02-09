@@ -113,8 +113,10 @@ class EparOption(object):
         self.inputLabel.pack(side = LEFT, fill = X, expand = TRUE)
 
         # Get the prompt string and determine if special handling is needed
-        self.prompt = self.paramInfo.get(field = "p_prompt", native = 0,
-                      prompt = 0)
+        # Use the prompt/description from the default version, in case they
+        # have edited theirs - this is not editable - see ticket #803
+        self.prompt = self.defaultParamInfo.get(field="p_prompt", native=0,
+                                                prompt=0)
 
         # Check the prompt to determine how many lines of valid text exist
         lines       = self.prompt.split("\n")
@@ -136,7 +138,8 @@ class EparOption(object):
             promptLines = promptLines[:-len(DSCRPTN_FLAG)]
             self._flaggedDescription = True
         fgColor = "black"
-        if self._flaggedDescription: fgColor = "red"
+        # turn off this red coloring for the DSCRPTN_FLAG - see #803
+#       if self._flaggedDescription: fgColor = "red"
 
         # Generate the prompt label
         self.promptLabel = Label(self.master_frame, anchor=W, fg=fgColor,
