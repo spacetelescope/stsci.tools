@@ -81,7 +81,7 @@ class EditParDialog(object):
         self._guiName = title
         self.taskName = self._taskParsObj.getName()
         self.pkgName = self._taskParsObj.getPkgname()
-        self.paramList = self._taskParsObj.getParList(docopy=1)
+        theParamList = self._taskParsObj.getParList(docopy=1)
         self._rcDir = resourceDir
         self.debug('TASK: '+self.taskName+', PKG: '+self.pkgName+ \
                    ', RC: '+self._rcDir)
@@ -89,12 +89,12 @@ class EditParDialog(object):
         self._tmwm = int(os.getenv('TEAL_MOUSE_WHEEL_MULTIPLIER', 7))
 
         # Get default parameter values for unlearn - watch return value
-        # NOTE - this may edit self.paramList
+        # NOTE - this may edit/reorder the working paramList
         if not self._setupDefaultParamList():
             return
 
         # Ignore the last parameter which is $nargs
-        self.numParams = len(self.paramList) - 1
+        self.numParams = len(theParamList) - 1
 
         # Set all default master GUI settings, then
         # allow subclasses to override them
@@ -508,39 +508,58 @@ class EditParDialog(object):
 
 
     def _setupDefaultParamList(self):
+        """ This creates self.defaultParamList.  It also does some checks
+        on the paramList, sets its order if needed, and deletes any extra
+        or unknown pars if found. We assume the order of self.defaultParamList
+        is the correct order. """
 
         # Obtain the default parameter list
-        dparlist = self._taskParsObj.getDefaultParList()
-        if len(dparlist) != len(self.paramList):
+        self.defaultParamList = self._taskParsObj.getDefaultParList()
+        theParamList = self._taskParsObj.getParList()
+
+        # Lengths are probably equal but this isn't necessarily an error
+        # here, so we check for differences below.
+        if len(self.defaultParamList) != len(theParamList):
             # whoa, lengths don't match (could be some missing or some extra)
             pmsg = 'Current list not same length as default list'
             if not self._handleParListMismatch(pmsg):
                 return False
-        # convert it to a dict
-        dpardict = {}
-        for par in dparlist:
-            dpardict[par.fullName()] = par
 
-        # Build default list sorted into same order as current list
-        dsort = []
-        todel = []
-        for par in self.paramList:
-            if par.fullName() in dpardict:
-                dsort.append(dpardict[par.fullName()])
-            else: # this is an extra/unknown par - let subclass handle it
-                if not self._handleParListMismatch('Unexpected par: "'+\
-                            par.fullName()+'"', extra=True):
-                    return False
-                todel.append(par.fullName())
+        # convert current par values to a dict of { par-fullname:par-object }
+        # for use below
+        ourpardict = {}
+        for par in theParamList: ourpardict[par.fullName()] = par
 
-        # handle if there are any to ignore/delete
-        if len(todel) > 0:
-            newList = [p for p in self.paramList if p.fullName() not in todel]
-            self.paramList = newList
-            for p in todel:
-                print('Ignoring unexpected par: "'+p+'"')
+        # Sort our paramList according to the order of the defaultParamList
+        # and repopulate the list according to that order. Create sortednames.
+        sortednames = [p.fullName() for p in self.defaultParamList]
 
-        self.defaultParamList = dsort
+        # Rebuild par list sorted into correct order.  Also find/flag any
+        # missing pars or any extra/unknown pars.  This automatically deletes
+        # "extras" by not adding them to the sorted list in the first place.
+        migrated = []
+        newList = []
+        for fullName in sortednames:
+            if fullName in ourpardict:
+                newList.append(ourpardict[fullName])
+                migrated.append(fullName) # make sure all get moved over
+            else: # this is a missing par - insert the default version
+                theDfltVer = \
+                    [p for p in self.defaultParamList if p.fullName()==fullName]
+                newList.append(copy.deepcopy(theDfltVer[0]))
+
+        # Update!  Next line writes to the self._taskParsObj.getParList() obj
+        theParamList[:] = newList # fill with newList, keep same mem pointer
+
+        # See if any got left out
+        extras = [fn for fn in ourpardict.keys() if not fn in migrated]
+        for fullName in extras:
+            # this is an extra/unknown par - let subclass handle it
+            if not self._handleParListMismatch('Unexpected par: "'+\
+                        fullName+'"', extra=True):
+                return False
+            print('Ignoring unexpected par: "'+p+'"')
+
         # return value indicates that all is well to continue
         return True
 
@@ -548,11 +567,14 @@ class EditParDialog(object):
     # Method to create the parameter entries
     def makeEntries(self, master, statusBar):
 
+        # Get model data, the list of pars
+        theParamList = self._taskParsObj.getParList()
+
         # Determine the size of the longest input string
         inputLength = INPUTWIDTH
         for i in range(self.numParams):
-            inputString = self.paramList[i].name
-            if (len(inputString) > inputLength):
+            inputString = theParamList[i].name
+            if len(inputString) > inputLength:
                 inputLength = len(inputString)
 
         # Set up the field widths
@@ -568,15 +590,15 @@ class EditParDialog(object):
         dfltsVerb = self._defaultsButtonTitle
         if dfltsVerb[-1]=='s': dfltsVerb = dfltsVerb[:-1]
         for i in range(self.numParams):
-            scope = self.paramList[i].scope
-            eparOpt = self._nonStandardEparOptionFor(self.paramList[i].type)
+            scope = theParamList[i].scope
+            eparOpt = self._nonStandardEparOptionFor(theParamList[i].type)
             cbo = self._defineEditedCallbackObjectFor(scope,
-                                                      self.paramList[i].name)
+                                                      theParamList[i].name)
             hcbo = None
             if self._knowTaskHelpIsHtml:
                 hcbo = self
             self.entryNo[i] = eparoption.eparOptionFactory(master, statusBar,
-                                  self.paramList[i], self.defaultParamList[i],
+                                  theParamList[i], self.defaultParamList[i],
                                   self.doScroll, self.fieldWidths,
                                   plugIn=eparOpt, editedCallbackObj=cbo,
                                   helpCallbackObj=hcbo, mainGuiObj=self,
@@ -606,9 +628,14 @@ class EditParDialog(object):
     def _toggleSectionActiveState(self, sectionName, state, skipList):
         """ Make an entire section (minus skipList items) either active or
             inactive.  sectionName is the same as the param's scope. """
+
+        # Get model data, the list of pars
+        theParamList = self._taskParsObj.getParList()
+
+        # Loop over their assoc. entries
         for i in range(self.numParams):
-            if self.paramList[i].scope == sectionName:
-                if skipList and self.paramList[i].name in skipList:
+            if theParamList[i].scope == sectionName:
+                if skipList and theParamList[i].name in skipList:
 #                   self.entryNo[i].setActiveState(True) # these always active
                     pass # if it started active, we don't need to reactivate it
                 else:
@@ -1413,21 +1440,24 @@ class EditParDialog(object):
             entries (slower and not always necessary). Note the
             corresponding TparDisplay method. """
 
-        if len(aParList) != len(self.paramList):
+        # Get model data, the list of pars
+        theParamList = self._taskParsObj.getParList() # we may modify members
+
+        if len(aParList) != len(theParamList):
             showwarning(message="Attempting to set parameter values from a "+ \
                         "list of different length ("+str(len(aParList))+ \
                         ") than the number shown here ("+ \
-                        str(len(self.paramList))+").  Be aware.",
+                        str(len(theParamList))+").  Be aware.",
                         title="Parameter List Length Mismatch")
 
         # LOOP THRU GUI PAR LIST
         for i in range(self.numParams):
-            par = self.paramList[i]
+            par = theParamList[i]
             if par.type == "pset":
                 continue # skip PSET's for now
             gui_entry = self.entryNo[i]
 
-            # Set the value in self.paramList before setting it in the GUI
+            # Set the value in the paramList before setting it in the GUI
             # This may be in the form of a list, or an IrafParList (getValue)
             if isinstance(aParList, list):
                 # Since "aParList" can have them in different order and number
@@ -1475,13 +1505,17 @@ class EditParDialog(object):
         validation, and it it not necessarily the same value saved in the
         model, which is always behind the GUI setting, in time. This is NOT
         to be used to get all the values - it would not be efficient. """
+
+        # Get model data, the list of pars
+        theParamList = self._taskParsObj.getParList()
+
         # NOTE: If par scope is given, it will be used, otherwise it is
         # assumed to be unneeded and the first name-match is returned.
         fullName = basicpar.makeFullName(scope, name)
 
         # Loop over the parameters to find the requested par
         for i in range(self.numParams):
-            par = self.paramList[i] # IrafPar or subclass
+            par = theParamList[i] # IrafPar or subclass
             entry = self.entryNo[i] # EparOption or subclass
             if par.fullName() == fullName or \
                (scope == None and par.name == name):
@@ -1501,10 +1535,13 @@ class EditParDialog(object):
         self.badEntries = []
         asNative = self._taskParsObj.knowAsNative()
 
+        # Get model data, the list of pars
+        theParamList = self._taskParsObj.getParList()
+
         # Loop over the parameters to obtain the modified information
         for i in range(self.numParams):
 
-            par = self.paramList[i] # IrafPar or subclass
+            par = theParamList[i] # IrafPar or subclass
             entry = self.entryNo[i] # EparOption or subclass
             # Cannot change an entry if it is a PSET, just skip
             if par.type == "pset":

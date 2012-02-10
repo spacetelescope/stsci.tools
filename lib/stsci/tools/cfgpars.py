@@ -473,6 +473,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         self._debugYetToPost = []
         self.__assocPkg = associatedPkg
 
+        # The __paramList pointer remains the same for the life of this object
+        self.__paramList = []
+
         # Set up ConfigObj stuff
         assert setAllToDefaults or os.path.isfile(cfgFileName), \
                "Config file not found: "+cfgFileName
@@ -545,6 +548,10 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # 'ans' will be True, False, or a dict (anything but True is bad)
         ans = self.validate(self._vtor, preserve_errors=True,
                             copy=setAllToDefaults)
+        # Note: before the call to validate(), the list returned from 
+        # self.keys() is in the order found in self.filename.  If that file
+        # was missing items that are in the .cfgspc, they will now show up
+        # in self.keys(), but not necessarily in the same order as the .cfgspc
         hasTypeErr = ans != True
         extra = self.listTheExtras(True)
 
@@ -617,15 +624,37 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             # init phase we may not yet have a logger, yet have stuff to log
             self._debugYetToPost.append(msg) # add to our little cache
 
-    def syncParamList(self, firstTime):
-        """ Set or reset the internal __paramList from the dict's contents. """
-        # See the note in setParam about this design needing to change...
-        self.__paramList = self._getParamsFromConfigDict(self,
-                                initialPass=firstTime)
-                                # dumpCfgspcTo=sys.stdout)
+    def syncParamList(self, firstTime, preserve_order=True):
+        """ Set or reset the internal param list from the dict's contents. """
+        # See the note in setParam about this design.
+
+        # Get latest par values from dict.  Make sure we do not
+        # change the id of the __paramList pointer here.
+        new_list = self._getParamsFromConfigDict(self, initialPass=firstTime)
+                                               # dumpCfgspcTo=sys.stdout)
         # Have to add this odd last one for the sake of the GUI (still?)
         if self._forUseWithEpar:
-            self.__paramList.append(basicpar.IrafParS(['$nargs','s','h','N']))
+            new_list.append(basicpar.IrafParS(['$nargs','s','h','N']))
+
+        if len(self.__paramList) > 0 and preserve_order:
+            # Here we have the most up-to-date data from the actual data
+            # model, the ConfigObj dict, and we need to use it to fill in
+            # our param list.  BUT, we need to preserve the order our list
+            # has had up until now (by unique parameter name).
+            namesInOrder = [p.fullName() for p in self.__paramList]
+            assert len(namesInOrder) == len(new_list), \
+                   'Mismatch in num pars, had: '+str(len(namesInOrder))+ \
+                   ', now have: '+str(len(new_list))+', '+str(namesInOrder)
+            self.__paramList[:] = [] # clear list, keep same pointer
+            # create a flat dict view of new_list, for ease of use in next step
+            new_list_dict = {} # can do in one step in v2.7
+            for par in new_list: new_list_dict[par.fullName()] = par
+            # populate
+            for fn in namesInOrder:
+                self.__paramList.append(new_list_dict[fn])
+        else:
+            # Here we just take the data in whatever order it came.
+            self.__paramList[:] = new_list # keep same list pointer
 
     def getName(self): return self.__taskName
 
@@ -639,9 +668,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     def getDefaultParList(self):
         """ Return a par list just like ours, but with all default values. """
         # The code below (create a new set-to-dflts obj) is correct, but it
-        # adds a tenth of a second to startup.  It's not clear how much this
-        # is used.  Clicking "Defaults" in the GUI does not call this.  This
-        # data is only used in the individual widget pop-up menus.
+        # adds a tenth of a second to startup.  Clicking "Defaults" in the
+        # GUI does not call this.  But this can be used to set the order seen.
 
         # But first check for rare case of no cfg file name
         if self.filename == None:
@@ -700,7 +728,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         assert idxHint != None, "ConfigObjPars relies on a valid idxHint"
         assert name == self.__paramList[idxHint].name, \
                'Error in setParam, name: "'+name+'" != name at idxHint: "'+\
-               self.__paramList[idxHint].name+'"'
+               self.__paramList[idxHint].name+'", idxHint: '+str(idxHint)
         self.__paramList[idxHint].set(val)
 
     def saveParList(self, *args, **kw):
@@ -832,6 +860,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             self._allExecutes = {}
 
         # start walking ("tell yer story walkin, buddy")
+        # NOTE: this relies on the "in" operator returning keys in the
+        # order that they exist in the dict (which depends on ConfigObj keeping
+        # the order they were found in the original file)
         for key in cfgObj:
             val = cfgObj[key]
 

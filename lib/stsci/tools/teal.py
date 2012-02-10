@@ -981,11 +981,15 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         """ Here we look through the entire .cfgspc to see if any parameters
         are affected by this trigger. For those that are, we apply the action
         to the GUI widget.  The action is specified by depType. """
+
         # First find which items are dependent upon this trigger (cached)
         # e.g. { scope1.name1 : dep'cy-type, scope2.name2 : dep'cy-type, ... }
         depParsDict = self._taskParsObj.getParsWhoDependOn(triggerName)
         if not depParsDict: return
         if 0: print "Dependent parameters:\n"+str(depParsDict)+"\n"
+
+        # Get model data, the list of pars
+        theParamList = self._taskParsObj.getParList()
 
         # Then go through the dependent pars and apply the trigger to them
         settingMsg = ''
@@ -993,7 +997,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             used = False
             # For each dep par, loop to find the widget for that scope.name
             for i in range(self.numParams):
-                scopedName = self.paramList[i].scope+'.'+self.paramList[i].name # diff from makeFullName!!
+                scopedName = theParamList[i].scope+'.'+theParamList[i].name # diff from makeFullName!!
                 if absName == scopedName: # a match was found
                     depType = depParsDict[absName]
                     if depType == 'active_if':
@@ -1004,7 +1008,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                         self.entryNo[i].forceValue(outval, noteEdited=True)
                         # WARNING! noteEdited=True may start recursion!
                         if len(settingMsg) > 0: settingMsg += ", "
-                        settingMsg += '"'+self.paramList[i].name+'" to "'+\
+                        settingMsg += '"'+theParamList[i].name+'" to "'+\
                                       outval+'"'
                     elif depType in ('set_yes_if', 'set_no_if'):
                         if bool(outval):
@@ -1013,11 +1017,11 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                             self.entryNo[i].forceValue(newval, noteEdited=True)
                             # WARNING! noteEdited=True may start recursion!
                             if len(settingMsg) > 0: settingMsg += ", "
-                            settingMsg += '"'+self.paramList[i].name+'" to "'+\
+                            settingMsg += '"'+theParamList[i].name+'" to "'+\
                                           newval+'"'
                         else:
                             if len(settingMsg) > 0: settingMsg += ", "
-                            settingMsg += '"'+self.paramList[i].name+\
+                            settingMsg += '"'+theParamList[i].name+\
                                           '" (no change)'
                     elif depType == 'is_disabled_by':
                         # this one is only used with boolean types
@@ -1032,9 +1036,9 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                             self.entryNo[i].setActiveState(False)
                             # we'd need this if the par had no _section_switch_
 #                           self._toggleSectionActiveState(
-#                                self.paramList[i].scope, False, None)
+#                                theParamList[i].scope, False, None)
                             if len(settingMsg) > 0: settingMsg += ", "
-                            settingMsg += '"'+self.paramList[i].name+'" to "'+\
+                            settingMsg += '"'+theParamList[i].name+'" to "'+\
                                           outval+'"'
                     else:
                         raise RuntimeError('Unknown dependency: "'+depType+ \
