@@ -50,13 +50,12 @@ PY3K = sys.version_info[:2] >= (3, 0)
 #     fileno() method that returns the correct file descriptor for the
 #     console's stdout.
 if not PY3K:
+    import os
     import __builtin__ as builtins
     from ctypes import pythonapi, py_object, c_void_p, c_char_p, c_int
     pythonapi.PyFile_AsFile.argtypes = (py_object,)
     pythonapi.PyFile_AsFile.restype = c_void_p
     pythonapi.PyOS_Readline.argtypes = (c_void_p, c_void_p, c_char_p)
-    pythonapi.isatty.argtypes = (c_int,)
-    pythonapi.isatty.restype = c_int
     pythonapi.PyOS_Readline.restype = c_char_p
 
     def global_logging_raw_input(prompt):
@@ -80,10 +79,10 @@ if not PY3K:
                 # Could be an AttributeError, an OSError, and IOError, or who
                 # knows what else...
                 return False
-
+    
             realfd = {'stdin': 0, 'stdout': 1, 'stderr': 2}[name]
 
-            return fd == realfd and pythonapi.isatty(fd)
+            return fd == realfd and os.isatty(fd)
 
 
         stdout = get_stream('stdout')
