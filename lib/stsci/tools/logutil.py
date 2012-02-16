@@ -53,6 +53,10 @@ if not PY3K:
     import os
     import __builtin__ as builtins
     from ctypes import pythonapi, py_object, c_void_p, c_char_p, c_int
+
+    # PyFile_AsFile returns a FILE * from a python file object.
+    # This is used later with pythonapi.PyOS_Readline to perform
+    # the readline.
     pythonapi.PyFile_AsFile.argtypes = (py_object,)
     pythonapi.PyFile_AsFile.restype = c_void_p
     pythonapi.PyOS_Readline.argtypes = (c_void_p, c_void_p, c_char_p)
