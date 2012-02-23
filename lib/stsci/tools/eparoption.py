@@ -532,11 +532,12 @@ class EnumEparOption(EparOption):
         for option in self.paramInfo.choice:
             lbl = option
             if lbl=='-': lbl = ' -' # Tk treats '-' as a separator request
-            self.entry.menu.add_radiobutton(label     = lbl,
-                                             value    = option,
-                                             variable = self.choice,
-                                             indicatoron = 0,
-                                             underline = underline[option])
+            self.entry.menu.add_radiobutton(label       = lbl,
+                                            value       = option,
+                                            variable    = self.choice,
+                                            command     = self.selected,
+                                            indicatoron = 0,
+                                            underline   = underline[option])
 
         # set up a pointer from the menubutton back to the menu
         self.entry['menu'] = self.entry.menu
@@ -568,6 +569,10 @@ class EnumEparOption(EparOption):
         except ValueError:
             # initial null value may not be in list
             pass
+
+    def selected(self):
+        """They have chosen an enumerated option."""
+        self.widgetEdited(action='entry') # kick off any checks that need doin
 
 #   def setActiveState(self, active):
 #       [...]
