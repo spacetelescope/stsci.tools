@@ -294,12 +294,12 @@ class WCSObject:
             # Initialize WCS object with keyword values...
             try:
                 _dkey = 'orientat'
-                if _header.has_key('orientat'):
+                if 'orientat' in _header:
                     self.orient = _header['orientat']
                 else:
                     self.orient = None
 
-                if _header['naxis'] == 0 and _header.has_key('pixvalue'):
+                if _header['naxis'] == 0 and 'pixvalue' in _header:
 
                 # Check for existence of NPIX/PIXVALUE keywords
                 # which represent a constant array extension
@@ -896,7 +896,7 @@ class WCSObject:
         for key in self.wcstrans.keys():
             _archive_key = self._buildNewKeyname(key,_prefix)
             if key!= 'pixel scale':
-                if header.has_key(_archive_key):
+                if _archive_key in header:
                     self.orig_wcs[_archive_key] = header[_archive_key]
                 else:
                     self.orig_wcs[_archive_key] = header[key]
@@ -913,7 +913,7 @@ class WCSObject:
         self.revert[_archive_key] = 'pixel scale'
 
         # Setup keyword to record when these keywords were backed up.
-        if header.has_key('WCSCDATE'):
+        if 'WCSCDATE' in header:
             self.orig_wcs['WCSCDATE'] = header['WCSCDATE']
         else:
             self.orig_wcs['WCSCDATE'] = fileutil.getLTime()
@@ -954,7 +954,7 @@ class WCSObject:
 
             # Verify that archive keywords will not be overwritten,
             # unless overwrite=yes.
-            _old_key = _extn.header.has_key(key)
+            _old_key = key in _extn.header
             if  _old_key == True and overwrite == no:
                 if not quiet:
                     print 'WCS keyword',key,' already exists! Not overwriting.'
@@ -962,22 +962,18 @@ class WCSObject:
 
             # No archive keywords exist yet in file, or overwrite=yes...
             # Extract the value for the original keyword
-            if _extn.header.has_key(_dkey):
+            if _dkey in _extn.header:
 
                 # Extract any comment string for the keyword as well
                 _indx_key = _extn.header.ascard.index_of(_dkey)
                 _full_key = _extn.header.ascard[_indx_key]
-                _indx_comment = _full_key.ascardimage().find('/')
-                if _indx_comment < 0:
-                    _comment = None
-                else:
-                    _comment = _full_key.ascardimage()[_indx_comment+1:].strip()
                 if not quiet:
                     print 'updating ',key,' with value of: ',self.orig_wcs[key]
-                _extn.header.update(key,self.orig_wcs[key],comment=_comment)
+                _extn.header.update(key, self.orig_wcs[key],
+                                    comment=_full_key.comment)
 
         key = 'WCSCDATE'
-        if not _extn.header.has_key(key):
+        if key not in _extn.header:
             # Print out history keywords to record when these keywords
             # were backed up.
             _extn.header.update(key,self.orig_wcs[key],
@@ -1018,7 +1014,7 @@ class WCSObject:
                 if key != 'pixel scale':
                     _okey = self._buildNewKeyname(key,_prepend)
 
-                    if _extn.header.has_key(_okey):
+                    if _okey in _extn.header:
                         _extn.header[key] = _extn.header[_okey]
                     else:
                         print 'No original WCS values found. Exiting...'
@@ -1046,7 +1042,7 @@ class WCSObject:
                 wcs_append = True
                 oldhdu = pyfits.open(refname,mode='append')
                 for e in oldhdu:
-                    if e.header.has_key('extname') and e.header['extname'] == 'WCS':
+                    if 'extname' in e.header and e.header['extname'] == 'WCS':
                         wcs_append = False
                 if wcs_append == True:
                     oldhdu.append(hdu)

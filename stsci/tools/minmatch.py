@@ -248,7 +248,7 @@ class QuietMinMatchDict(MinMatchDict):
             except KeyError:
                 return 0
         else:
-            return self.data.has_key(key)
+            return key in self.data
 
 
 # some simple tests

@@ -327,13 +327,13 @@ def getFilterNames(header,filternames=None):
 
     # Find out what instrument the input header came from, based on the
     # 'INSTRUME' keyword
-    if header.has_key('INSTRUME'):
+    if 'INSTRUME' in header:
         instrument = header['INSTRUME']
     else:
         raise ValueError,'Header does not contain INSTRUME keyword.'
 
     # Check to make sure this instrument is supported in _keydict
-    if _keydict.has_key(instrument):
+    if instrument in _keydict:
         _filtlist = _keydict[instrument]
     else:
         _filtlist = filternames
@@ -344,7 +344,7 @@ def getFilterNames(header,filternames=None):
     # blank keywords. Values containing 'CLEAR' or 'N/A' are valid.
     _filter_values = []
     for _key in _filtlist:
-        if header.has_key(_key):
+        if _key in header:
             _val = header[_key]
         else:
             _val = ''
@@ -556,7 +556,7 @@ def getHeader(filename,handle=None):
 
     if _extn > 0:
         # Append correct extension/chip/group header to PRIMARY...
-        for _card in getExtn(_fimg,_extn).header.ascardlist():
+        for _card in getExtn(_fimg,_extn).header.ascard:
             _hdr.ascard.append(_card)
 
     if not handle:
@@ -789,7 +789,7 @@ def countExtn(fimg,extname='SCI'):
         closefits = True
     n = 0
     for e in fimg:
-        if e.header.has_key('extname') and e.header['extname'] == extname:
+        if 'extname' in e.header and e.header['extname'] == extname:
             n += 1
 
     if closefits:
@@ -833,7 +833,7 @@ def getExtn(fimg,extn=None):
             except KeyError:
                 _extn = None
                 for e in fimg:
-                    if e.header.has_key('extname'):
+                    if 'extname' in e.header:
                         if e.header['extname'].lower() == _extns[0].lower() and e.header['extver'] == int(_extns[1]):
                             _extn = e
                             break
@@ -860,7 +860,7 @@ def getExtn(fimg,extn=None):
                             _nextn = i
                             break
                         i += 1
-            
+
             if _nextn < len(fimg):
                 _extn = fimg[_nextn]
             else:
@@ -1047,7 +1047,7 @@ def findKeywordExtn(ft,keyword,value=None):
     for chip in ft:
         hdr = chip.header
         # Check to make sure the extension has the given keyword
-        if hdr.has_key(keyword):
+        if keyword in hdr:
             if value != None:
                 # If it does, then does the value match the desired value
                 # MUST use 'string.strip' to match against any input string!
@@ -1071,7 +1071,7 @@ def findExtname(fimg,extname,extver=None):
     extnum = None
     for chip in fimg:
         hdr = chip.header
-        if hdr.has_key('EXTNAME'):
+        if 'EXTNAME' in hdr:
             if string.strip(hdr['EXTNAME']) == string.upper(extname):
                 if extver == None or hdr['EXTVER'] == extver:
                     extnum = i
@@ -1259,7 +1259,7 @@ def defvar(varname):
         _irafdef = iraf.envget(varname)
     else:
         _irafdef = 0
-    return _varDict.has_key(varname) or os.environ.has_key(varname) or _irafdef
+    return varname in _varDict or varname in os.environ or _irafdef
 
 # -----------------------------------------------------
 # IRAF utility procedures
@@ -1322,7 +1322,7 @@ def unset(*args, **kw):
     if len(kw) != 0:
         raise SyntaxError("unset requires a list of variable names")
     for arg in args:
-        if _varDict.has_key(arg):
+        if arg in _varDict:
             del _varDict[arg]
 
 def time(**kw):

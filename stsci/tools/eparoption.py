@@ -29,7 +29,7 @@ import capable
 if capable.OF_GRAPHICS:
     try:
         from Tkinter import *
-        import FileDialog, tkFileDialog
+        import tkFileDialog
         HAS_TKINTER = True
     except ImportError:
         # TODO: Provide fallbacks based on whether or not HAS_TKINTER is true;
@@ -40,9 +40,6 @@ if capable.OF_GRAPHICS:
         HAS_TKINTER = False
 else:
     StringVar = None
-
-# Community modules
-import filedlg #, clipboard_helper
 
 # Are we using X? (see description of logic in pyraf's wutil.py)
 USING_X = True
@@ -125,8 +122,10 @@ class EparOption(object):
         self.inputLabel.pack(side = LEFT, fill = X, expand = TRUE)
 
         # Get the prompt string and determine if special handling is needed
-        self.prompt = self.paramInfo.get(field = "p_prompt", native = 0,
-                      prompt = 0)
+        # Use the prompt/description from the default version, in case they
+        # have edited theirs - this is not editable - see ticket #803
+        self.prompt = self.defaultParamInfo.get(field="p_prompt", native=0,
+                                                prompt=0)
 
         # Check the prompt to determine how many lines of valid text exist
         lines       = self.prompt.split("\n")
@@ -148,7 +147,8 @@ class EparOption(object):
             promptLines = promptLines[:-len(DSCRPTN_FLAG)]
             self._flaggedDescription = True
         fgColor = "black"
-        if self._flaggedDescription: fgColor = "red"
+        # turn off this red coloring for the DSCRPTN_FLAG - see #803
+#       if self._flaggedDescription: fgColor = "red"
 
         # Generate the prompt label
         self.promptLabel = Label(self.master_frame, anchor=W, fg=fgColor,
@@ -407,15 +407,22 @@ class EparOption(object):
         self.menu.tk_popup(xcoord, ycoord)
 
     def fileBrowser(self):
-        """Invoke a Community Tkinter generic File Dialog"""
-        self.fd = filedlg.PersistLoadFileDialog(self.entry,
-                        "Directory Browser", "*")
-        if self.fd.Show() != 1:
+        """Invoke a Tkinter file dialog"""
+        if capable.OF_TKFD_IN_EPAR:
+           fname = tkFileDialog.askopenfilename(parent=self.entry,
+                                                title="Select File")
+        else:
+            import filedlg
+            self.fd = filedlg.PersistLoadFileDialog(self.entry,
+                              "Select File", "*")
+            if self.fd.Show() != 1:
+                self.fd.DialogCleanup()
+                return
+            fname = self.fd.GetFileName()
             self.fd.DialogCleanup()
-            return
-        self.fname = self.fd.GetFileName()
-        self.fd.DialogCleanup()
-        self.choice.set(self.fname)
+        if not fname: return # canceled
+
+        self.choice.set(fname)
         # don't select when we go back to widget to reduce risk of
         # accidentally typing over the filename
         self.lastSelection = None
@@ -512,7 +519,7 @@ class EnumEparOption(EparOption):
             for option in trylist:
                 # shortcuts dictionary is case-insensitive
                 letter = option[i:i+1].lower()
-                if self.shortcuts.has_key(letter):
+                if letter in self.shortcuts:
                     # will try again with next letter
                     trylist2.append(option)
                 elif letter:
@@ -534,11 +541,12 @@ class EnumEparOption(EparOption):
         for option in self.paramInfo.choice:
             lbl = option
             if lbl=='-': lbl = ' -' # Tk treats '-' as a separator request
-            self.entry.menu.add_radiobutton(label     = lbl,
-                                             value    = option,
-                                             variable = self.choice,
-                                             indicatoron = 0,
-                                             underline = underline[option])
+            self.entry.menu.add_radiobutton(label       = lbl,
+                                            value       = option,
+                                            variable    = self.choice,
+                                            command     = self.selected,
+                                            indicatoron = 0,
+                                            underline   = underline[option])
 
         # set up a pointer from the menubutton back to the menu
         self.entry['menu'] = self.entry.menu
@@ -570,6 +578,10 @@ class EnumEparOption(EparOption):
         except ValueError:
             # initial null value may not be in list
             pass
+
+    def selected(self):
+        """They have chosen an enumerated option."""
+        self.widgetEdited(action='entry') # kick off any checks that need doin
 
 #   def setActiveState(self, active):
 #       [...]

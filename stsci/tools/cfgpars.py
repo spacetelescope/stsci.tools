@@ -212,36 +212,66 @@ def getCfgFilesInDirForTask(aDir, aTask, recurse=False):
     else:
         flist = glob.glob(aDir+os.sep+'*.cfg')
     if aTask:
-        return [f for f in flist if \
-                getEmbeddedKeyVal(f, TASK_NAME_KEY, '') == aTask]
+        retval = []
+        for f in flist:
+            try:
+                if aTask == getEmbeddedKeyVal(f, TASK_NAME_KEY, ''):
+                    retval.append(f)
+            except Exception, e:
+                print 'Warning: '+str(e)
+        return retval
     else:
         return flist
 
 
 def getParsObjForPyPkg(pkgName, strict):
     """ Locate the appropriate ConfigObjPars (or subclass) within the given
-        package. NOTE this begins the same way as getUsrCfgFilesForPyPkg() """
-    # Get the python package and it's .cfg file
-    thePkg, theFile = findCfgFileForPkg(pkgName, '.cfg')
-    # See if the user has any of their own local .cfg files for this task
-    noLocals = True
-    tname = getEmbeddedKeyVal(theFile, TASK_NAME_KEY)
-    flist = getCfgFilesInDirForTask(getAppDir(), tname)
-    if len(flist) > 0:
-        noLocals = False
-        if len(flist) == 1: # can skip file times sort
+        package. NOTE this begins the same way as getUsrCfgFilesForPyPkg().
+        Look for .cfg file matches in these places, in this order:
+          1 - any named .cfg file in current directory matching given task
+          2 - if there exists a ~/.teal/<taskname>.cfg file
+          3 - any named .cfg file in SOME*ENV*VAR directory matching given task
+          4 - the installed default .cfg file (with the given package)
+    """
+    # Get the python package and it's .cfg file - need this no matter what
+    installedPkg, installedFile = findCfgFileForPkg(pkgName, '.cfg')
+    theFile = None
+    tname = getEmbeddedKeyVal(installedFile, TASK_NAME_KEY)
+
+    # See if the user has any of their own .cfg files in the cwd for this task
+    if theFile == None:
+        flist = getCfgFilesInDirForTask(os.getcwd(), tname)
+        if len(flist) > 0:
+            if len(flist) == 1: # can skip file times sort
+                theFile = flist[0]
+            else:
+                # There are a few different choices.  In the absence of
+                # requirements to the contrary, just take the latest.  Set up a
+                # list of tuples of (mtime, fname) so we can sort by mtime.
+                ftups = [ (os.stat(f)[stat.ST_MTIME], f) for f in flist]
+                ftups.sort()
+                theFile = ftups[-1][1]
+
+    # See if the user has any of their own app-dir .cfg files for this task
+    if theFile == None:
+        flist = getCfgFilesInDirForTask(getAppDir(), tname) # verifies tname
+        flist = [f for f in flist if os.path.basename(f) == tname+'.cfg']
+        if len(flist) > 0:
             theFile = flist[0]
-        else:
-            # There are a few different versions.  In the absence of
-            # requirements to the contrary, just take the latest.  Set up a
-            # list of tuples of (mtime, fname) so we can sort by mtime.
-            ftups = [ (os.stat(f)[stat.ST_MTIME], f) for f in flist]
-            ftups.sort()
-            theFile = ftups[-1][1]
+            assert len(flist) == 1, str(flist) # should never happen
+
+    # Add code to check an env. var defined area?  (speak to users first)
+
+    # Did we find one yet?  If not, use the installed version
+    useInstVer = False
+    if theFile == None:
+        theFile = installedFile
+        useInstVer = True
+
     # Create a stand-in instance from this file.  Force a read-only situation
     # if we are dealing with the installed, (expected to be) unwritable file.
-    return ConfigObjPars(theFile, associatedPkg=thePkg,
-                         forceReadOnly=noLocals, strict=strict)
+    return ConfigObjPars(theFile, associatedPkg=installedPkg,
+                         forceReadOnly=useInstVer, strict=strict)
 
 
 def getUsrCfgFilesForPyPkg(pkgName):
@@ -302,7 +332,7 @@ def flattenDictTree(aDict):
 
 def countKey(theDict, name):
     """ Return the number of times the given par exists in this dict-tree,
-    since the same key name may be used in differetn sections/sub-sections. """
+    since the same key name may be used in different sections/sub-sections. """
 
     retval = 0
     for key in theDict:
@@ -376,6 +406,48 @@ def mergeConfigObj(configObj, inputDict):
         setPar(configObj, key, inputDict[key])
 
 
+def integrityTestAllPkgCfgFiles(pkgObj, output=True):
+    """ Given a package OBJECT, inspect it and find all installed .cfg file-
+    using tasks under it.  Then them one at a time via
+    integrityTestTaskCfgFile, and report any/all errors. """
+    assert type(pkgObj) == type(os), \
+           "Expected module arg, got: "+str(type(pkgObj))
+    taskDict = findAllCfgTasksUnderDir(os.path.dirname(pkgObj.__file__))
+    # taskDict is { cfgFileName : taskName }
+    errors = []
+    for fname in taskDict:
+        taskName = taskDict[fname]
+        try:
+            if taskName:
+                if output:
+                    print 'In '+pkgObj.__name__+', checking task: '+ \
+                           taskName+', file: '+fname
+                integrityTestTaskCfgFile(taskName, fname)
+        except Exception, e:
+            errors.append(str(e))
+
+    assert len(errors) == 0, 'Errors found while integrity testing .cfg '+ \
+              'file(s) found under "'+pkgObj.__name__+'":\n'+ \
+              ('\n'.join(errors))
+
+
+def integrityTestTaskCfgFile(taskName, cfgFileName=None):
+    """ For a given task, inspect the given .cfg file (or simply find/use its
+    installed .cfg file), and check those values against the defaults
+    found in the installed .cfgspc file.  They should be the same.
+    If the file name is not given, the installed one is found and used. """
+
+    import teal # don't import above, to avoid circular import (may need to mv)
+    if not cfgFileName:
+        ignored, cfgFileName = findCfgFileForPkg(taskName, '.cfg')
+    diffDict = teal.diffFromDefaults(cfgFileName, report=False)
+    if len(diffDict) < 1:
+        return # no error
+    msg = 'The following par:value pairs from "'+cfgFileName+ \
+          '" are not the correct defaults: '+str(diffDict)
+    raise RuntimeError(msg)
+
+
 class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     """ This represents a task's dict of ConfigObj parameters. """
 
@@ -400,6 +472,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         self._debugLogger = None
         self._debugYetToPost = []
         self.__assocPkg = associatedPkg
+
+        # The __paramList pointer remains the same for the life of this object
+        self.__paramList = []
 
         # Set up ConfigObj stuff
         assert setAllToDefaults or os.path.isfile(cfgFileName), \
@@ -473,6 +548,10 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # 'ans' will be True, False, or a dict (anything but True is bad)
         ans = self.validate(self._vtor, preserve_errors=True,
                             copy=setAllToDefaults)
+        # Note: before the call to validate(), the list returned from 
+        # self.keys() is in the order found in self.filename.  If that file
+        # was missing items that are in the .cfgspc, they will now show up
+        # in self.keys(), but not necessarily in the same order as the .cfgspc
         hasTypeErr = ans != True
         extra = self.listTheExtras(True)
 
@@ -545,15 +624,37 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             # init phase we may not yet have a logger, yet have stuff to log
             self._debugYetToPost.append(msg) # add to our little cache
 
-    def syncParamList(self, firstTime):
-        """ Set or reset the internal __paramList from the dict's contents. """
-        # See the note in setParam about this design needing to change...
-        self.__paramList = self._getParamsFromConfigDict(self,
-                                initialPass=firstTime)
-                                # dumpCfgspcTo=sys.stdout)
+    def syncParamList(self, firstTime, preserve_order=True):
+        """ Set or reset the internal param list from the dict's contents. """
+        # See the note in setParam about this design.
+
+        # Get latest par values from dict.  Make sure we do not
+        # change the id of the __paramList pointer here.
+        new_list = self._getParamsFromConfigDict(self, initialPass=firstTime)
+                                               # dumpCfgspcTo=sys.stdout)
         # Have to add this odd last one for the sake of the GUI (still?)
         if self._forUseWithEpar:
-            self.__paramList.append(basicpar.IrafParS(['$nargs','s','h','N']))
+            new_list.append(basicpar.IrafParS(['$nargs','s','h','N']))
+
+        if len(self.__paramList) > 0 and preserve_order:
+            # Here we have the most up-to-date data from the actual data
+            # model, the ConfigObj dict, and we need to use it to fill in
+            # our param list.  BUT, we need to preserve the order our list
+            # has had up until now (by unique parameter name).
+            namesInOrder = [p.fullName() for p in self.__paramList]
+            assert len(namesInOrder) == len(new_list), \
+                   'Mismatch in num pars, had: '+str(len(namesInOrder))+ \
+                   ', now have: '+str(len(new_list))+', '+str(namesInOrder)
+            self.__paramList[:] = [] # clear list, keep same pointer
+            # create a flat dict view of new_list, for ease of use in next step
+            new_list_dict = {} # can do in one step in v2.7
+            for par in new_list: new_list_dict[par.fullName()] = par
+            # populate
+            for fn in namesInOrder:
+                self.__paramList.append(new_list_dict[fn])
+        else:
+            # Here we just take the data in whatever order it came.
+            self.__paramList[:] = new_list # keep same list pointer
 
     def getName(self): return self.__taskName
 
@@ -567,9 +668,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     def getDefaultParList(self):
         """ Return a par list just like ours, but with all default values. """
         # The code below (create a new set-to-dflts obj) is correct, but it
-        # adds a tenth of a second to startup.  It's not clear how much this
-        # is used.  Clicking "Defaults" in the GUI does not call this.  This
-        # data is only used in the individual widget pop-up menus.
+        # adds a tenth of a second to startup.  Clicking "Defaults" in the
+        # GUI does not call this.  But this can be used to set the order seen.
 
         # But first check for rare case of no cfg file name
         if self.filename == None:
@@ -584,6 +684,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
     def getFilename(self): return self.filename
 
     def getAssocPkg(self): return self.__assocPkg
+
+    def canExecute(self): return self._runFunc != None
 
     def isSameTaskAs(self, aCfgObjPrs):
         """ Return True if the passed in object is for the same task as
@@ -626,7 +728,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         assert idxHint != None, "ConfigObjPars relies on a valid idxHint"
         assert name == self.__paramList[idxHint].name, \
                'Error in setParam, name: "'+name+'" != name at idxHint: "'+\
-               self.__paramList[idxHint].name+'"'
+               self.__paramList[idxHint].name+'", idxHint: '+str(idxHint)
         self.__paramList[idxHint].set(val)
 
     def saveParList(self, *args, **kw):
@@ -758,6 +860,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             self._allExecutes = {}
 
         # start walking ("tell yer story walkin, buddy")
+        # NOTE: this relies on the "in" operator returning keys in the
+        # order that they exist in the dict (which depends on ConfigObj keeping
+        # the order they were found in the original file)
         for key in cfgObj:
             val = cfgObj[key]
 
@@ -1198,9 +1303,9 @@ def flattened2str(flattened, missing=False, extra=False):
             retval += ' is missing.'
         elif extra:
             if result:
-                retval += ' is an extra or unknown section.'
+                retval += ' is an unexpected section. Is your file out of date?'
             else:
-                retval += ' is an extra or unknown parameter.'
+                retval += ' is an unexpected parameter. Is your file out of date?'
         elif isinstance(result, bool):
             retval += ' has an invalid value'
         else:

@@ -81,12 +81,6 @@ def run( pytools_version = None ) :
     from distutils.core import setup
     from defsetup import setupargs, pkg
 
-    # collect our subversion information
-    __set_svn_version__()
-
-    # save the date when we last ran setup.py
-    __set_setup_date__()
-
     if "version" in sys.argv :
         sys.exit(0)
 
@@ -100,6 +94,18 @@ def run( pytools_version = None ) :
     # we can create one for them.
     if not 'package_dir' in setupargs :
         setupargs['package_dir'] = { pkg[0] : 'lib' }
+
+
+    for x in setupargs['package_dir'] :
+        x = setupargs['package_dir'][x]
+        # collect our subversion information
+        __set_svn_version__( x )
+
+        # save the date when we last ran setup.py
+        __set_setup_date__( x )
+
+    if "version" in sys.argv :
+        sys.exit(0)
 
     return setup(
         name =              pkg[0],
@@ -193,19 +199,21 @@ import re
 #   print yourpackage.svn_version.__full_svn_info__
 #
 
-def __set_svn_version__(path="./", fname='svn_version.py' ) :
+def __set_svn_version__(directory="./", fname='svn_version.py' ) :
     #
-    # path is the package where the version information will be stored.  Default
-    # is "this package", but from a higher level package, you can specify a directory
-    # of a package to process
+    # directory is both the directory where the version information will be stored
+    # (in the file fname) and the directory that we will run svn info on to
+    # get a version number.
+    #
+    # I think the default of ./ is probably useless at this point.
     #
     # fname is the name of the file to store the version information in.  Never change
     # this.
     #
 
     info = None
-    rev = __get_svn_rev__(path)
-    version_file = os.path.join(path,'lib',fname)
+    rev = __get_svn_rev__(directory)
+    version_file = os.path.join(directory,fname)
 
     # if we are unable to determine the revision, we default to leaving the
     # revision file unchanged.  Otherwise, we fill it in with whatever
@@ -220,7 +228,7 @@ def __set_svn_version__(path="./", fname='svn_version.py' ) :
             return
         revision = str(rev)
 
-    info = __get_full_info__(path)
+    info = __get_full_info__(directory)
     
     # now we can write the version information
 
@@ -289,7 +297,7 @@ def __get_full_info__(path):
 
 def __set_setup_date__( path="./", fname='svn_version.py') :
     import datetime
-    file = os.path.join(path,'lib',fname)
+    file = os.path.join(path,fname)
     d = datetime.datetime.now()
     l = [ ]
     try :

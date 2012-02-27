@@ -92,22 +92,22 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
             # Add NAXISn keywords for each NPIXn keyword in the header and
             # remove the NPIXn keywords
             naxis = 0
-            for card in reversed(header.ascard['NPIX*']):
+            for card in reversed(header['NPIX*'].cards):
                 try:
-                    idx = int(card.key[len('NPIX'):])
+                    idx = int(card.keyword[len('NPIX'):])
                 except ValueError:
                     continue
-                hdrlen = len(header.ascard)
-                header.update('NAXIS' + str(idx), card.value,
-                              card.comment, after='NAXIS')
-                del header[card.key]
-                if len(header.ascard) < hdrlen:
+                hdrlen = len(header)
+                header.set('NAXIS' + str(idx), card.value,
+                           card.comment, after='NAXIS')
+                del header[card.keyword]
+                if len(header) < hdrlen:
                     # A blank card was used when updating the header; add the
                     # blank back in.
-                    # TODO: Fix header.update so that it has an option not to
+                    # TODO: Fix header.set so that it has an option not to
                     # use a blank card--this is a detail that we really
                     # shouldn't have to worry about otherwise
-                    header.add_blank()
+                    header.append()
 
                 # Presumably the NPIX keywords are in order of their axis, but
                 # just in case somehow they're not...
@@ -132,12 +132,12 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
                 # Must remove the PIXVALUE and NPIXn keywords so we recognize
                 # that there is non-constant data in the file.
                 del header['PIXVALUE']
-                for card in header.ascard['NPIX*']:
+                for card in header['NPIX*'].cards:
                     try:
-                        idx = int(card.key[len('NPIX'):])
+                        idx = int(card.keyword[len('NPIX'):])
                     except ValueError:
                         continue
-                    del header[card.key]
+                    del header[card.keyword]
 
         super(_ConstantValueImageBaseHDU, self).__init__(
             data, header, do_not_scale_image_data, uint)
@@ -154,13 +154,12 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
         else:
             return super(_ConstantValueImageBaseHDU, self).size
 
-
     @pyfits.util.lazyproperty
     def data(self):
         if 'PIXVALUE' in self._header and 'NPIX1' not in self._header and \
            self._header['NAXIS'] > 0:
             bitpix = self._header['BITPIX']
-            dims = self._dimShape()
+            dims = self.shape
             code = self.NumCode[bitpix]
             pixval = self._header['PIXVALUE']
             if code in ['uint8', 'int16', 'int32', 'int64']:
@@ -196,14 +195,39 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
         else:
             return super(_ConstantValueImageBaseHDU, self).data
 
-    def _summary(self):
-        summ = super(_ConstantValueImageBaseHDU, self)._summary()
-        return (summ[0], summ[1].replace('ConstantValue', '')) + summ[2:]
+    @data.setter
+    def data(self, data):
+        self.__dict__['data'] = data
+        self._modified = True
+        if self.data is not None and not isinstance(data, np.ndarray):
+            # Try to coerce the data into a numpy array--this will work, on
+            # some level, for most objects
+            try:
+                data = np.array(data)
+            except:
+                raise TypeError('data object %r could not be coerced into an '
+                                'ndarray' % data)
 
-    def _writeheader(self, fileobj, checksum=False):
+        if isinstance(data, np.ndarray):
+            self._bitpix = self.ImgCode[data.dtype.name]
+            self._axes = list(data.shape)
+            self._axes.reverse()
+        elif self.data is None:
+            self._axes = []
+        else:
+            raise ValueError('not a valid data array')
+
+        self.update_header()
+
+    def update_header(self):
+        if (not self._modified and not self._header._modified and
+            (self._data_loaded and self.shape == self.data.shape)):
+            # Not likely that anything needs updating
+            return
+
+        super(_ConstantValueImageBaseHDU, self).update_header()
+
         if 'PIXVALUE' in self._header and self._header['NAXIS'] > 0:
-            super(_ConstantValueImageBaseHDU, self).update_header()
-
             # This is a Constant Value Data Array.  Verify that the data
             # actually matches the PIXVALUE
             pixval = self._header['PIXVALUE']
@@ -211,42 +235,23 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
                 pixval = long(pixval)
 
             arrayval = self._check_constant_value_data(self.data)
-            new_header = self._header
             if arrayval is not None:
                 st_ext = True
                 if arrayval != pixval:
                     self._header['PIXVALUE'] = arrayval
 
-                new_header = self._header.copy()
                 naxis = self._header['NAXIS']
-                new_header['NAXIS'] = 0
+                self._header['NAXIS'] = 0
                 for idx in range(naxis, 0, -1):
-                    axisval = self._header['NAXIS' + str(idx)]
-                    new_header.update('NPIX' + str(idx), axisval,
-                                      'length of constant array axis ' +
-                                      str(idx), after='PIXVALUE')
-                    del new_header['NAXIS' + str(idx)]
+                    axisval = self._header['NAXIS%d' % idx]
+                    self._header.set('NPIX%d' % idx, axisval,
+                                     'length of constant array axis %d' % idx,
+                                     after='PIXVALUE')
+                    del self._header['NAXIS%d' % idx]
 
-            old_header = self._header
-            self._header = new_header
-            data = self.data
-            # Temporarily set self.data to None to prevent update_header() from
-            # being being called again by the superclass
-            self.data = None
-            try:
-                offset = super(_ConstantValueImageBaseHDU, self).\
-                    _writeheader(fileobj, checksum)
-            finally:
-                self._header = old_header
-                self.data = data
-        else:
-            # All elements in array are not the same value.
-            # so this is no longer a constant data value array
-            del self._header['PIXVALUE']
-            offset = super(_ConstantValueImageBaseHDU, self)._writeheader(
-                fileobj, checksum)
-
-        return offset
+    def _summary(self):
+        summ = super(_ConstantValueImageBaseHDU, self)._summary()
+        return (summ[0], summ[1].replace('ConstantValue', '')) + summ[2:]
 
     def _writedata_internal(self, fileobj):
         if 'PIXVALUE' in self._header:
@@ -266,8 +271,8 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
 
 
 
-class ConstantValuePrimaryHDU(pyfits.hdu.PrimaryHDU,
-                              _ConstantValueImageBaseHDU):
+class ConstantValuePrimaryHDU(_ConstantValueImageBaseHDU,
+                              pyfits.hdu.PrimaryHDU):
     @classmethod
     def match_header(cls, header):
         return super(ConstantValuePrimaryHDU, cls).match_header(header) and \
@@ -276,8 +281,7 @@ class ConstantValuePrimaryHDU(pyfits.hdu.PrimaryHDU,
 PrimaryHDU = ConstantValuePrimaryHDU
 
 
-class ConstantValueImageHDU(pyfits.hdu.ImageHDU,
-                            _ConstantValueImageBaseHDU):
+class ConstantValueImageHDU(_ConstantValueImageBaseHDU, pyfits.hdu.ImageHDU):
     @classmethod
     def match_header(cls, header):
         return super(ConstantValueImageHDU, cls).match_header(header) and \

@@ -4,13 +4,13 @@ $Id$
 from __future__ import division # confidence high
 
 import glob, os, sys
-import configobj, cfgpars, editpar, filedlg, vtor_checks
+import configobj, cfgpars, editpar, vtor_checks
 from cfgpars import APP_NAME
 from irafutils import rglob, printColsAuto
 import capable
 if capable.OF_GRAPHICS:
     try:
-        import tkMessageBox
+        import tkFileDialog, tkMessageBox
     except ImportError:
         # TODO: Provide fallbacks based on whether or not HAS_TKINTER is true;
         # for now this just allows import Tkinter to fail more
@@ -248,6 +248,38 @@ def unlearn(taskPkgName, deleteAll=False):
         return flist # let the caller know this is an issue
 
 
+def diffFromDefaults(theTask, report=False):
+    """ Load the given file (or existing object), and return a dict
+    of its values which are different from the default values.  If report
+    is set, print to stdout the differences. """
+    # get the 2 dicts (trees: dicts of dicts)
+    defaultTree = load(theTask, canExecute=False, strict=True, defaults=True)
+    thisTree    = load(theTask, canExecute=False, strict=True, defaults=False)
+    # they must be flattenable
+    defaultFlat = cfgpars.flattenDictTree(defaultTree)
+    thisFlat    = cfgpars.flattenDictTree(thisTree)
+    # use the "set" operations till there is a dict.diff()
+    # thanks to:  http://stackoverflow.com/questions/715234
+    diffFlat = dict( set(thisFlat.iteritems()) - \
+                     set(defaultFlat.iteritems()) )
+    if report:
+        defaults_of_diffs_only = {}
+#       { k:defaultFlat[k] for k in diffFlat.keys() }
+        for k in diffFlat.keys():
+            defaults_of_diffs_only[k] = defaultFlat[k]
+        msg = 'Non-default values of "'+str(theTask)+'":\n'+ \
+              _flat2str(diffFlat)+ \
+              '\n\nDefault values:\n'+ \
+              _flat2str(defaults_of_diffs_only)
+        print(msg)
+    return diffFlat
+
+def _flat2str(fd): # waiting for a nice pretty-print
+    rv = '{\n'
+    for k in fd.keys(): rv += repr(k)+': '+repr(fd[k])+'\n'
+    return rv+'}'
+
+
 def popUpErr(parent=None, message="", title="Error"):
     # withdraw root, could standardize w/ EditParDialog.__init__()
     if parent == None:
@@ -432,6 +464,9 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self._bboxColor = cod.get('buttonBoxColor', ltblu)
         self._entsColor = cod.get('entriesColor', ltblu)
 
+        # double check _canExecute, but only if it is still set to the default
+        if self._canExecute and self._taskParsObj: # default _canExecute=True
+            self._canExecute = self._taskParsObj.canExecute()
         self._showExecuteButton = self._canExecute
 
         # check on the help string - just to see if it is HTML
@@ -463,9 +498,9 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         except IOError:
             # User does not have privs to write to this file. Get name of local
             # choice and try to use that.
-            if not fname:
-                fname = self._taskParsObj.filename
-            fname = self._rcDir+os.sep+os.path.basename(fname)
+#           if not fname: fname = self._taskParsObj.filename
+#           fname = self._rcDir+os.sep+os.path.basename(fname)
+            fname = self._rcDir+os.sep+self._taskParsObj.getName()+".cfg"
             # Tell them the context is changing, and where we are saving
             msg = 'Installed config file for task "'+ \
                   self._taskParsObj.getName()+'" is not to be overwritten.'+ \
@@ -680,10 +715,11 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         """ Return a string to be used as the filter arg to the save file
             dialog during Save-As. """
         # figure the dir to use, start with the one from the file
-        thedir = os.path.dirname(self._taskParsObj.filename)
-        # decide to skip if not writeable
-        if not os.access(thedir, os.W_OK) or os.path.exists(self._rcDir):
-            thedir = self._rcDir
+        absRcDir = os.path.abspath(self._rcDir)
+        thedir = os.path.abspath(os.path.dirname(self._taskParsObj.filename))
+        # skip if not writeable, or if is _rcDir
+        if thedir == absRcDir or not os.access(thedir, os.W_OK):
+            thedir = os.path.abspath(os.path.curdir)
         # create save-as filter string
         filt = thedir+'/*.cfg'
         envVarName = APP_NAME.upper()+'_CFG'
@@ -754,15 +790,21 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # Also allow them to simply find any file - do not check _task_name_...
         # (could use Tkinter's FileDialog, but this one is prettier)
         if fname[-3:] == '...':
-            fd = filedlg.PersistLoadFileDialog(self.top, "Load Config File",
-                                               self._getSaveAsFilter())
-            if fd.Show() != 1:
+            if capable.OF_TKFD_IN_EPAR:
+                fname = tkFileDialog.askopenfilename(title="Load Config File",
+                                                     parent=self.top)
+            else:
+                import filedlg
+                fd = filedlg.PersistLoadFileDialog(self.top,
+                                                   "Load Config File",
+                                                   self._getSaveAsFilter())
+                if fd.Show() != 1:
+                    fd.DialogCleanup()
+                    return
+                fname = fd.GetFileName()
                 fd.DialogCleanup()
-                return
-            fname = fd.GetFileName()
-            fd.DialogCleanup()
-            if fname == None: return # canceled
 
+        if not fname: return # canceled
         self.debug('Loading from: '+fname)
 
         # load it into a tmp object (use associatedPkg if we have one)
@@ -949,11 +991,15 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         """ Here we look through the entire .cfgspc to see if any parameters
         are affected by this trigger. For those that are, we apply the action
         to the GUI widget.  The action is specified by depType. """
+
         # First find which items are dependent upon this trigger (cached)
         # e.g. { scope1.name1 : dep'cy-type, scope2.name2 : dep'cy-type, ... }
         depParsDict = self._taskParsObj.getParsWhoDependOn(triggerName)
         if not depParsDict: return
         if 0: print "Dependent parameters:\n"+str(depParsDict)+"\n"
+
+        # Get model data, the list of pars
+        theParamList = self._taskParsObj.getParList()
 
         # Then go through the dependent pars and apply the trigger to them
         settingMsg = ''
@@ -961,7 +1007,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             used = False
             # For each dep par, loop to find the widget for that scope.name
             for i in range(self.numParams):
-                scopedName = self.paramList[i].scope+'.'+self.paramList[i].name # diff from makeFullName!!
+                scopedName = theParamList[i].scope+'.'+theParamList[i].name # diff from makeFullName!!
                 if absName == scopedName: # a match was found
                     depType = depParsDict[absName]
                     if depType == 'active_if':
@@ -972,7 +1018,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                         self.entryNo[i].forceValue(outval, noteEdited=True)
                         # WARNING! noteEdited=True may start recursion!
                         if len(settingMsg) > 0: settingMsg += ", "
-                        settingMsg += '"'+self.paramList[i].name+'" to "'+\
+                        settingMsg += '"'+theParamList[i].name+'" to "'+\
                                       outval+'"'
                     elif depType in ('set_yes_if', 'set_no_if'):
                         if bool(outval):
@@ -981,11 +1027,11 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                             self.entryNo[i].forceValue(newval, noteEdited=True)
                             # WARNING! noteEdited=True may start recursion!
                             if len(settingMsg) > 0: settingMsg += ", "
-                            settingMsg += '"'+self.paramList[i].name+'" to "'+\
+                            settingMsg += '"'+theParamList[i].name+'" to "'+\
                                           newval+'"'
                         else:
                             if len(settingMsg) > 0: settingMsg += ", "
-                            settingMsg += '"'+self.paramList[i].name+\
+                            settingMsg += '"'+theParamList[i].name+\
                                           '" (no change)'
                     elif depType == 'is_disabled_by':
                         # this one is only used with boolean types
@@ -1000,9 +1046,9 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                             self.entryNo[i].setActiveState(False)
                             # we'd need this if the par had no _section_switch_
 #                           self._toggleSectionActiveState(
-#                                self.paramList[i].scope, False, None)
+#                                theParamList[i].scope, False, None)
                             if len(settingMsg) > 0: settingMsg += ", "
-                            settingMsg += '"'+self.paramList[i].name+'" to "'+\
+                            settingMsg += '"'+theParamList[i].name+'" to "'+\
                                           outval+'"'
                     else:
                         raise RuntimeError('Unknown dependency: "'+depType+ \
