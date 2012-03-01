@@ -64,6 +64,7 @@ if OF_GRAPHICS :
     try :
         import Tkinter
     except ImportError :
+        TKINTER_IMPORT_FAILED = 1
         OF_GRAPHICS = False
 
 # Using tkFileDialog from PyRAF (and maybe in straight TEAL) is crashing python
