@@ -185,11 +185,13 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
                                       canExecute=canExecute)
 #                                     overrides=overrides)
         except cfgpars.NoCfgFileError, ncf:
+            log_last_error()
             if errorsToTerm:
                 print(str(ncf).replace('\n\n','\n'))
             else:
                 popUpErr(parent=parent,message=str(ncf),title="Unfound Task")
         except Exception, re: # catches RuntimeError and KeyError and ...
+            log_last_error()
             if errorsToTerm:
                 print(re.message.replace('\n\n','\n'))
             else:
@@ -211,6 +213,14 @@ def load(theTask, canExecute=True, strict=True, defaults=False):
     return teal(theTask, parent=None, loadOnly=True, returnDict=True,
                 canExecute=canExecute, strict=strict, errorsToTerm=True,
                 defaults=defaults)
+
+
+def log_last_error():
+    import traceback, time
+    f = open(cfgpars.getAppDir()+os.sep+'last_error.txt','w')
+    f.write(time.asctime()+'\n\n')
+    f.write(traceback.format_exc(f)+'\n')
+    f.close()
 
 
 def unlearn(taskPkgName, deleteAll=False):
@@ -442,6 +452,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self._saveAndCloseOnExec   = cfgGetBool(cod, 'saveAndCloseOnExec', True)
         self._showHelpInBrowser    = cfgGetBool(cod, 'showHelpInBrowser', False)
         self._writeProtectOnSaveAs = cfgGetBool(cod, 'writeProtectOnSaveAs', False)
+        self._flagNonDefaultVals   = cfgGetBool(cod, 'flagNonDefaultVals', None)
         self._optFile              = APP_NAME.lower()+".optionDB"
 
         # our own colors
@@ -965,6 +976,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         co['showHelpInBrowser']    = self._showHelpInBrowser
         co['saveAndCloseOnExec']   = self._saveAndCloseOnExec
         co['writeProtectOnSaveAs'] = self._writeProtectOnSaveAs
+        co['flagNonDefaultVals']   = self._flagNonDefaultVals
         co['frameColor']           = self._frmeColor
         co['taskBoxColor']         = self._taskColor
         co['buttonBoxColor']       = self._bboxColor

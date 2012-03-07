@@ -92,6 +92,7 @@ class EparOption(object):
         self._helpCallbackObj = helpCallbackObj
         self._mainGuiObj = mainGuiObj
         self._lastWidgetEditedVal = None
+        self._flagNonDefaultVals = False
 
         # DISABLE any indent for now - not sure why but this causes odd text
         # field sizes in other (unrelated and unindented) parameters...  Maybe
@@ -133,13 +134,13 @@ class EparOption(object):
                 else:
                     blankLineNo = i
                     break
-        self._flaggedDescription = False
+        self._flagged = False
         if promptLines.endswith(DSCRPTN_FLAG):
             promptLines = promptLines[:-len(DSCRPTN_FLAG)]
-            self._flaggedDescription = True
+            self._flagged = True
         fgColor = "black"
         # turn off this red coloring for the DSCRPTN_FLAG - see #803
-#       if self._flaggedDescription: fgColor = "red"
+#       if self._flagged: fgColor = "red"
 
         # Generate the prompt label
         self.promptLabel = Label(self.master_frame, anchor=W, fg=fgColor,
@@ -214,6 +215,14 @@ class EparOption(object):
             self.master.infoText.label.pack(side = LEFT)
             self.master.infoText.pack(side = TOP, anchor = W)
 
+    def setIsFlagging(self, isFlagging, redrawImmediately):
+        self._flagNonDefaultVals = isFlagging
+        if redrawImmediately:
+            if self._flagNonDefaultVals:
+                curVal = self.choice.get()
+            else: # otheriwse we don't care; use None; is ok and faster
+                curVal = None
+            self.flagThisPar(curVal, True)
 
     def getShowName(self):
         """ Return the name to be shown in the GUI for this par/option. """
@@ -336,14 +345,22 @@ class EparOption(object):
         """
 
         # be as lightweight as possible if obj doesn't care about this stuff
-        if not self._editedCallbackObj: return
+        if not self._editedCallbackObj and not self._flagNonDefaultVals:
+            return
+
         # get the current value
         curVal = val # take this first, if it is given
         if curVal == None:
             curVal = self.choice.get()
+
+        # do any flagging
+        self.flagThisPar(curVal, False)
+
         # see if this is a duplicate successive call for the same value
         if skipDups and curVal==self._lastWidgetEditedVal: return
+
         # pull trigger
+        if not self._editedCallbackObj: return
         self._editedCallbackObj.edited(self.paramInfo.scope,
                                        self.paramInfo.name,
                                        self.previousValue, curVal,
@@ -459,6 +476,40 @@ class EparOption(object):
         self.entry.configure(state=st)
         self.inputLabel.configure(state=st)
         self.promptLabel.configure(state=st)
+
+    def flagThisPar(self, currentVal, force):
+        """ If this par's value is different from the default value, it is here
+        that we flag it somehow as such.  This basic version simply makes the
+        surrounding text red (or returns it to normal). May be overridden.
+        Leave force at False if you want to allow this mehtod to make smart
+        time-saving decisions about when it can skip recoloring because it is
+        already the right color. Set force to true if you think we got out
+        of sync and need to be fixed. """
+
+        # Get out ASAP if we can
+        if (not force) and (not self._flagNonDefaultVals): return
+
+        # handle simple case before comparing values (quick return)
+        if force and not self._flagNonDefaultVals:
+            self._flagged = False
+            self.promptLabel.configure(fg="black")
+            return
+
+        # Get/format values to compare
+        currentNative = self.convertToNative(currentVal)
+        defaultNative = self.convertToNative(self.defaultParamInfo.value)
+        # par.value is same as par.get(native=1,prompt=0)
+
+        # flag or unflag as needed
+        if currentNative != defaultNative:
+            if not self._flagged or force:
+                self._flagged = True
+                self.promptLabel.configure(fg="red")
+        else: # same as def
+            if self._flagged or force:
+                self._flagged = False
+                self.promptLabel.configure(fg="black")
+        # ['red','blue','green','purple','yellow','orange','black']
 
 
 class EnumEparOption(EparOption):
@@ -823,7 +874,8 @@ def eparOptionFactory(master, statusBar, param, defaultParam,
                       doScroll, fieldWidths,
                       plugIn=None, editedCallbackObj=None,
                       helpCallbackObj=None, mainGuiObj=None,
-                      defaultsVerb="Default", bg=None, indent=False):
+                      defaultsVerb="Default", bg=None, indent=False,
+                      flagging=False):
 
     """Return EparOption item of appropriate type for the parameter param"""
 
@@ -845,4 +897,5 @@ def eparOptionFactory(master, statusBar, param, defaultParam,
                     indent=indent, helpCallbackObj=helpCallbackObj,
                     mainGuiObj=mainGuiObj)
     eo.setEditedCallbackObj(editedCallbackObj)
+    eo.setIsFlagging(flagging, False)
     return eo

@@ -104,6 +104,8 @@ class EditParDialog(object):
         self._showExecuteButton   = True
         self._showSaveCloseOnExec = True
         self._saveAndCloseOnExec  = True
+        self._showFlaggingChoice  = True
+        self._flagNonDefaultVals  = None # default not yet set
         self._showExtraHelpButton = False
         self._showHelpInBrowser   = False
         self._knowTaskHelpIsHtml  = False
@@ -121,6 +123,10 @@ class EditParDialog(object):
 
         # give the subclass a chance to disagree
         self._overrideMasterSettings() # give the subclass a chance to disagree
+
+        # any settings which depend on overrides
+        if self._flagNonDefaultVals is None:
+            self._flagNonDefaultVals = self._showFlaggingChoice # default
 
         # Create the root window as required, but hide it
         self.parent = parent
@@ -404,8 +410,8 @@ class EditParDialog(object):
             recently and they need to check for any trigger actions.  This
             would be used right after all the widgets have their values
             set or forced (e.g. via setAllEntriesFromParList). """
-        for i in range(self.numParams):
-            self.entryNo[i].widgetEdited(action=action, skipDups=False)
+        for entry in self.entryNo:
+            entry.widgetEdited(action=action, skipDups=False)
 
 
     def freshenFocus(self):
@@ -603,7 +609,8 @@ class EditParDialog(object):
                                   plugIn=eparOpt, editedCallbackObj=cbo,
                                   helpCallbackObj=hcbo, mainGuiObj=self,
                                   defaultsVerb=dfltsVerb, bg=self._entsColor,
-                                  indent = scope not in (None, '', '.') )
+                                  indent = scope not in (None, '', '.'),
+                                  flagging = self._flagNonDefaultVals)
 
 
     def _nonStandardEparOptionFor(self, paramTypeStr):
@@ -808,6 +815,13 @@ class EditParDialog(object):
             optionButton.menu.add_checkbutton(label="Save and Close on Execute",
                                               command=self.setExecOpt,
                                               variable=self._execChoice)
+        if self._showFlaggingChoice:
+            self._flagChoice = IntVar()
+            self._flagChoice.set(int(self._flagNonDefaultVals))
+            optionButton.menu.add_separator()
+            optionButton.menu.add_checkbutton(label="Flag Non-default Values",
+                                              command=self.setFlagOpt,
+                                              variable=self._flagChoice)
 
         # Associate the menu with the menu button
         optionButton["menu"] = optionButton.menu
@@ -908,10 +922,13 @@ class EditParDialog(object):
         # Pack
         box.pack(fill=X, expand=FALSE)
 
-
     def setExecOpt(self, event=None):
         self._saveAndCloseOnExec = bool(self._execChoice.get())
 
+    def setFlagOpt(self, event=None):
+        self._flagNonDefaultVals = bool(self._flagChoice.get())
+        for entry in self.entryNo:
+            entry.setIsFlagging(self._flagNonDefaultVals, True)
 
     def setHelpType(self, event=None):
         """ Determine which method of displaying the help pages was
