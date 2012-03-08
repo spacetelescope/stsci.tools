@@ -644,7 +644,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             namesInOrder = [p.fullName() for p in self.__paramList]
             assert len(namesInOrder) == len(new_list), \
                    'Mismatch in num pars, had: '+str(len(namesInOrder))+ \
-                   ', now have: '+str(len(new_list))+', '+str(namesInOrder)
+                   ', now we have: '+str(len(new_list))+', '+ \
+                   str([p.fullName() for p in new_list])
             self.__paramList[:] = [] # clear list, keep same pointer
             # create a flat dict view of new_list, for ease of use in next step
             new_list_dict = {} # can do in one step in v2.7
