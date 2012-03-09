@@ -910,7 +910,13 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     dtype = 's'
                     # convert the choices string to a list (to weed out kwds)
                     x = cspc[cspc.find('(')+1:-1] # just the options() args
+# cspc e.g.: option_kw("poly5","nearest","linear", default="poly5", comment="Interpolant (poly5,nearest,linear)")
                     x = x.split(',') # tokenize
+                    # but! comment value may have commas in it, find it
+                    # using it's equal sign, rm all after it
+                    has_eq = [i for i in x if i.find('=')>=0]
+                    if len(has_eq) > 0:
+                        x = x[: x.index(has_eq[0]) ]
                     # rm spaces, extra quotes; rm kywd arg pairs
                     x = [i.strip("' ") for i in x if i.find('=')<0]
                     choicesOrMin = '|'+'|'.join(x)+'|' # IRAF format for enums
