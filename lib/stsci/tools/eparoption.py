@@ -93,6 +93,7 @@ class EparOption(object):
         self._mainGuiObj = mainGuiObj
         self._lastWidgetEditedVal = None
         self._flagNonDefaultVals = False
+        self._flaggedColor = "red"
 
         # DISABLE any indent for now - not sure why but this causes odd text
         # field sizes in other (unrelated and unindented) parameters...  Maybe
@@ -214,6 +215,9 @@ class EparOption(object):
                                                bg = self.bkgColor)
             self.master.infoText.label.pack(side = LEFT)
             self.master.infoText.pack(side = TOP, anchor = W)
+
+    def setFlaggedColor(self, colorstr):
+        self._flaggedColor = colorstr
 
     def setIsFlagging(self, isFlagging, redrawImmediately):
         self._flagNonDefaultVals = isFlagging
@@ -504,7 +508,7 @@ class EparOption(object):
         if currentNative != defaultNative:
             if not self._flagged or force:
                 self._flagged = True
-                self.promptLabel.configure(fg="red")
+                self.promptLabel.configure(fg=self._flaggedColor) # was red
         else: # same as def
             if self._flagged or force:
                 self._flagged = False
@@ -875,7 +879,7 @@ def eparOptionFactory(master, statusBar, param, defaultParam,
                       plugIn=None, editedCallbackObj=None,
                       helpCallbackObj=None, mainGuiObj=None,
                       defaultsVerb="Default", bg=None, indent=False,
-                      flagging=False):
+                      flagging=False, flaggedColor=None):
 
     """Return EparOption item of appropriate type for the parameter param"""
 
@@ -898,4 +902,6 @@ def eparOptionFactory(master, statusBar, param, defaultParam,
                     mainGuiObj=mainGuiObj)
     eo.setEditedCallbackObj(editedCallbackObj)
     eo.setIsFlagging(flagging, False)
+    if flaggedColor:
+        eo.setFlaggedColor(flaggedColor)
     return eo

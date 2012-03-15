@@ -116,10 +116,11 @@ class EditParDialog(object):
         self._defSaveAsExt        = '.cfg'
 
         # Colors
-        self._frmeColor = None # frame of window
-        self._taskColor = None # task label area
-        self._bboxColor = None # button area
-        self._entsColor = None # entries area
+        self._frmeColor = None  # frame of window
+        self._taskColor = None  # task label area
+        self._bboxColor = None  # button area
+        self._entsColor = None  # entries area
+        self._flagColor = "red" # non-default values
 
         # give the subclass a chance to disagree
         self._overrideMasterSettings() # give the subclass a chance to disagree
@@ -610,7 +611,8 @@ class EditParDialog(object):
                                   helpCallbackObj=hcbo, mainGuiObj=self,
                                   defaultsVerb=dfltsVerb, bg=self._entsColor,
                                   indent = scope not in (None, '', '.'),
-                                  flagging = self._flagNonDefaultVals)
+                                  flagging = self._flagNonDefaultVals,
+                                  flaggedColor=self._flagColor)
 
 
     def _nonStandardEparOptionFor(self, paramTypeStr):
