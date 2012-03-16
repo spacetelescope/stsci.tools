@@ -3,7 +3,7 @@ $Id$
 """
 from __future__ import division # confidence high
 
-import glob, os, sys
+import glob, os, sys, traceback
 import configobj, cfgpars, editpar, vtor_checks
 from cfgpars import APP_NAME
 from irafutils import rglob, printColsAuto
@@ -216,7 +216,7 @@ def load(theTask, canExecute=True, strict=True, defaults=False):
 
 
 def log_last_error():
-    import traceback, time
+    import time
     f = open(cfgpars.getAppDir()+os.sep+'last_error.txt','w')
     f.write(time.asctime()+'\n\n')
     f.write(traceback.format_exc(f)+'\n')
@@ -657,7 +657,16 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                     self.showStatus("Evaluating "+triggerName+' ...') #dont keep
                     self.top.update_idletasks() #allow msg to draw prior to exec
                     # execute it and retrieve the outcome
-                    outval = execEmbCode(scope, name, newVal, self, codeStr)
+                    try:
+                        outval = execEmbCode(scope, name, newVal, self, codeStr)
+                    except Exception, ex:
+                        outval = 'ERROR in '+triggerName+': '+str(ex)
+                        print outval
+                        msg = outval+':\n'+('-'*99)+'\n'+traceback.format_exc()
+                        msg += 'CODE:  '+codeStr+'\n'+'-'*99+'\n'
+                        self.debug(msg)
+                        self.showStatus(outval, keep=1)
+
                     # Leave this debug line in until it annoys someone
                     msg = 'Value of "'+name+'" triggered "'+triggerName+'"'
                     stroutval = str(outval)
