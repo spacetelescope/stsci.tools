@@ -1171,7 +1171,8 @@ class EditParDialog(object):
         # bad entries, there should be none returned.
         mstr = "TASKMETA: task="+self.taskName+" package="+self.pkgName
         if self.checkSetSaveEntries(doSave=True, filename=fname, comment=mstr,
-                                    set_ro=self._writeProtectOnSaveAs):
+                                    set_ro=self._writeProtectOnSaveAs,
+                                    overwriteRO=True):
             os.chdir(curdir) # in case file dlg moved us
             raise Exception("Unexpected bad entries for: "+self.taskName)
 
@@ -1549,7 +1550,7 @@ class EditParDialog(object):
     # Read, save, and validate the entries
     def checkSetSaveEntries(self, doSave=True, filename=None, comment=None,
                             fleeOnBadVals=False, allowGuiChanges=True,
-                            set_ro=False):
+                            set_ro=False, overwriteRO=False):
 
         self.badEntries = []
         asNative = self._taskParsObj.knowAsNative()
@@ -1621,7 +1622,8 @@ class EditParDialog(object):
         # SAVE: Save results to the given file
         if doSave:
             self.debug('Saving...')
-            out = self._doActualSave(filename, comment, set_ro=set_ro)
+            out = self._doActualSave(filename, comment, set_ro=set_ro,
+                                     overwriteRO=overwriteRO)
             if len(out):
                 self.showStatus(out, keep=2) # inform user on saves
 

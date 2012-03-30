@@ -291,13 +291,9 @@ def checkSetReadOnly(fname, raiseOnErr = False):
     are not supposed to, then fix that case. """
     if os.access(fname, os.W_OK):
         # We can write to this but it is supposed to be read-only. Fix it.
-        privs = os.stat(fname).st_mode
-        try:
-            # Take away usr-write, leave group and other alone, though it
-            # may be simpler to just force/set it to: r--r--r-- or r--------
-            os.chmod(fname, (privs ^ stat.S_IWUSR))
-        except OSError:
-            if raiseOnErr: raise
+        # Take away usr-write, leave group and other alone, though it
+        # may be simpler to just force/set it to: r--r--r-- or r--------
+        irafutils.setWritePrivs(fname, False, ignoreErrors= not raiseOnErr)
 
 
 def flattenDictTree(aDict):

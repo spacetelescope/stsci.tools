@@ -6,7 +6,7 @@ from __future__ import division # confidence high
 import glob, os, sys, traceback
 import configobj, cfgpars, editpar, vtor_checks
 from cfgpars import APP_NAME
-from irafutils import rglob, printColsAuto
+from irafutils import printColsAuto, rglob, setWritePrivs
 import capable
 if capable.OF_GRAPHICS:
     import tkFileDialog, tkMessageBox
@@ -279,6 +279,23 @@ def _flat2str(fd): # waiting for a nice pretty-print
     for k in fd.keys(): rv += repr(k)+': '+repr(fd[k])+'\n'
     return rv+'}'
 
+def _isInstalled(fullFname):
+    """ Return True if the given file name is located in an
+    installed area (versus a user-owned file) """
+    if not fullFname: return False
+    if not os.path.exists(fullFname): return False
+    instAreas = []
+    try:
+        import site
+        instAreas = site.getsitepackages()
+    except:
+        pass # python 2.6 and lower don't have site.getsitepackages()
+    if len(instAreas) < 1:
+        instAreas = [ os.path.dirname(os.__file__) ]
+    for ia in instAreas:
+        if fullFname.find(ia) >= 0:
+            return True
+    return False
 
 def popUpErr(parent=None, message="", title="Error"):
     # withdraw root, could standardize w/ EditParDialog.__init__()
@@ -412,6 +429,7 @@ def cfgGetBool(theObj, name, dflt):
 
 # Main class
 class ConfigObjEparDialog(editpar.EditParDialog):
+    """ The TEAL GUI. """
 
     FALSEVALS = (None, False, '', 0, 0.0, '0', '0.0', 'OFF', 'Off', 'off',
                  'NO', 'No', 'no', 'N', 'n', 'FALSE', 'False', 'false')
@@ -491,21 +509,35 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self.updateTitle(self._taskParsObj.filename)
 
 
-    def _doActualSave(self, fname, comment, set_ro=False):
+    def _doActualSave(self, fname, comment, set_ro=False, overwriteRO=False):
         """ Override this so we can handle case of file not writable, as
             well as to make our _lastSavedState copy. """
-        self.debug('Saving, file name given: '+str(fname))
+        self.debug('Saving, file name given: '+str(fname)+', set_ro: '+\
+                   str(set_ro)+', overwriteRO: '+str(overwriteRO))
+        cantWrite = False
+        inInstArea = False
+        if fname in (None, ''): fname = self._taskParsObj.getFilename()
         try:
-            rv=self._taskParsObj.saveParList(filename=fname,comment=comment)
+            if _isInstalled(fname): # check: may be installed but not read-only
+                inInstArea = cantWrite = True
+            else:
+                # in case of save-as, allow overwrite of read-only file
+                if overwriteRO and os.path.exists(fname):
+                    setWritePrivs(fname, True, True) # try make writable
+                # do the save
+                rv=self._taskParsObj.saveParList(filename=fname,comment=comment)
         except IOError:
-            # User does not have privs to write to this file. Get name of local
-            # choice and try to use that.
-#           if not fname: fname = self._taskParsObj.filename
-#           fname = self._rcDir+os.sep+os.path.basename(fname)
+            cantWrite = True
+
+        # User does not have privs to write to this file. Get name of local
+        # choice and try to use that.
+        if cantWrite:
             fname = self._rcDir+os.sep+self._taskParsObj.getName()+".cfg"
             # Tell them the context is changing, and where we are saving
-            msg = 'Installed config file for task "'+ \
-                  self._taskParsObj.getName()+'" is not to be overwritten.'+ \
+            msg = 'Read-only config file for task "'
+            if inInstArea:
+                msg = 'Installed config file for task "'
+            msg += self._taskParsObj.getName()+'" is not to be overwritten.'+\
                   '  Values will be saved to: \n\n\t"'+fname+'".'
             tkMessageBox.showwarning(message=msg, title="Will not overwrite!")
             # Try saving to their local copy
@@ -576,6 +608,16 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             return teal_bttn.TealActionParButton
         else:
             return None
+
+
+    def updateTitle(self, atitle):
+        """ Override so we can append read-only status. """
+        if atitle and os.path.exists(atitle):
+            if _isInstalled(atitle):
+                atitle += '  [installed]'
+            elif not os.access(atitle, os.W_OK):
+                atitle += '  [read only]'
+        super(ConfigObjEparDialog, self).updateTitle(atitle)
 
 
     def edited(self, scope, name, lastSavedVal, newVal, action):
