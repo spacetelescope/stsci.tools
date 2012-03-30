@@ -6,6 +6,7 @@ stripQuotes     Strip single or double quotes off string and remove embedded
                 quote pairs
 csvSplit        Split comma-separated fields in strings (cover bug in csv mod)
 rglob           Recursive glob
+setWritePrivs   Convenience function to add/remove write privs
 removeEscapes   Remove escaped quotes & newlines from strings
 translateName   Convert CL parameter or variable name to Python-acceptable name
 untranslateName Undo Python conversion of CL parameter or variable name
@@ -19,7 +20,7 @@ R. White, 1999 Jul 16
 """
 from __future__ import division
 
-import os, sys, string, struct, re, fnmatch, keyword, types, select
+import os, stat, string, struct, sys, re, fnmatch, keyword, types, select
 import capable
 if capable.OF_GRAPHICS:
     import Tkinter
@@ -282,6 +283,23 @@ def rglob(root, pattern):
             goodfiles = fnmatch.filter(files, pattern)
             retlist.extend(os.path.join(base, f) for f in goodfiles)
     return retlist
+
+def setWritePrivs(fname, makeWritable, ignoreErrors=False):
+    """ Set a file named fname to be writable (or not) by user, with the
+    option to ignore errors.  There is nothing ground-breaking here, but I
+    was annoyed with having to repeate this little bit of code. """
+    privs = os.stat(fname).st_mode
+    try:
+        if makeWritable:
+            os.chmod(fname, privs | stat.S_IWUSR)
+        else:
+            os.chmod(fname, privs & (~ stat.S_IWUSR))
+    except OSError:
+        if ignoreErrors:
+            pass # just try, don't whine
+        else:
+            raise
+
 
 def removeEscapes(value, quoted=0):
 
