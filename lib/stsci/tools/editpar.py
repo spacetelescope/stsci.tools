@@ -110,7 +110,7 @@ class EditParDialog(object):
         self._showHelpInBrowser   = False
         self._knowTaskHelpIsHtml  = False
         self._unpackagedTaskTitle = "Task"
-        self._writeProtectOnSaveAs= False
+        self._writeProtectOnSaveAs= True
         self._defaultsButtonTitle = "Defaults"
         self._optFile             = DFT_OPT_FILE
         self._defSaveAsExt        = '.cfg'
@@ -1121,26 +1121,26 @@ class EditParDialog(object):
         curdir = os.getcwd()
 
         # The user wishes to save to a different name
+        writeProtChoice = self._writeProtectOnSaveAs
         if capable.OF_TKFD_IN_EPAR:
             # Prompt using native looking dialog
             fname = tkFileDialog.asksaveasfilename(parent=self.top,
                     title='Save Parameter File As',
                     defaultextension=self._defSaveAsExt,
                     initialdir=os.path.dirname(self._getSaveAsFilter()))
-#                   self._writeProtectOnSaveAs does anyone use this??
         else:
             # Prompt. (could use Tkinter's FileDialog, but this one is prettier)
             # initWProtState is only used in the 1st call of a session
             import filedlg
             fd = filedlg.PersistSaveFileDialog(self.top,
                          "Save Parameter File As", self._getSaveAsFilter(),
-                         initWProtState=self._writeProtectOnSaveAs)
+                         initWProtState=writeProtChoice)
             if fd.Show() != 1:
                 fd.DialogCleanup()
                 os.chdir(curdir) # in case file dlg moved us
                 return
             fname = fd.GetFileName()
-            self._writeProtectOnSaveAs = fd.GetWriteProtectChoice()
+            writeProtChoice = fd.GetWriteProtectChoice()
             fd.DialogCleanup()
 
         if not fname: return # canceled
@@ -1171,7 +1171,7 @@ class EditParDialog(object):
         # bad entries, there should be none returned.
         mstr = "TASKMETA: task="+self.taskName+" package="+self.pkgName
         if self.checkSetSaveEntries(doSave=True, filename=fname, comment=mstr,
-                                    set_ro=self._writeProtectOnSaveAs,
+                                    set_ro=writeProtChoice,
                                     overwriteRO=True):
             os.chdir(curdir) # in case file dlg moved us
             raise Exception("Unexpected bad entries for: "+self.taskName)
