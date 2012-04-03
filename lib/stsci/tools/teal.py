@@ -517,6 +517,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         cantWrite = False
         inInstArea = False
         if fname in (None, ''): fname = self._taskParsObj.getFilename()
+        # now do some final checks then save
         try:
             if _isInstalled(fname): # check: may be installed but not read-only
                 inInstArea = cantWrite = True
@@ -532,7 +533,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # User does not have privs to write to this file. Get name of local
         # choice and try to use that.
         if cantWrite:
-            fname = self._rcDir+os.sep+self._taskParsObj.getName()+".cfg"
+            fname = self._taskParsObj.getDefaultSaveFilename()
             # Tell them the context is changing, and where we are saving
             msg = 'Read-only config file for task "'
             if inInstArea:
@@ -542,10 +543,11 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             tkMessageBox.showwarning(message=msg, title="Will not overwrite!")
             # Try saving to their local copy
             rv=self._taskParsObj.saveParList(filename=fname, comment=comment)
-            # Treat like a save-as
-            self._saveAsPostSave_Hook(fname)
 
-        # Limit write privs if requested (only if not in _rcDir)
+        # Treat like a save-as (update title for ALL save ops)
+        self._saveAsPostSave_Hook(fname)
+
+        # Limit write privs if requested (only if not in the rc dir)
         if set_ro and os.path.dirname(os.path.abspath(fname)) != \
                                       os.path.abspath(self._rcDir):
             cfgpars.checkSetReadOnly(fname)
@@ -867,16 +869,20 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                                            strict=self._strict)
         except Exception, ex:
             tkMessageBox.showerror(message=ex.message,
-                title="Error in "+os.path.basename(fname))
+                title='Error in '+os.path.basename(fname))
+            self.debug('Error in '+os.path.basename(fname))
+            self.debug(traceback.format_exc())
             return
 
         # check it to make sure it is a match
         if not self._taskParsObj.isSameTaskAs(tmpObj):
             msg = 'The current task is "'+self._taskParsObj.getName()+ \
-                  '", but the selected file is for task "'+tmpObj.getName()+ \
-                  '".  This file was not loaded.'
+                  '", but the selected file is for task "'+ \
+                  str(tmpObj.getName())+'".  This file was not loaded.'
             tkMessageBox.showerror(message=msg,
                 title="Error in "+os.path.basename(fname))
+            self.debug(msg)
+            self.debug(traceback.format_exc())
             return
 
         # Set the GUI entries to these values (let the user Save after)
@@ -951,10 +957,12 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             return
 
         # Set the GUI entries to these values (let the user Save after)
+        tmpObj.filename = self._taskParsObj.filename = '' # name it later
         newParList = tmpObj.getParList()
         try:
             self.setAllEntriesFromParList(newParList) # needn't updateModel yet
             self.checkAllTriggers('defaults')
+            self.updateTitle('')
             self.showStatus("Loaded default "+self.taskName+" values via: "+ \
                  os.path.basename(tmpObj._original_configspec), keep=1)
         except editpar.UnfoundParamError, pe:

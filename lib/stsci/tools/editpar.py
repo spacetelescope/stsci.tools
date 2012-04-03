@@ -403,7 +403,10 @@ class EditParDialog(object):
 
 
     def updateTitle(self, atitle):
-        self.top.title('%s:  %s' % (self._guiName, atitle))
+        if atitle:
+            self.top.title('%s:  %s' % (self._guiName, atitle))
+        else:
+            self.top.title('%s' % (self._guiName))
 
 
     def checkAllTriggers(self, action):
