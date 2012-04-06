@@ -156,11 +156,12 @@ the "Execute" button.
 
 
 # Starts a GUI session, or simply loads a file
-def teal(theTask, parent=None, loadOnly=False, returnDict=True,
-         canExecute=True, strict=False, errorsToTerm=False, defaults=False):
+def teal(theTask, parent=None, loadOnly=False, returnAs="dict",
+         canExecute=True, strict=False, errorsToTerm=False,
+         autoClose=True, defaults=False):
 #        overrides=None):
     """ Start the GUI session, or simply load a task's ConfigObj. """
-    if loadOnly:
+    if loadOnly: # this forces returnAs="dict"
         obj = None
         try:
             obj = cfgpars.getObjectFromTaskArg(theTask, strict, defaults)
@@ -173,6 +174,8 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
                 print(re.message.replace('\n\n','\n'))
         return obj
     else:
+        assert returnAs in ("dict", "status", None), \
+               "Invalid value for returnAs arg: "+str(returnAs)
         dlg = None
         try:
             # if setting to all defaults, go ahead and load it here, pre-GUI
@@ -180,7 +183,7 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
                 theTask = cfgpars.getObjectFromTaskArg(theTask, strict, True)
             # now create/run the dialog
             dlg = ConfigObjEparDialog(theTask, parent=parent,
-                                      returnDict=returnDict,
+                                      autoClose=autoClose,
                                       strict=strict,
                                       canExecute=canExecute)
 #                                     overrides=overrides)
@@ -199,18 +202,29 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
                          title="Bad Parameters")
 
         # Return, depending on the mode in which we are operating
-        if not returnDict:
+        if returnAs == None:
             return
+
+        if returnAs == "dict":
+            if dlg is None or dlg.canceled():
+                return None
+            else:
+                return dlg.getTaskParsObj()
+
+        # else, returnAs == "status"
         if dlg is None or dlg.canceled():
-            return None
-        else:
-            return dlg.getTaskParsObj()
+            return -1
+        if dlg.executed():
+            return 1
+        return 0 # save/closed
+        # Note that you should be careful not to use "status" and
+        # autoClose=False, because the user can Save then Cancel
 
 
 def load(theTask, canExecute=True, strict=True, defaults=False):
     """ Shortcut to load TEAL .cfg files for non-GUI access where
     loadOnly=True. """
-    return teal(theTask, parent=None, loadOnly=True, returnDict=True,
+    return teal(theTask, parent=None, loadOnly=True, returnAs="dict",
                 canExecute=canExecute, strict=strict, errorsToTerm=True,
                 defaults=defaults)
 
@@ -428,21 +442,17 @@ def cfgGetBool(theObj, name, dflt):
 
 
 # Main class
-class ConfigObjEparDialog(editpar.EditParDialog):
+class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
     """ The TEAL GUI. """
 
     FALSEVALS = (None, False, '', 0, 0.0, '0', '0.0', 'OFF', 'Off', 'off',
                  'NO', 'No', 'no', 'N', 'n', 'FALSE', 'False', 'false')
 
     def __init__(self, theTask, parent=None, title=APP_NAME,
-                 isChild=0, childList=None, returnDict=True,
+                 isChild=0, childList=None, autoClose=False,
                  strict=False, canExecute=True):
 #                overrides=None,
-
-        # returnDict is fundamental to this GUI.  If True, then a dict is
-        # returned to the caller when it is Closed (None is returned if it
-        # is Canceled).  If False, we operate in an auto-close mode (like EPAR)
-        self._returnDict = returnDict
+        self._do_usac = autoClose
 
         # Keep track of any passed-in args before creating the _taskParsObj
 #       self._overrides = overrides
@@ -465,7 +475,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # our own GUI setup
         self._appName              = APP_NAME
         self._appHelpString        = tealHelpString
-        self._useSimpleAutoClose   = not self._returnDict
+        self._useSimpleAutoClose   = self._do_usac
         self._showExtraHelpButton  = False
         self._saveAndCloseOnExec   = cfgGetBool(cod, 'saveAndCloseOnExec', True)
         self._showHelpInBrowser    = cfgGetBool(cod, 'showHelpInBrowser', False)

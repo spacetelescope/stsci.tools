@@ -78,6 +78,7 @@ class EditParDialog(object):
 
         # Now go back and ensure we have the full taskname; set up other items
         self._canceled = False
+        self._executed = False
         self._guiName = title
         self.taskName = self._taskParsObj.getName()
         self.pkgName = self._taskParsObj.getPkgname()
@@ -1204,6 +1205,7 @@ class EditParDialog(object):
                               self.taskName)
                 if not ansOKCANCEL: return
             self.showStatus("Task "+self.taskName+" is running...", keep=2)
+            self._executed = True # note for later use
             self.runTask()
             return
 
@@ -1236,6 +1238,7 @@ class EditParDialog(object):
 
         # Run the task
         try:
+            self._executed = True # note for later use
             self.runTask()
         finally:
             self.top.quit()
@@ -1264,8 +1267,7 @@ class EditParDialog(object):
         self.top.focus_set()
         self.top.withdraw()
 
-        # Note that they canceled
-        self._canceled = True
+        self._canceled = True # note for later use
 
         # Do not destroy the window, just hide it for now.
         # This is so EXECUTE will not get an error - properly use Mediator.
@@ -1377,6 +1379,11 @@ class EditParDialog(object):
     def canceled(self):
         """ Did the user click Cancel? (or close us via the window manager) """
         return self._canceled
+
+
+    def executed(self):
+        """ Did the user click Execute? """
+        return self._executed
 
 
     # Get the task help in a string
