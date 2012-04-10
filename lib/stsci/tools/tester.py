@@ -45,7 +45,7 @@ import sys
 
 pytools_tester_active = False
 
-def test(modname, *args, **kwds):
+def test(modname, mode='nose', *args, **kwds):
     """
     Purpose:
     ========
@@ -53,6 +53,8 @@ def test(modname, *args, **kwds):
     test/ directory of the installed modules.
 
     """
+
+    global pytools_tester_active
 
     if modname is not None :
         curdir = sys.modules[modname].__file__
@@ -63,39 +65,72 @@ def test(modname, *args, **kwds):
 
     DIRS = [os.path.join(curdir, testdir) for testdir in ['test', 'tests']]
 
-    # First arg is blank, since it's skipped by nose
-    # --exe is needed because easy_install sets all .py files as executable for
-    # some reason
-    args = ['', '--exe']
-    found_one = False
-    for dirname in DIRS:
-        if os.path.isdir(dirname) :
-            args.append('-w')
-            args.append(dirname)
-            found_one = True
+    dirname = None
+    for x in DIRS:
+        if os.path.isdir(x) :
+            dirname = x
+            break
 
-    if not found_one :
-        print 'no tests found in: %s' % repr(dirs)
-        return False
+    if dirname is None :
+            print 'no tests found in: %s' % repr(dirs)
+            return False
 
-    result = False
+    if mode == 'nose' :
 
-    try:
-        import nose
-    except ImportError:
-        print "Nose 0.10.4 or greater is required for running tests."
-        raise
+        print("Testing with nose in %s\n"%dirname)
+        try:
+            import nose
+        except ImportError:
+            print "Nose 0.10.4 or greater is required for running tests."
+            raise
 
-    try :
-        pytools_tester_active = True
+        # First arg is blank, since it's skipped by nose
+        # --exe is needed because easy_install sets all .py files as executable for
+        # some reason
+        args = ['', '--exe', '-w', dirname ]
 
-        result = nose.run(argv=args)
+        result = False
 
-    except :
+        try :
+            pytools_tester_active = True
+            result = nose.run(argv=args)
+        except :
+            pytools_tester_active = False
+            raise
         pytools_tester_active = False
-        raise
 
-    pytools_tester_active = False
+        return result
 
-    return result
+    if mode == 'pytest' :
+
+        print("Testing with pytest in %s\n"%dirname)
+
+        try :
+            import pytest
+        except ImportError :
+            print "py.test is required for running tests"
+            raise
+
+        # do not use --doctest-modules ; it doesn't work right
+        args = [ dirname ]
+
+        try :
+            import pandokia
+            args = ['-p', 'pandokia.helpers.pytest_plugin' ] + args
+        except ImportError :
+            pass
+
+        result = False
+
+        try :
+            pytools_tester_active = True
+            result = pytest.main(args)
+        except :
+            pytools_tester_active = False
+            raise
+        pytools_tester_active = False
+
+        return result
+
+    raise ValueError("invalid test specification - mode must be one of 'nose' or 'pytest'")
 
