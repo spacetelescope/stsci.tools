@@ -350,12 +350,15 @@ def execEmbCode(SCOPE, NAME, VAL, TEAL, codeStr):
 
 
 
-def print_tasknames(pkgName, aDir, term_width=80, always=False):
+def print_tasknames(pkgName, aDir, term_width=80, always=False,
+                    hidden=None):
     """ Print a message listing TEAL-enabled tasks available under a
         given installation directory (where pkgName resides).
         If always is True, this will always print when tasks are
         found; otherwise it will only print found tasks when in interactive
         mode.
+        The parameter 'hidden' supports a list of input tasknames that should
+        not be reported even though they still exist.
     """
     # See if we can bail out early
     if not always:
@@ -368,6 +371,9 @@ def print_tasknames(pkgName, aDir, term_width=80, always=False):
     # Check for tasks
     taskDict = cfgpars.findAllCfgTasksUnderDir(aDir)
     tasks = [x for x in taskDict.values() if len(x) > 0]
+    if hidden: # could even account for a single taskname as input here if needed
+        for x in hidden:
+            if x in tasks: tasks.remove(x)
     # only be verbose if there something found
     if len(tasks) > 0:
         sortedUniqTasks = sorted(set(tasks))
