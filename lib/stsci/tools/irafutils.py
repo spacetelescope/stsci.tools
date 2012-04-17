@@ -25,6 +25,8 @@ import capable
 if capable.OF_GRAPHICS:
     import Tkinter
 
+PY3K = sys.version_info[0] > 2
+
 
 def printColsAuto(in_strings, term_width=80, min_pad=1):
     """ Print a list of strings centered in columns.  Determine the number
@@ -434,8 +436,9 @@ class _TkRead:
             # no Tk widgets yet, so no need for mainloop
             s = []
             while nbytes>0:
-                snew = os.read(fd, nbytes)
+                snew = os.read(fd, nbytes) # returns bytes in PY3K
                 if snew:
+                    if PY3K: snew = snew.decode('ascii')
                     s.append(snew)
                     nbytes -= len(snew)
                 else:
@@ -454,13 +457,15 @@ class _TkRead:
                 self.widget.tk.deletefilehandler(fd)
             return "".join(self.value)
 
+
     def _read(self, fd, mask):
         """Read waiting data and terminate Tk mainloop if done"""
         try:
             # if EOF was encountered on a tty, avoid reading again because
             # it actually requests more data
             if select.select([fd],[],[],0)[0]:
-                snew = os.read(fd, self.nbytes)
+                snew = os.read(fd, self.nbytes) # returns bytes in PY3K
+                if PY3K: snew = snew.decode('ascii')
                 self.value.append(snew)
                 self.nbytes -= len(snew)
             else:
