@@ -446,7 +446,7 @@ class _TkRead:
             self.nbytes = nbytes
             self.value = []
             self.widget.tk.createfilehandler(fd,
-                                    Tkinter.tkinter.READABLE | Tkinter.tkinter.EXCEPTION,
+                                    Tkinter.READABLE | Tkinter.EXCEPTION,
                                     self._read)
             try:
                 self.widget.mainloop()
