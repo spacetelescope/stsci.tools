@@ -1233,8 +1233,11 @@ class EditParDialog(object):
 
         # Before running the task, clear any already-handled exceptions that
         # will be erroneously picked up by the task's logger utility.
-        # !! (take this line out when that is fixed) !!
-        sys.exc_clear()
+        # This is temporary.  Remove this line when logging is fixed.
+        try:
+            sys.exc_clear() # not present in Py3
+        except AttributeError:
+            pass
 
         # Run the task
         try:

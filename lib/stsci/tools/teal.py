@@ -233,7 +233,7 @@ def log_last_error():
     import time
     f = open(cfgpars.getAppDir()+os.sep+'last_error.txt','w')
     f.write(time.asctime()+'\n\n')
-    f.write(traceback.format_exc(f)+'\n')
+    f.write(traceback.format_exc()+'\n')
     f.close()
 
 
