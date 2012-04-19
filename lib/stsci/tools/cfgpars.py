@@ -544,7 +544,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # 'ans' will be True, False, or a dict (anything but True is bad)
         ans = self.validate(self._vtor, preserve_errors=True,
                             copy=setAllToDefaults)
-        # Note: before the call to validate(), the list returned from 
+        # Note: before the call to validate(), the list returned from
         # self.keys() is in the order found in self.filename.  If that file
         # was missing items that are in the .cfgspc, they will now show up
         # in self.keys(), but not necessarily in the same order as the .cfgspc

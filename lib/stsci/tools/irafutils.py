@@ -121,7 +121,7 @@ def csvSplit(line, delim=',', allowEol=True):
     >>> l = rdr.next(); print len(l), str(l)
     6 ["arg1='str1'", "arg2='str", 'with', 'embedded', "commas'", "arg3=7"]
 
-    which we can see is not correct - we wanted 3 tokens.  This occurs in 
+    which we can see is not correct - we wanted 3 tokens.  This occurs in
     Python 2.5.2 and 2.6.  It seems to be due to the text at the start of each
     token ("arg1=") i.e. because the quote isn't for the whole token.  If we
     were to remove the names of the args and the equal signs, it works:

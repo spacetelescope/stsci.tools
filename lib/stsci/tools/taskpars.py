@@ -61,4 +61,4 @@ class TaskPars:
         return 'No help string available for task "'+self.getName()+'".\n '+ \
                'Implement getHelpAsString() in your TaskPars sub-class.'
 
-    # also, eparam, lParam, tParam, dParam, tryValue ? 
+    # also, eparam, lParam, tParam, dParam, tryValue ?
