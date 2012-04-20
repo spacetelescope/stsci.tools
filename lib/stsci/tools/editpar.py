@@ -1235,7 +1235,7 @@ class EditParDialog(object):
         # will be erroneously picked up by the task's logger utility.
         # This is temporary.  Remove this line when logging is fixed.
         try:
-            sys.exc_clear() # not present in Py3
+            sys.exc_clear() # not present in PY3K
         except AttributeError:
             pass
 
