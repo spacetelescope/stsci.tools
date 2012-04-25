@@ -27,7 +27,7 @@ def ndarr2str(arr, encoding='ascii'):
         return retval
 
 
-def tobytes(s):
+def tobytes(s, encoding='ascii'):
     """ Convert string s to the 'bytes' type, even back before Python 2.6.
     In Pythons before 3.0, this is technically the same as the str type
     in terms of the character data in memory. """
@@ -37,10 +37,14 @@ def tobytes(s):
         if isinstance(s, bytes):
             return s
         else:
-            return s.encode('ascii')
+            return s.encode(encoding)
     else:
         # for py2.6 on (before 3.0), bytes is same as str;  2.5 has no bytes
-        return s
+        # but handle if unicode is passed
+        if isinstance(s, unicode):
+            return s.encode(encoding)
+        else:
+            return s
 
 
 try:
