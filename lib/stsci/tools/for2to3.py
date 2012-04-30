@@ -20,8 +20,9 @@ def ndarr2str(arr, encoding='ascii'):
     # be fast, don't check - just assume 'arr' is a numpy array - the tostring
     # call will fail anyway if not
     retval = arr.tostring()
-    # would rather check "if isinstance(retval, bytes)", but support 2.5
-    if not isinstance(retval, (str, unicode)):
+    # would rather check "if isinstance(retval, bytes)", but support 2.5.
+    # could rm the if PY3K check, but it makes this faster on 2.x.
+    if PY3K and not isinstance(retval, (str, unicode)):
         return retval.decode(encoding)
     else: # is str
         return retval
