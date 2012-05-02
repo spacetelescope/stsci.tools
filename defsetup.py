@@ -1,4 +1,6 @@
 from __future__ import division # confidence high
+import sys
+PY3K = sys.version_info[0] > 2
 
 # Don't copy this as an example - use any other package is stsci_python,
 # such as sample_package
@@ -18,3 +20,6 @@ setupargs = {
     'data_files' :      [ ( 'stsci/tools/tests', [ 'lib/stsci/tools/tests/*.fits' ] ) ],
     }
 
+if PY3K:
+    # TODO: in PY3K we get: "error: can't copy 'lib/stsci/tools/tests/*.fits' "
+    setupargs['data_files'] = [ ( 'stsci/tools/tests', [] ) ]
