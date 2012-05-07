@@ -12,9 +12,9 @@ import sys
 # exec it instead.  We only want it to initialize itself,
 # so we don't need to keep the symbol table.
 
-syms = { }
+syms = {}
 f=open("./lib/stsci/tools/stsci_distutils_hack.py","r")
-exec f in syms
+exec(f.read(), syms)
 f.close()
 
 syms['__set_svn_version__']()
