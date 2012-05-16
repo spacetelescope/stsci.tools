@@ -15,7 +15,7 @@ setupargs = {
     'author_email' :    "help@stsci.edu",
     'license' :         "http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE",
     'platforms' :       ["Linux","Solaris","Mac OS X","Win"],
-    'scripts' :         [ 'scripts/fitsdiff','scripts/convertwaiveredfits','scripts/stscidocs'] ,
+    'scripts' :         ['scripts/convertwaiveredfits','scripts/stscidocs'] ,
     'package_dir' :     { 'stsci' : 'old_stsci', 'stsci.tools' : 'lib/stsci/tools', 'stsci.tools.tests' : 'lib/stsci/tools/tests' },
     'data_files' :      [ ( 'stsci/tools/tests', [ 'lib/stsci/tools/tests/*.fits' ] ) ],
     }
