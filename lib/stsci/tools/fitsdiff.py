@@ -59,7 +59,7 @@ def list_parse(name_list):
             log.warning('reading %s failed: %s; ignoring this file' %
                         (value, e))
     else:
-        return [v.strip() for v in name_list.split(',')])
+        return [v.strip() for v in name_list.split(',')]
 
 
 if __name__ == "__main__":
