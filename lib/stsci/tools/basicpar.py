@@ -759,7 +759,7 @@ class IrafPar:
         Default implementation simply prevents direct use of base class.
         Should accept None or null string.
         """
-        raise RuntimeError("Bug: base class IrafPar cannot be used directly")
+        raise NotImplementedError("class IrafPar cannot be used directly")
 
 
 # -----------------------------------------------------

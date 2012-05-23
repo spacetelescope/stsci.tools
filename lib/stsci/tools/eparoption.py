@@ -808,7 +808,7 @@ class ActionEparButton(EparOption):
         self.entry.pack(side = LEFT)
 
     def clicked(self):
-        raise RuntimeError('ActionEparButton.clicked must be implemented')
+        raise NotImplementedError('clicked() must be implemented')
 
     def unlearnValue(self):
         pass

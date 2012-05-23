@@ -395,7 +395,7 @@ class EditParDialog(object):
         TaskPars subclass object. """
 
         # Here we catch if this version is run by accident
-        raise RuntimeError("Bug: EditParDialog is not to be used directly")
+        raise NotImplementedError("EditParDialog is not to be used directly")
 
 
     def _saveGuiSettings(self):
@@ -1095,7 +1095,7 @@ class EditParDialog(object):
         """ Load the parameter settings from a user-specified file.  Any epar
         changes here should be coordinated with the corresponding tpar pfopen
         function. """
-        raise RuntimeError("Bug: EditParDialog is not to be used directly")
+        raise NotImplementedError("EditParDialog is not to be used directly")
 
 
     def _getSaveAsFilter(self):
@@ -1648,7 +1648,7 @@ class EditParDialog(object):
         save.  Return a string result to be printed to the screen. """
         # do something like
 #       return self._taskParsObj.saveParList(filename=fname, comment=comment)
-        raise RuntimeError("Bug: EditParDialog is not to be used directly")
+        raise NotImplementedError("EditParDialog is not to be used directly")
 
 
     def checkSetSaveChildren(self, doSave=True):

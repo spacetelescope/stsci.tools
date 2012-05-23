@@ -15,32 +15,32 @@ class TaskPars:
 
     def getName(self, *args, **kw):
         """ Returns the string name of the task. """
-        raise RuntimeError("Bug: class TaskPars is not to be used directly")
+        raise NotImplementedError("class TaskPars is not to be used directly")
 
     def getPkgname(self, *args, **kw):
         """ Returns the string name of the package, if applicable. """
-        raise RuntimeError("Bug: class TaskPars is not to be used directly")
+        raise NotImplementedError("class TaskPars is not to be used directly")
 
     def getParList(self, *args, **kw):
         """ Returns a list of parameter objects. """
-        raise RuntimeError("Bug: class TaskPars is not to be used directly")
+        raise NotImplementedError("class TaskPars is not to be used directly")
 
     def getDefaultParList(self, *args, **kw):
         """ Returns a list of parameter objects with default values set. """
-        raise RuntimeError("Bug: class TaskPars is not to be used directly")
+        raise NotImplementedError("class TaskPars is not to be used directly")
 
     def setParam(self, *args, **kw):
         """ Allows one to set the value of a single parameter.
             Initial signature is setParam(name, value, scope='', check=1) """
-        raise RuntimeError("Bug: class TaskPars is not to be used directly")
+        raise NotImplementedError("class TaskPars is not to be used directly")
 
     def getFilename(self, *args, **kw):
         """ Returns the string name of any associated config/parameter file. """
-        raise RuntimeError("Bug: class TaskPars is not to be used directly")
+        raise NotImplementedError("class TaskPars is not to be used directly")
 
     def saveParList(self, *args, **kw):
         """ Allows one to save the entire set to a file. """
-        raise RuntimeError("Bug: class TaskPars is not to be used directly")
+        raise NotImplementedError("class TaskPars is not to be used directly")
 
     def run(self, *args, **kw):
         """ Runs the task with the known parameters. """
