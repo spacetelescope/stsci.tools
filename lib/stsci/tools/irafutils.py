@@ -24,8 +24,7 @@ import os, stat, string, struct, sys, re, fnmatch, keyword, types, select
 import capable
 if capable.OF_GRAPHICS:
     import Tkinter
-
-PY3K = sys.version_info[0] > 2
+from capable import PY3K
 
 
 def printColsAuto(in_strings, term_width=80, min_pad=1):
