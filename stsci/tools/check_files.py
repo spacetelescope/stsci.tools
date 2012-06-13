@@ -66,7 +66,7 @@ def checkPhotKeywords(filelist):
         This only moves keywords from the PRIMARY header if the keywords
         do not already exist in the SCI header.
         """
-        PHOTKEYS = ['PHOTFLAM','PHOTPLAM','PHOTBW','PHOTZPT','PHOTMODE']
+        PHOTKEYS = ['PHOTFLAM','PHOTPLAM','PHOTBW','PHOTZPT','PHOTMODE','PHOTFNU']
         for f in filelist:
             handle = fileutil.openImage(f,mode='update',memmap=0)
             phdr = handle['PRIMARY'].header
