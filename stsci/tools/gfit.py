@@ -162,5 +162,6 @@ def plot_fit(y, mfit, x=None):
     pylab.plot(x,yy)
 
 def test():
-    import doctest,gfit
+    import doctest
+    import gfit
     return doctest.testmod(gfit)

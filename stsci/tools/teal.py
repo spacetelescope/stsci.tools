@@ -3,10 +3,10 @@ $Id$
 """
 from __future__ import division # confidence high
 
-import glob, os, sys
+import glob, os, sys, traceback
 import configobj, cfgpars, editpar, vtor_checks
 from cfgpars import APP_NAME
-from irafutils import rglob, printColsAuto
+from irafutils import printColsAuto, rglob, setWritePrivs
 import capable
 if capable.OF_GRAPHICS:
     try:
@@ -166,11 +166,12 @@ the "Execute" button.
 
 
 # Starts a GUI session, or simply loads a file
-def teal(theTask, parent=None, loadOnly=False, returnDict=True,
-         canExecute=True, strict=False, errorsToTerm=False, defaults=False):
+def teal(theTask, parent=None, loadOnly=False, returnAs="dict",
+         canExecute=True, strict=False, errorsToTerm=False,
+         autoClose=True, defaults=False):
 #        overrides=None):
     """ Start the GUI session, or simply load a task's ConfigObj. """
-    if loadOnly:
+    if loadOnly: # this forces returnAs="dict"
         obj = None
         try:
             obj = cfgpars.getObjectFromTaskArg(theTask, strict, defaults)
@@ -183,6 +184,8 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
                 print(re.message.replace('\n\n','\n'))
         return obj
     else:
+        assert returnAs in ("dict", "status", None), \
+               "Invalid value for returnAs arg: "+str(returnAs)
         dlg = None
         try:
             # if setting to all defaults, go ahead and load it here, pre-GUI
@@ -190,16 +193,18 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
                 theTask = cfgpars.getObjectFromTaskArg(theTask, strict, True)
             # now create/run the dialog
             dlg = ConfigObjEparDialog(theTask, parent=parent,
-                                      returnDict=returnDict,
+                                      autoClose=autoClose,
                                       strict=strict,
                                       canExecute=canExecute)
 #                                     overrides=overrides)
         except cfgpars.NoCfgFileError, ncf:
+            log_last_error()
             if errorsToTerm:
                 print(str(ncf).replace('\n\n','\n'))
             else:
                 popUpErr(parent=parent,message=str(ncf),title="Unfound Task")
         except Exception, re: # catches RuntimeError and KeyError and ...
+            log_last_error()
             if errorsToTerm:
                 print(re.message.replace('\n\n','\n'))
             else:
@@ -207,20 +212,39 @@ def teal(theTask, parent=None, loadOnly=False, returnDict=True,
                          title="Bad Parameters")
 
         # Return, depending on the mode in which we are operating
-        if not returnDict:
+        if returnAs == None:
             return
+
+        if returnAs == "dict":
+            if dlg is None or dlg.canceled():
+                return None
+            else:
+                return dlg.getTaskParsObj()
+
+        # else, returnAs == "status"
         if dlg is None or dlg.canceled():
-            return None
-        else:
-            return dlg.getTaskParsObj()
+            return -1
+        if dlg.executed():
+            return 1
+        return 0 # save/closed
+        # Note that you should be careful not to use "status" and
+        # autoClose=False, because the user can Save then Cancel
 
 
 def load(theTask, canExecute=True, strict=True, defaults=False):
     """ Shortcut to load TEAL .cfg files for non-GUI access where
     loadOnly=True. """
-    return teal(theTask, parent=None, loadOnly=True, returnDict=True,
+    return teal(theTask, parent=None, loadOnly=True, returnAs="dict",
                 canExecute=canExecute, strict=strict, errorsToTerm=True,
                 defaults=defaults)
+
+
+def log_last_error():
+    import time
+    f = open(cfgpars.getAppDir()+os.sep+'last_error.txt','w')
+    f.write(time.asctime()+'\n\n')
+    f.write(traceback.format_exc()+'\n')
+    f.close()
 
 
 def unlearn(taskPkgName, deleteAll=False):
@@ -279,6 +303,23 @@ def _flat2str(fd): # waiting for a nice pretty-print
     for k in fd.keys(): rv += repr(k)+': '+repr(fd[k])+'\n'
     return rv+'}'
 
+def _isInstalled(fullFname):
+    """ Return True if the given file name is located in an
+    installed area (versus a user-owned file) """
+    if not fullFname: return False
+    if not os.path.exists(fullFname): return False
+    instAreas = []
+    try:
+        import site
+        instAreas = site.getsitepackages()
+    except:
+        pass # python 2.6 and lower don't have site.getsitepackages()
+    if len(instAreas) < 1:
+        instAreas = [ os.path.dirname(os.__file__) ]
+    for ia in instAreas:
+        if fullFname.find(ia) >= 0:
+            return True
+    return False
 
 def popUpErr(parent=None, message="", title="Error"):
     # withdraw root, could standardize w/ EditParDialog.__init__()
@@ -319,12 +360,15 @@ def execEmbCode(SCOPE, NAME, VAL, TEAL, codeStr):
 
 
 
-def print_tasknames(pkgName, aDir, term_width=80, always=False):
+def print_tasknames(pkgName, aDir, term_width=80, always=False,
+                    hidden=None):
     """ Print a message listing TEAL-enabled tasks available under a
         given installation directory (where pkgName resides).
         If always is True, this will always print when tasks are
         found; otherwise it will only print found tasks when in interactive
         mode.
+        The parameter 'hidden' supports a list of input tasknames that should
+        not be reported even though they still exist.
     """
     # See if we can bail out early
     if not always:
@@ -337,6 +381,9 @@ def print_tasknames(pkgName, aDir, term_width=80, always=False):
     # Check for tasks
     taskDict = cfgpars.findAllCfgTasksUnderDir(aDir)
     tasks = [x for x in taskDict.values() if len(x) > 0]
+    if hidden: # could even account for a single taskname as input here if needed
+        for x in hidden:
+            if x in tasks: tasks.remove(x)
     # only be verbose if there something found
     if len(tasks) > 0:
         sortedUniqTasks = sorted(set(tasks))
@@ -411,20 +458,17 @@ def cfgGetBool(theObj, name, dflt):
 
 
 # Main class
-class ConfigObjEparDialog(editpar.EditParDialog):
+class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
+    """ The TEAL GUI. """
 
     FALSEVALS = (None, False, '', 0, 0.0, '0', '0.0', 'OFF', 'Off', 'off',
                  'NO', 'No', 'no', 'N', 'n', 'FALSE', 'False', 'false')
 
     def __init__(self, theTask, parent=None, title=APP_NAME,
-                 isChild=0, childList=None, returnDict=True,
+                 isChild=0, childList=None, autoClose=False,
                  strict=False, canExecute=True):
 #                overrides=None,
-
-        # returnDict is fundamental to this GUI.  If True, then a dict is
-        # returned to the caller when it is Closed (None is returned if it
-        # is Canceled).  If False, we operate in an auto-close mode (like EPAR)
-        self._returnDict = returnDict
+        self._do_usac = autoClose
 
         # Keep track of any passed-in args before creating the _taskParsObj
 #       self._overrides = overrides
@@ -447,11 +491,12 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         # our own GUI setup
         self._appName              = APP_NAME
         self._appHelpString        = tealHelpString
-        self._useSimpleAutoClose   = not self._returnDict
+        self._useSimpleAutoClose   = self._do_usac
         self._showExtraHelpButton  = False
         self._saveAndCloseOnExec   = cfgGetBool(cod, 'saveAndCloseOnExec', True)
         self._showHelpInBrowser    = cfgGetBool(cod, 'showHelpInBrowser', False)
-        self._writeProtectOnSaveAs = cfgGetBool(cod, 'writeProtectOnSaveAs', False)
+        self._writeProtectOnSaveAs = cfgGetBool(cod, 'writeProtectOnSaveAsOpt', True)
+        self._flagNonDefaultVals   = cfgGetBool(cod, 'flagNonDefaultVals', None)
         self._optFile              = APP_NAME.lower()+".optionDB"
 
         # our own colors
@@ -463,6 +508,7 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self._taskColor = cod.get('taskBoxColor', ltblu)
         self._bboxColor = cod.get('buttonBoxColor', ltblu)
         self._entsColor = cod.get('entriesColor', ltblu)
+        self._flagColor = cod.get('flaggedColor', 'brown')
 
         # double check _canExecute, but only if it is still set to the default
         if self._canExecute and self._taskParsObj: # default _canExecute=True
@@ -489,29 +535,45 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         self.updateTitle(self._taskParsObj.filename)
 
 
-    def _doActualSave(self, fname, comment, set_ro=False):
+    def _doActualSave(self, fname, comment, set_ro=False, overwriteRO=False):
         """ Override this so we can handle case of file not writable, as
             well as to make our _lastSavedState copy. """
-        self.debug('Saving, file name given: '+str(fname))
+        self.debug('Saving, file name given: '+str(fname)+', set_ro: '+\
+                   str(set_ro)+', overwriteRO: '+str(overwriteRO))
+        cantWrite = False
+        inInstArea = False
+        if fname in (None, ''): fname = self._taskParsObj.getFilename()
+        # now do some final checks then save
         try:
-            rv=self._taskParsObj.saveParList(filename=fname,comment=comment)
+            if _isInstalled(fname): # check: may be installed but not read-only
+                inInstArea = cantWrite = True
+            else:
+                # in case of save-as, allow overwrite of read-only file
+                if overwriteRO and os.path.exists(fname):
+                    setWritePrivs(fname, True, True) # try make writable
+                # do the save
+                rv=self._taskParsObj.saveParList(filename=fname,comment=comment)
         except IOError:
-            # User does not have privs to write to this file. Get name of local
-            # choice and try to use that.
-#           if not fname: fname = self._taskParsObj.filename
-#           fname = self._rcDir+os.sep+os.path.basename(fname)
-            fname = self._rcDir+os.sep+self._taskParsObj.getName()+".cfg"
+            cantWrite = True
+
+        # User does not have privs to write to this file. Get name of local
+        # choice and try to use that.
+        if cantWrite:
+            fname = self._taskParsObj.getDefaultSaveFilename()
             # Tell them the context is changing, and where we are saving
-            msg = 'Installed config file for task "'+ \
-                  self._taskParsObj.getName()+'" is not to be overwritten.'+ \
+            msg = 'Read-only config file for task "'
+            if inInstArea:
+                msg = 'Installed config file for task "'
+            msg += self._taskParsObj.getName()+'" is not to be overwritten.'+\
                   '  Values will be saved to: \n\n\t"'+fname+'".'
             tkMessageBox.showwarning(message=msg, title="Will not overwrite!")
             # Try saving to their local copy
             rv=self._taskParsObj.saveParList(filename=fname, comment=comment)
-            # Treat like a save-as
-            self._saveAsPostSave_Hook(fname)
 
-        # Limit write privs if requested (only if not in _rcDir)
+        # Treat like a save-as (update title for ALL save ops)
+        self._saveAsPostSave_Hook(fname)
+
+        # Limit write privs if requested (only if not in the rc dir)
         if set_ro and os.path.dirname(os.path.abspath(fname)) != \
                                       os.path.abspath(self._rcDir):
             cfgpars.checkSetReadOnly(fname)
@@ -574,6 +636,16 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             return teal_bttn.TealActionParButton
         else:
             return None
+
+
+    def updateTitle(self, atitle):
+        """ Override so we can append read-only status. """
+        if atitle and os.path.exists(atitle):
+            if _isInstalled(atitle):
+                atitle += '  [installed]'
+            elif not os.access(atitle, os.W_OK):
+                atitle += '  [read only]'
+        super(ConfigObjEparDialog, self).updateTitle(atitle)
 
 
     def edited(self, scope, name, lastSavedVal, newVal, action):
@@ -655,7 +727,16 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                     self.showStatus("Evaluating "+triggerName+' ...') #dont keep
                     self.top.update_idletasks() #allow msg to draw prior to exec
                     # execute it and retrieve the outcome
-                    outval = execEmbCode(scope, name, newVal, self, codeStr)
+                    try:
+                        outval = execEmbCode(scope, name, newVal, self, codeStr)
+                    except Exception, ex:
+                        outval = 'ERROR in '+triggerName+': '+str(ex)
+                        print outval
+                        msg = outval+':\n'+('-'*99)+'\n'+traceback.format_exc()
+                        msg += 'CODE:  '+codeStr+'\n'+'-'*99+'\n'
+                        self.debug(msg)
+                        self.showStatus(outval, keep=1)
+
                     # Leave this debug line in until it annoys someone
                     msg = 'Value of "'+name+'" triggered "'+triggerName+'"'
                     stroutval = str(outval)
@@ -814,16 +895,20 @@ class ConfigObjEparDialog(editpar.EditParDialog):
                                            strict=self._strict)
         except Exception, ex:
             tkMessageBox.showerror(message=ex.message,
-                title="Error in "+os.path.basename(fname))
+                title='Error in '+os.path.basename(fname))
+            self.debug('Error in '+os.path.basename(fname))
+            self.debug(traceback.format_exc())
             return
 
         # check it to make sure it is a match
         if not self._taskParsObj.isSameTaskAs(tmpObj):
             msg = 'The current task is "'+self._taskParsObj.getName()+ \
-                  '", but the selected file is for task "'+tmpObj.getName()+ \
-                  '".  This file was not loaded.'
+                  '", but the selected file is for task "'+ \
+                  str(tmpObj.getName())+'".  This file was not loaded.'
             tkMessageBox.showerror(message=msg,
                 title="Error in "+os.path.basename(fname))
+            self.debug(msg)
+            self.debug(traceback.format_exc())
             return
 
         # Set the GUI entries to these values (let the user Save after)
@@ -898,10 +983,12 @@ class ConfigObjEparDialog(editpar.EditParDialog):
             return
 
         # Set the GUI entries to these values (let the user Save after)
+        tmpObj.filename = self._taskParsObj.filename = '' # name it later
         newParList = tmpObj.getParList()
         try:
             self.setAllEntriesFromParList(newParList) # needn't updateModel yet
             self.checkAllTriggers('defaults')
+            self.updateTitle('')
             self.showStatus("Loaded default "+self.taskName+" values via: "+ \
                  os.path.basename(tmpObj._original_configspec), keep=1)
         except editpar.UnfoundParamError, pe:
@@ -972,13 +1059,15 @@ class ConfigObjEparDialog(editpar.EditParDialog):
         if os.path.exists(rcFile): os.remove(rcFile)
         co = configobj.ConfigObj(rcFile) # can skip try-block, won't read file
 
-        co['showHelpInBrowser']    = self._showHelpInBrowser
-        co['saveAndCloseOnExec']   = self._saveAndCloseOnExec
-        co['writeProtectOnSaveAs'] = self._writeProtectOnSaveAs
-        co['frameColor']           = self._frmeColor
-        co['taskBoxColor']         = self._taskColor
-        co['buttonBoxColor']       = self._bboxColor
-        co['entriesColor']         = self._entsColor
+        co['showHelpInBrowser']       = self._showHelpInBrowser
+        co['saveAndCloseOnExec']      = self._saveAndCloseOnExec
+        co['writeProtectOnSaveAsOpt'] = self._writeProtectOnSaveAs
+        co['flagNonDefaultVals']      = self._flagNonDefaultVals
+        co['frameColor']              = self._frmeColor
+        co['taskBoxColor']            = self._taskColor
+        co['buttonBoxColor']          = self._bboxColor
+        co['entriesColor']            = self._entsColor
+        co['flaggedColor']            = self._flagColor
 
         co.initial_comment = ['Automatically generated by '+\
             APP_NAME+'.  All edits will eventually be overwritten.']

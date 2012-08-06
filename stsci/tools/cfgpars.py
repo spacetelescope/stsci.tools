@@ -184,8 +184,8 @@ def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
                 return aPkg, f
 
     # What, are you still here?
-    raise NoCfgFileError('No valid '+ext+' files found in package: "'+pkgName+\
-                         '" for task: "'+taskName+'"')
+    raise NoCfgFileError('No valid '+ext+' files found in package: "'+ \
+                         str(pkgName)+'" for task: "'+str(taskName)+'"')
 
 
 def findAllCfgTasksUnderDir(aDir):
@@ -291,13 +291,9 @@ def checkSetReadOnly(fname, raiseOnErr = False):
     are not supposed to, then fix that case. """
     if os.access(fname, os.W_OK):
         # We can write to this but it is supposed to be read-only. Fix it.
-        privs = os.stat(fname).st_mode
-        try:
-            # Take away usr-write, leave group and other alone, though it
-            # may be simpler to just force/set it to: r--r--r-- or r--------
-            os.chmod(fname, (privs ^ stat.S_IWUSR))
-        except OSError:
-            if raiseOnErr: raise
+        # Take away usr-write, leave group and other alone, though it
+        # may be simpler to just force/set it to: r--r--r-- or r--------
+        irafutils.setWritePrivs(fname, False, ignoreErrors= not raiseOnErr)
 
 
 def flattenDictTree(aDict):
@@ -548,7 +544,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # 'ans' will be True, False, or a dict (anything but True is bad)
         ans = self.validate(self._vtor, preserve_errors=True,
                             copy=setAllToDefaults)
-        # Note: before the call to validate(), the list returned from 
+        # Note: before the call to validate(), the list returned from
         # self.keys() is in the order found in self.filename.  If that file
         # was missing items that are in the .cfgspc, they will now show up
         # in self.keys(), but not necessarily in the same order as the .cfgspc
@@ -624,6 +620,16 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             # init phase we may not yet have a logger, yet have stuff to log
             self._debugYetToPost.append(msg) # add to our little cache
 
+    def getDefaultSaveFilename(self, stub=False):
+        """ Return name of file where we are expected to be saved if no files
+        for this task have ever been saved, and the user wishes to save.  If
+        stub is True, the result will be <dir>/<taskname>_stub.cfg instead of
+        <dir>/<taskname>.cfg. """
+        if stub:
+            return self._rcDir+os.sep+self.__taskName+'_stub.cfg'
+        else:
+            return self._rcDir+os.sep+self.__taskName+'.cfg'
+
     def syncParamList(self, firstTime, preserve_order=True):
         """ Set or reset the internal param list from the dict's contents. """
         # See the note in setParam about this design.
@@ -644,7 +650,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             namesInOrder = [p.fullName() for p in self.__paramList]
             assert len(namesInOrder) == len(new_list), \
                    'Mismatch in num pars, had: '+str(len(namesInOrder))+ \
-                   ', now have: '+str(len(new_list))+', '+str(namesInOrder)
+                   ', now we have: '+str(len(new_list))+', '+ \
+                   str([p.fullName() for p in new_list])
             self.__paramList[:] = [] # clear list, keep same pointer
             # create a flat dict view of new_list, for ease of use in next step
             new_list_dict = {} # can do in one step in v2.7
@@ -674,14 +681,18 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # But first check for rare case of no cfg file name
         if self.filename == None:
             # this is a .cfgspc-only kind of object so far
-            self.filename = self._rcDir+os.sep+self.__taskName+'_stub.cfg'
+            self.filename = self.getDefaultSaveFilename(stub=True)
             return copy.deepcopy(self.__paramList)
 
         tmpObj = ConfigObjPars(self.filename, associatedPkg=self.__assocPkg,
                                setAllToDefaults=True, strict=False)
         return tmpObj.getParList()
 
-    def getFilename(self): return self.filename
+    def getFilename(self):
+        if self.filename in (None, ''):
+            return self.getDefaultSaveFilename()
+        else:
+            return self.filename
 
     def getAssocPkg(self): return self.__assocPkg
 
@@ -819,7 +830,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         if os.path.isfile(retval): return retval
 
         # Also try the resource dir
-        retval = self._rcDir+os.sep+self.__taskName+".cfgspc"
+        retval = self.getDefaultSaveFilename()+'spc' # .cfgspc
         if os.path.isfile(retval): return retval
 
         # Now try and see if there is a matching .cfgspc file in/under an
@@ -909,7 +920,13 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     dtype = 's'
                     # convert the choices string to a list (to weed out kwds)
                     x = cspc[cspc.find('(')+1:-1] # just the options() args
+# cspc e.g.: option_kw("poly5","nearest","linear", default="poly5", comment="Interpolant (poly5,nearest,linear)")
                     x = x.split(',') # tokenize
+                    # but! comment value may have commas in it, find it
+                    # using it's equal sign, rm all after it
+                    has_eq = [i for i in x if i.find('=')>=0]
+                    if len(has_eq) > 0:
+                        x = x[: x.index(has_eq[0]) ]
                     # rm spaces, extra quotes; rm kywd arg pairs
                     x = [i.strip("' ") for i in x if i.find('=')<0]
                     choicesOrMin = '|'+'|'.join(x)+'|' # IRAF format for enums

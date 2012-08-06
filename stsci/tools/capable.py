@@ -9,6 +9,8 @@ $Id$
 from __future__ import division  # confidence high
 
 import os, sys
+PY3K = sys.version_info[0] > 2
+
 
 def is_darwin_and_x():
     """ Convenience function.  Returns True if is an X11-linked Python/Tkinter
@@ -17,11 +19,40 @@ def is_darwin_and_x():
     is installed (only) in the Framework builds of Python. """
     if not sys.platform == 'darwin':
         return False
-    # Is OSX.
+
+    return which_darwin_linkage() == "x11"
+
+
+def which_darwin_linkage(force_otool_check=False):
+    """ Convenience function.  Returns one of ('x11', 'aqua') in answer to the
+    question of whether this is an X11-linked Python/Tkinter, or a natively
+    built (framework, Aqua) one.  This is only for OSX.
+    On Python 2.*, this relies on the assumption that on OSX, PyObjC
+    is installed only in the Framework builds of Python.  On Python 3.*,
+    this inspects the actual tkinter library binary via otool. """
+
+    # sanity check
+    assert sys.platform=='darwin', 'Incorrect usaage, not on OSX'
+
     # There will *usually* be PyObjC modules on sys.path on the natively-
-    # linked Python. (could also shell out a call to otool on exec)
-    junk = ",".join(sys.path)
-    return junk.lower().find('/pyobjc') < 0
+    # linked Python. This is assumed to be always correct on Python 2.x, as
+    # of 2012.  This is kludgy but quick and effective.
+    if not force_otool_check:
+        junk = ",".join(sys.path)
+        if junk.lower().find('/pyobjc') >= 0:
+            return "aqua"
+
+    # OK, no PyObjC found.  What we do next is different per Python ver.
+    if not PY3K and not force_otool_check:
+        return "x11"
+
+    # Is PY3K, use otool shell command (requires 2.7+)
+    import Tkinter, subprocess
+    libs = subprocess.check_output(('/usr/bin/otool', '-L', Tkinter._tkinter.__file__)).decode()
+    if libs.find('/libX11.') >= 0:
+        return "x11"
+    else:
+        return "aqua"
 
 
 OF_GRAPHICS = True
@@ -71,10 +102,14 @@ if OF_GRAPHICS :
     try :
         import Tkinter
     except ImportError :
+        TKINTER_IMPORT_FAILED = 1
         OF_GRAPHICS = False
 
 # Using tkFileDialog from PyRAF (and maybe in straight TEAL) is crashing python
 # itself on OSX only.  Allow on Linux.  Mac: use this until PyRAF #171 fixed.
 OF_TKFD_IN_EPAR = True
-if sys.platform == 'darwin' and not is_darwin_and_x(): # if framework ver
+if sys.platform == 'darwin' and OF_GRAPHICS and \
+   not is_darwin_and_x(): # if framework ver
     OF_TKFD_IN_EPAR = 'TEAL_TRY_TKFD' in os.environ
+
+

@@ -14,7 +14,8 @@ import numpy as N
 
 BUFSIZE = 1024*1000   # 1Mb cache size
 
-__version__ = '0.6'
+__version__ = '0.7'
+__vdate__ = '25-July-2012'
 
 
 def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
@@ -72,12 +73,12 @@ def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
             # This allows the user to avoid edge effects when
             # convolving the returned image sections, and insures
             # that the last segment will always be returned with
-            # overlap+1 rows.  
-            
+            # overlap+1 rows.
+
             _prange = pix+nrows+overlap
             if _prange > _numrows: _prange = _numrows
             if pix == _prange: break
-            
+
             if copy:
                 if single:
                     _cache = imgarr[pix:_prange].copy()
@@ -103,40 +104,41 @@ def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
                         imglist[updateSection][pix:_prange] = _outlist[updateSection]
                     del _outlist
                     _outlist = []
-    
+
 def computeBuffRows(imgarr,bufsize=BUFSIZE):
-    """ Function to compute the number of rows from the 
+    """ Function to compute the number of rows from the
         input array that fits in the allocated memory given
         by the bufsize.
     """
     imgarr = N.asarray(imgarr)
     buffrows = int(bufsize / (imgarr.itemsize * imgarr.shape[1]))
     return buffrows
-    
+
 def computeNumberBuff(numrows, buffrows, overlap):
-    """ Function to compute the number of buffer sections  
-        that will be used to read the input image given the 
-        specified overlap. 
+    """ Function to compute the number of buffer sections
+        that will be used to read the input image given the
+        specified overlap.
     """
     nbuff = _computeNbuff(numrows, buffrows, overlap)
     niter = 1 + int(nbuff)
     totalrows = niter * buffrows
-    # We need to account for the case where the number of 
+    # We need to account for the case where the number of
     # iterations ends up being greater than needed due to the
     # overlap.
     #if totalrows > numrows: niter -= 1
-    fracbuff = (nbuff - int(nbuff))*buffrows
-    if fracbuff < overlap+1 and nbuff > 1:
+    lastbuff = numrows - (niter*(buffrows-overlap))
+
+    if lastbuff < overlap+1 and nbuff > 1:
         good = False
         while not good:
             if buffrows > overlap+1:
                 buffrows -= 1
-                
+
                 nbuff = _computeNbuff(numrows, buffrows, overlap)
                 niter = 1 + int(nbuff)
                 totalrows = niter * (buffrows - overlap)
-                fracbuff = (nbuff - int(nbuff))*buffrows
-                if fracbuff > overlap + 1:
+                lastbuff = numrows - (niter*(buffrows-overlap))
+                if lastbuff > overlap + 1:
                     good = True
             else:
                 good = True
@@ -144,7 +146,7 @@ def computeNumberBuff(numrows, buffrows, overlap):
 
 def _computeNbuff(numrows,buffrows,overlap):
 
-    if buffrows > numrows: 
+    if buffrows > numrows:
         nbuff = 1
     else:
         overlaprows = buffrows - overlap
@@ -154,9 +156,9 @@ def _computeNbuff(numrows,buffrows,overlap):
 
 def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
     """ Return image section for each image listed on input, with
-        the object performing the file I/O upon each call to the 
+        the object performing the file I/O upon each call to the
         iterator.
-        
+
         The inputs can either be a single image or a list of them,
         with the return value matching the input type.
         All images in a list MUST have the same shape, though,
@@ -190,13 +192,13 @@ def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
 #        niter = int(imgarr.shape[0] / nrows) * nrows
         nbuff,nrows = computeNumberBuff(imgarr.shape[0],nrows,overlap)
         niter = nbuff * nrows
-        
+
         for pix in range(0,niter+1,nrows-overlap):
             # overlap needs to be computed here
             # This allows the user to avoid edge effects when
             # convolving the returned image sections, and insures
             # that the last segment will always be returned with
-            # overlap+1 rows.  
+            # overlap+1 rows.
             _prange = pix+nrows
             if _prange > _numrows: _prange = _numrows
             if pix >= _prange: break
@@ -208,4 +210,3 @@ def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
                 yield _outlist,(pix,_prange)
                 del _outlist
                 _outlist = []
-    

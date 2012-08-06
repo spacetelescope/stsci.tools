@@ -4,7 +4,7 @@
 #
 # Implements setup.py code common to many of our packages.
 #
-# The new standard stsci module setup.py is just 
+# The new standard stsci module setup.py is just
 #
 #   import stsci.tools.stsci_distutils_hack
 #   stsci.tools.stsci_distutils_hack.run( pytools_version = "XX" )
@@ -50,7 +50,7 @@ def run( pytools_version = None ) :
 
     * perform the install
 
-    usage: 
+    usage:
 
         import stsci.tools.stsci_distutils_hack
         stsci.tools.stsci_distutils_hack.run(pytools_version = "3.0")
@@ -58,7 +58,7 @@ def run( pytools_version = None ) :
     """
 
     if not hasattr(sys, 'version_info') or sys.version_info < (2,3,0,'alpha',0):
-        raise SystemExit, "Python 2.3 or later required."
+        raise SystemExit("Python 2.3 or later required.")
 
     if pytools_version :
         # Only try to import stsci.tools if we are asked to check for a version.
@@ -70,9 +70,9 @@ def run( pytools_version = None ) :
 
         # bug: should use distutils version comparator to perform ">" comparisons
         if ( stsci.tools.__version__ != pytools_version ) :
-            print "wrong version of stsci.tools!"
-            print "have ",stsci.tools.__version__ 
-            print "want ",pytools_version
+            print("wrong version of stsci.tools!")
+            print("have "+str(stsci.tools.__version__))
+            print("want "+str(pytools_version))
             sys.exit(1)
 
     # look for include files that common linux distributions leave out
@@ -110,9 +110,7 @@ def run( pytools_version = None ) :
     return setup(
         name =              pkg[0],
         packages =          pkg,
-
         **setupargs
-
         )
 
 
@@ -126,9 +124,9 @@ def run( pytools_version = None ) :
 # This is essentially "smart_install_data" as used in the old
 # setup.py files, except that it also understands wildcards
 # and os-specific paths.  This means the module author can
-# ask for data files with 
-#       "data/generic/*" 
-# instead of 
+# ask for data files with
+#       "data/generic/*"
+# instead of
 #       glob.glob(os.path.join('data', 'generic', '*'))
 
 
@@ -229,7 +227,7 @@ def __set_svn_version__(directory="./", fname='svn_version.py' ) :
         revision = str(rev)
 
     info = __get_full_info__(directory)
-    
+
     # now we can write the version information
 
     f = open(version_file,'w')
@@ -241,11 +239,11 @@ def __set_svn_version__(directory="./", fname='svn_version.py' ) :
     f.write("\n__full_svn_info__ = '''\n%s'''\n\n" % info)
     f.close()
 
-    
+
 def __get_svn_rev__(path):
     m = None
     try:
-        # with popen3,  stderr goes into a pipe where we ignore it, 
+        # with popen3,  stderr goes into a pipe where we ignore it,
         # This means the user does not see errors.
         cmd = 'svnversion '+path
         (sin, sout, serr) = os.popen3(cmd)
@@ -269,7 +267,7 @@ def __get_svn_rev__(path):
 def __get_full_info__(path):
     info = None
     try:
-        # with popen3,  stderr goes into a pipe where we ignore it, 
+        # with popen3,  stderr goes into a pipe where we ignore it,
         # This means the user does not see errors.
         (sin, sout, serr) = os.popen3('svn info %s' % path)
 
@@ -312,7 +310,7 @@ def __set_setup_date__( path="./", fname='svn_version.py') :
     f=open(file,"w")
     for line in l :
         f.write(line)
-    
+
     f.write("%s # setupdate\n" % "import datetime")
     f.write("%s # setupdate\n" % ("setupdate = "+repr(d)))
     f.close()
@@ -320,7 +318,7 @@ def __set_setup_date__( path="./", fname='svn_version.py') :
 
 ######## ######## ######## ######## ######## ######## ######## ########
 #
-# 
+#
 
 def check_requirements() :
 
@@ -331,12 +329,12 @@ def check_requirements() :
 
     d = distutils.sysconfig.get_python_inc( plat_specific=0 )
     if not os.path.exists( d + '/Python.h') :
-        print "ERROR: Python development files are missing from",d
+        print("ERROR: Python development files are missing from "+d)
         dev_pkg_missing=1
 
     d = distutils.sysconfig.get_python_inc( plat_specific=1 )
     if not os.path.exists( d + '/pyconfig.h') :
-        print "ERROR: Python development files are missing from",d
+        print("ERROR: Python development files are missing from "+d)
         dev_pkg_missing=1
 
     try :
@@ -345,21 +343,21 @@ def check_requirements() :
         numpy_missing = 1
 
     if not numpy_missing :
-        d = numpy.get_include()    
+        d = numpy.get_include()
         if not os.path.exists( d + '/numpy/arrayobject.h') :
-            print "ERROR: Numpy development files are missing from",d
+            print("ERROR: Numpy development files are missing from "+d)
             dev_pkg_missing=1
 
     # print explanations for whatever problems there are
     if numpy_missing:
-        print """
+        print("""
 This installation requires the numpy package.  You may find it in
 your operating system distribution, or you may find it at
 http://numpy.scipy.org
-"""
+""")
 
     if dev_pkg_missing :
-        print """
+        print("""
 Many OS distributions separate Python and Numpy into user and
 developer packages.  You need both packages to complete this install,
 but this machine appears to be missing one of the developer packages.
@@ -367,7 +365,7 @@ The package names are different on different systems, but usually
 the necessary package is named somethng like 'python-dev' or
 'python-devel' (or 'numpy-dev' or 'numpy-devel', for numpy).
 
-"""
+""")
 
     if numpy_missing or dev_pkg_missing :
         import sys

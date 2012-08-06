@@ -86,6 +86,7 @@ class EditParDialog(object):
 
         # Now go back and ensure we have the full taskname; set up other items
         self._canceled = False
+        self._executed = False
         self._guiName = title
         self.taskName = self._taskParsObj.getName()
         self.pkgName = self._taskParsObj.getPkgname()
@@ -112,23 +113,30 @@ class EditParDialog(object):
         self._showExecuteButton   = True
         self._showSaveCloseOnExec = True
         self._saveAndCloseOnExec  = True
+        self._showFlaggingChoice  = True
+        self._flagNonDefaultVals  = None # default not yet set
         self._showExtraHelpButton = False
         self._showHelpInBrowser   = False
         self._knowTaskHelpIsHtml  = False
         self._unpackagedTaskTitle = "Task"
-        self._writeProtectOnSaveAs= False
+        self._writeProtectOnSaveAs= True
         self._defaultsButtonTitle = "Defaults"
         self._optFile             = DFT_OPT_FILE
         self._defSaveAsExt        = '.cfg'
 
         # Colors
-        self._frmeColor = None # frame of window
-        self._taskColor = None # task label area
-        self._bboxColor = None # button area
-        self._entsColor = None # entries area
+        self._frmeColor = None  # frame of window
+        self._taskColor = None  # task label area
+        self._bboxColor = None  # button area
+        self._entsColor = None  # entries area
+        self._flagColor = "red" # non-default values
 
         # give the subclass a chance to disagree
         self._overrideMasterSettings() # give the subclass a chance to disagree
+
+        # any settings which depend on overrides
+        if self._flagNonDefaultVals is None:
+            self._flagNonDefaultVals = self._showFlaggingChoice # default
 
         # Create the root window as required, but hide it
         self.parent = parent
@@ -395,7 +403,7 @@ class EditParDialog(object):
         TaskPars subclass object. """
 
         # Here we catch if this version is run by accident
-        raise RuntimeError("Bug: EditParDialog is not to be used directly")
+        raise NotImplementedError("EditParDialog is not to be used directly")
 
 
     def _saveGuiSettings(self):
@@ -404,7 +412,10 @@ class EditParDialog(object):
 
 
     def updateTitle(self, atitle):
-        self.top.title('%s:  %s' % (self._guiName, atitle))
+        if atitle:
+            self.top.title('%s:  %s' % (self._guiName, atitle))
+        else:
+            self.top.title('%s' % (self._guiName))
 
 
     def checkAllTriggers(self, action):
@@ -412,8 +423,8 @@ class EditParDialog(object):
             recently and they need to check for any trigger actions.  This
             would be used right after all the widgets have their values
             set or forced (e.g. via setAllEntriesFromParList). """
-        for i in range(self.numParams):
-            self.entryNo[i].widgetEdited(action=action, skipDups=False)
+        for entry in self.entryNo:
+            entry.widgetEdited(action=action, skipDups=False)
 
 
     def freshenFocus(self):
@@ -611,7 +622,9 @@ class EditParDialog(object):
                                   plugIn=eparOpt, editedCallbackObj=cbo,
                                   helpCallbackObj=hcbo, mainGuiObj=self,
                                   defaultsVerb=dfltsVerb, bg=self._entsColor,
-                                  indent = scope not in (None, '', '.') )
+                                  indent = scope not in (None, '', '.'),
+                                  flagging = self._flagNonDefaultVals,
+                                  flaggedColor=self._flagColor)
 
 
     def _nonStandardEparOptionFor(self, paramTypeStr):
@@ -816,6 +829,13 @@ class EditParDialog(object):
             optionButton.menu.add_checkbutton(label="Save and Close on Execute",
                                               command=self.setExecOpt,
                                               variable=self._execChoice)
+        if self._showFlaggingChoice:
+            self._flagChoice = IntVar()
+            self._flagChoice.set(int(self._flagNonDefaultVals))
+            optionButton.menu.add_separator()
+            optionButton.menu.add_checkbutton(label="Flag Non-default Values",
+                                              command=self.setFlagOpt,
+                                              variable=self._flagChoice)
 
         # Associate the menu with the menu button
         optionButton["menu"] = optionButton.menu
@@ -916,10 +936,13 @@ class EditParDialog(object):
         # Pack
         box.pack(fill=X, expand=FALSE)
 
-
     def setExecOpt(self, event=None):
         self._saveAndCloseOnExec = bool(self._execChoice.get())
 
+    def setFlagOpt(self, event=None):
+        self._flagNonDefaultVals = bool(self._flagChoice.get())
+        for entry in self.entryNo:
+            entry.setIsFlagging(self._flagNonDefaultVals, True)
 
     def setHelpType(self, event=None):
         """ Determine which method of displaying the help pages was
@@ -1080,7 +1103,7 @@ class EditParDialog(object):
         """ Load the parameter settings from a user-specified file.  Any epar
         changes here should be coordinated with the corresponding tpar pfopen
         function. """
-        raise RuntimeError("Bug: EditParDialog is not to be used directly")
+        raise NotImplementedError("EditParDialog is not to be used directly")
 
 
     def _getSaveAsFilter(self):
@@ -1110,26 +1133,26 @@ class EditParDialog(object):
         curdir = os.getcwd()
 
         # The user wishes to save to a different name
+        writeProtChoice = self._writeProtectOnSaveAs
         if capable.OF_TKFD_IN_EPAR:
             # Prompt using native looking dialog
             fname = tkFileDialog.asksaveasfilename(parent=self.top,
                     title='Save Parameter File As',
                     defaultextension=self._defSaveAsExt,
                     initialdir=os.path.dirname(self._getSaveAsFilter()))
-#                   self._writeProtectOnSaveAs does anyone use this??
         else:
             # Prompt. (could use Tkinter's FileDialog, but this one is prettier)
             # initWProtState is only used in the 1st call of a session
             import filedlg
             fd = filedlg.PersistSaveFileDialog(self.top,
                          "Save Parameter File As", self._getSaveAsFilter(),
-                         initWProtState=self._writeProtectOnSaveAs)
+                         initWProtState=writeProtChoice)
             if fd.Show() != 1:
                 fd.DialogCleanup()
                 os.chdir(curdir) # in case file dlg moved us
                 return
             fname = fd.GetFileName()
-            self._writeProtectOnSaveAs = fd.GetWriteProtectChoice()
+            writeProtChoice = fd.GetWriteProtectChoice()
             fd.DialogCleanup()
 
         if not fname: return # canceled
@@ -1160,7 +1183,8 @@ class EditParDialog(object):
         # bad entries, there should be none returned.
         mstr = "TASKMETA: task="+self.taskName+" package="+self.pkgName
         if self.checkSetSaveEntries(doSave=True, filename=fname, comment=mstr,
-                                    set_ro=self._writeProtectOnSaveAs):
+                                    set_ro=writeProtChoice,
+                                    overwriteRO=True):
             os.chdir(curdir) # in case file dlg moved us
             raise Exception("Unexpected bad entries for: "+self.taskName)
 
@@ -1189,6 +1213,7 @@ class EditParDialog(object):
                               self.taskName)
                 if not ansOKCANCEL: return
             self.showStatus("Task "+self.taskName+" is running...", keep=2)
+            self._executed = True # note for later use
             self.runTask()
             return
 
@@ -1216,11 +1241,15 @@ class EditParDialog(object):
 
         # Before running the task, clear any already-handled exceptions that
         # will be erroneously picked up by the task's logger utility.
-        # !! (take this line out when that is fixed) !!
-        sys.exc_clear()
+        # This is temporary.  Remove this line when logging is fixed.
+        try:
+            sys.exc_clear() # not present in PY3K
+        except AttributeError:
+            pass
 
         # Run the task
         try:
+            self._executed = True # note for later use
             self.runTask()
         finally:
             self.top.quit()
@@ -1249,8 +1278,7 @@ class EditParDialog(object):
         self.top.focus_set()
         self.top.withdraw()
 
-        # Note that they canceled
-        self._canceled = True
+        self._canceled = True # note for later use
 
         # Do not destroy the window, just hide it for now.
         # This is so EXECUTE will not get an error - properly use Mediator.
@@ -1362,6 +1390,11 @@ class EditParDialog(object):
     def canceled(self):
         """ Did the user click Cancel? (or close us via the window manager) """
         return self._canceled
+
+
+    def executed(self):
+        """ Did the user click Execute? """
+        return self._executed
 
 
     # Get the task help in a string
@@ -1538,7 +1571,7 @@ class EditParDialog(object):
     # Read, save, and validate the entries
     def checkSetSaveEntries(self, doSave=True, filename=None, comment=None,
                             fleeOnBadVals=False, allowGuiChanges=True,
-                            set_ro=False):
+                            set_ro=False, overwriteRO=False):
 
         self.badEntries = []
         asNative = self._taskParsObj.knowAsNative()
@@ -1610,7 +1643,8 @@ class EditParDialog(object):
         # SAVE: Save results to the given file
         if doSave:
             self.debug('Saving...')
-            out = self._doActualSave(filename, comment, set_ro=set_ro)
+            out = self._doActualSave(filename, comment, set_ro=set_ro,
+                                     overwriteRO=overwriteRO)
             if len(out):
                 self.showStatus(out, keep=2) # inform user on saves
 
@@ -1622,7 +1656,7 @@ class EditParDialog(object):
         save.  Return a string result to be printed to the screen. """
         # do something like
 #       return self._taskParsObj.saveParList(filename=fname, comment=comment)
-        raise RuntimeError("Bug: EditParDialog is not to be used directly")
+        raise NotImplementedError("EditParDialog is not to be used directly")
 
 
     def checkSetSaveChildren(self, doSave=True):

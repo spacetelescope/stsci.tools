@@ -58,15 +58,6 @@ class MinMatchDict(UserDict):
         """Return __init__ args for pickle"""
         return (self.data, self.minkeylength)
 
-    def __getstate__(self):
-        """Return state info for pickle"""
-        # no additional state after init
-        return None
-
-    def __setstate__(self, state):
-        """Restore state info from pickle"""
-        pass
-
     def _mmInit(self):
         """Create the minimum match dictionary of keys"""
         # cache references to speed up loop a bit

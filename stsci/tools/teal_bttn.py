@@ -23,6 +23,11 @@ class TealActionParButton(eparoption.ActionEparButton):
         else:
             return ''
 
+    def flagThisPar(self, currentVal, force):
+        """ Override this to do nothing - the value of this par will
+        never be wrong and thus never need to be flagged. """
+        pass
+
     def clicked(self):
         """ Called when this button is clicked. Execute code from .cfgspc """
         try:

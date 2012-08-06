@@ -6,6 +6,7 @@ stripQuotes     Strip single or double quotes off string and remove embedded
                 quote pairs
 csvSplit        Split comma-separated fields in strings (cover bug in csv mod)
 rglob           Recursive glob
+setWritePrivs   Convenience function to add/remove write privs
 removeEscapes   Remove escaped quotes & newlines from strings
 translateName   Convert CL parameter or variable name to Python-acceptable name
 untranslateName Undo Python conversion of CL parameter or variable name
@@ -19,7 +20,7 @@ R. White, 1999 Jul 16
 """
 from __future__ import division
 
-import os, sys, string, struct, re, fnmatch, keyword, types, select
+import os, stat, string, struct, sys, re, fnmatch, keyword, types, select
 import capable
 if capable.OF_GRAPHICS:
     try:
@@ -31,6 +32,7 @@ if capable.OF_GRAPHICS:
         # gracefully--software will crash later if it actually tries to use
         # Tkinter
         HAS_TKINTER = False
+from capable import PY3K
 
 
 def printColsAuto(in_strings, term_width=80, min_pad=1):
@@ -291,6 +293,23 @@ def rglob(root, pattern):
             retlist.extend(os.path.join(base, f) for f in goodfiles)
     return retlist
 
+def setWritePrivs(fname, makeWritable, ignoreErrors=False):
+    """ Set a file named fname to be writable (or not) by user, with the
+    option to ignore errors.  There is nothing ground-breaking here, but I
+    was annoyed with having to repeate this little bit of code. """
+    privs = os.stat(fname).st_mode
+    try:
+        if makeWritable:
+            os.chmod(fname, privs | stat.S_IWUSR)
+        else:
+            os.chmod(fname, privs & (~ stat.S_IWUSR))
+    except OSError:
+        if ignoreErrors:
+            pass # just try, don't whine
+        else:
+            raise
+
+
 def removeEscapes(value, quoted=0):
 
     """Remove escapes from in front of quotes (which IRAF seems to
@@ -424,8 +443,9 @@ class _TkRead:
             # no Tk widgets yet, so no need for mainloop
             s = []
             while nbytes>0:
-                snew = os.read(fd, nbytes)
+                snew = os.read(fd, nbytes) # returns bytes in PY3K
                 if snew:
+                    if PY3K: snew = snew.decode('ascii')
                     s.append(snew)
                     nbytes -= len(snew)
                 else:
@@ -436,7 +456,7 @@ class _TkRead:
             self.nbytes = nbytes
             self.value = []
             self.widget.tk.createfilehandler(fd,
-                                    Tkinter.tkinter.READABLE | Tkinter.tkinter.EXCEPTION,
+                                    Tkinter.READABLE | Tkinter.EXCEPTION,
                                     self._read)
             try:
                 self.widget.mainloop()
@@ -444,13 +464,15 @@ class _TkRead:
                 self.widget.tk.deletefilehandler(fd)
             return "".join(self.value)
 
+
     def _read(self, fd, mask):
         """Read waiting data and terminate Tk mainloop if done"""
         try:
             # if EOF was encountered on a tty, avoid reading again because
             # it actually requests more data
             if select.select([fd],[],[],0)[0]:
-                snew = os.read(fd, self.nbytes)
+                snew = os.read(fd, self.nbytes) # returns bytes in PY3K
+                if PY3K: snew = snew.decode('ascii')
                 self.value.append(snew)
                 self.nbytes -= len(snew)
             else:

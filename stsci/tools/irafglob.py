@@ -12,7 +12,7 @@ __version__ = '1.1'
 
 def irafglob(inlist, atfile=None):
     """ Returns a list of filenames based on the type of IRAF input.
- 
+
     Handles lists, wild-card characters, and at-files.  For special
     at-files, use the atfile keyword to process them.
 

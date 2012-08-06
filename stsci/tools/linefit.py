@@ -81,5 +81,6 @@ def linefit(x,y,weights=None):
     return b0, b1
 
 def test():
-    import doctest,linefit
+    import doctest
+    import linefit
     return doctest.testmod(linefit)
