@@ -896,7 +896,11 @@ def findFile(input):
     if _fdir == '':
         _fdir = os.curdir
 
-    flist = os.listdir(_fdir)
+    try:
+        flist = os.listdir(_fdir)
+    except OSError:
+        # handle when requested file in on a disconnect network store
+        return no
 
     _root,_extn = parseFilename(_fname)
 
