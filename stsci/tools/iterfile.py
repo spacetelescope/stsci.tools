@@ -17,45 +17,51 @@ __version__ = '0.2 (06-October-2006)'
 class IterFitsFile(object):
     """ This class defines an object which can be used to
         access the data from a FITS file without leaving
-        the file-handle open between reads. 
+        the file-handle open between reads.
 
     """
     def __init__(self,name):
         self.name = name
         self.fname = None
         self.extn = None
-        
         self.handle = None
-        
+        self.inmemory = False
+
         if not self.fname:
             self.fname,self.extn = parseFilename(name)
 
-            
+    def set_inmemory(self,val):
+        """Sets inmemory attribute to either True or False """
+        assert type(val) is bool, 'Please specify either True or False'
+        self.inmemory = val
+
     def _shape(self):
         """ Returns the shape of the data array associated with this file."""
         hdu = self.open()
         _shape = hdu.data.shape
-        self.close()
-        del hdu
+        if not self.inmemory:
+            self.close()
+            del hdu
         return _shape
 
     def _data(self):
         """ Returns the data array associated with this file/extenstion."""
         hdu = self.open()
         _data = hdu.data.copy()
-        self.close()
-        del hdu
+        if not self.inmemory:
+            self.close()
+            del hdu
         return _data
-        
 
     def type(self):
         """ Returns the shape of the data array associated with this file."""
         hdu = self.open()
         _type = hdu.data.dtype.name
-        self.close()
-        del hdu
+        if not self.inmemory:
+            self.close()
+            del hdu
         return _type
-        
+
     def open(self):
         """ Opens the file for subsequent access. """
 
@@ -66,29 +72,34 @@ class IterFitsFile(object):
             if len(self.extn) == 1:
                 hdu = self.handle[self.extn]
             else:
-                hdu = self.handle[self.extn[0],self.extn[1]]        
+                hdu = self.handle[self.extn[0],self.extn[1]]
         else:
             hdu = self.handle[0]
 
         return hdu
-    
+
 
     def close(self):
         """ Closes file handle for this FITS object."""
         if self.handle != None:
             self.handle.close()
         self.handle = None
-                            
+
     def __getslice__(self,i,j):
         """ Returns a PyFITS section for the rows specified. """
         # All I/O must be done here, starting with open
-        hdu = self.open()        
-        _data = hdu.section[i:j,:]
-        self.close()
-        del hdu
-        
+        hdu = self.open()
+        if self.inmemory:
+            _data = hdu.data[i:j,:]
+        else:
+            _data = hdu.section[i:j,:]
+
+        if not self.inmemory:
+            self.close()
+            del hdu
+
         return _data
-        
+
     def __getattribute__(self,name):
         if name == 'data':
             return self._data()
@@ -136,9 +147,8 @@ def parseFilename(filename):
         else:
             # Only integer extension number given, or default of 0 is used.
             _extn = [int(extn)]
-        
+
     else:
         _fname = filename
         _extn = None
     return _fname,_extn
-
