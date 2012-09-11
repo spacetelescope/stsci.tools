@@ -9,7 +9,6 @@ These modules provide support for working with FITS images, WCS information, or 
    stpyfits
    fitsdiff
    wcsutil
-   makewcs
    convert
    asnutil
 

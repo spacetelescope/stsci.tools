@@ -5,28 +5,28 @@ These modules provide basic data analysis or data fitting functionality.
 
 linefit
 =======
-.. automodule:: pytools.linefit
+.. automodule:: stsci.tools.linefit
    :members:
 
 nmpfit
 ======   
-.. automodule:: pytools.nmpfit
+.. automodule:: stsci.tools.nmpfit
    :members:
    
 xyinterp
 ========
-.. automodule:: pytools.xyinterp
+.. automodule:: stsci.tools.xyinterp
    :members:
 
 gfit
 ====
-.. automodule:: pytools.gfit
+.. automodule:: stsci.tools.gfit
    :members:
    
 Image Combination Modules
 *************************
 The `numcombine` module serves as a limited replacement for IRAF's 'imcombine' task.
 
-.. automodule:: pytools.numcombine
+.. automodule:: stsci.image.numcombine
    :members:
    :undoc-members:
