@@ -107,7 +107,8 @@ def ddtohms(xsky,ysky,verbose=no):
 
 
 def troll(roll, dec, v2, v3):
-    """ Computes the roll angle at the target position based on:
+    """ Computes the roll angle at the target position based on::
+
             the roll angle at the V1 axis(roll),
             the dec of the target(dec), and
             the V2/V3 position of the aperture (v2,v3) in arcseconds.
