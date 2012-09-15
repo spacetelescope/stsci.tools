@@ -72,7 +72,7 @@ def test(modname, mode='nose', *args, **kwds):
             break
 
     if dirname is None :
-            print 'no tests found in: %s' % repr(dirs)
+            print 'no tests found in: %s' % repr(DIRS)
             return False
 
     if mode == 'nose' :
