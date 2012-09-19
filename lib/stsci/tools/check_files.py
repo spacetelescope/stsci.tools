@@ -39,11 +39,12 @@ def checkFiles(filelist,ivmlist = None):
     newfilelist, ivmlist = checkStisFiles(newfilelist, ivmlist)
     if newfilelist == []:
         return [], []
-    removed_expt_files = check_exptime(newfilelist)
 
+    removed_expt_files = check_exptime(newfilelist)
     newfilelist, ivmlist = update_input(newfilelist, ivmlist, removed_expt_files)
     if newfilelist == []:
         return [], []
+
     removed_ngood_files = checkNGOODPIX(newfilelist)
     newfilelist, ivmlist = update_input(newfilelist, ivmlist, removed_ngood_files)
     if newfilelist == []:
@@ -53,7 +54,6 @@ def checkFiles(filelist,ivmlist = None):
     newfilelist, ivmlist = update_input(newfilelist, ivmlist, removed_pav3_files)
 
     newfilelist, ivmlist = update_input(newfilelist, ivmlist,[])
-
     if newfilelist == []:
         return [], []
 
@@ -110,7 +110,8 @@ def check_exptime(filelist):
     removed_files = []
     for f in filelist:
         try:
-            exptime = fileutil.getHeader(f+'[sci,1]')['EXPTIME']
+            hdr = pyfits.getheader(f)
+            exptime = hdr['EXPTIME']
         except KeyError:
             removed_files.append(f)
             print "Warning:  There are files without keyword EXPTIME"
@@ -136,8 +137,8 @@ def checkNGOODPIX(filelist):
     """
     removed_files = []
     for inputfile in filelist:
-        if (fileutil.getKeyword(inputfile,'instrume') == 'ACS') \
-           or fileutil.getKeyword(inputfile,'instrume') == 'STIS':
+        instr = pyfits.getval(inputfile, 'instrume')
+        if instr in ('ACS', 'STIS'):
             file = pyfits.open(inputfile)
             ngood = 0
             for extn in file:
@@ -145,7 +146,7 @@ def checkNGOODPIX(filelist):
                     ngood += extn.header['NGOODPIX']
             file.close()
 
-            if (ngood == 0):
+            if ngood == 0:
                 removed_files.append(inputfile)
 
     if removed_files != []:
