@@ -372,7 +372,6 @@ class PersistFileDialog(FileDialog):
         # the file browser in the last accessed directory.
         if self.__class__.lastAccessedDir:
             self.cwd      = self.__class__.lastAccessedDir
-            self.orig_dir = self.__class__.lastAccessedDir
 
     # Override the OkPressed method from the parent in order to
     # update the class variable.
