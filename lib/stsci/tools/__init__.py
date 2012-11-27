@@ -13,7 +13,7 @@ if False :
     except:
         pass
 else :
-    __version__ = '3.0'
+    __version__ = '3.1'
 
 try:
     from stsci.tools.svninfo import (__svn_version__, __full_svn_info__,
