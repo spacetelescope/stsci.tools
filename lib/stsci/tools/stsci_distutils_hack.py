@@ -53,7 +53,7 @@ def run( pytools_version = None ) :
     usage:
 
         import stsci.tools.stsci_distutils_hack
-        stsci.tools.stsci_distutils_hack.run(pytools_version = "3.0")
+        stsci.tools.stsci_distutils_hack.run(pytools_version = "3.1")
 
     """
 

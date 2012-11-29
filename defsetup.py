@@ -9,7 +9,7 @@ pkg = [ 'stsci', 'stsci.tools', 'stsci.tools.tests' ]
 
 setupargs = {
 
-    'version' :         '3.0',
+    'version' :         '3.1',
     'description' :     "General Use Python Tools",
     'author' :          "Warren Hack, Christopher Hanley",
     'author_email' :    "help@stsci.edu",
