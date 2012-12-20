@@ -297,7 +297,7 @@ def stisExt2PrimKw(stisfiles):
             d[k] = pyfits.getval(sfile, k, ext=1)
 
         for item in d.items():
-            pyfits.setval(sfile, key=item[0], value=item[1], comment='Copied from extension header')
+            pyfits.setval(sfile, keyword=item[0], value=item[1], comment='Copied from extension header')
 
 
 def isSTISSpectroscopic(fname):
@@ -323,7 +323,7 @@ def checkPA_V3(fnames):
                 except KeyError:
                     print "Warning:  Files without keyword PA_V3 detected"
                     removed_files.append(f)
-                pyfits.setval(f, key='PA_V3', value=pav3)
+                pyfits.setval(f, keyword='PA_V3', value=pav3)
             else:
                 print "Warning:  Files without keyword PA_V3 detected"
                 removed_files.append(f)
