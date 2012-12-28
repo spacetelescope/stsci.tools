@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+import d2to1
+print "d2to1 is",d2to1.__file__
+
 try:
     from setuptools import setup
 except ImportError:
