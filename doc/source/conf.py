@@ -182,7 +182,7 @@ htmlhelp_basename = 'stsci.toolsdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'stsci.tools.tex', u'pytools Documentation',
+  ('index', 'stsci.tools.tex', u'stsci.tools Documentation',
    u'SSB', 'manual'),
 ]
 
