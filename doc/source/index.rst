@@ -4,7 +4,8 @@
    contain the root `toctree` directive.
 
 Welcome to stsci.tools's documentation!
-===================================
+=======================================
+
 The STSCI.TOOLS package in STScI_Python provides many functions for use by multiple software packages.
 
 Contents:
