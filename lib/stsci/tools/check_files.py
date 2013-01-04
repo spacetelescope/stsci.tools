@@ -39,12 +39,11 @@ def checkFiles(filelist,ivmlist = None):
     newfilelist, ivmlist = checkStisFiles(newfilelist, ivmlist)
     if newfilelist == []:
         return [], []
-
     removed_expt_files = check_exptime(newfilelist)
+
     newfilelist, ivmlist = update_input(newfilelist, ivmlist, removed_expt_files)
     if newfilelist == []:
         return [], []
-
     removed_ngood_files = checkNGOODPIX(newfilelist)
     newfilelist, ivmlist = update_input(newfilelist, ivmlist, removed_ngood_files)
     if newfilelist == []:
@@ -54,6 +53,7 @@ def checkFiles(filelist,ivmlist = None):
     newfilelist, ivmlist = update_input(newfilelist, ivmlist, removed_pav3_files)
 
     newfilelist, ivmlist = update_input(newfilelist, ivmlist,[])
+
     if newfilelist == []:
         return [], []
 
@@ -110,8 +110,7 @@ def check_exptime(filelist):
     removed_files = []
     for f in filelist:
         try:
-            hdr = pyfits.getheader(f)
-            exptime = hdr['EXPTIME']
+            exptime = fileutil.getHeader(f+'[sci,1]')['EXPTIME']
         except KeyError:
             removed_files.append(f)
             print "Warning:  There are files without keyword EXPTIME"
@@ -128,7 +127,7 @@ def check_exptime(filelist):
 
 def checkNGOODPIX(filelist):
     """
-    Only for ACS, and STIS, check NGOODPIX
+    Only for ACS, WFC3 and STIS, check NGOODPIX
     If all pixels are 'bad' on all chips, exclude this image
     from further processing.
     Similar checks requiring comparing 'driz_sep_bits' against
@@ -136,9 +135,10 @@ def checkNGOODPIX(filelist):
     done separately (and later).
     """
     removed_files = []
+    supported_instruments = ['ACS','STIS','WFC3']
     for inputfile in filelist:
-        instr = pyfits.getval(inputfile, 'instrume')
-        if instr in ('ACS', 'STIS'):
+        if fileutil.getKeyword(inputfile,'instrume') in supported_instruments:
+            print 'Running checkNGOODPIX on input images...',
             file = pyfits.open(inputfile)
             ngood = 0
             for extn in file:
@@ -146,9 +146,10 @@ def checkNGOODPIX(filelist):
                     ngood += extn.header['NGOODPIX']
             file.close()
 
-            if ngood == 0:
+            if (ngood == 0):
                 removed_files.append(inputfile)
 
+    print 'to find ',len(removed_files),' files with NGOODPIX = 0'
     if removed_files != []:
         print "Warning:  Files without valid pixels detected: keyword NGOODPIX = 0.0"
         print "Warning:  Removing the following files from input list"
