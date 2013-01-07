@@ -138,7 +138,6 @@ def checkNGOODPIX(filelist):
     supported_instruments = ['ACS','STIS','WFC3']
     for inputfile in filelist:
         if fileutil.getKeyword(inputfile,'instrume') in supported_instruments:
-            print 'Running checkNGOODPIX on input images...',
             file = pyfits.open(inputfile)
             ngood = 0
             for extn in file:
@@ -149,7 +148,6 @@ def checkNGOODPIX(filelist):
             if (ngood == 0):
                 removed_files.append(inputfile)
 
-    print 'to find ',len(removed_files),' files with NGOODPIX = 0'
     if removed_files != []:
         print "Warning:  Files without valid pixels detected: keyword NGOODPIX = 0.0"
         print "Warning:  Removing the following files from input list"
