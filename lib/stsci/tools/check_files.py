@@ -16,21 +16,7 @@ def checkFiles(filelist,ivmlist = None):
     The list of science files should match the list of ivm files at the end.
     """
 
-    if ivmlist == None:
-        ivmlist = [None for l in filelist]
-
-    sci_ivm = zip(filelist, ivmlist)
-
-    removed_files, translated_names, newivmlist = convert2fits(sci_ivm)
-    newfilelist, ivmlist = update_input(filelist, ivmlist, removed_files)
-
-    if newfilelist == [] and translated_names == []:
-        return [], []
-
-    elif translated_names != []:
-        newfilelist.extend(translated_names)
-        ivmlist.extend(newivmlist)
-
+    newfilelist, ivmlist = checkFITSFormat(filelist, ivmlist)
 
     # check for STIS association files. This must be done before
     # the other checks in order to handle correctly stis
@@ -56,6 +42,30 @@ def checkFiles(filelist,ivmlist = None):
 
     if newfilelist == []:
         return [], []
+
+    return newfilelist, ivmlist
+
+def checkFITSFormat(filelist, ivmlist=None):
+    """
+    This code will check whether or not files are GEIS or WAIVER FITS and
+    convert them to MEF if found. It also keeps the IVMLIST consistent with
+    the input filelist, in the case that some inputs get dropped during
+    the check/conversion.
+    """
+    if ivmlist == None:
+        ivmlist = [None for l in filelist]
+
+    sci_ivm = zip(filelist, ivmlist)
+
+    removed_files, translated_names, newivmlist = convert2fits(sci_ivm)
+    newfilelist, ivmlist = update_input(filelist, ivmlist, removed_files)
+
+    if newfilelist == [] and translated_names == []:
+        return [], []
+
+    elif translated_names != []:
+        newfilelist.extend(translated_names)
+        ivmlist.extend(newivmlist)
 
     return newfilelist, ivmlist
 
