@@ -10,18 +10,10 @@ from __future__ import division # confidence high
 import os, sys, tempfile, time
 import capable
 if capable.OF_GRAPHICS:
-    try:
-        from Tkinter import  _default_root
-        from Tkinter import *
-        from tkMessageBox import askokcancel, askyesno, showwarning
-        HAS_TKINTER = True
-    except ImportError:
-        # TODO: Provide fallbacks based on whether or not HAS_TKINTER is true;
-        # for now this just allows import Tkinter to fail more
-        # gracefully--software will crash later if it actually tries to use
-        # Tkinter
-        HAS_TKINTER = False
-
+    from Tkinter import  _default_root
+    from Tkinter import *
+    import tkFileDialog
+    from tkMessageBox import askokcancel, askyesno, showwarning
 
 # stsci.tools modules
 from irafglobals import userWorkingHome

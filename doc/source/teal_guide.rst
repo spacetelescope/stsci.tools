@@ -168,7 +168,7 @@ Any task which has a TEAL interface implemented can be advertised to users of th
 
     # These lines allow TEAL to print out the names of TEAL-enabled tasks 
     # upon importing this package.
-    from pytools import teal
+    from stsci.tools import teal
     teal.print_tasknames(__name__, os.path.dirname(__file__))
 
 
@@ -203,7 +203,7 @@ Running the GUI using Python
 ----------------------------
 Fundamentally, TEAL is a Python GUI that can be run interactively under any Python interpreter, not just PyRAF.  It can be called for our example task using the syntax::
 
-    >>> from pytools import teal
+    >>> from stsci.tools import teal
     >>> cobj = teal.teal('resetbits')
 
 Getting the ConfigObj Without Starting the GUI
@@ -283,7 +283,7 @@ This capability has been implemented in `betadrizzle` to control whether or not 
     <more parameters removed, until we get to the end of the file...>
 
     [ _RULES_ ]
-    _rule1_ = string_kw(default='', when='defaults,entry', code='from pytools import check_files; ans={ True:"yes",False:"no"}; OUT = ans[check_files.countInput(VAL) > 1]')
+    _rule1_ = string_kw(default='', when='defaults,entry', code='from stsci.tools import check_files; ans={ True:"yes",False:"no"}; OUT = ans[check_files.countInput(VAL) > 1]')
     
 In this case, ``_rule1_`` gets defined in the special parameter section ``[_RULES_]`` and triggered upon the editing of the parameter ``input``.  The result of this logic will then automatically set the value of any section parameter with the ``is_set_by=_rule1_`` argument, such as the parameter ``driz_separate`` in the section ``[STEP 3: DRIZZLE SEPARATE IMAGES]``
 

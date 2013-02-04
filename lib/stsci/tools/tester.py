@@ -72,7 +72,7 @@ def test(modname, mode='nose', *args, **kwds):
             break
 
     if dirname is None :
-            #print 'no tests found in: %s' % repr(dirs)
+            print 'no tests found in: %s' % repr(DIRS)
             return False
 
     if mode == 'nose' :
@@ -81,7 +81,7 @@ def test(modname, mode='nose', *args, **kwds):
         try:
             import nose
         except ImportError:
-            #print "Nose 0.10.4 or greater is required for running tests."
+            print "Nose 0.10.4 or greater is required for running tests."
             raise
 
         # First arg is blank, since it's skipped by nose
@@ -108,7 +108,7 @@ def test(modname, mode='nose', *args, **kwds):
         try :
             import pytest
         except ImportError :
-            #print "py.test is required for running tests"
+            print "py.test is required for running tests"
             raise
 
         # do not use --doctest-modules ; it doesn't work right

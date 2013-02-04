@@ -25,18 +25,9 @@ from __future__ import division # confidence high
 import os, commands
 import capable
 if capable.OF_GRAPHICS:
-    try:
-        import Tkinter
-        import alert
-        from dialog import *
-        HAS_TKINTER = True
-    except ImportError:
-        HAS_TKINTER = False
-        ModalDialog = object
-        # TODO: Provide fallbacks based on whether or not HAS_TKINTER is true;
-        # for now this just allows import Tkinter to fail more
-        # gracefully--software will crash later if it actually tries to use
-        # Tkinter
+    import Tkinter
+    import alert
+    from dialog import *
 else:
     ModalDialog = object
 
@@ -381,7 +372,6 @@ class PersistFileDialog(FileDialog):
         # the file browser in the last accessed directory.
         if self.__class__.lastAccessedDir:
             self.cwd      = self.__class__.lastAccessedDir
-            self.orig_dir = self.__class__.lastAccessedDir
 
     # Override the OkPressed method from the parent in order to
     # update the class variable.

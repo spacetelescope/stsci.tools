@@ -4,13 +4,13 @@ Conversion Utilities
 
 Convertwaiveredfits
 *******************
-.. automodule:: pytools.convertwaiveredfits
+.. automodule:: stsci.tools.convertwaiveredfits
    :members:
    :undoc-members:
 
 ReadGEIS
 ********
-.. automodule:: pytools.readgeis
+.. automodule:: stsci.tools.readgeis
    :members:
 
 Check_files
@@ -20,7 +20,7 @@ input file formats for use in betadrizzle.  This set of functions also
 includes format conversion functions to convert GEIS or waiver-FITS HST
 images into multi-extension FITS (MEF) files. 
 
-.. automodule:: pytools.check_files
+.. automodule:: stsci.tools.check_files
    :members:
    :undoc-members:
    

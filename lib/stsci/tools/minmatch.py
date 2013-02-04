@@ -95,7 +95,7 @@ class MinMatchDict(UserDict):
     def resolve(self, key, keylist):
         """Hook to resolve ambiguities in selected keys"""
         raise AmbiguousKeyError("Ambiguous key "+ repr(key) +
-                ", could be any of " + repr(keylist))
+                ", could be any of " + str(sorted(keylist)))
 
     def add(self, key, item):
         """Add a new key/item pair to the dictionary.  Resets an existing
@@ -250,11 +250,11 @@ def test():
     d.add('test',1)
     d.add('text',2)
     d.add('ten',10)
-    print "d.items()", d.items()
+    print "d.items()", sorted(d.items())
     print "d['tex']=", d['tex']
     print "Changing d['tes'] to 3"
     d['tes'] = 3
-    print "d.items()", d.items()
+    print "d.items()", sorted(d.items())
     try:
         print "Ambiguous assignment to d['te'] - expecting exception"
         d['te'] = 5
@@ -263,7 +263,7 @@ def test():
         print '---'
     print "d.get('tes')", d.get('tes')
     print "d.get('teq'), expect None: ", d.get('teq')
-    print "d.getall('t')", d.getall('t')
+    print "d.getall('t')", sorted(d.getall('t'))
     try:
         print "d.get('t') - expecting exception"
         d.get('t')
@@ -272,7 +272,7 @@ def test():
         print '---'
     print "d.add('tesseract',100)"
     d.add('tesseract',100)
-    print "d.items()", d.items()
+    print "d.items()", sorted(d.items())
     try:
         print "d.get('tes') - expecting exception"
         d.get('tes')
@@ -287,17 +287,17 @@ def test():
         print '---'
     print "del d['tess']"
     del d['tess']
-    print "d.items()", d.items()
+    print "d.items()", sorted(d.items())
     print "d.get('tes')", d.get('tes')
     print "d.has_key('tes'):", d.has_key('tes')
     print "d.has_key('tes', exact=True):", d.has_key('tes', exact=True)
     print "'tes' in d:", 'tes' in d
     print "d.clear()"
     d.clear()
-    print "d.items()", d.items()
+    print "d.items()", sorted(d.items())
     print "d.update({'ab': 0, 'cd': 1, 'ce': 2})"
     d.update({'ab': 0, 'cd': 1, 'ce': 2})
-    print "d.items()", d.items()
+    print "d.items()", sorted(d.items())
     print "d['a']", d['a']
     try:
         print "d['t'] - expecting exception"

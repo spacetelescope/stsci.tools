@@ -16,21 +16,7 @@ def checkFiles(filelist,ivmlist = None):
     The list of science files should match the list of ivm files at the end.
     """
 
-    if ivmlist == None:
-        ivmlist = [None for l in filelist]
-
-    sci_ivm = zip(filelist, ivmlist)
-
-    removed_files, translated_names, newivmlist = convert2fits(sci_ivm)
-    newfilelist, ivmlist = update_input(filelist, ivmlist, removed_files)
-
-    if newfilelist == [] and translated_names == []:
-        return [], []
-
-    elif translated_names != []:
-        newfilelist.extend(translated_names)
-        ivmlist.extend(newivmlist)
-
+    newfilelist, ivmlist = checkFITSFormat(filelist, ivmlist)
 
     # check for STIS association files. This must be done before
     # the other checks in order to handle correctly stis
@@ -56,6 +42,30 @@ def checkFiles(filelist,ivmlist = None):
 
     if newfilelist == []:
         return [], []
+
+    return newfilelist, ivmlist
+
+def checkFITSFormat(filelist, ivmlist=None):
+    """
+    This code will check whether or not files are GEIS or WAIVER FITS and
+    convert them to MEF if found. It also keeps the IVMLIST consistent with
+    the input filelist, in the case that some inputs get dropped during
+    the check/conversion.
+    """
+    if ivmlist == None:
+        ivmlist = [None for l in filelist]
+
+    sci_ivm = zip(filelist, ivmlist)
+
+    removed_files, translated_names, newivmlist = convert2fits(sci_ivm)
+    newfilelist, ivmlist = update_input(filelist, ivmlist, removed_files)
+
+    if newfilelist == [] and translated_names == []:
+        return [], []
+
+    elif translated_names != []:
+        newfilelist.extend(translated_names)
+        ivmlist.extend(newivmlist)
 
     return newfilelist, ivmlist
 
@@ -127,7 +137,7 @@ def check_exptime(filelist):
 
 def checkNGOODPIX(filelist):
     """
-    Only for ACS, and STIS, check NGOODPIX
+    Only for ACS, WFC3 and STIS, check NGOODPIX
     If all pixels are 'bad' on all chips, exclude this image
     from further processing.
     Similar checks requiring comparing 'driz_sep_bits' against
@@ -135,9 +145,9 @@ def checkNGOODPIX(filelist):
     done separately (and later).
     """
     removed_files = []
+    supported_instruments = ['ACS','STIS','WFC3']
     for inputfile in filelist:
-        if (fileutil.getKeyword(inputfile,'instrume') == 'ACS') \
-           or fileutil.getKeyword(inputfile,'instrume') == 'STIS':
+        if fileutil.getKeyword(inputfile,'instrume') in supported_instruments:
             file = pyfits.open(inputfile)
             ngood = 0
             for extn in file:
@@ -297,7 +307,7 @@ def stisExt2PrimKw(stisfiles):
             d[k] = pyfits.getval(sfile, k, ext=1)
 
         for item in d.items():
-            pyfits.setval(sfile, keyword=item[0], value=item[1], comment='Copied from extension header')
+            pyfits.setval(sfile, key=item[0], value=item[1], comment='Copied from extension header')
 
 
 def isSTISSpectroscopic(fname):
@@ -323,7 +333,7 @@ def checkPA_V3(fnames):
                 except KeyError:
                     print "Warning:  Files without keyword PA_V3 detected"
                     removed_files.append(f)
-                pyfits.setval(f, keyword='PA_V3', value=pav3)
+                pyfits.setval(f, key='PA_V3', value=pav3)
             else:
                 print "Warning:  Files without keyword PA_V3 detected"
                 removed_files.append(f)

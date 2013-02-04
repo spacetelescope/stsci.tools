@@ -27,17 +27,8 @@ from __future__ import division # confidence high
 import os, sys, string, commands
 import capable
 if capable.OF_GRAPHICS:
-    try:
-        from Tkinter import *
-        import tkFileDialog
-        HAS_TKINTER = True
-    except ImportError:
-        # TODO: Provide fallbacks based on whether or not HAS_TKINTER is true;
-        # for now this just allows import Tkinter to fail more
-        # gracefully--software will crash later if it actually tries to use
-        # Tkinter
-        StringVar = None
-        HAS_TKINTER = False
+    from Tkinter import *
+    import tkFileDialog
 else:
     StringVar = None
 

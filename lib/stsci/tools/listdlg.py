@@ -9,17 +9,8 @@ $Id$
 from __future__ import division # confidence high
 import capable
 if capable.OF_GRAPHICS:
-    try:
-        from Tkinter import *
-        from tkSimpleDialog import Dialog
-        HAS_TKINTER = True
-    except ImportError:
-        # TODO: Provide fallbacks based on whether or not HAS_TKINTER is true;
-        # for now this just allows import Tkinter to fail more
-        # gracefully--software will crash later if it actually tries to use
-        # Tkinter
-        HAS_TKINTER = False
-        Dialog = object
+    from Tkinter import *
+    from tkSimpleDialog import Dialog
 else:
     Dialog = object
 
