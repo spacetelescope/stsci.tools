@@ -1,7 +1,7 @@
 # from __future__ import absolute_import
 from __future__ import division # confidence high
 
-from .version import __version__
+from .version import *
 
 import stsci.tools.tester
 def test(*args,**kwds):
