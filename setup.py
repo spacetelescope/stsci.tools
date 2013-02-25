@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-import d2to1
-
 try:
     from setuptools import setup
 except ImportError:
