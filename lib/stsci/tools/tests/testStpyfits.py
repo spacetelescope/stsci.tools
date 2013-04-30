@@ -5,7 +5,7 @@ import os
 import tempfile
 
 import numpy as np
-from nose.tools import assert_true, assert_equal, assert_raises
+from nose.tools import assert_true, assert_false, assert_equal, assert_raises
 
 import stsci.tools.stpyfits as stpyfits
 import pyfits
@@ -139,7 +139,10 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         hdul = stpyfits.open(self.data('cdva2.fits'))
         hdul1 = pyfits.open(self.data('cdva2.fits'))
 
-        stpyfits.writeto(self.temp('new.fits'), hdul[0].data, hdul[0].header,
+        header = hdul[0].header.copy()
+        header['NAXIS'] = 0
+
+        stpyfits.writeto(self.temp('new.fits'), hdul[0].data, header,
                          clobber=True)
         pyfits.writeto(self.temp('new1.fits'), hdul1[0].data,hdul1[0].header,
                        clobber=True)
@@ -199,8 +202,8 @@ class TestStpyfitsFunctions(PyfitsTestCase):
             [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'uint8', ''),
              (1, '', 'ImageHDU', 8, (10, 10), 'uint8', '')])
         assert_equal(pyfits.info(self.temp('new.fits'), output=False),
-            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), 'int32', ''),
-             (1, '', 'ImageHDU', 8, (), 'int32', '')])
+            [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'int32', ''),
+             (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')])
         assert_equal(pyfits.info(self.temp('new1.fits'), output=False),
             [(0, 'PRIMARY', 'PrimaryHDU', 7, (), 'uint8', ''),
              (1, '', 'ImageHDU', 8, (), 'uint8', '')])
@@ -236,7 +239,9 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         hdul = stpyfits.open(self.data('cdva2.fits'))
         hdul1 = pyfits.open(self.data('cdva2.fits'))
 
-        stpyfits.writeto(self.temp('new.fits'), hdul[0].data, hdul[0].header,
+        header = hdul[0].header.copy()
+        header['NAXIS'] = 0
+        stpyfits.writeto(self.temp('new.fits'), hdul[0].data, header,
                          clobber=True)
 
         hdu = stpyfits.ImageHDU()
@@ -246,17 +251,13 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         hdu1.data = hdul1[0].data
         hdu.header.set('BITPIX', 32)
         hdu1.header.set('BITPIX', 32)
-        hdu.header.set('NAXIS', 2)
-        hdu.header.set('NAXIS1', 10, 'length of constant array axis 1',
-                       after='NAXIS')
-        hdu.header.set('NAXIS2', 10, 'length of constant array axis 2',
-                       after='NAXIS1')
+        hdu.header.set('NAXIS', 0)
         hdu.header.set('PIXVALUE', 1, 'Constant pixel value', after='GCOUNT')
         hdu1.header.set('PIXVALUE', 1, 'Constant pixel value', after='GCOUNT')
-        hdu1.header.set('NPIX1', 10, 'length of constant array axis 1',
-                        after='GCOUNT')
-        hdu1.header.set('NPIX2', 10, 'length of constant array axis 2',
-                        after='NPIX1')
+        hdu.header.set('NPIX1', 10, 'length of constant array axis 1',
+                       after='GCOUNT')
+        hdu.header.set('NPIX2', 10, 'length of constant array axis 2',
+                       after='NPIX1')
         stpyfits.append(self.temp('new.fits'), hdu.data, hdu.header)
 
         d = hdu.data * 0
@@ -609,3 +610,27 @@ class TestStpyfitsFunctions(PyfitsTestCase):
 
         hdul.close()
         hdul1.close()
+
+    def testStrayPixvalue(self):
+        """Regression test for #885
+        (https://svn.stsci.edu/trac/ssb/stsci_python/ticket/885)
+
+        Tests that HDUs containing a non-zero NAXIS as well as a PIXVALUE
+        keyword in their header are not treated as constant value HDUs.
+        """
+
+        data = np.arange(100).reshape((10, 10))
+        phdu = pyfits.PrimaryHDU(data=data)
+        hdu = pyfits.ImageHDU(data=data)
+
+        phdu.header['PIXVALUE'] = 10
+        hdu.header['PIXVALUE'] = 10
+
+        hdul = pyfits.HDUList([phdu, hdu])
+        hdul.writeto(self.temp('test.fits'))
+
+        with stpyfits.open(self.temp('test.fits')) as h:
+            assert_false(isinstance(h[0], stpyfits.ConstantValuePrimaryHDU))
+            assert_false(isinstance(h[1], stpyfits.ConstantValueImageHDU))
+            assert_true((h[0].data == data).all())
+            assert_true((h[1].data == data).all())

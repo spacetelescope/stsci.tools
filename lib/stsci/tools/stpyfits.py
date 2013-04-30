@@ -19,6 +19,7 @@ import pyfits
 # A few imports for backward compatibility; in the earlier stpyfits these were
 # overridden, but with pyfits's new extension system it's not necessary
 from pyfits import HDUList
+from pyfits.util import _is_int
 
 
 __version__ = '1.1.0/%s' % pyfits.__version__
@@ -156,8 +157,8 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
 
     @pyfits.util.lazyproperty
     def data(self):
-        if 'PIXVALUE' in self._header and 'NPIX1' not in self._header and \
-           self._header['NAXIS'] > 0:
+        if ('PIXVALUE' in self._header and 'NPIX1' not in self._header and
+               self._header['NAXIS'] > 0):
             bitpix = self._header['BITPIX']
             dims = self.shape
             code = self.NumCode[bitpix]
@@ -219,6 +220,20 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
 
         self.update_header()
 
+    @classmethod
+    def match_header(cls, header):
+        """A constant value HDU will only be recognized as such if the header
+        contains a valid PIXVALUE and NAXIS == 0.
+        """
+
+        pixvalue = header.get('PIXVALUE')
+        naxis = header.get('NAXIS', 0)
+
+        return (super(_ConstantValueImageBaseHDU, cls).match_header(header) and
+                   (isinstance(pixvalue, float) or _is_int(pixvalue)) and
+                   naxis == 0)
+
+
     def update_header(self):
         if (not self._modified and not self._header._modified and
             (self._data_loaded and self.shape == self.data.shape)):
@@ -248,6 +263,18 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
                                      'length of constant array axis %d' % idx,
                                      after='PIXVALUE')
                     del self._header['NAXIS%d' % idx]
+            else:
+                # No longer a constant value array; remove any remaining
+                # NPIX or PIXVALUE keywords
+                try:
+                    del self._header['PIXVALUE']
+                except KeyError:
+                    pass
+
+                try:
+                    del self._header['NPIX*']
+                except KeyError:
+                    pass
 
     def _summary(self):
         summ = super(_ConstantValueImageBaseHDU, self)._summary()
@@ -273,19 +300,15 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
 
 class ConstantValuePrimaryHDU(_ConstantValueImageBaseHDU,
                               pyfits.hdu.PrimaryHDU):
-    @classmethod
-    def match_header(cls, header):
-        return super(ConstantValuePrimaryHDU, cls).match_header(header) and \
-               'PIXVALUE' in header
+    """Primary HDUs with constant value arrays."""
+
 # For backward-compatibility
 PrimaryHDU = ConstantValuePrimaryHDU
 
 
 class ConstantValueImageHDU(_ConstantValueImageBaseHDU, pyfits.hdu.ImageHDU):
-    @classmethod
-    def match_header(cls, header):
-        return super(ConstantValueImageHDU, cls).match_header(header) and \
-               'PIXVALUE' in header
+    """Image extension HDUs with constant value arrays."""
+
 # For backward-compatibility
 ImageHDU = ConstantValueImageHDU
 
