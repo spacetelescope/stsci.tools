@@ -634,3 +634,21 @@ class TestStpyfitsFunctions(PyfitsTestCase):
             assert_false(isinstance(h[1], stpyfits.ConstantValueImageHDU))
             assert_true((h[0].data == data).all())
             assert_true((h[1].data == data).all())
+
+    def testDimensionlessConstantValueArray(self):
+        """Tests a case that was reported where an HDU can be a constant
+        value HDU (it has a PIXVALUE and NAXIS=0) but NPIX1 = NPIX2 = 0 as
+        well.
+        """
+
+        hdu = stpyfits.PrimaryHDU()
+        hdu.header['NAXIS'] = 0
+        hdu.header['BITPIX'] = 16
+        hdu.header['NPIX1'] = 0
+        hdu.header['NPIX2'] = 0
+        hdu.header['PIXVALUE'] = 0
+
+        hdu.writeto(self.temp('test.fits'))
+
+        with stpyfits.open(self.temp('test.fits')) as h:
+            assert_true(h[0].data is None)

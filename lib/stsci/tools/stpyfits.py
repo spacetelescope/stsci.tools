@@ -161,6 +161,12 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
                self._header['NAXIS'] > 0):
             bitpix = self._header['BITPIX']
             dims = self.shape
+
+            # Special case where the pixvalue can be present but all the NPIXn
+            # keywords are zero.
+            if sum(dims) == 0:
+                return None
+
             code = self.NumCode[bitpix]
             pixval = self._header['PIXVALUE']
             if code in ['uint8', 'int16', 'int32', 'int64']:
