@@ -652,3 +652,5 @@ class TestStpyfitsFunctions(PyfitsTestCase):
 
         with stpyfits.open(self.temp('test.fits')) as h:
             assert_true(h[0].data is None)
+
+            h.writeto(self.temp('test2.fits'))

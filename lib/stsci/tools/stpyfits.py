@@ -255,7 +255,11 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
             if self._header['BITPIX'] > 0:
                 pixval = long(pixval)
 
-            arrayval = self._check_constant_value_data(self.data)
+            if self.data is None or self.data.nbytes == 0:
+                # Emoty data array; just keep the existing PIXVALUE
+                arrayval = self._header['PIXVALUE']
+            else:
+                arrayval = self._check_constant_value_data(self.data)
             if arrayval is not None:
                 st_ext = True
                 if arrayval != pixval:
