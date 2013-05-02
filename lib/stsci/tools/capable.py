@@ -74,7 +74,10 @@ if OF_GRAPHICS and sys.platform == 'darwin':
     #     http://developer.apple.com/library/mac/#technotes/tn2083/_index.html
     # If we are the console user, we own /dev/console and can read from it.
     #
-    OF_GRAPHICS = os.access("/dev/console", os.R_OK)
+    if 'PYRAF_YES_DISPLAY' not in os.environ:
+        OF_GRAPHICS = os.access("/dev/console", os.R_OK)
+        # the use of PYRAF_YES_DISPLAY is a temporary hack to get a user
+        # working while we debug why they have no read-acces to /dev/console
 
     # Add a double-check for remote X11 users.  We *think* this is a smaller
     # set of cases, so we do it last minute here:
