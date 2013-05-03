@@ -682,3 +682,17 @@ class TestStpyfitsFunctions(PyfitsTestCase):
             assert_equal(h[0].data.max(), 2)
             assert_equal(h[0].data.min(), 1)
 
+    def testGetvalExtensionHDU(self):
+        """Regression test for an issue that came up with the fact that
+        ImageHDU has a different argument signature from PrimaryHDU.
+        """
+
+        data = np.ones((100, 100))
+        hdu = stpyfits.ImageHDU(data=data)
+        hdu.header['PIXVALUE'] = 1
+        hdu.header['FOO'] = 'test'
+        hdul = stpyfits.HDUList([stpyfits.PrimaryHDU(), hdu])
+        hdul.writeto(self.temp('test.fits'))
+
+        assert_equal(stpyfits.getval(self.temp('test.fits'), 'FOO', ext=1),
+                     'test')

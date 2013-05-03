@@ -140,8 +140,12 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
                         continue
                     del header[card.keyword]
 
+        # Make sure to pass any arguments other than data and header as
+        # keyword arguments, because PrimaryHDU and ImageHDU have stupidly
+        # different signatures for __init__
         super(_ConstantValueImageBaseHDU, self).__init__(
-            data, header, do_not_scale_image_data, uint)
+            data, header, do_not_scale_image_data=do_not_scale_image_data,
+            uint=uint)
 
     @property
     def size(self):
