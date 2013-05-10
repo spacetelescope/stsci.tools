@@ -654,3 +654,45 @@ class TestStpyfitsFunctions(PyfitsTestCase):
             assert_true(h[0].data is None)
 
             h.writeto(self.temp('test2.fits'))
+
+    def testDeconvertConstantArray(self):
+        """When a constant value array's data is overridden with non-
+        constant data, test that when saving the file it removes
+        all constant value array keywords and is treated as a normal image
+        HDU.
+        """
+
+        data = np.ones((100, 100))
+        hdu = stpyfits.PrimaryHDU(data=data)
+        hdu.header['PIXVALUE'] = 1
+        hdu.writeto(self.temp('test.fits'))
+
+        with stpyfits.open(self.temp('test.fits'), mode='update') as h:
+            assert_equal(h[0].header['PIXVALUE'], 1)
+            h[0].data[20:80, 20:80] = 2
+
+        with pyfits.open(self.temp('test.fits')) as h:
+            assert_true('PIXVALUE' not in h[0].header)
+            assert_true('NPIX1' not in h[0].header)
+            assert_true('NPIX2' not in h[0].header)
+            assert_equal(h[0].header.count('NAXIS'), 1)
+            assert_equal(h[0].header['NAXIS'], 2)
+            assert_equal(h[0].header['NAXIS1'], 100)
+            assert_equal(h[0].header['NAXIS2'], 100)
+            assert_equal(h[0].data.max(), 2)
+            assert_equal(h[0].data.min(), 1)
+
+    def testGetvalExtensionHDU(self):
+        """Regression test for an issue that came up with the fact that
+        ImageHDU has a different argument signature from PrimaryHDU.
+        """
+
+        data = np.ones((100, 100))
+        hdu = stpyfits.ImageHDU(data=data)
+        hdu.header['PIXVALUE'] = 1
+        hdu.header['FOO'] = 'test'
+        hdul = stpyfits.HDUList([stpyfits.PrimaryHDU(), hdu])
+        hdul.writeto(self.temp('test.fits'))
+
+        assert_equal(stpyfits.getval(self.temp('test.fits'), 'FOO', ext=1),
+                     'test')
