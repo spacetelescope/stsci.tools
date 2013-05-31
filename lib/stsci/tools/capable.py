@@ -32,7 +32,7 @@ def which_darwin_linkage(force_otool_check=False):
     this inspects the actual tkinter library binary via otool. """
 
     # sanity check
-    assert sys.platform=='darwin', 'Incorrect usaage, not on OSX'
+    assert sys.platform=='darwin', 'Incorrect usage, not on OSX'
 
     # There will *usually* be PyObjC modules on sys.path on the natively-
     # linked Python. This is assumed to be always correct on Python 2.x, as
