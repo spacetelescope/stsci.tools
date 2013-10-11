@@ -55,6 +55,26 @@ def which_darwin_linkage(force_otool_check=False):
         return "aqua"
 
 
+def get_dc_owner(raises, mask_if_self):
+    """ Convenience function to return owner of /dev/console.
+    If raises is True, this raises an exception on any error.
+    If not, it returns any error string as the owner name.
+    If owner is self, and if mask_if_self, returns "<self>"."""
+    try:
+        from pwd import getpwuid
+        owner_uid = os.stat('/dev/console').st_uid
+        self_uid  = os.getuid()
+        if mask_if_self and owner_uid == self_uid:
+            return "<self>"
+        owner_name = getpwuid(owner_uid).pw_name
+        return owner_name
+    except Exception, e:
+        if raises:
+            raise e
+        else:
+            return str(e)
+
+
 OF_GRAPHICS = True
 
 if 'PYRAF_NO_DISPLAY' in os.environ or 'PYTOOLS_NO_DISPLAY' in os.environ:
@@ -73,11 +93,16 @@ if OF_GRAPHICS and sys.platform == 'darwin':
     # any windows/graphics calls.  See "console user" here:
     #     http://developer.apple.com/library/mac/#technotes/tn2083/_index.html
     # If we are the console user, we own /dev/console and can read from it.
+    # When no one is logged in, /dev/console is owned by "root". When user "bob"
+    # is logged in locally/physically, /dev/console is owned by "bob".
+    # However, if "bob" restarts the X server while logged in, /dev/console
+    # may be owned by "sysadmin" - so we check for that.
     #
     if 'PYRAF_YES_DISPLAY' not in os.environ:
-        OF_GRAPHICS = os.access("/dev/console", os.R_OK)
-        # the use of PYRAF_YES_DISPLAY is a temporary hack to get a user
-        # working while we debug why they have no read-acces to /dev/console
+        # the use of PYRAF_YES_DISPLAY is a temporary override while we
+        # debug why a user might have no read-acces to /dev/console
+        dc_owner = get_dc_owner(False, False)
+        OF_GRAPHICS = dc_owner == 'sysadmin' or os.access("/dev/console", os.R_OK)
 
     # Add a double-check for remote X11 users.  We *think* this is a smaller
     # set of cases, so we do it last minute here:
@@ -107,5 +132,3 @@ OF_TKFD_IN_EPAR = True
 if sys.platform == 'darwin' and OF_GRAPHICS and \
    not is_darwin_and_x(): # if framework ver
     OF_TKFD_IN_EPAR = 'TEAL_TRY_TKFD' in os.environ
-
-
