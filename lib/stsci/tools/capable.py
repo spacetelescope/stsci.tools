@@ -68,7 +68,7 @@ def get_dc_owner(raises, mask_if_self):
             return "<self>"
         owner_name = getpwuid(owner_uid).pw_name
         return owner_name
-    except Exception, e:
+    except Exception as e:
         if raises:
             raise e
         else:
