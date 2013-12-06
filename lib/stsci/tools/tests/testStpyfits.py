@@ -23,7 +23,7 @@ class TestStpyfitsFunctions(PyfitsTestCase):
 
         assert_equal(
             stpyfits.info(self.data('o4sp040b0_raw.fits'), output=False),
-            [(0, 'PRIMARY', 'PrimaryHDU', 215, (), 'int16', ''),
+            [(0, 'PRIMARY', 'PrimaryHDU', 215, (), '', ''),
              (1, 'SCI', 'ImageHDU', 141, (62, 44), 'int16', ''),
              (2, 'ERR', 'ImageHDU', 71, (62, 44), 'int16', ''),
              (3, 'DQ', 'ImageHDU', 71, (62, 44), 'int16', ''),
@@ -34,13 +34,13 @@ class TestStpyfitsFunctions(PyfitsTestCase):
 
         assert_equal(
             pyfits.info(self.data('o4sp040b0_raw.fits'), output=False),
-            [(0, 'PRIMARY', 'PrimaryHDU', 215, (), 'int16', ''),
+            [(0, 'PRIMARY', 'PrimaryHDU', 215, (), '', ''),
              (1, 'SCI', 'ImageHDU', 141, (62, 44), 'int16', ''),
-             (2, 'ERR', 'ImageHDU', 71, (), 'int16', ''),
-             (3, 'DQ', 'ImageHDU', 71, (), 'int16', ''),
+             (2, 'ERR', 'ImageHDU', 71, (), '', ''),
+             (3, 'DQ', 'ImageHDU', 71, (), '', ''),
              (4, 'SCI', 'ImageHDU', 141, (62, 44), 'int16', ''),
-             (5, 'ERR', 'ImageHDU', 71, (), 'int16', ''),
-             (6, 'DQ', 'ImageHDU', 71, (), 'int16', '')])
+             (5, 'ERR', 'ImageHDU', 71, (), '', ''),
+             (6, 'DQ', 'ImageHDU', 71, (), '', '')])
 
         assert_equal(
             stpyfits.info(self.data('cdva2.fits'), output=False),
@@ -48,7 +48,7 @@ class TestStpyfitsFunctions(PyfitsTestCase):
 
         assert_equal(
             pyfits.info(self.data('cdva2.fits'), output=False),
-            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), 'int32', '')])
+            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), '', '')])
 
 
     def testOpenConvienceFunction(self):
@@ -155,10 +155,10 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         info3 = pyfits.info(self.temp('new1.fits'), output=False)
         info4 = stpyfits.info(self.temp('new1.fits'), output=False)
 
-        assert_equal(info1, [(0, 'PRIMARY', 'PrimaryHDU', 6, (), 'int32', '')])
+        assert_equal(info1, [(0, 'PRIMARY', 'PrimaryHDU', 6, (), '', '')])
         assert_equal(info2,
             [(0, 'PRIMARY', 'PrimaryHDU', 6, (10, 10), 'int32', '')])
-        assert_equal(info3, [(0, 'PRIMARY', 'PrimaryHDU', 6, (), 'uint8', '')])
+        assert_equal(info3, [(0, 'PRIMARY', 'PrimaryHDU', 6, (), '', '')])
         assert_equal(info4,
             [(0, 'PRIMARY', 'PrimaryHDU', 6, (10, 10), 'uint8', '')])
 
