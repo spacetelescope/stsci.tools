@@ -20,7 +20,7 @@ function to the __init__.py of their package:
 
 import stsci.tools.tester
 def test(*args,**kwds):
-    stsci.tools.tester.test(modname=__name__, *args, **kwds)
+    return stsci.tools.tester.test(modname=__name__, *args, **kwds)
 
 
 This assumes that all software packages are installed with the structure:
@@ -28,11 +28,11 @@ This assumes that all software packages are installed with the structure:
 package/
     __init__.py
     modules.py
-    test/
-    test/__init__.py
-    test/test_whatever.py
+    tests/
+    tests/__init__.py
+    tests/test_whatever.py
 
-Where the /test subdirectory containts the python files that nose will
+Where the /tests subdirectory containts the python files that nose will
 recognize as tests.
 
 """
@@ -50,7 +50,7 @@ def test(modname, mode='nose', *args, **kwds):
     Purpose:
     ========
     test: Run refcore nosetest suite of tests. The tests are located in the
-    test/ directory of the installed modules.
+    tests/ directory of the installed modules.
 
     """
 
@@ -63,7 +63,7 @@ def test(modname, mode='nose', *args, **kwds):
     else:
         raise ValueError('name of module to test not given')
 
-    DIRS = [os.path.join(curdir, testdir) for testdir in ['test', 'tests']]
+    DIRS = [os.path.join(curdir, testdir) for testdir in ['tests', 'test']]
 
     dirname = None
     for x in DIRS:
