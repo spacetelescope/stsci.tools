@@ -395,9 +395,19 @@ class EparOption(object):
 
         self.menu = Menu(self.entry, tearoff = 0)
         if self.browserEnabled != DISABLED:
-            self.menu.add_command(label   = "File Browser",
-                                  state   = self.browserEnabled,
-                                  command = self.fileBrowser)
+            # Handle file and directory in different functions (tkFileDialog)
+            if capable.OF_TKFD_IN_EPAR:
+                self.menu.add_command(label   = "File Browser",
+                                      state   = self.browserEnabled,
+                                      command = self.fileBrowser)
+                self.menu.add_command(label   = "Directory Browser",
+                                      state   = self.browserEnabled,
+                                      command = self.dirBrowser)
+            # Handle file and directory in the same function (filedlg)
+            else:
+                self.menu.add_command(label   = "File/Directory Browser",
+                                      state   = self.browserEnabled,
+                                      command = self.fileBrowser)
             self.menu.add_separator()
         self.menu.add_command(label   = "Clear",
                               state   = self.clearEnabled,
@@ -432,6 +442,20 @@ class EparOption(object):
                 return
             fname = self.fd.GetFileName()
             self.fd.DialogCleanup()
+        if not fname: return # canceled
+
+        self.choice.set(fname)
+        # don't select when we go back to widget to reduce risk of
+        # accidentally typing over the filename
+        self.lastSelection = None
+
+    def dirBrowser(self):
+        """Invoke a Tkinter directory dialog"""
+        if capable.OF_TKFD_IN_EPAR:
+            fname = tkFileDialog.askdirectory(parent=self.entry,
+                                              title="Select Directory")
+        else:
+            raise NotImplementedError('Fix popupChoices() logic.')
         if not fname: return # canceled
 
         self.choice.set(fname)
