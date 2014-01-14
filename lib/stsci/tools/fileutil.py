@@ -807,7 +807,7 @@ def getExtn(fimg,extn=None):
     """
     # If no extension is provided, search for first extension
     # in FITS file with data associated with it.
-    if not extn:
+    if extn is None:
         # Set up default to point to PRIMARY extension.
         _extn = fimg[0]
         # then look for first extension with data.
