@@ -843,8 +843,10 @@ def getExtn(fimg,extn=None):
             _indx = str(extn[:extn.find('/')])
             _extn = fimg[int(_indx)]
         elif type(extn) == types.StringType:
+            if extn.strip() == '':
+                _extn = None # force error since invalid name was provided
             # Only one extension value specified...
-            if extn.isdigit():
+            elif extn.isdigit():
                 # We only have an extension number specified as a string...
                 _nextn = int(extn)
             else:
@@ -1410,5 +1412,3 @@ def _expand1(instring, noerror):
 def access(filename):
     """Returns true if file exists"""
     return os.path.exists(Expand(filename))
-
-
