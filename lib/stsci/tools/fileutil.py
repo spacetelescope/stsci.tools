@@ -39,14 +39,6 @@ General functions included are::
          Opens file and returns PyFITS object.
          It will work on both FITS and GEIS formatted images.
 
-    translate2MEF(filename, writefits=True, clobber=True, fitsname=None,
-                  verbose=True)
-        Translates input WAIVERED FITS or GEIS formatted images together with
-        associated DQ images to MEF. Returns a tuple
-        (imgFileName,dqFileName,imgType) containing MEF image file name,
-        DQ file name, and input image type:'waiver','geis','mef', or 'simple'.
-
-
     findFile(input)
 
     checkFileExists(filename,directory=None)
@@ -607,6 +599,7 @@ def buildFITSName(geisname):
     return _fitsname
 
 
+
 def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fitsname=None):
     """ Opens file and returns PyFITS object.
         It will work on both FITS and GEIS formatted images.
@@ -636,60 +629,6 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
             name to use for GEIS-derived MEF file,
             if None and writefits==True, will use 'buildFITSName()' to generate one
     """
-    (mef_fname, dqfitsname, fitstype) = translate2MEF(filename,
-            writefits=writefits, clobber=clobber, fitsname=fitsname,
-            verbose=True)
-
-    fimg = pyfits.open(mef_fname,mode=mode,memmap=memmap)
-
-    # Return handle for use by user
-    return fimg
-
-
-def translate2MEF(filename, writefits=True, clobber=True, fitsname=None,
-                  verbose=True):
-    """ Translates input WAIVERED FITS or GEIS formatted images together with
-        associated DQ images to MEF.
-
-        Returns a tuple (imgFileName,dqFileName,imgType) containing MEF image
-        file name, DQ file name, and input image type: 'waiver', 'geis',
-        'mef', or 'simple'. dqFileName may be None if DQ file associated
-        with the input image does not exist or if the input image is already
-        a MEF file.
-
-        Notes
-        -----
-        If a GEIS or waivered FITS image is used as input,
-        it will convert it to a MEF object
-        and only if 'writefits = True' will write it out to a file. If
-        'fitsname = None', the name used to write out the new MEF file
-        will be created using 'buildFITSName()'.
-
-        Possible Issues
-        ---------------
-        Repeaded use of this function on the "same" GEIS or WAIVERED file
-        is not recommended. This functon was designed to insure that the
-        input files get translated to MEF format and returns file names
-        of the MEF image and DQ files. When applying this function to a
-        previously transladed file (which is now already a MEF file)
-        the reported file name may be incorrect (None).
-
-        For example, for a WFPC2 image "M87_c0f.fits" with an associated
-        data quality file "M87_c1f.fits"
-
-        Parameters
-        ----------
-        filename: str
-            name of input file
-        writefits: bool
-            if True, will write out GEIS as multi-extension FITS
-            and return handle to that opened GEIS-derived MEF file
-        clobber: bool
-            overwrite previously written out GEIS-derived MEF file
-        fitsname: str
-            name to use for GEIS-derived MEF file,
-            if None and writefits==True, will use 'buildFITSName()' to generate one
-    """
     # Insure that the filename is always fully expanded
     # This will not affect filenames without paths or
     # filenames specified with extensions.
@@ -702,14 +641,17 @@ def translate2MEF(filename, writefits=True, clobber=True, fitsname=None,
     # Check whether we have a FITS file and if so what type
     isfits,fitstype = isFits(_fname)
 
-    dqfitsname = None
     if isfits:
         if fitstype != 'waiver':
-            # Input file is already a MEF so return input file name and type
-            return (_fname, None, fitstype)
+            # Open the FITS file
+            fimg = pyfits.open(_fname,mode=mode,memmap=memmap)
+            return fimg
         else:
             import convertwaiveredfits
-            fimg = convertwaiveredfits.convertwaiveredfits(_fname)
+            try:
+                fimg = convertwaiveredfits.convertwaiveredfits(_fname)
+            except:
+                raise
             #check for the existence of a data quality file
             _dqname = buildNewRootname(_fname, extn='_c1f.fits')
             dqexists = os.path.exists(_dqname)
@@ -718,8 +660,7 @@ def translate2MEF(filename, writefits=True, clobber=True, fitsname=None,
                     dqfile = convertwaiveredfits.convertwaiveredfits(_dqname)
                     dqfitsname = buildNewRootname(_dqname,extn='_c1h.fits')
                 except:
-                    if verbose:
-                        print "Could not read data quality file %s" % _dqname
+                    print "Could not read data quality file %s" % _dqname
             if writefits:
                 # User wants to make a FITS copy and update it
                 # using the filename they have provided
@@ -730,23 +671,23 @@ def translate2MEF(filename, writefits=True, clobber=True, fitsname=None,
                 # Write out GEIS image as multi-extension FITS.
                 fexists = os.path.exists(fitsname)
                 if (fexists and clobber) or not fexists:
-                    if verbose:
-                        print 'Writing out WAIVERED as MEF to ',fitsname
+                    print 'Writing out WAIVERED as MEF to ',fitsname
                     fimg.writeto(fitsname, clobber=clobber)
                     if dqexists:
-                        if verbose:
-                            print 'Writing out WAIVERED as MEF to ',dqfitsname
+                        print 'Writing out WAIVERED as MEF to ',dqfitsname
                         dqfile.writeto(dqfitsname, clobber=clobber)
-            # Now close input GEIS image, and open writable
-            # handle to output FITS image instead...
-            fimg.close()
-            del fimg
+                # Now close input GEIS image, and open writable
+                # handle to output FITS image instead...
+                fimg.close()
+                del fimg
+                fimg = pyfits.open(fitsname,mode=mode,memmap=memmap)
 
+        # Return handle for use by user
+        return fimg
     else:
         # Input was specified as a GEIS image, but no FITS copy
         # exists.  Read it in with 'readgeis' and make a copy
         # then open the FITS copy...
-        fitstype = 'geis'
         try:
             # Open as a GEIS image for reading only
             fimg =  readgeis.readgeis(_fname)
@@ -761,11 +702,10 @@ def translate2MEF(filename, writefits=True, clobber=True, fitsname=None,
                 dqfile = readgeis.readgeis(_dqname)
                 dqfitsname = buildFITSName(_dqname)
             except:
-                if verbose:
-                    print "Could not read data quality file %s" % _dqname
+                print "Could not read data quality file %s" % _dqname
 
         # Check to see if user wanted to update GEIS header.
-        # or write out a multi-extension FITS file
+        # or write out a multi-extension FITS file and return a handle to it
         if writefits:
                 # User wants to make a FITS copy and update it
                 # using the filename they have provided
@@ -775,19 +715,19 @@ def translate2MEF(filename, writefits=True, clobber=True, fitsname=None,
             # Write out GEIS image as multi-extension FITS.
             fexists = os.path.exists(fitsname)
             if (fexists and clobber) or not fexists:
-                    if verbose:
-                        print 'Writing out GEIS as MEF to ',fitsname
+                    print 'Writing out GEIS as MEF to ',fitsname
                     fimg.writeto(fitsname, clobber=clobber)
                     if dqexists:
-                        if verbose:
-                            print 'Writing out GEIS as MEF to ',dqfitsname
+                        print 'Writing out GEIS as MEF to ',dqfitsname
                         dqfile.writeto(dqfitsname, clobber=clobber)
-            # Now close input GEIS image
+            # Now close input GEIS image, and open writable
+            # handle to output FITS image instead...
             fimg.close()
             del fimg
+            fimg = pyfits.open(fitsname,mode=mode,memmap=memmap)
 
-    # Return file names and fits type for use by user
-    return (fitsname, dqfitsname, fitstype)
+        # Return handle for use by user
+        return fimg
 
 
 def parseFilename(filename):
@@ -903,8 +843,10 @@ def getExtn(fimg,extn=None):
             _indx = str(extn[:extn.find('/')])
             _extn = fimg[int(_indx)]
         elif type(extn) == types.StringType:
+            if extn.strip() == '':
+                _extn = None # force error since invalid name was provided
             # Only one extension value specified...
-            if extn.isdigit():
+            elif extn.isdigit():
                 # We only have an extension number specified as a string...
                 _nextn = int(extn)
             else:
@@ -1470,4 +1412,3 @@ def _expand1(instring, noerror):
 def access(filename):
     """Returns true if file exists"""
     return os.path.exists(Expand(filename))
-
