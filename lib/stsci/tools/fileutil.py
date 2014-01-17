@@ -676,11 +676,11 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
                     if dqexists:
                         print 'Writing out WAIVERED as MEF to ',dqfitsname
                         dqfile.writeto(dqfitsname, clobber=clobber)
-            # Now close input GEIS image, and open writable
-            # handle to output FITS image instead...
-            fimg.close()
-            del fimg
-            fimg = pyfits.open(fitsname,mode=mode,memmap=memmap)
+                # Now close input GEIS image, and open writable
+                # handle to output FITS image instead...
+                fimg.close()
+                del fimg
+                fimg = pyfits.open(fitsname,mode=mode,memmap=memmap)
 
         # Return handle for use by user
         return fimg
@@ -807,7 +807,7 @@ def getExtn(fimg,extn=None):
     """
     # If no extension is provided, search for first extension
     # in FITS file with data associated with it.
-    if not extn:
+    if extn is None:
         # Set up default to point to PRIMARY extension.
         _extn = fimg[0]
         # then look for first extension with data.
@@ -843,8 +843,10 @@ def getExtn(fimg,extn=None):
             _indx = str(extn[:extn.find('/')])
             _extn = fimg[int(_indx)]
         elif type(extn) == types.StringType:
+            if extn.strip() == '':
+                _extn = None # force error since invalid name was provided
             # Only one extension value specified...
-            if extn.isdigit():
+            elif extn.isdigit():
                 # We only have an extension number specified as a string...
                 _nextn = int(extn)
             else:
@@ -1410,5 +1412,3 @@ def _expand1(instring, noerror):
 def access(filename):
     """Returns true if file exists"""
     return os.path.exists(Expand(filename))
-
-
