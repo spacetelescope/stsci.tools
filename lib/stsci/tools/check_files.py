@@ -96,7 +96,8 @@ def checkStisFiles(filelist, ivmlist=None):
             newfilenames = splitStis(t[0], sci_count)
             assoc_files.extend(newfilenames)
             removed_files.append(t[0])
-            if t[1] != None:
+            if (isinstance(t[1], tuple) and t[1][0] is not None) or \
+               (not isinstance(t[1], tuple) and t[1] is not None):
                 print 'Does not handle STIS IVM files and STIS association files\n'
             else:
                 assoc_ilist.extend([None]*len(assoc_files))
