@@ -372,6 +372,20 @@ def untranslateName(s):
 
 # procedures to read while still allowing Tk widget updates
 
+def init_tk_default_root():
+
+    """ In case the _default_root value is required, you may
+    safely call this ahead of time to ensure that it has been
+    initialized.  If it has already been, this is a no-op.
+    """
+
+    if not capable.OF_GRAPHICS:
+        raise RuntimeError("Cannot run this command without graphics")
+
+    if not Tkinter._default_root: # Tkinter imported above
+        newdfrt = Tkinter.Tk()
+        newdfrt.withdraw()
+
 def tkread(file, n=0):
 
     """Read n bytes from file (or socket) while running Tk mainloop.
@@ -430,9 +444,11 @@ class _TkRead:
             fd = file.fileno()
         else:
             raise TypeError("file must be an integer or a filehandle/socket")
+        init_tk_default_root() # harmless if already done
         self.widget = Tkinter._default_root
         if not self.widget:
             # no Tk widgets yet, so no need for mainloop
+            # (shouldnt happen now with init_tk_default_root)
             s = []
             while nbytes>0:
                 snew = os.read(fd, nbytes) # returns bytes in PY3K
