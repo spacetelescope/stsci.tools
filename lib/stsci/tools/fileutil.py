@@ -81,7 +81,8 @@ numerixenv.check()
 try:
     import stpyfits as pyfits
 except ImportError:
-    import pyfits
+    #import pyfits
+    from astropy.io import fits as pyfits
 import readgeis
 
 import string,os,types,shutil,copy, re, sys

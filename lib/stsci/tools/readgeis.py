@@ -8,7 +8,7 @@
         readgeis: Read GEIS file and convert it to a FITS extension file.
 
         License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
-        
+
         Usage:
 
                 readgeis.py [options] GEISname FITSname
@@ -24,7 +24,7 @@
                 abc.xyh will have an output name of abc_xyf.fits
 
         :Options:
-        
+
         -h     print the help (this text)
 
         :Example:
@@ -37,14 +37,14 @@
             >>> hdulist.writeto(FITSFileName)
 
         The most basic usage from the command line::
-        
+
             readgeis.py test1.hhh test1.fits
 
         This command will convert the input GEIS file test1.hhh to
         a FITS file test1.fits.
 
 
-        From the command line:: 
+        From the command line::
 
             readgeis.py .
 
@@ -54,7 +54,7 @@
 
 
         Another example of usage from the command line::
-        
+
             readgeis.py "u*" "*"
 
         this will convert all `u*.??h` files in the current directory
@@ -73,7 +73,8 @@ from __future__ import division # confidence high
 __version__ = "2.2 (18 Feb, 2011), \xa9 AURA"
 
 import os, sys, string
-import pyfits
+#import pyfits
+from astropy.io import fits as pyfits
 import numpy
 from numpy import memmap
 
@@ -192,12 +193,12 @@ def readgeis(input):
         _bytes = pdtype[star+1:]
 
         # collect boolean keywords since they need special attention later
-        
+
         if _type == 'LOGICAL':
             bools.append(i)
         if pdtype == 'REAL*4':
             floats.append(i)
-       
+
         fmt = geis_fmt[_type] + _bytes
         formats.append((ptype,fmt))
 
@@ -235,9 +236,9 @@ def readgeis(input):
     dat = f1.read()
 #    dat = memmap(data_file, mode='c')
     hdulist.mmobject = dat
-    
+
     errormsg = ""
-    
+
     loc = 0
     for k in range(gcount):
         ext_dat = numpy.fromstring(dat[loc:loc+data_size], dtype=_code)
@@ -245,7 +246,7 @@ def readgeis(input):
         if _uint16:
             ext_dat += _bzero
         # Check to see whether there are any NaN's or infs which might indicate
-        # a byte-swapping problem, such as being written out on little-endian 
+        # a byte-swapping problem, such as being written out on little-endian
         #   and being read in on big-endian or vice-versa.
         if _code.find('float') >= 0 and \
             (numpy.any(numpy.isnan(ext_dat)) or numpy.any(numpy.isinf(ext_dat))):
@@ -272,20 +273,20 @@ def readgeis(input):
         ext_hdu = pyfits.ImageHDU(data=ext_dat)
 
         rec = numpy.fromstring(dat[loc+data_size:loc+group_size], dtype=formats)
-        
+
         loc += group_size
 
         # Create separate PyFITS Card objects for each entry in 'rec'
         for i in range(1, pcount+1):
             #val = rec.field(i-1)[0]
             val = rec[0][i-1]
-            
+
             if i in bools:
                 if val:
                     val = pyfits.TRUE
                 else:
                     val = pyfits.FALSE
-            
+
             if i in floats:
                 # use fromstring, format in Card is deprecated in pyfits 0.9
                 _str = '%-8s= %20.7G / %s' % (key[i-1], val, comm[i-1])

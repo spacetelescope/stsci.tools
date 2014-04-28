@@ -15,14 +15,17 @@ import functools
 import re
 import numpy as np
 
-import pyfits
+#import pyfits
+from astropy.io import fits as pyfits
 # A few imports for backward compatibility; in the earlier stpyfits these were
 # overridden, but with pyfits's new extension system it's not necessary
-from pyfits import HDUList
-from pyfits.util import _is_int
+#from pyfits import HDUList
+#from pyfits.util import _is_int
+from astropy.io.fits import HDUList
+from astropy.io.fits.util import _is_int
+from astropy.utils import lazyproperty
 
-
-__version__ = '1.1.0/%s' % pyfits.__version__
+#__version__ = '1.1.0/%s' % pyfits.__version__
 
 
 STPYFITS_ENABLED = False # Not threadsafe TODO: (should it be?)
@@ -159,7 +162,7 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
         else:
             return super(_ConstantValueImageBaseHDU, self).size
 
-    @pyfits.util.lazyproperty
+    @lazyproperty
     def data(self):
         if ('PIXVALUE' in self._header and 'NPIX1' not in self._header and
                self._header['NAXIS'] > 0):

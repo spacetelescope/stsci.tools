@@ -5,7 +5,8 @@ numerixenv.check()
 
 import string, copy, os
 
-import pyfits
+#import pyfits
+from astropy.io import fits as pyfits
 import numpy as N
 from math import *
 

@@ -145,7 +145,8 @@ import os
 import types
 import sys
 import string
-import pyfits
+#import pyfits
+from astropy.io import fits as pyfits
 #
 # -----------------------------------------------------------------------------
 # Function definitions

@@ -71,7 +71,8 @@ from __future__ import division # confidence high
 __version__ = "1.0 (25 Feb, 2011), \xa9 AURA"
 
 import os, sys, string, shutil
-import pyfits
+#import pyfits
+from astropy.io import fits as pyfits
 import numpy
 dat = None
 
@@ -86,7 +87,7 @@ cols_pfmt = {'REAL':'E', 'DOUBLE': 'D', 'INTEGER': 'J', 'LOGICAL':'A', 'CHARACTE
 
 # Keywords which require special unit conversion
 # keywords which are output as long-floats without using exponential formatting
-kw_DOUBLE = ['CRVAL1','CRVAL2','FPKTTIME','LPKTTIME'] 
+kw_DOUBLE = ['CRVAL1','CRVAL2','FPKTTIME','LPKTTIME']
 
 def byteswap(input,output=None,clobber=True):
 

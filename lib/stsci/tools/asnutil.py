@@ -10,7 +10,8 @@ from __future__ import division # confidence high
 
 import fileutil as fu
 import wcsutil
-import pyfits
+#import pyfits
+from astropy.io import fits as pyfits
 import numpy as N
 import os.path, time
 

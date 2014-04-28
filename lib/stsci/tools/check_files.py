@@ -1,7 +1,8 @@
 from __future__ import division # confidence high
 
 from stsci.tools import parseinput, fileutil, readgeis, asnutil,irafglob
-import pyfits
+#import pyfits
+from astropy.io import fits as pyfits
 import os
 
 def checkFiles(filelist,ivmlist = None):

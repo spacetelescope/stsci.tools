@@ -8,7 +8,8 @@ from __future__ import division # confidence high
 import numerixenv
 numerixenv.check()
 
-import pyfits
+#import pyfits
+from astropy.io import fits as pyfits
 
 __version__ = '0.2 (06-October-2006)'
 
