@@ -92,11 +92,11 @@ def stsci(hdulist):
             hdulist[i].name = filetype
             hdulist[i]._extver = i
             # Add extension keywords for this chip to extension
-            hdulist[i].header.update(key='EXPNAME', value=rootname, comment="9 character exposure identifier")
-            hdulist[i].header.update(key='EXTVER', value=i, comment="extension version number")
-            hdulist[i].header.update(key='EXTNAME', value=filetype, comment="extension name")
-            hdulist[i].header.update(key='INHERIT', value=pyfits.TRUE, comment="inherit the primary header")
-            hdulist[i].header.update(key='ROOTNAME', value=rootname, comment="rootname of the observation set")
+            hdulist[i].header['EXPNAME'] = (rootname, "9 character exposure identifier")
+            hdulist[i].header['EXTVER']= (i, "extension version number")
+            hdulist[i].header['EXTNAME'] = (filetype, "extension name")
+            hdulist[i].header['INHERIT'] = (pyfits.TRUE, "inherit the primary header")
+            hdulist[i].header['ROOTNAME'] = (rootname, "rootname of the observation set")
 
 
 def stsci2(hdulist, filename):
@@ -105,7 +105,7 @@ def stsci2(hdulist, filename):
     # Write output file name to the primary header
     instrument = hdulist[0].header.get('INSTRUME', '')
     if instrument in ("WFPC2", "FOC"):
-        hdulist[0].header.update('FILENAME', filename)
+        hdulist[0].header['FILENAME'] = filename
 
 
 def readgeis(input):
@@ -225,8 +225,8 @@ def readgeis(input):
     _after = 'NAXIS'
     if _naxis0 > 0:
         _after += `_naxis0`
-    phdr.update(key='EXTEND', value=pyfits.TRUE, comment="FITS dataset may contain extensions", after=_after)
-    phdr.update(key='NEXTEND', value=gcount, comment="Number of standard extensions")
+    phdr.set(key='EXTEND', value=pyfits.TRUE, comment="FITS dataset may contain extensions", after=_after)
+    phdr.set(key='NEXTEND', value=gcount, comment="Number of standard extensions")
 
     hdulist = pyfits.HDUList([pyfits.PrimaryHDU(header=phdr, data=None)])
 
@@ -297,8 +297,8 @@ def readgeis(input):
 
         # deal with bscale/bzero
         if (_bscale != 1 or _bzero != 0):
-            ext_hdu.header.update('BSCALE', _bscale)
-            ext_hdu.header.update('BZERO', _bzero)
+            ext_hdu.header['BSCALE'] = _bscale
+            ext_hdu.header['BZERO'] = _bzero
 
         hdulist.append(ext_hdu)
 

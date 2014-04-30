@@ -423,7 +423,7 @@ class ASNTable(dict):
             whdu = wcsutil.WCSObject(refimg)
             whdu.createReferenceWCS(outfile,overwrite=False)
             ftab = pyfits.open(outfile)
-            ftab['primary'].header.update('refimage', outfile+"[wcs]")
+            ftab['primary'].header['refimage'] = outfile+"[wcs]"
             ftab.close()
         del whdu
 
@@ -495,8 +495,8 @@ class ASNTable(dict):
         newhdr['FILENAME'] = outfilename
         newhdr['ASN_ID'] = output
         newhdr['ASN_TAB'] = outfilename
-        newhdr.update('SHFRAME', shframe, comment="Frame which shifts are measured")
-        newhdr.update('REFIMAGE', refimg, comment="Image shifts were measured from")
+        newhdr['SHFRAME'] = (shframe, "Frame which shifts are measured")
+        newhdr['REFIMAGE'] = (refimg, "Image shifts were measured from")
 
 
 

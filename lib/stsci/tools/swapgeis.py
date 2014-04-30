@@ -295,7 +295,7 @@ def byteswap(input,output=None,clobber=True):
     phdr = pyfits.Header(pyfits.CardList(cards))
     im.close()
 
-    phdr.update('FILENAME',input,after='DATE')
+    phdr.set('FILENAME', value=input, after='DATE')
 
     # Determine starting point for adding Group Parameter Block keywords to Primary header
     phdr_indx = phdr.ascard.index_of('PSIZE')
@@ -397,7 +397,7 @@ def byteswap(input,output=None,clobber=True):
     _after = 'NAXIS'
     if _naxis0 > 0:
         _after += `_naxis0`
-    phdr.update(key='EXTEND', value=pyfits.TRUE, comment="FITS dataset may contain extensions", after=_after)
+    phdr.set(key='EXTEND', value=pyfits.TRUE, comment="FITS dataset may contain extensions", after=_after)
 
     # Use copy-on-write for all data types since byteswap may be needed
     # in some platforms.
@@ -482,13 +482,13 @@ def byteswap(input,output=None,clobber=True):
 
             # deal with bscale/bzero
             if (_bscale != 1 or _bzero != 0):
-                phdr.update('BSCALE', _bscale)
-                phdr.update('BZERO', _bzero)
+                phdr['BSCALE'] = _bscale
+                phdr['BZERO'] = _bzero
 
         #hdulist.append(ext_hdu)
     # Define new table based on Column definitions
     ext_table = pyfits.new_table(cols,tbtype='TableHDU')
-    ext_table.header.update('EXTNAME',input+'.tab',after='TFIELDS')
+    ext_table.header.set('EXTNAME', value=input+'.tab', after='TFIELDS')
     # Add column descriptions to header of table extension to match stwfits output
     for i in range(len(key)):
         ext_table.header.ascard.append(pyfits.Card(key=key[i], value=comm[i]))

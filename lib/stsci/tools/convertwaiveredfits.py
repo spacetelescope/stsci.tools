@@ -405,13 +405,13 @@ def toMultiExtensionFits(waiveredObject,
     #
     # Add the EXTEND card
     #
-    mPHdu.header.update('EXTEND', pyfits.TRUE, after='NAXIS')
+    mPHdu.header.set('EXTEND', value=pyfits.TRUE, after='NAXIS')
     #
     # Add the NEXTEND card.  There will be one extension
     # for each row in the wavered Fits file table HDU.
     #
-    mPHdu.header.update('NEXTEND', whdul[1].data.shape[0],
-                        'Number of standard extensions')
+    mPHdu.heade['NEXTEND'] = (whdul[1].data.shape[0],
+                              'Number of standard extensions')
     #
     # Create the multi-extension file HDUList from the primary header
     #
@@ -466,7 +466,7 @@ def toMultiExtensionFits(waiveredObject,
         #
         if originalDataType == 'USHORT':
             mhdul[i+1].scale('int16','',bscale=1,bzero=32768)
-            mhdul[i+1].header.update('BSCALE',1,before='BZERO')
+            mhdul[i+1].header.set('BSCALE', value=1, before='BZERO')
         #
         # For WFPC2 and FOS instruments require additional header cards
         #
@@ -474,34 +474,35 @@ def toMultiExtensionFits(waiveredObject,
             #
             # Add EXTNAME card to header
             #
-            mhdul[i+1].header.update('EXTNAME',mPHeader.get('FILETYPE',''),
-                                     'extension name')
+            mhdul[i+1].header['EXTNAME'] = (mPHeader.get('FILETYPE',''),
+                                            'extension name')
             #
             # Add EXTVER card to the header
             #
             mhdul[i+1]._extver = i+1
-            mhdul[i+1].header.update('EXTVER',i+1,'extension version number',
-                                     after='EXTNAME')
+            mhdul[i+1].header.set('EXTVER', value=i+1,
+                                  comment='extension version number',
+                                  after='EXTNAME')
             #
             # Add the EXPNAME card to the header
             #
-            mhdul[i+1].header.update('EXPNAME',
-                                     mPHeader.get('ROOTNAME', ''),
-                                     '9 character exposure identifier',
-                                     before='EXTVER')
+            mhdul[i+1].header.set('EXPNAME',
+                                  mPHeader.get('ROOTNAME', ''),
+                                  '9 character exposure identifier',
+                                  before='EXTVER')
             #
             # Add the INHERIT card to the header.
             #
-            mhdul[i+1].header.update('INHERIT',pyfits.TRUE,
-                                     'inherit the primary header',
-                                     after='EXTVER')
+            mhdul[i+1].header.set('INHERIT',pyfits.TRUE,
+                                  'inherit the primary header',
+                                  after='EXTVER')
             #
             # Add the ROOTNAME card to the header
             #
-            mhdul[i+1].header.update('ROOTNAME',
-                                     mPHeader.get('ROOTNAME', ''),
-                                     'rootname of the observationset',
-                                     after='INHERIT')
+            mhdul[i+1].header.set('ROOTNAME',
+                                  mPHeader.get('ROOTNAME', ''),
+                                  'rootname of the observationset',
+                                  after='INHERIT')
 
     if not multiExtensionFileName and forceFileOutput:
         base,ext = os.path.splitext(whdul[0]._file.name)
@@ -517,7 +518,7 @@ def toMultiExtensionFits(waiveredObject,
             # instruments
             #
             head,tail = os.path.split(multiExtensionFileName)
-            mhdul[0].header.update('FILENAME',tail,after='NEXTEND')
+            mhdul[0].header.set('FILENAME', value=tail, after='NEXTEND')
 
         mhdul.writeto(multiExtensionFileName,clobber=True)
         verboseString = verboseString[:-1] + " and written to " + \

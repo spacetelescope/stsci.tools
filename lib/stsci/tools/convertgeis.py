@@ -94,7 +94,7 @@ def stsci2(hdulist, filename):
     # Write output file name to the primary header
     instrument = hdulist[0].header.get('INSTRUME', '')
     if instrument in ("WFPC2", "FOC"):
-        hdulist[0].header.update('FILENAME', filename)
+        hdulist[0].header['FILENAME'] = filename
 
 def convert(input):
 
@@ -237,7 +237,7 @@ def convert(input):
     _after = 'NAXIS'
     if _naxis0 > 0:
         _after += `_naxis0`
-    phdr.update(key='EXTEND', value=pyfits.TRUE, comment="FITS dataset may contain extensions", after=_after)
+    phdr.set(key='EXTEND', value=pyfits.TRUE, comment="FITS dataset may contain extensions", after=_after)
 
     # Use copy-on-write for all data types since byteswap may be needed
     # in some platforms.
@@ -322,13 +322,13 @@ def convert(input):
 
             # deal with bscale/bzero
             if (_bscale != 1 or _bzero != 0):
-                phdr.update('BSCALE', _bscale)
-                phdr.update('BZERO', _bzero)
+                phdr['BSCALE'] = _bscale
+                phdr['BZERO'] = _bzero
 
         #hdulist.append(ext_hdu)
     # Define new table based on Column definitions
     ext_table = pyfits.new_table(cols,tbtype='TableHDU')
-    ext_table.header.update('EXTNAME',input+'.tab',after='TFIELDS')
+    ext_table.header.set('EXTNAME', value=input+'.tab', after='TFIELDS')
     # Add column descriptions to header of table extension to match stwfits output
     for i in range(len(key)):
         ext_table.header.ascard.append(pyfits.Card(key=key[i], value=comm[i]))

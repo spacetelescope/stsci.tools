@@ -585,7 +585,7 @@ def updateKeyword(filename, key, value,show=yes):
     except KeyError:
         if show:
             print 'Adding new keyword ',key,'=',value
-        _hdr.update(key, value)
+        _hdr[key] = value
 
     # Close image
     _fimg.close()

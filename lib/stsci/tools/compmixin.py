@@ -49,7 +49,7 @@ class ComparableMixin(object):
         return self._compare(other, lambda s,o: s <= o)
 
     def __eq__(self, other):
-       return self._compare(other, lambda s,o: s == o)
+        return self._compare(other, lambda s,o: s == o)
 
     def __ge__(self, other):
         return self._compare(other, lambda s,o: s >= o)
