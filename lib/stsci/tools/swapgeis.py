@@ -71,8 +71,7 @@ from __future__ import division # confidence high
 __version__ = "1.0 (25 Feb, 2011), \xa9 AURA"
 
 import os, sys, string, shutil
-#import pyfits
-from astropy.io import fits as pyfits
+from astropy.io import fits
 import numpy
 dat = None
 
@@ -80,9 +79,9 @@ dat = None
 
 # definitions used to convert GEIS record into numpy objects
 geis_fmt = {'REAL':'f', 'DOUBLE': 'f', 'INTEGER':'i', 'LOGICAL':'i','CHARACTER':'S'}
-# definitions used to convert data into numpy array for use in pyfits.Column
+# definitions used to convert data into numpy array for use in `astropy.io.fits.Column`
 cols_fmt = {'REAL':'float', 'DOUBLE':'float', 'INTEGER':'int', 'LOGICAL':'S', 'CHARACTER': 'S'}
-# definitions used to define print format for pyfits.Column
+# definitions used to define print format for `astropy.io.fits.Column`
 cols_pfmt = {'REAL':'E', 'DOUBLE': 'D', 'INTEGER': 'J', 'LOGICAL':'A', 'CHARACTER': 'A'}
 
 # Keywords which require special unit conversion
@@ -114,7 +113,7 @@ def byteswap(input,output=None,clobber=True):
     """
 
     global dat
-    cardLen = pyfits.Card.length
+    cardLen = fits.Card.length
 
     # input file(s) must be of the form *.??h and *.??d
     if input[-1] != 'h' or input[-4] != '.':
@@ -151,9 +150,9 @@ def byteswap(input,output=None,clobber=True):
         line = line[:8].upper() + line[8:]
         if line == end_card:
             break
-        cards.append(pyfits.Card('').fromstring(line))
+        cards.append(fits.Card('').fromstring(line))
 
-    phdr = pyfits.Header(pyfits.CardList(cards))
+    phdr = fits.Header(fits.CardList(cards))
     im.close()
 
     _naxis0 = phdr.get('NAXIS', 0)
@@ -210,7 +209,7 @@ def byteswap(input,output=None,clobber=True):
 
     _shape = _naxis[1:]
     _shape.reverse()
-    _code = pyfits.core.ImageHDU.NumCode[_bitpix]
+    _code = fits.core.ImageHDU.NumCode[_bitpix]
     _bscale = phdr.get('BSCALE', 1)
     _bzero = phdr.get('BZERO', 0)
     if phdr['DATATYPE'][:10] == 'UNSIGNED*2':
@@ -235,7 +234,7 @@ def byteswap(input,output=None,clobber=True):
         ext_dat = ext_dat.reshape(_shape).byteswap()
         outdat += ext_dat.tostring()
 
-        ext_hdu = pyfits.ImageHDU(data=ext_dat)
+        ext_hdu = fits.ImageHDU(data=ext_dat)
 
         rec = numpy.fromstring(dat[loc+data_size:loc+group_size], dtype=formats).byteswap()
         outdat += rec.tostring()
@@ -264,7 +263,7 @@ def byteswap(input,output=None,clobber=True):
     """
 
 #   global dat  # !!! (looks like this is a function missing its head)
-    cardLen = pyfits.Card.length
+    cardLen = fits.Card.length
 
     # input file(s) must be of the form *.??h and *.??d
     if input[-1] != 'h' or input[-4] != '.':
@@ -290,9 +289,9 @@ def byteswap(input,output=None,clobber=True):
         line = line[:8].upper() + line[8:]
         if line == end_card:
             break
-        cards.append(pyfits.Card('').fromstring(line))
+        cards.append(fits.Card('').fromstring(line))
 
-    phdr = pyfits.Header(pyfits.CardList(cards))
+    phdr = fits.Header(fits.CardList(cards))
     im.close()
 
     phdr.set('FILENAME', value=input, after='DATE')
@@ -372,12 +371,12 @@ def byteswap(input,output=None,clobber=True):
         cfmt = cols_pfmt[_type]+nrpt
 
         #print 'Column format for ',ptype,': ',cfmt,' with dtype of ',afmt
-        cols_dict[ptype] = pyfits.Column(name=ptype,format=cfmt,array=numpy.zeros(gcount,dtype=afmt))
+        cols_dict[ptype] = fits.Column(name=ptype,format=cfmt,array=numpy.zeros(gcount,dtype=afmt))
         cols.append(cols_dict[ptype]) # This keeps the columns in order
 
     _shape = _naxis[1:]
     _shape.reverse()
-    _code = pyfits.core.ImageHDU.NumCode[_bitpix]
+    _code = fits.ImageHDU.NumCode[_bitpix]
     _bscale = phdr.get('BSCALE', 1)
     _bzero = phdr.get('BZERO', 0)
     if phdr['DATATYPE'][:10] == 'UNSIGNED*2':
@@ -392,12 +391,14 @@ def byteswap(input,output=None,clobber=True):
             del phdr[i]
 
     # clean up other primary header keywords
-    phdr['SIMPLE']=pyfits.TRUE
-    phdr['GROUPS']=pyfits.FALSE
+    phdr['SIMPLE'] = True
+    phdr['GROUPS'] = False
     _after = 'NAXIS'
     if _naxis0 > 0:
         _after += `_naxis0`
-    phdr.set(key='EXTEND', value=pyfits.TRUE, comment="FITS dataset may contain extensions", after=_after)
+    phdr.set(keyword='EXTEND', value=True,
+             comment="FITS dataset may contain extensions",
+             after=_after)
 
     # Use copy-on-write for all data types since byteswap may be needed
     # in some platforms.
@@ -442,7 +443,6 @@ def byteswap(input,output=None,clobber=True):
                 errormsg += "===================================\n"
 
         arr_stack[k] = ext_dat
-        #ext_hdu = pyfits.ImageHDU(data=ext_dat)
 
         rec = numpy.fromstring(dat[loc+data_size:loc+group_size], dtype=formats)
 
@@ -468,16 +468,15 @@ def byteswap(input,output=None,clobber=True):
 
                 if i in bools:
                     if val:
-                        val = pyfits.TRUE
+                        val = True
                     else:
-                        val = pyfits.FALSE
-
+                        val = False
                 if i in floats:
                     # use fromstring, format in Card is deprecated in pyfits 0.9
                     _str = '%-8s= %20.13G / %s' % (key[i-1], val, comm[i-1])
-                    _card = pyfits.Card("").fromstring(_str)
+                    _card = fits.Card("").fromstring(_str)
                 else:
-                    _card = pyfits.Card(key=key[i-1], value=val, comment=comm[i-1])
+                    _card = fits.Card(keyword=key[i-1], value=val, comment=comm[i-1])
                 phdr.ascard.insert(phdr_indx+i, _card)
 
             # deal with bscale/bzero
@@ -487,11 +486,11 @@ def byteswap(input,output=None,clobber=True):
 
         #hdulist.append(ext_hdu)
     # Define new table based on Column definitions
-    ext_table = pyfits.new_table(cols,tbtype='TableHDU')
+    ext_table = fits.new_table(cols, tbtype='TableHDU')
     ext_table.header.set('EXTNAME', value=input+'.tab', after='TFIELDS')
     # Add column descriptions to header of table extension to match stwfits output
     for i in range(len(key)):
-        ext_table.header.ascard.append(pyfits.Card(key=key[i], value=comm[i]))
+        ext_table.header.ascard.append(fits.Card(keyword=key[i], value=comm[i]))
 
     if errormsg != "":
         errormsg += "===================================\n"
@@ -507,7 +506,7 @@ def byteswap(input,output=None,clobber=True):
 
     f1.close()
 
-    hdulist = pyfits.HDUList([pyfits.PrimaryHDU(header=phdr, data=arr_stack)])
+    hdulist = fits.HDUList([fits.PrimaryHDU(header=phdr, data=arr_stack)])
     hdulist.append(ext_table)
 
     return hdulist

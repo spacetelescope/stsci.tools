@@ -1,12 +1,8 @@
 from __future__ import division # confidence high
 
-import numerixenv
-numerixenv.check()
-
 import string, copy, os
 
-#import pyfits
-from astropy.io import fits as pyfits
+from astropy.io import fits
 import numpy as N
 from math import *
 
@@ -1040,7 +1036,7 @@ class WCSObject:
             else:
                 # Append header to existing file
                 wcs_append = True
-                oldhdu = pyfits.open(refname,mode='append')
+                oldhdu = fits.open(refname, mode='append')
                 for e in oldhdu:
                     if 'extname' in e.header and e.header['extname'] == 'WCS':
                         wcs_append = False
@@ -1059,7 +1055,7 @@ class WCSObject:
         """ Generate a WCS header object that can be used to
             populate a reference WCS HDU.
         """
-        hdu = pyfits.ImageHDU()
+        hdu = fits.ImageHDU()
         hdu.header['EXTNAME'] = 'WCS'
         hdu.header['EXTVER'] = 1
         # Now, update original image size information

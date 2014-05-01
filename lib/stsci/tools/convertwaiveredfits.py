@@ -68,7 +68,7 @@
     ==========
     waiveredObject: obj
         input object representing a waivered FITS
-        file; either a pyfits.HDUList object, a file
+        file; either a astropy.io.fits.HDUList object, a file
         object, or a file specification
 
     outputFileName : string
@@ -96,7 +96,7 @@
     Returns
     =======
     hduList
-        pyfits.HDUList (PyFITS multi-extension FITS object) containing converted output
+        fits.HDUList (PyFITS multi-extension FITS object) containing converted output
 
     Examples
     ========
@@ -120,9 +120,9 @@
     file out.fits; the returned HDUList is in multi-extension
     FITS format
 
-      >>> import pyfits
+      >>> from astropy.io import fits
       >>> import convertwaiveredfits
-      >>> inHdul = pyfits.open('u9zh010bm_c0f.fits')
+      >>> inHdul = fits.open('u9zh010bm_c0f.fits')
       >>> hdulist = convertwaiveredfits.convertwaiveredfits(inHdul)
 
     this will convert the waivered FITS file u9zh010bm_c0f.fits
@@ -145,8 +145,7 @@ import os
 import types
 import sys
 import string
-#import pyfits
-from astropy.io import fits as pyfits
+from astropy.io import fits
 #
 # -----------------------------------------------------------------------------
 # Function definitions
@@ -290,7 +289,7 @@ def _verify(waiveredHdul):
             #
             # The Primary HDU must have some data
             #
-            if isinstance(waiveredHdul[1], pyfits.TableHDU):
+            if isinstance(waiveredHdul[1], fits.TableHDU):
                 #
                 # The Alternate HDU must be a TableHDU
                 #
@@ -321,7 +320,7 @@ def toMultiExtensionFits(waiveredObject,
         Parameters:
 
           waiveredObject  input object representing a waivered FITS file;
-                          either a pyfits.HDUList object, a file object, or a
+                          either a astroyp.io.fits.HDUList object, a file object, or a
                           file specification
 
           outputFileName  file specification for the output file
@@ -347,7 +346,7 @@ def toMultiExtensionFits(waiveredObject,
                           file name
     """
 
-    if isinstance(waiveredObject,pyfits.HDUList):
+    if isinstance(waiveredObject, fits.HDUList):
         whdul = waiveredObject
         inputObjectDescription = "HDUList object"
     elif isinstance(waiveredObject, file) or \
@@ -357,7 +356,7 @@ def toMultiExtensionFits(waiveredObject,
         else:
             inputObjectDescription = "file " + waiveredObject
 
-        whdul = pyfits.open(waiveredObject)
+        whdul = fits.open(waiveredObject)
     else:
         raise TypeError, "Input object must be HDUList, file object, " + \
                          "or file name"
@@ -401,11 +400,11 @@ def toMultiExtensionFits(waiveredObject,
     #
     # Create the PrimaryHDU
     #
-    mPHdu = pyfits.PrimaryHDU(header=mPHeader)
+    mPHdu = fits.PrimaryHDU(header=mPHeader)
     #
     # Add the EXTEND card
     #
-    mPHdu.header.set('EXTEND', value=pyfits.TRUE, after='NAXIS')
+    mPHdu.header.set('EXTEND', value=True, after='NAXIS')
     #
     # Add the NEXTEND card.  There will be one extension
     # for each row in the wavered Fits file table HDU.
@@ -415,7 +414,7 @@ def toMultiExtensionFits(waiveredObject,
     #
     # Create the multi-extension file HDUList from the primary header
     #
-    mhdul = pyfits.HDUList([mPHdu])
+    mhdul = fits.HDUList([mPHdu])
     #
     # Create the extension HDUs for the multi-extension file.  There
     # will be one extension for each row in the wavered file's table.
@@ -435,7 +434,7 @@ def toMultiExtensionFits(waiveredObject,
         else:
             data = whdul[0].data[i]
 
-        mhdul.append(pyfits.ImageHDU(data))
+        mhdul.append(fits.ImageHDU(data))
         #
         # Add cards to the header for each keyword in the column
         # names of the secondary HDU table from the wavered file
@@ -446,9 +445,9 @@ def toMultiExtensionFits(waiveredObject,
                 # Handle logical values
                 #
                 if string.strip(whdul[1].data.field(keyword)[i]) == 'T':
-                    d = pyfits.TRUE
+                    d = True
                 else:
-                    d = pyfits.FALSE
+                    d = False
             elif format[0] == 'E':
                 #
                 # Handle floating point values
@@ -493,7 +492,7 @@ def toMultiExtensionFits(waiveredObject,
             #
             # Add the INHERIT card to the header.
             #
-            mhdul[i+1].header.set('INHERIT',pyfits.TRUE,
+            mhdul[i+1].header.set('INHERIT', True,
                                   'inherit the primary header',
                                   after='EXTVER')
             #
@@ -543,7 +542,7 @@ def convertwaiveredfits(waiveredObject,
         Parameters:
 
           waiveredObject  input object representing a waivered FITS file;
-                          either a pyfits.HDUList object, a file object, or a
+                          either a astropy.io.fits.HDUList object, a file object, or a
                           file specification
 
           outputFileName  file specification for the output file

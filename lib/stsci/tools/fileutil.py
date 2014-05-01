@@ -79,10 +79,9 @@ numerixenv.check()
 
 # Turn this on when stpyfits gets fixed (PyFITS Trac #28)
 try:
-    import stpyfits as pyfits
+    import stpyfits as fits
 except ImportError:
-    #import pyfits
-    from astropy.io import fits as pyfits
+    from astropy.io import fits
 import readgeis
 
 import string,os,types,shutil,copy, re, sys
@@ -226,7 +225,7 @@ def isFits(input):
     # Only check type of FITS file if filename ends in valid FITS string
     f = None
     fileclose = False
-    if isinstance(input, pyfits.HDUList):
+    if isinstance(input, fits.HDUList):
         isfits = True
         f = input
     else:
@@ -237,7 +236,7 @@ def isFits(input):
     if isfits:
         if not f:
             try:
-                f = pyfits.open(input,mode='readonly')
+                f = fits.open(input, mode='readonly')
                 fileclose = True
             except Exception, e:
                 if f is not None: f.close()
@@ -245,7 +244,7 @@ def isFits(input):
         data0 = f[0].data
         if data0 != None:
             try:
-                if isinstance(f[1],pyfits.pyfits.TableHDU):
+                if isinstance(f[1], fits.TableHDU):
                     fitstype = 'waiver'
             except IndexError:
                 fitstype = 'simple'
@@ -482,7 +481,7 @@ def getKeyword(filename,keyword,default=None,handle=None):
     else:
         # Use what the user provides, after insuring
         # that it is a proper PyFITS object.
-        if isinstance(handle, pyfits.HDUList):
+        if isinstance(handle, fits.HDUList):
             _fimg = handle
         else:
             raise ValueError,'Handle must be PyFITS object!'
@@ -543,7 +542,7 @@ def getHeader(filename,handle=None):
     else:
         # Use what the user provides, after insuring
         # that it is a proper PyFITS object.
-        if isinstance(handle,pyfits.HDUList):
+        if isinstance(handle, fits.HDUList):
             _fimg = handle
         else:
             raise ValueError,'Handle must be PyFITS object!'
@@ -557,9 +556,10 @@ def getHeader(filename,handle=None):
 
     if _extn > 0:
         # Append correct extension/chip/group header to PRIMARY...
-        for _card in getExtn(_fimg,_extn).header.ascard:
-            _hdr.ascard.append(_card)
-
+        #for _card in getExtn(_fimg,_extn).header.ascard:
+            #_hdr.ascard.append(_card)
+        for _card in getExtn(_fimg,_extn).header.cards:
+            _hdr.append(_card)
     if not handle:
         # Close file handle now...
         _fimg.close()
@@ -645,7 +645,7 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
     if isfits:
         if fitstype != 'waiver':
             # Open the FITS file
-            fimg = pyfits.open(_fname,mode=mode,memmap=memmap)
+            fimg = fits.open(_fname,mode=mode,memmap=memmap)
             return fimg
         else:
             import convertwaiveredfits
@@ -681,7 +681,7 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
                 # handle to output FITS image instead...
                 fimg.close()
                 del fimg
-                fimg = pyfits.open(fitsname,mode=mode,memmap=memmap)
+                fimg = fits.open(fitsname,mode=mode,memmap=memmap)
 
         # Return handle for use by user
         return fimg
@@ -725,7 +725,7 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
             # handle to output FITS image instead...
             fimg.close()
             del fimg
-            fimg = pyfits.open(fitsname,mode=mode,memmap=memmap)
+            fimg = fits.open(fitsname,mode=mode,memmap=memmap)
 
         # Return handle for use by user
         return fimg
@@ -753,7 +753,7 @@ def parseExtn(extn=None):
     """
     Parse a string representing a qualified fits extension name as in the
     output of parseFilename and return a tuple (str(extname), int(extver)),
-    which can be passed to pyfits functions using the 'ext' kw.
+    which can be passed to `astropy.io.fits` functions using the 'ext' kw.
     Default return is the first extension in a fits file.
 
     Examples
@@ -786,7 +786,7 @@ def countExtn(fimg,extname='SCI'):
     """
     closefits = False
     if isinstance(fimg,str):
-        fimg = pyfits.open(fimg)
+        fimg = fits.open(fimg)
         closefits = True
     n = 0
     for e in fimg:

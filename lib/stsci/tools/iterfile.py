@@ -5,14 +5,9 @@ License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 """
 from __future__ import division # confidence high
 
-import numerixenv
-numerixenv.check()
-
-#import pyfits
-from astropy.io import fits as pyfits
+from astropy.io import fits
 
 __version__ = '0.2 (06-October-2006)'
-
 
 
 class IterFitsFile(object):
@@ -67,7 +62,7 @@ class IterFitsFile(object):
         """ Opens the file for subsequent access. """
 
         if self.handle == None:
-            self.handle = pyfits.open(self.fname,mode='readonly')
+            self.handle = fits.open(self.fname, mode='readonly')
 
         if self.extn:
             if len(self.extn) == 1:

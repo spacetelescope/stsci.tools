@@ -11,7 +11,8 @@ from __future__ import division # confidence high
 import fileutil as fu
 import wcsutil
 #import pyfits
-from astropy.io import fits as pyfits
+import astropy
+from astropy.io import fits# as pyfits
 import numpy as N
 import os.path, time
 
@@ -60,7 +61,7 @@ def readASNTable(fname, output=None, prodonly=False):
     """
 
     try:
-        f = pyfits.open(fu.osfn(fname))
+        f = fits.open(fu.osfn(fname))
     except:
         raise IOError, "Can't open file %s\n" % fname
 
@@ -373,7 +374,7 @@ class ASNTable(dict):
             warningmsg += "#  is being replaced.                   #\n"
             warningmsg += "#                                       #\n"
             warningmsg += "#########################################\n\n"
-        fasn = pyfits.HDUList()
+        fasn = fits.HDUList()
 
         # Compute maximum length of MEMNAME for table column definition
         _maxlen = 0
@@ -403,17 +404,17 @@ class ASNTable(dict):
         scl = [self['members'][l]['scale'] for l in self['order']]
         scl.append(1.0)
 
-        memname = pyfits.Column(name='MEMNAME',format=namelen_str,array=N.char.array(mname))
-        memtype = pyfits.Column(name='MEMTYPE',format='14A',array=N.char.array(mtype))
-        memprsn = pyfits.Column(name='MEMPRSNT', format='L', array=N.array(mprsn).astype(N.uint8))
-        xoffset = pyfits.Column(name='XOFFSET', format='E', array=N.array(xoff))
-        yoffset = pyfits.Column(name='YOFFSET', format='E', array=N.array(yoff))
-        xdelta = pyfits.Column(name='XDELTA', format='E', array=N.array(xsh))
-        ydelta = pyfits.Column(name='YDELTA', format='E', array=N.array(ysh))
-        rotation = pyfits.Column(name='ROTATION', format='E', array=N.array(rot))
-        scale = pyfits.Column(name='SCALE', format='E', array=N.array(scl))
+        memname = fits.Column(name='MEMNAME',format=namelen_str,array=N.char.array(mname))
+        memtype = fits.Column(name='MEMTYPE',format='14A',array=N.char.array(mtype))
+        memprsn = fits.Column(name='MEMPRSNT', format='L', array=N.array(mprsn).astype(N.uint8))
+        xoffset = fits.Column(name='XOFFSET', format='E', array=N.array(xoff))
+        yoffset = fits.Column(name='YOFFSET', format='E', array=N.array(yoff))
+        xdelta = fits.Column(name='XDELTA', format='E', array=N.array(xsh))
+        ydelta = fits.Column(name='YDELTA', format='E', array=N.array(ysh))
+        rotation = fits.Column(name='ROTATION', format='E', array=N.array(rot))
+        scale = fits.Column(name='SCALE', format='E', array=N.array(scl))
 
-        hdu = pyfits.new_table([memname,memtype,memprsn,xoffset,yoffset,xdelta,ydelta,rotation,scale],nrows=len(mname))
+        hdu = fits.new_table([memname,memtype,memprsn,xoffset,yoffset,xdelta,ydelta,rotation,scale],nrows=len(mname))
         fasn.append(hdu)
         fasn.writeto(outfile, clobber=True)
         fasn.close()
@@ -422,7 +423,7 @@ class ASNTable(dict):
         if refimg != None:
             whdu = wcsutil.WCSObject(refimg)
             whdu.createReferenceWCS(outfile,overwrite=False)
-            ftab = pyfits.open(outfile)
+            ftab = fits.open(outfile)
             ftab['primary'].header['refimage'] = outfile+"[wcs]"
             ftab.close()
         del whdu
@@ -430,35 +431,35 @@ class ASNTable(dict):
 
 
     def buildPrimary(self, fasn, output=None):
-        _prihdr = pyfits.Header([pyfits.Card('SIMPLE', pyfits.TRUE,'Fits standard'),
-                    pyfits.Card('BITPIX  ',                    16 ,' Bits per pixel'),
-                    pyfits.Card('NAXIS   ',                     0 ,' Number of axes'),
-                    pyfits.Card('ORIGIN  ',  'NOAO-IRAF FITS Image Kernel July 1999' ,'FITS file originator'),
-                    pyfits.Card('IRAF-TLM',  '18:26:13 (27/03/2000)' ,' Time of last modification'),
-                    pyfits.Card('EXTEND  ',pyfits.TRUE ,' File may contain standard extensions'),
-                    pyfits.Card('NEXTEND ',                     1 ,' Number of standard extensions'),
-                    pyfits.Card('DATE    ',  '2001-02-14T20:07:57',' date this file was written (yyyy-mm-dd)'),
-                    pyfits.Card('FILENAME',  'hr_box_asn.fits'            ,' name of file'),
-                    pyfits.Card('FILETYPE',  'ASN_TABLE'          ,' type of data found in data file'),
-                    pyfits.Card('TELESCOP',  'HST'                ,' telescope used to acquire data'),
-                    pyfits.Card('INSTRUME',  'ACS   '             ,' identifier for instrument used to acquire data'),
-                    pyfits.Card('EQUINOX ',                2000.0 ,' equinox of celestial coord. system'),
-                    pyfits.Card('ROOTNAME',  'hr_box  '              ,' rootname of the observation set'),
-                    pyfits.Card('PRIMESI ',  'ACS   '             ,' instrument designated as prime'),
-                    pyfits.Card('TARGNAME',  'SIM-DITHER'                     ,'proposer\'s target name'),
-                    pyfits.Card('RA_TARG ',                    0. ,' right ascension of the target (deg) (J2000)'),
-                    pyfits.Card('DEC_TARG',                    0. ,' declination of the target (deg) (J2000)'),
-                    pyfits.Card('DETECTOR',  'HRC     '           ,' detector in use: WFC, HRC, or SBC'),
-                    pyfits.Card('ASN_ID  ',  'hr_box  '           ,' unique identifier assigned to association'),
-                    pyfits.Card('ASN_TAB ',  'hr_box_asn.fits'         ,' name of the association table')])
+        _prihdr = fits.Header([fits.Card('SIMPLE', True, 'Fits standard'),
+                    fits.Card('BITPIX  ',                    16 ,' Bits per pixel'),
+                    fits.Card('NAXIS   ',                     0 ,' Number of axes'),
+                    fits.Card('ORIGIN  ',  'NOAO-IRAF FITS Image Kernel July 1999' ,'FITS file originator'),
+                    fits.Card('IRAF-TLM',  '18:26:13 (27/03/2000)' ,' Time of last modification'),
+                    fits.Card('EXTEND  ', True ,' File may contain standard extensions'),
+                    fits.Card('NEXTEND ',                     1 ,' Number of standard extensions'),
+                    fits.Card('DATE    ',  '2001-02-14T20:07:57',' date this file was written (yyyy-mm-dd)'),
+                    fits.Card('FILENAME',  'hr_box_asn.fits'            ,' name of file'),
+                    fits.Card('FILETYPE',  'ASN_TABLE'          ,' type of data found in data file'),
+                    fits.Card('TELESCOP',  'HST'                ,' telescope used to acquire data'),
+                    fits.Card('INSTRUME',  'ACS   '             ,' identifier for instrument used to acquire data'),
+                    fits.Card('EQUINOX ',                2000.0 ,' equinox of celestial coord. system'),
+                    fits.Card('ROOTNAME',  'hr_box  '              ,' rootname of the observation set'),
+                    fits.Card('PRIMESI ',  'ACS   '             ,' instrument designated as prime'),
+                    fits.Card('TARGNAME',  'SIM-DITHER'                     ,'proposer\'s target name'),
+                    fits.Card('RA_TARG ',                    0. ,' right ascension of the target (deg) (J2000)'),
+                    fits.Card('DEC_TARG',                    0. ,' declination of the target (deg) (J2000)'),
+                    fits.Card('DETECTOR',  'HRC     '           ,' detector in use: WFC, HRC, or SBC'),
+                    fits.Card('ASN_ID  ',  'hr_box  '           ,' unique identifier assigned to association'),
+                    fits.Card('ASN_TAB ',  'hr_box_asn.fits'         ,' name of the association table')])
 
         # Format time values for keywords IRAF-TLM, and DATE
         _ltime = time.localtime(time.time())
         tlm_str = time.strftime('%H:%M:%S (%d/%m/%Y)',_ltime)
         date_str = time.strftime('%Y-%m-%dT%H:%M:%S',_ltime)
-        origin_str = 'PyFITS Version '+pyfits.__version__
+        origin_str = 'FITS Version '+ astropy.__version__
         # Build PRIMARY HDU
-        _hdu = pyfits.PrimaryHDU(header=_prihdr)
+        _hdu = fits.PrimaryHDU(header=_prihdr)
         fasn.append(_hdu)
 
         newhdr = fasn['PRIMARY'].header
@@ -468,7 +469,7 @@ class ASNTable(dict):
         fullname = fu.buildRootname(mem0name,ext=['_flt.fits', '_c0h.fits', '_c0f.fits'])
         try:
             # Open img1 to obtain keyword values for updating template
-            fimg1 = pyfits.open(fullname)
+            fimg1 = fits.open(fullname)
         except:
             print 'File %s does not exist' % fullname
 

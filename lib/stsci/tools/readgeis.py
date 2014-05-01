@@ -73,8 +73,7 @@ from __future__ import division # confidence high
 __version__ = "2.2 (18 Feb, 2011), \xa9 AURA"
 
 import os, sys, string
-#import pyfits
-from astropy.io import fits as pyfits
+from astropy.io import fits
 import numpy
 from numpy import memmap
 
@@ -95,7 +94,7 @@ def stsci(hdulist):
             hdulist[i].header['EXPNAME'] = (rootname, "9 character exposure identifier")
             hdulist[i].header['EXTVER']= (i, "extension version number")
             hdulist[i].header['EXTNAME'] = (filetype, "extension name")
-            hdulist[i].header['INHERIT'] = (pyfits.TRUE, "inherit the primary header")
+            hdulist[i].header['INHERIT'] = (True, "inherit the primary header")
             hdulist[i].header['ROOTNAME'] = (rootname, "rootname of the observation set")
 
 
@@ -118,7 +117,7 @@ def readgeis(input):
     """
 
     global dat
-    cardLen = pyfits.Card.length
+    cardLen = fits.Card.length
 
     # input file(s) must be of the form *.??h and *.??d
     if input[-1] != 'h' or input[-4] != '.':
@@ -145,9 +144,9 @@ def readgeis(input):
         line = line[:8].upper() + line[8:]
         if line == end_card:
             break
-        cards.append(pyfits.Card('').fromstring(line))
+        cards.append(fits.Card('').fromstring(line))
 
-    phdr = pyfits.Header(pyfits.CardList(cards))
+    phdr = fits.Header(fits.CardList(cards))
     im.close()
 
     _naxis0 = phdr.get('NAXIS', 0)
@@ -204,7 +203,7 @@ def readgeis(input):
 
     _shape = _naxis[1:]
     _shape.reverse()
-    _code = pyfits.core.ImageHDU.NumCode[_bitpix]
+    _code = fits.core.ImageHDU.NumCode[_bitpix]
     _bscale = phdr.get('BSCALE', 1)
     _bzero = phdr.get('BZERO', 0)
     if phdr['DATATYPE'][:10] == 'UNSIGNED*2':
@@ -219,16 +218,16 @@ def readgeis(input):
             del phdr[i]
 
     # clean up other primary header keywords
-    phdr['SIMPLE']=pyfits.TRUE
-    phdr['BITPIX']=16
-    phdr['GROUPS']=pyfits.FALSE
+    phdr['SIMPLE'] = True
+    phdr['BITPIX'] = 16
+    phdr['GROUPS'] = False
     _after = 'NAXIS'
     if _naxis0 > 0:
         _after += `_naxis0`
-    phdr.set(key='EXTEND', value=pyfits.TRUE, comment="FITS dataset may contain extensions", after=_after)
+    phdr.set(key='EXTEND', value=True, comment="FITS dataset may contain extensions", after=_after)
     phdr.set(key='NEXTEND', value=gcount, comment="Number of standard extensions")
 
-    hdulist = pyfits.HDUList([pyfits.PrimaryHDU(header=phdr, data=None)])
+    hdulist = fits.HDUList([fits.PrimaryHDU(header=phdr, data=None)])
 
     # Use copy-on-write for all data types since byteswap may be needed
     # in some platforms.
@@ -270,7 +269,7 @@ def readgeis(input):
                 errormsg += "=  with maximum bitvalues.        =\n"
                 errormsg += "===================================\n"
 
-        ext_hdu = pyfits.ImageHDU(data=ext_dat)
+        ext_hdu = fits.ImageHDU(data=ext_dat)
 
         rec = numpy.fromstring(dat[loc+data_size:loc+group_size], dtype=formats)
 
@@ -283,16 +282,15 @@ def readgeis(input):
 
             if i in bools:
                 if val:
-                    val = pyfits.TRUE
+                    val = True
                 else:
-                    val = pyfits.FALSE
-
+                    val = False
             if i in floats:
                 # use fromstring, format in Card is deprecated in pyfits 0.9
                 _str = '%-8s= %20.7G / %s' % (key[i-1], val, comm[i-1])
-                _card = pyfits.Card("").fromstring(_str)
+                _card = fits.Card("").fromstring(_str)
             else:
-                _card = pyfits.Card(key=key[i-1], value=val, comment=comm[i-1])
+                _card = fits.Card(keyword=key[i-1], value=val, comment=comm[i-1])
             ext_hdu.header.ascard.append(_card)
 
         # deal with bscale/bzero
