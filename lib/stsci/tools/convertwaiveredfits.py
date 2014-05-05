@@ -385,7 +385,7 @@ def toMultiExtensionFits(waiveredObject,
         # the keyword, not all of the cards
         #
         if keyword in mPHeader:
-            del mPHeader[mPHeader.ascard.index_of(keyword)]
+            del mPHeader[mPHeader.index(keyword)]
     #
     # Get the columns from the secondary HDU table
     #

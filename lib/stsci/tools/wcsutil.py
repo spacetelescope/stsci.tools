@@ -963,8 +963,8 @@ class WCSObject:
             if _dkey in _extn.header:
 
                 # Extract any comment string for the keyword as well
-                _indx_key = _extn.header.ascard.index_of(_dkey)
-                _full_key = _extn.header.ascard[_indx_key]
+                _indx_key = _extn.header.indexf(_dkey)
+                _full_key = _extn.header.cards[_indx_key]
                 if not quiet:
                     print 'updating ',key,' with value of: ',self.orig_wcs[key]
                 _extn.header[key] = (self.orig_wcs[key], _full_key.comment)

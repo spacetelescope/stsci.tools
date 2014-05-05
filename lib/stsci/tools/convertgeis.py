@@ -137,7 +137,7 @@ def convert(input):
     im.close()
 
     # Determine starting point for adding Group Parameter Block keywords to Primary header
-    phdr_indx = phdr.ascard.index_of('PSIZE')
+    phdr_indx = phdr.index('PSIZE')
 
     _naxis0 = phdr.get('NAXIS', 0)
     _naxis = [phdr['NAXIS'+`j`] for j in range(1, _naxis0+1)]
@@ -166,7 +166,7 @@ def convert(input):
     cols_dict = {} # provides name access to Column defs
     _range = range(1, pcount+1)
     key = [phdr['PTYPE'+`j`] for j in _range]
-    comm = [phdr.ascard['PTYPE'+`j`].comment for j in _range]
+    comm = [phdr.cards['PTYPE'+`j`].comment for j in _range]
 
     # delete group parameter definition header keywords
     _list = ['PTYPE'+`j` for j in _range] + \
@@ -226,8 +226,8 @@ def convert(input):
         _uint16 = 0
 
     # delete from the end, so it will not conflict with previous delete
-    for i in range(len(phdr.ascard)-1, -1, -1):
-        if phdr.ascard[i].key in _list:
+    for i in range(len(phdr)-1, -1, -1):
+        if phdr.cards[i].keyword in _list:
             del phdr[i]
 
     # clean up other primary header keywords
@@ -317,7 +317,7 @@ def convert(input):
                     _card = fits.Card("").fromstring(_str)
                 else:
                     _card = fits.Card(key=key[i-1], value=val, comment=comm[i-1])
-                phdr.ascard.insert(phdr_indx+i, _card)
+                phdr.insert(phdr_indx+i, _card)
 
             # deal with bscale/bzero
             if (_bscale != 1 or _bzero != 0):
@@ -330,7 +330,7 @@ def convert(input):
     ext_table.header.set('EXTNAME', value=input+'.tab', after='TFIELDS')
     # Add column descriptions to header of table extension to match stwfits output
     for i in range(len(key)):
-        ext_table.header.ascard.append(fits.Card(key=key[i], value=comm[i]))
+        ext_table.header.append(fits.Card(keyword=key[i], value=comm[i]))
 
     if errormsg != "":
         errormsg += "===================================\n"

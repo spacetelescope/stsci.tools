@@ -174,7 +174,7 @@ def readgeis(input):
     floats = []
     _range = range(1, pcount+1)
     key = [phdr['PTYPE'+`j`] for j in _range]
-    comm = [phdr.ascard['PTYPE'+`j`].comment for j in _range]
+    comm = [phdr.cards['PTYPE'+`j`].comment for j in _range]
 
     # delete group parameter definition header keywords
     _list = ['PTYPE'+`j` for j in _range] + \
@@ -213,8 +213,8 @@ def readgeis(input):
         _uint16 = 0
 
     # delete from the end, so it will not conflict with previous delete
-    for i in range(len(phdr.ascard)-1, -1, -1):
-        if phdr.ascard[i].key in _list:
+    for i in range(len(phdr)-1, -1, -1):
+        if phdr.cards[i].keyword in _list:
             del phdr[i]
 
     # clean up other primary header keywords
@@ -291,7 +291,7 @@ def readgeis(input):
                 _card = fits.Card("").fromstring(_str)
             else:
                 _card = fits.Card(keyword=key[i-1], value=val, comment=comm[i-1])
-            ext_hdu.header.ascard.append(_card)
+            ext_hdu.header.append(_card)
 
         # deal with bscale/bzero
         if (_bscale != 1 or _bzero != 0):
