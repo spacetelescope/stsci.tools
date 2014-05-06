@@ -241,7 +241,7 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
 
     def update_header(self):
         if (not self._modified and not self._header._modified and
-            (self._data_loaded and self.shape == self.data.shape)):
+            (self._has_data and self.shape == self.data.shape)):
             # Not likely that anything needs updating
             return
 
