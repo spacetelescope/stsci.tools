@@ -71,7 +71,7 @@ IRAF compatibility functions (abbreviated list)::
     access(filename)
         Returns true if file exists, where filename can include IRAF variables
 """
-from __future__ import division # confidence high
+from __future__ import division  # confidence high
 
 from . import numerixenv
 numerixenv.check()
@@ -85,7 +85,6 @@ import copy
 import os
 import re
 import shutil
-import string
 import sys
 
 import time as _time
@@ -352,7 +351,7 @@ def getFilterNames(header,filternames=None):
             _filter_values.append(header[_key])
 
     # Return the comma-separated list
-    return string.join(_filter_values,',')
+    return ','.join(_filter_values)
 
 
 def buildNewRootname(filename,extn=None,extlist=None):
@@ -451,7 +450,7 @@ def buildRootname(filename,ext=None):
     # info to build one...
     if rootname == None and ext != None:
         # Check to see if we have a full filename to start with...
-        _indx = string.find(froot,'.')
+        _indx = froot.find('.')
         if _indx > 0:
             rootname = froot[:_indx]+ext[0]
         else:
@@ -470,7 +469,7 @@ def getKeyword(filename,keyword,default=None,handle=None):
     It returns the value as a string.
     """
     # Insure that there is at least 1 extension specified...
-    if string.find(filename,'[') < 0:
+    if filename.find('[') < 0:
         filename += '[0]'
 
     _fname,_extn = parseFilename(filename)
@@ -909,7 +908,6 @@ def findFile(input):
 
     found = no
     for name in flist:
-        #if not string.find(name,_fname):
         if name == _root:
             # Check to see if given extension, if any, exists
             if _extn == None:
@@ -951,19 +949,7 @@ def checkFileExists(filename,directory=None):
         or specified directory. Default is current directory.
         Returns 1 if it exists, 0 if not found.
     """
-    """
-    # Original SLOW implementation
-    if directory == None or directory == '': directory = '.'
-    _ldir = os.listdir(directory)
 
-    _exist = 0
-    # for each file in directory...
-    for file in _ldir:
-        # compare filename with file
-        if string.find(file,filename) > -1:
-            _exist = 1
-            break
-    """
     if directory is not None:
         fname = os.path.join(directory,filename)
     else:
@@ -1057,8 +1043,8 @@ def findKeywordExtn(ft,keyword,value=None):
         if keyword in hdr:
             if value != None:
                 # If it does, then does the value match the desired value
-                # MUST use 'string.strip' to match against any input string!
-                if string.strip(hdr[keyword]) == value:
+                # MUST use 'str.strip' to match against any input string!
+                if hdr[keyword].strip() == value:
                     extnum = i
                     break
             else:
@@ -1079,7 +1065,7 @@ def findExtname(fimg,extname,extver=None):
     for chip in fimg:
         hdr = chip.header
         if 'EXTNAME' in hdr:
-            if string.strip(hdr['EXTNAME']) == string.upper(extname):
+            if hdr['EXTNAME'].strip() == extname.upper():
                 if extver == None or hdr['EXTVER'] == extver:
                     extnum = i
                     break
@@ -1090,9 +1076,9 @@ def rAsciiLine(ifile):
 
     """ Returns the next non-blank line in an ASCII file. """
 
-    _line = string.strip(ifile.readline())
+    _line = ifile.readline().strip()
     while len(_line) == 0:
-        _line = string.strip(ifile.readline())
+        _line = ifile.readline().strip()
     return _line
 
 #######################################################
@@ -1238,12 +1224,11 @@ def osfn(filename):
     if filename is None: return filename
 
     ename = Expand(filename)
-    dlist = ename.split(os.sep)
-    dlist = map(string.strip, dlist)
+    dlist = [part.strip() for part in ename.split(os.sep)]
     if len(dlist)==1 and dlist[0] not in [os.curdir,os.pardir]:
         return dlist[0]
 
-    # I use string.join instead of os.path.join here because
+    # I use str.join instead of os.path.join here because
     # os.path.join("","") returns "" instead of "/"
 
     epath = os.sep.join(dlist)
