@@ -103,8 +103,6 @@ EXTLIST =  ['_crj.fits','_flt.fits','_flc.fits','_sfl.fits','_cal.fits','_raw.fi
 
 BLANK_ASNDICT = {'output':None,'order':[],'members':{'abshift':no,'dshift':no}}
 
-__version__ = '1.3.3 (1-Feb-2010)'
-
 def help():
     print __doc__
 
