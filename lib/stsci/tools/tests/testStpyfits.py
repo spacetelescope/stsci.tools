@@ -207,8 +207,8 @@ class TestStpyfitsFunctions(FitsTestCase):
             [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'int32', ''),
              (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')])
         assert_equal(fits.info(self.temp('new1.fits'), output=False),
-            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), 'uint8', ''),
-             (1, '', 'ImageHDU', 8, (), 'uint8', '')])
+            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), '', ''),
+             (1, '', 'ImageHDU', 8, (), '', '')])
 
         hdul5 = stpyfits.open(self.temp('new.fits'))
         hdul6 = fits.open(self.temp('new1.fits'))
@@ -267,8 +267,8 @@ class TestStpyfitsFunctions(FitsTestCase):
         stpyfits.update(self.temp('new.fits'), d, hdu.header, 1)
 
         assert_equal(fits.info(self.temp('new.fits'), output=False),
-            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), 'int32', ''),
-             (1, '', 'ImageHDU', 8, (), 'int32', '')])
+            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), '', ''),
+             (1, '', 'ImageHDU', 8, (), '', '')])
         assert_equal(stpyfits.info(self.temp('new.fits'), output=False),
             [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'int32', ''),
              (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')])
@@ -378,8 +378,8 @@ class TestStpyfitsFunctions(FitsTestCase):
              (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')])
 
         assert_equal(fits.info(self.temp('new.fits'), output=False),
-            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), 'int32', ''),
-             (1, '', 'ImageHDU', 8, (), 'int32', '')])
+            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), '', ''),
+             (1, '', 'ImageHDU', 8, (), '', '')])
 
         hdul1 = stpyfits.open(self.temp('new.fits'))
         hdul2 = fits.open(self.temp('new.fits'))
@@ -500,8 +500,8 @@ class TestStpyfitsFunctions(FitsTestCase):
             [(0, 'PRIMARY', 'PrimaryHDU', 6, (10,), 'int32', ''),
              (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')])
         assert_equal(fits.info(self.temp('new.fits'), output=False),
-            [(0, 'PRIMARY', 'PrimaryHDU', 6, (), 'int32', ''),
-             (1, '', 'ImageHDU', 8, (), 'int32', '')])
+            [(0, 'PRIMARY', 'PrimaryHDU', 6, (), '', ''),
+             (1, '', 'ImageHDU', 8, (), '', '')])
 
         hdul1 = stpyfits.open(self.temp('new.fits'))
         hdul2 = fits.open(self.temp('new.fits'))
@@ -537,8 +537,8 @@ class TestStpyfitsFunctions(FitsTestCase):
             [(0, 'PRIMARY', 'PrimaryHDU', 6, (15,), 'int32', ''),
              (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')])
         assert_equal(fits.info(self.temp('new.fits'), output=False),
-            [(0, 'PRIMARY', 'PrimaryHDU', 6, (), 'int32', ''),
-             (1, '', 'ImageHDU', 8, (), 'int32', '')])
+            [(0, 'PRIMARY', 'PrimaryHDU', 6, (), '', ''),
+             (1, '', 'ImageHDU', 8, (), '', '')])
 
         hdul1 = stpyfits.open(self.temp('new.fits'))
         hdul2 = fits.open(self.temp('new.fits'))
