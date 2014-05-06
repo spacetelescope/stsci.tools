@@ -230,8 +230,8 @@ def isFits(input):
         An ``(isfits, fitstype)`` tuple.  The values of ``isfits`` and
         ``fitstype`` are specified as:
 
-        ``isfits``: True|False
-        ``fitstype``: if True, one of 'waiver', 'mef', 'simple'; if False, None
+         - ``isfits``: True|False
+         - ``fitstype``: if True, one of 'waiver', 'mef', 'simple'; if False, None
 
     Notes
     -----
@@ -434,6 +434,8 @@ def buildRootname(filename, ext=None):
 
     Examples
     --------
+
+    ::
 
         >>> rootname = buildRootname(filename, ext=['_dth.fits'])
 
@@ -816,11 +818,13 @@ def parseExtn(extn=None):
     Examples
     --------
 
-        >>>parseExtn('sci,2')
+    ::
+
+        >>> parseExtn('sci, 2')
         ('sci', 2)
-        >>>parseExtn('2')
+        >>> parseExtn('2')
         ('', 2)
-        >>>parseExtn('sci')
+        >>> parseExtn('sci')
         ('sci', 1)
 
     """
