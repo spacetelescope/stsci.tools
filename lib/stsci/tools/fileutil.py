@@ -230,16 +230,14 @@ def isFits(input):
         An ``(isfits, fitstype)`` tuple.  The values of ``isfits`` and
         ``fitstype`` are specified as:
 
-            isfits - True|False
-            fitstype - if True, one of 'waiver', 'mef', 'simple'
-                       if False, None
+        ``isfits``: True|False
+        ``fitstype``: if True, one of 'waiver', 'mef', 'simple'; if False, None
 
     Notes
     -----
     Input images which do not have a valid FITS filename will automatically
     result in a return of (False, None).
 
-    For files with
     In the case that the input has a valid FITS filename but runs into some
     error upon opening, this routine will raise that exception for the calling
     routine/user to handle.
@@ -434,8 +432,8 @@ def buildRootname(filename, ext=None):
     Any user supplied extensions to use for searching for file need to be
     provided as a list of extensions.
 
-    Example
-    -------
+    Examples
+    --------
 
         >>> rootname = buildRootname(filename, ext=['_dth.fits'])
 
