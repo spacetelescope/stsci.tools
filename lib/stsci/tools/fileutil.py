@@ -73,22 +73,24 @@ IRAF compatibility functions (abbreviated list)::
 """
 from __future__ import division # confidence high
 
-import numerixenv
+from . import numerixenv
 numerixenv.check()
 
 
-# Turn this on when stpyfits gets fixed (PyFITS Trac #28)
-try:
-    import stpyfits as fits
-except ImportError:
-    from astropy.io import fits
-import readgeis
+from . import stpyfits as fits
+from . import readgeis
 
-import string,os,types,shutil,copy, re, sys
-import calendar, datetime
-import numpy as np
+import datetime
+import copy
+import os
+import re
+import shutil
+import string
+import sys
+
 import time as _time
 
+import numpy as np
 # Environment variable handling - based on iraffunctions.py
 # define INDEF, yes, no, EOF, Verbose, userIrafHome
 
