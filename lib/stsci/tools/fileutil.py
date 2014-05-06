@@ -1,4 +1,4 @@
-""" fileutil.py -- General file functions
+"""fileutil.py -- General file functions
 
 These were initially designed for use with PyDrizzle.
 These functions only rely on booleans 'yes' and 'no', PyFITS and readgeis.
@@ -71,14 +71,15 @@ IRAF compatibility functions (abbreviated list)::
     access(filename)
         Returns true if file exists, where filename can include IRAF variables
 """
+
 from __future__ import division  # confidence high
 
 from . import numerixenv
 numerixenv.check()
 
-
 from . import stpyfits as fits
 from . import readgeis
+from . import convertwaiveredfits
 
 import datetime
 import copy
@@ -100,12 +101,24 @@ no = False
 # List of supported default file types
 # It will look for these file types by default
 # when trying to recognize input rootnames.
-EXTLIST =  ['_crj.fits','_flt.fits','_flc.fits','_sfl.fits','_cal.fits','_raw.fits','.c0h','.hhh','_c0h.fits', '_c0f.fits', '_c1f.fits','.fits']
+EXTLIST =  ['_crj.fits', '_flt.fits', '_flc.fits', '_sfl.fits', '_cal.fits',
+            '_raw.fits', '.c0h', '.hhh', '_c0h.fits', '_c0f.fits', '_c1f.fits',
+            '.fits']
 
-BLANK_ASNDICT = {'output':None,'order':[],'members':{'abshift':no,'dshift':no}}
+
+BLANK_ASNDICT = {
+    'output': None,
+    'order': [],
+    'members': {
+        'abshift': no,
+        'dshift': no
+    }
+}
+
 
 def help():
     print __doc__
+
 
 #################
 #
@@ -117,94 +130,109 @@ def help():
 def DEGTORAD(deg):
     return (deg * np.pi / 180.)
 
+
 def RADTODEG(rad):
     return (rad * 180. / np.pi)
 
+
 def DIVMOD(num,val):
-    if isinstance(num,np.ndarray):
+    if isinstance(num, np.ndarray):
     # Treat number as numpy object
-        _num = np.remainder(num,val)
+        _num = np.remainder(num, val)
     else:
-        _num = divmod(num,val)[1]
+        _num = divmod(num, val)[1]
     return _num
 
+
 def getLTime():
-    """ Returns a formatted string with the current local time."""
+    """Returns a formatted string with the current local time."""
+
     _ltime = _time.localtime(_time.time())
-    tlm_str = _time.strftime('%H:%M:%S (%d/%m/%Y)',_ltime)
+    tlm_str = _time.strftime('%H:%M:%S (%d/%m/%Y)', _ltime)
     return tlm_str
 
+
 def getDate():
-    """ Returns a formatted string with the current date."""
+    """Returns a formatted string with the current date."""
+
     _ltime = _time.localtime(_time.time())
     date_str = _time.strftime('%Y-%m-%dT%H:%M:%S',_ltime)
 
     return date_str
 
-def convertDate(date):
-    """ Convert DATE string into a decimal year.
-    """
-    d,t = date.split('T')
-    return decimal_date(d,timeobs=t)
 
-def decimal_date(dateobs,timeobs=None):
-    """ Convert DATE-OBS (and optional TIME-OBS) into a decimal year.
-    """
-    year,month,day = dateobs.split('-')
+def convertDate(date):
+    """Convert DATE string into a decimal year."""
+
+    d, t = date.split('T')
+    return decimal_date(d, timeobs=t)
+
+
+def decimal_date(dateobs, timeobs=None):
+    """Convert DATE-OBS (and optional TIME-OBS) into a decimal year."""
+
+    year, month, day = dateobs.split('-')
     if timeobs is not None:
-        hr,min,sec = timeobs.split(':')
+        hr, min, sec = timeobs.split(':')
     else:
-        hr,min,sec = 0,0,0
-    rdate = datetime.datetime(int(year),int(month),int(day),int(hr),int(min),int(sec))
-    dday = (float(rdate.strftime("%j")) + rdate.hour/24.0 + rdate.minute/(60.*24) + rdate.second/(3600*24.))/365.25
+        hr, min, sec = 0, 0, 0
+
+    rdate = datetime.datetime(int(year), int(month), int(day), int(hr),
+                              int(min), int(sec))
+    dday = (float(rdate.strftime("%j")) + rdate.hour / 24.0 +
+            rdate.minute / (60. * 24) + rdate.second / (3600 * 24.)) / 365.25
     ddate = int(year) + dday
 
     return ddate
 
+
 def interpretDQvalue(input):
-    """ Converts an integer 'input' into its component bit values as a list of
-        power of 2 integers.
-        For example, the bit value 1027 would return [1,2,1024]
+    """
+    Converts an integer 'input' into its component bit values as a list of
+    power of 2 integers.
+
+    For example, the bit value 1027 would return [1, 2, 1024]
     """
 
-    nbits=16
+    nbits = 16
     # We will only support integer values up to 2**128
-    for iexp in [16,32,64,128]:
+    for iexp in [16, 32, 64, 128]:
         # Find out whether the input value is less than 2**iexp
-        if (input // (2**iexp)) == 0:
+        if (input // (2 ** iexp)) == 0:
             # when it finally is, we have identified how many bits can be used to
             # describe this input bitvalue
             nbits = iexp
             break
 
     # Find out how 'dtype' values are described on this machine
-    a = np.zeros(1,dtype='int16')
+    a = np.zeros(1, dtype='int16')
     atype_descr = a.dtype.descr[0][1]
     # Use this description to build the description we need for our input integer
-    dtype_str = atype_descr[:2]+str(nbits//8)
-    result = np.zeros(nbits+1,dtype=dtype_str)
+    dtype_str = atype_descr[:2] + str(nbits // 8)
+    result = np.zeros(nbits + 1, dtype=dtype_str)
 
     # For each bit, determine whether it has been set in the input value or not
-    for n in range(nbits+1):
-        i = 2**n
+    for n in range(nbits + 1):
+        i = 2 ** n
         if input & i > 0:
             # record which bit has been set as the power-of-2 integer
             result[n] = i
 
     # Return the non-zero unique values as a Python list
-    return np.delete(np.unique(result),0).tolist()
+    return np.delete(np.unique(result), 0).tolist()
 
 
 def isFits(input):
     """
     Returns
     --------
-    isFits: a tuple (isfits, fitstype)
-        The values of `isfits` and `fitstype` are specified as::
+    isFits: tuple
+        An ``(isfits, fitstype)`` tuple.  The values of ``isfits`` and
+        ``fitstype`` are specified as:
 
             isfits - True|False
             fitstype - if True, one of 'waiver', 'mef', 'simple'
-               if False, None
+                       if False, None
 
     Notes
     -----
@@ -215,11 +243,11 @@ def isFits(input):
     In the case that the input has a valid FITS filename but runs into some
     error upon opening, this routine will raise that exception for the calling
     routine/user to handle.
-
     """
+
     isfits = False
     fitstype = None
-    names = ['fits','fit', 'FITS','FIT']
+    names = ['fits', 'fit', 'FITS', 'FIT']
     #determine if input is a fits file based on extension
     # Only check type of FITS file if filename ends in valid FITS string
     f = None
@@ -238,10 +266,11 @@ def isFits(input):
                 f = fits.open(input, mode='readonly')
                 fileclose = True
             except Exception, e:
-                if f is not None: f.close()
+                if f is not None:
+                    f.close()
                 raise
         data0 = f[0].data
-        if data0 != None:
+        if data0 is not None:
             try:
                 if isinstance(f[1], fits.TableHDU):
                     fitstype = 'waiver'
@@ -258,11 +287,12 @@ def isFits(input):
 
 def buildRotMatrix(theta):
     _theta = DEGTORAD(theta)
-    _mrot = np.zeros(shape=(2,2),dtype=np.float64)
-    _mrot[0] = (np.cos(_theta),np.sin(_theta))
-    _mrot[1] = (-np.sin(_theta),np.cos(_theta))
+    _mrot = np.zeros(shape=(2,2), dtype=np.float64)
+    _mrot[0] = (np.cos(_theta), np.sin(_theta))
+    _mrot[1] = (-np.sin(_theta), np.cos(_theta))
 
     return _mrot
+
 
 #################
 #
@@ -272,22 +302,25 @@ def buildRotMatrix(theta):
 #
 #################
 def verifyWriteMode(files):
-    """ Checks whether files are writable. It is up to the
-        calling routine to raise an Exception, if desired.
-
-        This function returns True, if all files are writable
-        and False, if any are not writable.  In addition, for
-        all files found to not be writable, it will print out
-        the list of names of affected files.
     """
+    Checks whether files are writable. It is up to the calling routine to raise
+    an Exception, if desired.
+
+    This function returns True, if all files are writable and False, if any are
+    not writable.  In addition, for all files found to not be writable, it will
+    print out the list of names of affected files.
+    """
+
     # Start by insuring that input is a list of filenames,
     # if only a single filename has been given as input,
     # convert it to a list with len == 1.
-    if not isinstance(files, list): files = [files]
+    if not isinstance(files, list):
+        files = [files]
 
     # Keep track of the name of each file which is not writable
     not_writable = []
     writable = True
+
     # Check each file in input list
     for fname in files:
         try:
@@ -297,19 +330,20 @@ def verifyWriteMode(files):
         except:
             not_writable.append(fname)
             writable = False
+
     if not writable:
         print 'The following file(s) do not have write permission!'
         for fname in not_writable:
-            print '    ',fname
+            print '    ', fname
 
     return writable
 
 
-def getFilterNames(header,filternames=None):
+def getFilterNames(header, filternames=None):
     """
-    Returns a comma-separated string of filter names extracted from the
-    input header (PyFITS header object).  This function has been hard-coded
-    to support the following instruments:
+    Returns a comma-separated string of filter names extracted from the input
+    header (PyFITS header object).  This function has been hard-coded to
+    support the following instruments:
 
         ACS, WFPC2, STIS
 
@@ -318,18 +352,23 @@ def getFilterNames(header,filternames=None):
 
     The 'filternames' parameter allows the user to provide a list of keyword
     names for their instrument, in the case their instrument is not supported.
-
     """
+
     # Define the keyword names for each instrument
-    _keydict = {'ACS':['FILTER1','FILTER2'],'WFPC2':['FILTNAM1','FILTNAM2'],
-                'STIS':['OPT_ELEM','FILTER'], 'NICMOS':['FILTER','FILTER2'], 'WFC3':['FILTER','FILTER2']}
+    _keydict = {
+        'ACS': ['FILTER1', 'FILTER2'],
+        'WFPC2': ['FILTNAM1', 'FILTNAM2'],
+        'STIS': ['OPT_ELEM', 'FILTER'],
+        'NICMOS': ['FILTER', 'FILTER2'],
+        'WFC3': ['FILTER', 'FILTER2']
+    }
 
     # Find out what instrument the input header came from, based on the
     # 'INSTRUME' keyword
     if 'INSTRUME' in header:
         instrument = header['INSTRUME']
     else:
-        raise ValueError,'Header does not contain INSTRUME keyword.'
+        raise ValueError('Header does not contain INSTRUME keyword.')
 
     # Check to make sure this instrument is supported in _keydict
     if instrument in _keydict:
@@ -354,14 +393,17 @@ def getFilterNames(header,filternames=None):
     return ','.join(_filter_values)
 
 
-def buildNewRootname(filename,extn=None,extlist=None):
-    """ Build rootname for a new file.
-        Use 'extn' for new filename if given, does NOT
-        append a suffix/extension at all.
-
-        Does NOT check to see if it exists already.
-        Will ALWAYS return a new filename.
+def buildNewRootname(filename, extn=None, extlist=None):
     """
+    Build rootname for a new file.
+
+    Use 'extn' for new filename if given, does NOT append a suffix/extension at
+    all.
+
+    Does NOT check to see if it exists already.  Will ALWAYS return a new
+    filename.
+    """
+
     # Search known suffixes to replace ('_crj.fits',...)
     _extlist = copy.deepcopy(EXTLIST)
     # Also, add a default where '_dth.fits' replaces
@@ -379,23 +421,31 @@ def buildNewRootname(filename,extn=None,extlist=None):
          # default to entire rootname
         _indx = len(filename)
 
-    if extn == None: extn = ''
+    if extn is None:
+        extn = ''
 
-    return filename[:_indx]+extn
+    return filename[:_indx] + extn
 
-def buildRootname(filename,ext=None):
-    """ Built a new rootname for an existing file and given extension.
-    Any user supplied extensions to use for searching for file
-    need to be provided as a list of extensions.
 
-    Usage:
-        rootname = buildRootname(filename,ext=['_dth.fits'])
+def buildRootname(filename, ext=None):
+    """
+    Build a new rootname for an existing file and given extension.
+
+    Any user supplied extensions to use for searching for file need to be
+    provided as a list of extensions.
+
+    Example
+    -------
+
+        >>> rootname = buildRootname(filename, ext=['_dth.fits'])
 
     """
-    if filename in ['',' ',None]:
+
+    if filename in ['' ,' ', None]:
         return None
-    fpath,froot = os.path.split(filename)
-    if fpath in ['',' ',None]:
+
+    fpath, froot = os.path.split(filename)
+    if fpath in ['', ' ', None]:
         fpath = os.curdir
     # Get complete list of filenames from current directory
     flist = os.listdir(fpath)
@@ -408,8 +458,8 @@ def buildRootname(filename,ext=None):
         if name == froot:
             rootname = froot
             break
-        elif name == froot+'.fits':
-            rootname = froot+'.fits'
+        elif name == froot + '.fits':
+            rootname = froot + '.fits'
             break
     # If we have an incomplete filename, try building a default
     # name and seeing if it exists...
@@ -419,9 +469,9 @@ def buildRootname(filename,ext=None):
     for extn in EXTLIST:
         _extlist.append(extn)
 
-    if rootname == None:
+    if rootname is None:
         # Add any user-specified extension to list of extensions...
-        if ext != None:
+        if ext is not None:
             for i in ext:
                 _extlist.insert(0,i)
         # loop over all extensions looking for a filename that matches...
@@ -433,7 +483,7 @@ def buildRootname(filename,ext=None):
                 if rname == name:
                     rootname = name
                     break
-            if rootname == None:
+            if rootname is None:
                 # Try looking for all lower-case filename
                 # instead of a mixed-case filename as required
                 # by the pipeline.
@@ -443,36 +493,39 @@ def buildRootname(filename,ext=None):
                         rootname = name
                         break
 
-            if rootname != None:
+            if rootname is not None:
                 break
 
     # If we still haven't found the file, see if we have the
     # info to build one...
-    if rootname == None and ext != None:
+    if rootname is None and ext is not None:
         # Check to see if we have a full filename to start with...
         _indx = froot.find('.')
         if _indx > 0:
-            rootname = froot[:_indx]+ext[0]
+            rootname = froot[:_indx] + ext[0]
         else:
             rootname = froot + ext[0]
 
-    if fpath not in ['.','',' ',None]:
-        rootname = os.path.join(fpath,rootname)
+    if fpath not in ['.', '', ' ', None]:
+        rootname = os.path.join(fpath, rootname)
     # It will be up to the calling routine to verify
     # that a valid rootname, rather than 'None', was returned.
     return rootname
 
-def getKeyword(filename,keyword,default=None,handle=None):
+
+def getKeyword(filename, keyword, default=None, handle=None):
     """
-    General, write-safe method for returning a keyword value
-    from the header of a IRAF recognized image.
-    It returns the value as a string.
+    General, write-safe method for returning a keyword value from the header of
+    a IRAF recognized image.
+
+    Returns the value as a string.
     """
+
     # Insure that there is at least 1 extension specified...
     if filename.find('[') < 0:
         filename += '[0]'
 
-    _fname,_extn = parseFilename(filename)
+    _fname, _extn = parseFilename(filename)
 
     if not handle:
         # Open image whether it is FITS or GEIS
@@ -483,10 +536,10 @@ def getKeyword(filename,keyword,default=None,handle=None):
         if isinstance(handle, fits.HDUList):
             _fimg = handle
         else:
-            raise ValueError,'Handle must be PyFITS object!'
+            raise ValueError('Handle must be %r object!' % fits.HDUList)
 
     # Address the correct header
-    _hdr = getExtn(_fimg,_extn).header
+    _hdr = getExtn(_fimg, _extn).header
 
     try:
         value =  _hdr[keyword]
@@ -502,10 +555,11 @@ def getKeyword(filename,keyword,default=None,handle=None):
         del _fimg
 
     if value == '':
-        if default == None:
+        if default is None:
             value = None
         else:
             value = default
+
     # NOTE:  Need to clean up the keyword.. Occasionally the keyword value
     # goes right up to the "/" FITS delimiter, and iraf.keypar is incapable
     # of realizing this, so it incorporates "/" along with the keyword value.
@@ -521,30 +575,33 @@ def getKeyword(filename,keyword,default=None,handle=None):
     # So, the following piece of code CHECKS for this and FIXES the string,
     # very simply by removing the last character if it is a "/".
     # This fix courtesy of Anton Koekemoer, 2002.
-    elif type(value) is types.StringType:
+    elif isinstance(value, basestring):
         if value[-1:] == '/':
             value = value[:-1]
 
     return value
 
-def getHeader(filename,handle=None):
-    """ Return a copy of the PRIMARY header, along with any group/extension
-        header, for this filename specification.
+
+def getHeader(filename, handle=None):
     """
-    _fname,_extn = parseFilename(filename)
+    Return a copy of the PRIMARY header, along with any group/extension header
+    for this filename specification.
+    """
+
+    _fname, _extn = parseFilename(filename)
     # Allow the user to provide an already opened PyFITS object
     # to derive the header from...
     #
     if not handle:
         # Open image whether it is FITS or GEIS
-        _fimg = openImage(_fname,mode='readonly')
+        _fimg = openImage(_fname, mode='readonly')
     else:
         # Use what the user provides, after insuring
         # that it is a proper PyFITS object.
         if isinstance(handle, fits.HDUList):
             _fimg = handle
         else:
-            raise ValueError,'Handle must be PyFITS object!'
+            raise ValueError('Handle must be a %r object!' % fits.HDUList)
 
     _hdr = _fimg['PRIMARY'].header.copy()
 
@@ -557,7 +614,7 @@ def getHeader(filename,handle=None):
         # Append correct extension/chip/group header to PRIMARY...
         #for _card in getExtn(_fimg,_extn).header.ascard:
             #_hdr.ascard.append(_card)
-        for _card in getExtn(_fimg,_extn).header.cards:
+        for _card in getExtn(_fimg, _extn).header.cards:
             _hdr.append(_card)
     if not handle:
         # Close file handle now...
@@ -568,66 +625,68 @@ def getHeader(filename,handle=None):
 
 
 def updateKeyword(filename, key, value,show=yes):
-    """ Add/update keyword to header with given value. """
+    """Add/update keyword to header with given value."""
 
-    _fname,_extn = parseFilename(filename)
+    _fname, _extn = parseFilename(filename)
 
     # Open image whether it is FITS or GEIS
-    _fimg = openImage(_fname,mode='update')
+    _fimg = openImage(_fname, mode='update')
 
     # Address the correct header
-    _hdr = getExtn(_fimg,_extn).header
+    _hdr = getExtn(_fimg, _extn).header
 
     # Assign a new value or add new keyword here.
     try:
         _hdr[key] = value
     except KeyError:
         if show:
-            print 'Adding new keyword ',key,'=',value
+            print 'Adding new keyword ', key, '=', value
         _hdr[key] = value
 
     # Close image
     _fimg.close()
     del _fimg
 
+
 def buildFITSName(geisname):
-    """ Build a new FITS filename for a GEIS input image. """
+    """Build a new FITS filename for a GEIS input image."""
+
     # User wants to make a FITS copy and update it...
     _indx = geisname.rfind('.')
-    _fitsname = geisname[:_indx]+'_'+geisname[_indx+1:-1]+'h.fits'
+    _fitsname = geisname[:_indx] + '_' + geisname[_indx + 1:-1] + 'h.fits'
 
     return _fitsname
 
 
+def openImage(filename, mode='readonly', memmap=0, writefits=True,
+              clobber=True, fitsname=None):
+    """
+    Opens file and returns PyFITS object.  Works on both FITS and GEIS
+    formatted images.
 
-def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fitsname=None):
-    """ Opens file and returns PyFITS object.
-        It will work on both FITS and GEIS formatted images.
+    Notes
+    -----
+    If a GEIS or waivered FITS image is used as input, it will convert it to a
+    MEF object and only if ``writefits = True`` will write it out to a file. If
+    ``fitsname = None``, the name used to write out the new MEF file will be
+    created using `buildFITSName`.
 
-        Notes
-        -----
-        If a GEIS or waivered FITS image is used as input,
-        it will convert it to a MEF object
-        and only if 'writefits = True' will write it out to a file. If
-        'fitsname = None', the name used to write out the new MEF file
-        will be created using 'buildFITSName()'.
-
-        Parameters
-        ----------
-        filename: str
-            name of input file
-        mode: str
-            mode for opening file based on PyFITS `mode` parameter values
-        memmap: int
-            switch for using memory mapping, 0 for no, 1 for yes
-        writefits: bool
-            if True, will write out GEIS as multi-extension FITS
-            and return handle to that opened GEIS-derived MEF file
-        clobber: bool
-            overwrite previously written out GEIS-derived MEF file
-        fitsname: str
-            name to use for GEIS-derived MEF file,
-            if None and writefits==True, will use 'buildFITSName()' to generate one
+    Parameters
+    ----------
+    filename: str
+        name of input file
+    mode: str
+        mode for opening file based on PyFITS `mode` parameter values
+    memmap: int
+        switch for using memory mapping, 0 for no, 1 for yes
+    writefits: bool
+        if True, will write out GEIS as multi-extension FITS
+        and return handle to that opened GEIS-derived MEF file
+    clobber: bool
+        overwrite previously written out GEIS-derived MEF file
+    fitsname: str
+        name to use for GEIS-derived MEF file,
+        if None and writefits==True, will use 'buildFITSName()' to generate one
     """
     # Insure that the filename is always fully expanded
     # This will not affect filenames without paths or
@@ -636,29 +695,26 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
 
     # Extract the rootname and extension specification
     # from input image name
-    _fname,_iextn = parseFilename(filename)
+    _fname, _iextn = parseFilename(filename)
 
     # Check whether we have a FITS file and if so what type
-    isfits,fitstype = isFits(_fname)
+    isfits, fitstype = isFits(_fname)
 
     if isfits:
         if fitstype != 'waiver':
             # Open the FITS file
-            fimg = fits.open(_fname,mode=mode,memmap=memmap)
+            fimg = fits.open(_fname, mode=mode, memmap=memmap)
             return fimg
         else:
-            import convertwaiveredfits
-            try:
-                fimg = convertwaiveredfits.convertwaiveredfits(_fname)
-            except:
-                raise
+            fimg = convertwaiveredfits.convertwaiveredfits(_fname)
+
             #check for the existence of a data quality file
             _dqname = buildNewRootname(_fname, extn='_c1f.fits')
             dqexists = os.path.exists(_dqname)
             if dqexists:
                 try:
                     dqfile = convertwaiveredfits.convertwaiveredfits(_dqname)
-                    dqfitsname = buildNewRootname(_dqname,extn='_c1h.fits')
+                    dqfitsname = buildNewRootname(_dqname, extn='_c1h.fits')
                 except:
                     print "Could not read data quality file %s" % _dqname
             if writefits:
@@ -666,21 +722,21 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
                 # using the filename they have provided
                 if fitsname is None:
                     rname = buildNewRootname(_fname)
-                    fitsname = buildNewRootname(rname,extn='_c0h.fits')
+                    fitsname = buildNewRootname(rname, extn='_c0h.fits')
 
                 # Write out GEIS image as multi-extension FITS.
                 fexists = os.path.exists(fitsname)
                 if (fexists and clobber) or not fexists:
-                    print 'Writing out WAIVERED as MEF to ',fitsname
+                    print 'Writing out WAIVERED as MEF to ', fitsname
                     fimg.writeto(fitsname, clobber=clobber)
                     if dqexists:
-                        print 'Writing out WAIVERED as MEF to ',dqfitsname
+                        print 'Writing out WAIVERED as MEF to ', dqfitsname
                         dqfile.writeto(dqfitsname, clobber=clobber)
                 # Now close input GEIS image, and open writable
                 # handle to output FITS image instead...
                 fimg.close()
                 del fimg
-                fimg = fits.open(fitsname,mode=mode,memmap=memmap)
+                fimg = fits.open(fitsname, mode=mode, memmap=memmap)
 
         # Return handle for use by user
         return fimg
@@ -690,9 +746,9 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
         # then open the FITS copy...
         try:
             # Open as a GEIS image for reading only
-            fimg =  readgeis.readgeis(_fname)
+            fimg = readgeis.readgeis(_fname)
         except:
-            raise IOError("Could not open GEIS input:",_fname)
+            raise IOError("Could not open GEIS input: %s" % _fname)
 
         #check for the existence of a data quality file
         _dqname = buildNewRootname(_fname, extn='.c1h')
@@ -715,16 +771,16 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
             # Write out GEIS image as multi-extension FITS.
             fexists = os.path.exists(fitsname)
             if (fexists and clobber) or not fexists:
-                    print 'Writing out GEIS as MEF to ',fitsname
+                    print 'Writing out GEIS as MEF to ', fitsname
                     fimg.writeto(fitsname, clobber=clobber)
                     if dqexists:
-                        print 'Writing out GEIS as MEF to ',dqfitsname
+                        print 'Writing out GEIS as MEF to ', dqfitsname
                         dqfile.writeto(dqfitsname, clobber=clobber)
             # Now close input GEIS image, and open writable
             # handle to output FITS image instead...
             fimg.close()
             del fimg
-            fimg = fits.open(fitsname,mode=mode,memmap=memmap)
+            fimg = fits.open(fitsname, mode=mode, memmap=memmap)
 
         # Return handle for use by user
         return fimg
@@ -732,38 +788,45 @@ def openImage(filename,mode='readonly',memmap=0,writefits=True,clobber=True,fits
 
 def parseFilename(filename):
     """
-        Parse out filename from any specified extensions.
-        Returns rootname and string version of extension name.
+    Parse out filename from any specified extensions.
 
+    Returns rootname and string version of extension name.
     """
+
     # Parse out any extension specified in filename
     _indx = filename.find('[')
     if _indx > 0:
         # Read extension name provided
         _fname = filename[:_indx]
-        _extn = filename[_indx+1:-1]
+        _extn = filename[_indx + 1:-1]
     else:
         _fname = filename
         _extn = None
 
-    return _fname,_extn
+    return _fname, _extn
+
 
 def parseExtn(extn=None):
     """
     Parse a string representing a qualified fits extension name as in the
-    output of parseFilename and return a tuple (str(extname), int(extver)),
-    which can be passed to `astropy.io.fits` functions using the 'ext' kw.
+    output of `parseFilename` and return a tuple ``(str(extname),
+    int(extver))``, which can be passed to `astropy.io.fits` functions using
+    the 'ext' kw.
+
     Default return is the first extension in a fits file.
 
     Examples
     --------
+
         >>>parseExtn('sci,2')
         ('sci', 2)
         >>>parseExtn('2')
         ('', 2)
         >>>parseExtn('sci')
         ('sci', 1)
+
     """
+
     if not extn:
         return ('', 0)
 
@@ -779,14 +842,18 @@ def parseExtn(extn=None):
     else:
         return (lext[0], 1)
 
-def countExtn(fimg,extname='SCI'):
-    """ Return the number of 'extname' extensions, defaulting to counting the
+
+def countExtn(fimg, extname='SCI'):
+    """
+    Return the number of 'extname' extensions, defaulting to counting the
     number of SCI extensions.
     """
+
     closefits = False
-    if isinstance(fimg,str):
+    if isinstance(fimg, basestring):
         fimg = fits.open(fimg)
         closefits = True
+
     n = 0
     for e in fimg:
         if 'extname' in e.header and e.header['extname'] == extname:
@@ -797,14 +864,17 @@ def countExtn(fimg,extname='SCI'):
 
     return n
 
-def getExtn(fimg,extn=None):
-    """ Returns the PyFITS extension corresponding to extension specified in filename.
 
-        Defaults to returning the first extension with data or the primary
-        extension, if none have data.
-        If a non-existent extension has been specified,
-        it raises a KeyError exception.
+def getExtn(fimg, extn=None):
     """
+    Returns the PyFITS extension corresponding to extension specified in
+    filename.
+
+    Defaults to returning the first extension with data or the primary
+    extension, if none have data.  If a non-existent extension has been
+    specified, it raises a `KeyError` exception.
+    """
+
     # If no extension is provided, search for first extension
     # in FITS file with data associated with it.
     if extn is None:
@@ -812,13 +882,13 @@ def getExtn(fimg,extn=None):
         _extn = fimg[0]
         # then look for first extension with data.
         for _e in fimg:
-            if _e.data != None:
+            if _e.data is not None:
                 _extn = _e
                 break
     else:
         # An extension was provided, so parse it out...
         if repr(extn).find(',') > 1:
-            if isinstance(extn,tuple):
+            if isinstance(extn, tuple):
                 # We have a tuple possibly created by parseExtn(), so
                 # turn it into a list for easier manipulation.
                 _extns = list(extn)
@@ -829,22 +899,23 @@ def getExtn(fimg,extn=None):
             # Two values given for extension:
             #    for example, 'sci,1' or 'dq,1'
             try:
-                _extn = fimg[_extns[0],int(_extns[1])]
+                _extn = fimg[_extns[0], int(_extns[1])]
             except KeyError:
                 _extn = None
                 for e in fimg:
-                    if 'extname' in e.header:
-                        if e.header['extname'].lower() == _extns[0].lower() and e.header['extver'] == int(_extns[1]):
-                            _extn = e
-                            break
-
+                    hdr = e.header
+                    if ('extname' in hdr and
+                            hdr['extname'].lower() == _extns[0].lower() and
+                            hdr['extver'] == int(_extns[1])):
+                        _extn = e
+                        break
         elif repr(extn).find('/') > 1:
             # We are working with GEIS group syntax
             _indx = str(extn[:extn.find('/')])
             _extn = fimg[int(_indx)]
-        elif type(extn) == types.StringType:
+        elif isinstance(ext, basestring):
             if extn.strip() == '':
-                _extn = None # force error since invalid name was provided
+                _extn = None  # force error since invalid name was provided
             # Only one extension value specified...
             elif extn.isdigit():
                 # We only have an extension number specified as a string...
@@ -858,7 +929,8 @@ def getExtn(fimg,extn=None):
                     i = 0
                     for hdu in fimg:
                         isimg = 'extname' in hdu.header
-                        if isimg and extn.lower() == hdu.header['extname'].lower():
+                        hdr = hdu.header
+                        if isimg and extn.lower() == hdr['extname'].lower():
                             _nextn = i
                             break
                         i += 1
@@ -874,10 +946,13 @@ def getExtn(fimg,extn=None):
                 _extn = fimg[int(extn)]
             else:
                 _extn = None
+
     if _extn is None:
-        raise KeyError, 'Extension %s not found'%extn
+        raise KeyError('Extension %s not found' % extn)
+
     return _extn
-#
+
+
 #Revision History:
 #    Nov 2001: findFile upgraded to accept full filenames with paths,
 #               instead of working only on files from current directory. WJH
@@ -885,15 +960,15 @@ def getExtn(fimg,extn=None):
 # Base function for
 #   with optional path.
 def findFile(input):
+    """Search a directory for full filename with optional path."""
 
-    """ Search a directory for full filename with optional path. """
     # If no input name is provided, default to returning 'no'(FALSE)
     if not input:
         return no
 
     # We use 'osfn' here to insure that any IRAF variables are
     # expanded out before splitting out the path...
-    _fdir,_fname = os.path.split(osfn(input))
+    _fdir, _fname = os.path.split(osfn(input))
 
     if _fdir == '':
         _fdir = os.curdir
@@ -904,13 +979,13 @@ def findFile(input):
         # handle when requested file in on a disconnect network store
         return no
 
-    _root,_extn = parseFilename(_fname)
+    _root, _extn = parseFilename(_fname)
 
     found = no
     for name in flist:
         if name == _root:
             # Check to see if given extension, if any, exists
-            if _extn == None:
+            if _extn is None:
                 found = yes
                 continue
             else:
@@ -936,18 +1011,19 @@ def findFile(input):
                     else:
                         del f
                 else:
-                    _fext = findExtname(f,_extname,extver=_extver)
-                    if _fext != None:
+                    _fext = findExtname(f, _extname, extver=_extver)
+                    if _fext is not None:
                         found = yes
                         del f
                         continue
     return found
 
 
-def checkFileExists(filename,directory=None):
-    """ Checks to see if file specified exists in current
-        or specified directory. Default is current directory.
-        Returns 1 if it exists, 0 if not found.
+def checkFileExists(filename,i directory=None):
+    """
+    Checks to see if file specified exists in current or specified directory.
+
+    Default is current directory.  Returns 1 if it exists, 0 if not found.
     """
 
     if directory is not None:
@@ -958,20 +1034,13 @@ def checkFileExists(filename,directory=None):
     return _exist
 
 
-def copyFile(input,output,replace=None):
-
-    """ Copy a file whole from input to output. """
+def copyFile(input, output, replace=None):
+    """Copy a file whole from input to output."""
 
     _found = findFile(output)
-    if not _found or (_found and replace ):
+    if not _found or (_found and replace):
         shutil.copy2(input, output)
-        #finput = open(input,'r')
-        #fout = open(output,'w')
-        #fout.writelines(finput.readlines())
-        #fout.close()
-        #finput.close()
-        #del finput
-        #del fout
+
 
 def _remove(file):
     # Check to see if file exists.  If not, return immediately.
@@ -986,7 +1055,7 @@ def _remove(file):
     elif file.find('.imh') > 0:
         # Delete both .imh and .pix files
         os.remove(file)
-        os.remove(file[:-3]+'pix')
+        os.remove(file[:-3] + 'pix')
     else:
         # If we have a GEIS image that has separate header
         # and pixel files which need to be removed.
@@ -996,15 +1065,19 @@ def _remove(file):
         # At this point, we may be deleting a non-image
         # file, so only verify whether a GEIS hhd or similar
         # file exists before trying to delete it.
-        if findFile(file[:-1]+'d'):
-            os.remove(file[:-1]+'d')
+        if findFile(file[:-1] + 'd'):
+            os.remove(file[:-1] + 'd')
+
 
 def removeFile(inlist):
-    """ Utility function for deleting a list of files or a single file.
-        This function will automatically delete both files of a
-            GEIS image, just like 'iraf.imdelete'.
     """
-    if type(inlist) != types.StringType:
+    Utility function for deleting a list of files or a single file.
+
+    This function will automatically delete both files of a GEIS image, just
+    like 'iraf.imdelete'.
+    """
+
+    if not isinstance(inlist, basestring):
     # We do have a list, so delete all filenames in list.
         # Treat like a list of full filenames
         _ldir = os.listdir('.')
@@ -1012,8 +1085,8 @@ def removeFile(inlist):
         # Now, check to see if there are wildcards which need to be expanded
             if f.find('*') >= 0 or f.find('?') >= 0:
                 # We have a wild card specification
-                regpatt = f.replace('?','.?')
-                regpatt = regpatt.replace('*','.*')
+                regpatt = f.replace('?', '.?')
+                regpatt = regpatt.replace('*', '.*')
                 _reg = re.compile(regpatt)
                 for file in _ldir:
                     if _reg.match(file):
@@ -1026,12 +1099,10 @@ def removeFile(inlist):
         _remove(inlist)
 
 
-def findKeywordExtn(ft,keyword,value=None):
-
+def findKeywordExtn(ft, keyword, value=None):
     """
-    This function will return the index of the extension in
-    a multi-extension FITS file which contains the desired keyword
-    with the given value.
+    This function will return the index of the extension in a multi-extension
+    FITS file which contains the desired keyword with the given value.
     """
 
     i = 0
@@ -1041,7 +1112,7 @@ def findKeywordExtn(ft,keyword,value=None):
         hdr = chip.header
         # Check to make sure the extension has the given keyword
         if keyword in hdr:
-            if value != None:
+            if value is not None:
                 # If it does, then does the value match the desired value
                 # MUST use 'str.strip' to match against any input string!
                 if hdr[keyword].strip() == value:
@@ -1050,16 +1121,17 @@ def findKeywordExtn(ft,keyword,value=None):
             else:
                 extnum = i
                 break
-        i = i + 1
+        i += 1
     # Return the index of the extension which contained the
     # desired EXTNAME value.
     return extnum
 
 
-def findExtname(fimg,extname,extver=None):
-    """ This function returns the list number of the extension
-            corresponding to EXTNAME given.
+def findExtname(fimg, extname, extver=None):
     """
+    Returns the list number of the extension corresponding to EXTNAME given.
+    """
+
     i = 0
     extnum = None
     for chip in fimg:
@@ -1069,17 +1141,18 @@ def findExtname(fimg,extname,extver=None):
                 if extver == None or hdr['EXTVER'] == extver:
                     extnum = i
                     break
-        i = i + 1
+        i += 1
     return extnum
 
-def rAsciiLine(ifile):
 
-    """ Returns the next non-blank line in an ASCII file. """
+def rAsciiLine(ifile):
+    """Returns the next non-blank line in an ASCII file."""
 
     _line = ifile.readline().strip()
     while len(_line) == 0:
         _line = ifile.readline().strip()
     return _line
+
 
 #######################################################
 #
@@ -1114,29 +1187,31 @@ _varDict = {}
 # initialized when this module is imported)
 
 unsavedVars = [
-                        'EOF',
-                        '_NullFile',
-                        '_NullPath',
-                        '__builtins__',
-                        '__doc__',
-                        '__file__',
-                        '__name__',
-                        '__re_var_match',
-                        '__re_var_match2',
-                        '__re_var_paren',
-                        '_badFormats',
-                        '_clearString',
-                        '_exitCommands',
-                        '_unsavedVarsDict',
-                        '_radixDigits',
-                        '_re_taskname',
-                        '_sttyArgs',
-                        'no',
-                        'yes',
-                        'userWorkingHome',
-                        ]
+    'EOF',
+    '_NullFile',
+    '_NullPath',
+    '__builtins__',
+    '__doc__',
+    '__file__',
+    '__name__',
+    '__re_var_match',
+    '__re_var_match2',
+    '__re_var_paren',
+    '_badFormats',
+    '_clearString',
+    '_exitCommands',
+    '_unsavedVarsDict',
+    '_radixDigits',
+    '_re_taskname',
+    '_sttyArgs',
+    'no',
+    'yes',
+    'userWorkingHome'
+]
+
 _unsavedVarsDict = {}
-for v in unsavedVars: _unsavedVarsDict[v] = 1
+for v in unsavedVars:
+    _unsavedVarsDict[v] = 1
 del unsavedVars, v
 
 
@@ -1146,12 +1221,16 @@ del unsavedVars, v
 # -----------------------------------------------------
 
 def getVarDict():
-    """Returns dictionary all IRAF variables"""
+    """Returns dictionary all IRAF variables."""
+
     return _varDict
 
+
 def getVarList():
-    """Returns list of names of all IRAF variables"""
+    """Returns list of names of all IRAF variables."""
+
     return _varDict.keys()
+
 
 # -----------------------------------------------------
 # listVars:
@@ -1159,7 +1238,8 @@ def getVarList():
 # -----------------------------------------------------
 
 def listVars(prefix="", equals="\t= ", **kw):
-    """List IRAF variables"""
+    """List IRAF variables."""
+
     keylist = getVarList()
     if len(keylist) == 0:
         print 'No IRAF variables defined'
@@ -1170,8 +1250,7 @@ def listVars(prefix="", equals="\t= ", **kw):
 
 
 def untranslateName(s):
-
-    """Undo Python conversion of CL parameter or variable name"""
+    """Undo Python conversion of CL parameter or variable name."""
 
     s = s.replace('DOT', '.')
     s = s.replace('DOLLAR', '$')
@@ -1180,8 +1259,10 @@ def untranslateName(s):
     s = s.replace('.PY', '.')
     return s
 
-def envget(var,default=None):
-    """Get value of IRAF or OS environment variable"""
+
+def envget(var, default=None):
+    """Get value of IRAF or OS environment variable."""
+
     if 'pyraf' in sys.modules:
         #ONLY if pyraf is already loaded, import iraf into the namespace
         from pyraf import iraf
@@ -1212,8 +1293,9 @@ def envget(var,default=None):
                 else:
                     raise KeyError("Undefined environment variable `%s'" % var)
 
+
 def osfn(filename):
-    """Convert IRAF virtual path name to OS pathname"""
+    """Convert IRAF virtual path name to OS pathname."""
 
     # Try to emulate the CL version closely:
     #
@@ -1221,11 +1303,12 @@ def osfn(filename):
     # - strips blanks around path components
     # - if no slashes or relative paths, return relative pathname
     # - otherwise return absolute pathname
-    if filename is None: return filename
+    if filename is None:
+        return filename
 
     ename = Expand(filename)
     dlist = [part.strip() for part in ename.split(os.sep)]
-    if len(dlist)==1 and dlist[0] not in [os.curdir,os.pardir]:
+    if len(dlist) == 1 and dlist[0] not in [os.curdir, os.pardir]:
         return dlist[0]
 
     # I use str.join instead of os.path.join here because
@@ -1234,12 +1317,14 @@ def osfn(filename):
     epath = os.sep.join(dlist)
     fname = os.path.abspath(epath)
     # append '/' if relative directory was at end or filename ends with '/'
-    if fname[-1] != os.sep and dlist[-1] in ['', os.curdir,os.pardir]:
+    if fname[-1] != os.sep and dlist[-1] in ['', os.curdir, os.pardir]:
         fname = fname + os.sep
     return fname
 
+
 def defvar(varname):
-    """Returns true if CL variable is defined"""
+    """Returns true if CL variable is defined."""
+
     if 'pyraf' in sys.modules:
         #ONLY if pyraf is already loaded, import iraf into the namespace
         from pyraf import iraf
@@ -1253,6 +1338,7 @@ def defvar(varname):
         _irafdef = 0
     return varname in _varDict or varname in os.environ or _irafdef
 
+
 # -----------------------------------------------------
 # IRAF utility procedures
 # -----------------------------------------------------
@@ -1261,7 +1347,8 @@ def defvar(varname):
 # be called as tasks
 
 def set(*args, **kw):
-    """Set IRAF environment variables"""
+    """Set IRAF environment variables."""
+
     if len(args) == 0:
         if len(kw) != 0:
             # normal case is only keyword,value pairs
@@ -1282,8 +1369,8 @@ def set(*args, **kw):
         # zzsetenv.def, so just ignore it here...
         #
         # Flag any other syntax as an error.
-        if len(args) != 1 or len(kw) != 0 or \
-                        type(args[0]) != types.StringType or args[0][:1] != '@':
+        if (len(args) != 1 or len(kw) != 0 or
+                not isinstance(args[0], basestring) or args[0][:1] != '@'):
             raise SyntaxError("set requires name=value pairs")
 
 # currently do not distinguish set from reset
@@ -1292,9 +1379,10 @@ def set(*args, **kw):
 reset = set
 
 def show(*args, **kw):
-    """Print value of IRAF or OS environment variables"""
+    """Print value of IRAF or OS environment variables."""
+
     if len(kw):
-        raise TypeError('unexpected keyword argument: ' + `kw.keys()`)
+        raise TypeError('unexpected keyword argument: %r' % list(kw))
 
     if args:
         for arg in args:
@@ -1303,23 +1391,29 @@ def show(*args, **kw):
         # print them all
         listVars(prefix="    ", equals="=")
 
-def unset(*args, **kw):
-    """Unset IRAF environment variables
 
-    This is not a standard IRAF task, but it is obviously useful.
-    It makes the resulting variables undefined.  It silently ignores
-    variables that are not defined.  It does not change the os environment
-    variables.
+def unset(*args, **kw):
     """
+    Unset IRAF environment variables.
+
+    This is not a standard IRAF task, but it is obviously useful.  It makes the
+    resulting variables undefined.  It silently ignores variables that are not
+    defined.  It does not change the os environment variables.
+    """
+
     if len(kw) != 0:
         raise SyntaxError("unset requires a list of variable names")
+
     for arg in args:
         if arg in _varDict:
             del _varDict[arg]
 
+
 def time(**kw):
-    """Print current time and date"""
+    """Print current time and date."""
+
     print _time.ctime(_time.time())
+
 
 # -----------------------------------------------------
 # Expand: Expand a string with embedded IRAF variables
@@ -1342,16 +1436,20 @@ __re_var_match2 = re.compile(r'\$(?P<varname>\w*)')
 # search for string embedded in parentheses
 __re_var_paren = re.compile(r'\((?P<varname>[^()]*)\)')
 
-def Expand(instring, noerror=0):
-    """Expand a string with embedded IRAF variables (IRAF virtual filename)
 
-    Allows comma-separated lists.  Also uses os.path.expanduser to
-    replace '~' symbols.
-    Set noerror flag to silently replace undefined variables with just
-    the variable name or null (so Expand('abc$def') = 'abcdef' and
-    Expand('(abc)def') = 'def').  This is the IRAF behavior, though it
-    is confusing and hides errors.
+def Expand(instring, noerror=0):
     """
+    Expand a string with embedded IRAF variables (IRAF virtual filename).
+
+    Allows comma-separated lists.  Also uses os.path.expanduser to replace '~'
+    symbols.
+
+    Set the noerror flag to silently replace undefined variables with just the
+    variable name or null (so Expand('abc$def') = 'abcdef' and
+    Expand('(abc)def') = 'def').  This is the IRAF behavior, though it is
+    confusing and hides errors.
+    """
+
     # call _expand1 for each entry in comma-separated list
     wordlist = instring.split(",")
     outlist = []
@@ -1359,8 +1457,10 @@ def Expand(instring, noerror=0):
         outlist.append(os.path.expanduser(_expand1(word, noerror=noerror)))
     return ",".join(outlist)
 
+
 def _expand1(instring, noerror):
-    """Expand a string with embedded IRAF variables (IRAF virtual filename)"""
+    """Expand a string with embedded IRAF variables (IRAF virtual filename)."""
+
     # first expand names in parentheses
     # note this works on nested names too, expanding from the
     # inside out (just like IRAF)
@@ -1373,7 +1473,8 @@ def _expand1(instring, noerror):
         elif noerror:
             varname = ""
         else:
-            raise ValueError,"Undefined variable `%s' in string `%s'" % (varname, instring)
+            raise ValueError("Undefined variable `%s' in string `%s'" %
+                             (varname, instring))
 
         instring = instring[:mm.start()] + varname + instring[mm.end():]
         mm = __re_var_paren.search(instring)
@@ -1382,7 +1483,7 @@ def _expand1(instring, noerror):
     if mm is None:
         return instring
     varname = mm.group('varname')
-    if varname in ['',' ',None]:
+    if varname in ['', ' ', None]:
         mm = __re_var_match2.match(instring)
         varname = mm.group('varname')
 
@@ -1392,9 +1493,11 @@ def _expand1(instring, noerror):
     elif noerror:
         return _expand1(varname + instring[mm.end():], noerror)
     else:
-        raise ValueError,"Undefined variable `%s' in string `%s'" % (varname, instring)
+        raise ValueError("Undefined variable `%s' in string `%s'" %
+                         (varname, instring))
 
 
 def access(filename):
-    """Returns true if file exists"""
+    """Returns true if file exists."""
+
     return os.path.exists(Expand(filename))
