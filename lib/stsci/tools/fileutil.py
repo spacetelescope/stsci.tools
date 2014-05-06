@@ -1019,7 +1019,7 @@ def findFile(input):
     return found
 
 
-def checkFileExists(filename,i directory=None):
+def checkFileExists(filename, directory=None):
     """
     Checks to see if file specified exists in current or specified directory.
 
