@@ -41,8 +41,6 @@ def disable_stpyfits():
         STPYFITS_ENABLED = False
 
 
-# For backwards compatibility, provide the same convenience functions that this
-# module originally provided
 def with_stpyfits(func):
     @functools.wraps(func)
     def wrapped_with_stpyfits(*args, **kwargs):
@@ -57,18 +55,6 @@ def with_stpyfits(func):
                 disable_stpyfits()
         return retval
     return wrapped_with_stpyfits
-
-
-open = fitsopen = with_stpyfits(fits.open)
-info = with_stpyfits(fits.info)
-append = with_stpyfits(fits.append)
-writeto = with_stpyfits(fits.writeto)
-update = with_stpyfits(fits.update)
-getheader = with_stpyfits(fits.getheader)
-getdata = with_stpyfits(fits.getdata)
-getval = with_stpyfits(fits.getval)
-setval = with_stpyfits(fits.setval)
-delval = with_stpyfits(fits.delval)
 
 
 class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
@@ -311,26 +297,33 @@ class ConstantValuePrimaryHDU(_ConstantValueImageBaseHDU,
                               fits.hdu.PrimaryHDU):
     """Primary HDUs with constant value arrays."""
 
-# For backward-compatibility
-PrimaryHDU = ConstantValuePrimaryHDU
-
 
 class ConstantValueImageHDU(_ConstantValueImageBaseHDU, fits.hdu.ImageHDU):
     """Image extension HDUs with constant value arrays."""
 
-# For backward-compatibility
+
+# Import the rest of the astropy.io.fits module
+from astropy.io.fits import *
+
+# For backward-compatibility with older code that thinks PrimaryHDU and
+# ImageHDU should support the ConstantValue features
+PrimaryHDU = ConstantValuePrimaryHDU
 ImageHDU = ConstantValueImageHDU
 
 
-#
-# Restrict what can be imported using from stpyfits import *
-#
-_locals = locals().keys()
-for n in _locals[::-1]:
-    if 'ConstantValue' not in n or \
-       n not in ('enable_stpyfits', 'disable_stpyfits', 'open', 'info',
-                 'append', 'writeto', 'update', 'getheader', 'getdata',
-                 'getval', 'setval', 'delval', 'HDUList', 'PrimaryHDU',
-                 'ImageHDU'):
-        _locals.remove(n)
-__all__ = _locals
+# Override the other "convenience" functions to use stpyfits
+open = fitsopen = with_stpyfits(fits.open)
+info = with_stpyfits(fits.info)
+append = with_stpyfits(fits.append)
+writeto = with_stpyfits(fits.writeto)
+update = with_stpyfits(fits.update)
+getheader = with_stpyfits(fits.getheader)
+getdata = with_stpyfits(fits.getdata)
+getval = with_stpyfits(fits.getval)
+setval = with_stpyfits(fits.setval)
+delval = with_stpyfits(fits.delval)
+
+
+__all__ = fits.__all__ + ['enable_stpyfits', 'disable_stpyfits',
+                          'with_stpyfits', 'ConstantValuePrimaryHDU',
+                          'ConstantValueImageHDU']
