@@ -131,9 +131,9 @@ def convert(input):
         line = line[:8].upper() + line[8:]
         if line == end_card:
             break
-        cards.append(fits.Card('').fromstring(line))
+        cards.append(fits.Card.fromstring(line))
 
-    phdr = fits.Header(fits.CardList(cards))
+    phdr = fits.Header(cards)
     im.close()
 
     # Determine starting point for adding Group Parameter Block keywords to Primary header
@@ -314,7 +314,7 @@ def convert(input):
                 if i in floats:
                     # use fromstring, format in Card is deprecated in pyfits 0.9
                     _str = '%-8s= %20.13G / %s' % (key[i-1], val, comm[i-1])
-                    _card = fits.Card("").fromstring(_str)
+                    _card = fits.Card.fromstring(_str)
                 else:
                     _card = fits.Card(key=key[i-1], value=val, comment=comm[i-1])
                 phdr.insert(phdr_indx+i, _card)

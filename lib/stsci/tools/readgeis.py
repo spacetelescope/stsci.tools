@@ -144,9 +144,9 @@ def readgeis(input):
         line = line[:8].upper() + line[8:]
         if line == end_card:
             break
-        cards.append(fits.Card('').fromstring(line))
+        cards.append(fits.Card.fromstring(line))
 
-    phdr = fits.Header(fits.CardList(cards))
+    phdr = fits.Header(cards)
     im.close()
 
     _naxis0 = phdr.get('NAXIS', 0)
@@ -288,7 +288,7 @@ def readgeis(input):
             if i in floats:
                 # use fromstring, format in Card is deprecated in pyfits 0.9
                 _str = '%-8s= %20.7G / %s' % (key[i-1], val, comm[i-1])
-                _card = fits.Card("").fromstring(_str)
+                _card = fits.Card.fromstring(_str)
             else:
                 _card = fits.Card(keyword=key[i-1], value=val, comment=comm[i-1])
             ext_hdu.header.append(_card)
