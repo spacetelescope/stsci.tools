@@ -409,8 +409,8 @@ def toMultiExtensionFits(waiveredObject,
     # Add the NEXTEND card.  There will be one extension
     # for each row in the wavered Fits file table HDU.
     #
-    mPHdu.heade['NEXTEND'] = (whdul[1].data.shape[0],
-                              'Number of standard extensions')
+    mPHdu.header['NEXTEND'] = (whdul[1].data.shape[0],
+                               'Number of standard extensions')
     #
     # Create the multi-extension file HDUList from the primary header
     #
