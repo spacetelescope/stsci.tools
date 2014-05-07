@@ -915,7 +915,7 @@ def getExtn(fimg, extn=None):
             # We are working with GEIS group syntax
             _indx = str(extn[:extn.find('/')])
             _extn = fimg[int(_indx)]
-        elif isinstance(ext, basestring):
+        elif isinstance(extn, basestring):
             if extn.strip() == '':
                 _extn = None  # force error since invalid name was provided
             # Only one extension value specified...
