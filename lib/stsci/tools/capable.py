@@ -47,8 +47,9 @@ def which_darwin_linkage(force_otool_check=False):
         # There will *usually* be PyObjC modules on sys.path on the natively-
         # linked Python. This is assumed to be always correct on Python 2.x, as
         # of 2012.  This is kludgy but quick and effective.
-        junk = ",".join(sys.path)
-        if junk.lower().find('/pyobjc') >= 0:
+        sp = ",".join(sys.path)
+        sp = sp.lower().strip(',')
+        if '/pyobjc' in sp or 'pyobjc,' in sp or 'pyobjc/' in sp or sp.endswith('pyobjc'):
             return "aqua"
 
         # OK, no PyObjC found.  What we do next is different per Python ver.
