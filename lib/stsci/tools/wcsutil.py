@@ -1,11 +1,8 @@
 from __future__ import division # confidence high
 
-import numerixenv
-numerixenv.check()
-
 import string, copy, os
 
-import pyfits
+from astropy.io import fits
 import numpy as N
 from math import *
 
@@ -802,7 +799,7 @@ class WCSObject:
         for key in _wcsobj.wcstrans.keys():
             _dkey = _wcsobj.wcstrans[key]
             if _dkey != 'pscale':
-                _extn.header.update(key,_wcsobj.__dict__[_dkey])
+                _extn.header[key] = _wcsobj.__dict__[_dkey]
 
         # Close the file
         fimg.close()
@@ -966,19 +963,17 @@ class WCSObject:
             if _dkey in _extn.header:
 
                 # Extract any comment string for the keyword as well
-                _indx_key = _extn.header.ascard.index_of(_dkey)
-                _full_key = _extn.header.ascard[_indx_key]
+                _indx_key = _extn.header.indexf(_dkey)
+                _full_key = _extn.header.cards[_indx_key]
                 if not quiet:
                     print 'updating ',key,' with value of: ',self.orig_wcs[key]
-                _extn.header.update(key, self.orig_wcs[key],
-                                    comment=_full_key.comment)
+                _extn.header[key] = (self.orig_wcs[key], _full_key.comment)
 
         key = 'WCSCDATE'
         if key not in _extn.header:
             # Print out history keywords to record when these keywords
             # were backed up.
-            _extn.header.update(key,self.orig_wcs[key],
-                comment = "Time WCS keywords were copied.")
+            _extn.header[key] = (self.orig_wcs[key], "Time WCS keywords were copied.")
 
         # Close the now updated image
         fimg.close()
@@ -1041,7 +1036,7 @@ class WCSObject:
             else:
                 # Append header to existing file
                 wcs_append = True
-                oldhdu = pyfits.open(refname,mode='append')
+                oldhdu = fits.open(refname, mode='append')
                 for e in oldhdu:
                     if 'extname' in e.header and e.header['extname'] == 'WCS':
                         wcs_append = False
@@ -1060,21 +1055,21 @@ class WCSObject:
         """ Generate a WCS header object that can be used to
             populate a reference WCS HDU.
         """
-        hdu = pyfits.ImageHDU()
-        hdu.header.update('EXTNAME','WCS')
-        hdu.header.update('EXTVER',1)
+        hdu = fits.ImageHDU()
+        hdu.header['EXTNAME'] = 'WCS'
+        hdu.header['EXTVER'] = 1
         # Now, update original image size information
-        hdu.header.update('WCSAXES',2,comment="number of World Coordinate System axes")
-        hdu.header.update('NPIX1',self.naxis1,comment="Length of array axis 1")
-        hdu.header.update('NPIX2',self.naxis2,comment="Length of array axis 2")
-        hdu.header.update('PIXVALUE',0.0,comment="values of pixels in array")
+        hdu.header['WCSAXES'] = (2, "number of World Coordinate System axes")
+        hdu.header['NPIX1'] = (self.naxis1, "Length of array axis 1")
+        hdu.header['NPIX2'] = (self.naxis2, "Length of array axis 2")
+        hdu.header['PIXVALUE'] = (0.0, "values of pixels in array")
 
         # Write out values to header...
         excluded_keys = ['naxis1','naxis2']
         for key in self.wcskeys:
             _dkey = self.wcstrans[key]
             if _dkey not in excluded_keys:
-                hdu.header.update(key,self.__dict__[_dkey])
+                hdu.header[key] = self.__dict__[_dkey]
 
 
         return hdu

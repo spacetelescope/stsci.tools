@@ -1,7 +1,7 @@
 from __future__ import division # confidence high
 
-from stsci.tools import parseinput, fileutil, readgeis, asnutil,irafglob
-import pyfits
+from stsci.tools import parseinput, fileutil, readgeis, asnutil, irafglob
+from astropy.io import fits
 import os
 
 def checkFiles(filelist,ivmlist = None):
@@ -21,7 +21,7 @@ def checkFiles(filelist,ivmlist = None):
     # check for STIS association files. This must be done before
     # the other checks in order to handle correctly stis
     # assoc files
-    #if pyfits.getval(newfilelist[0], 'INSTRUME') == 'STIS':
+    #if fits.getval(newfilelist[0], 'INSTRUME') == 'STIS':
     newfilelist, ivmlist = checkStisFiles(newfilelist, ivmlist)
     if newfilelist == []:
         return [], []
@@ -84,7 +84,7 @@ def checkStisFiles(filelist, ivmlist=None):
 
     for t in zip(filelist, ivmlist):
 
-        if pyfits.getval(t[0], 'INSTRUME') != 'STIS':
+        if fits.getval(t[0], 'INSTRUME') != 'STIS':
             newflist.append(t[0])
             newilist.append(t[1])
             continue
@@ -96,7 +96,8 @@ def checkStisFiles(filelist, ivmlist=None):
             newfilenames = splitStis(t[0], sci_count)
             assoc_files.extend(newfilenames)
             removed_files.append(t[0])
-            if t[1] != None:
+            if (isinstance(t[1], tuple) and t[1][0] is not None) or \
+               (not isinstance(t[1], tuple) and t[1] is not None):
                 print 'Does not handle STIS IVM files and STIS association files\n'
             else:
                 assoc_ilist.extend([None]*len(assoc_files))
@@ -148,7 +149,7 @@ def checkNGOODPIX(filelist):
     supported_instruments = ['ACS','STIS','WFC3']
     for inputfile in filelist:
         if fileutil.getKeyword(inputfile,'instrume') in supported_instruments:
-            file = pyfits.open(inputfile)
+            file = fits.open(inputfile)
             ngood = 0
             for extn in file:
                 if 'EXTNAME' in extn.header and extn.header['EXTNAME'] == 'SCI':
@@ -190,7 +191,7 @@ def stisObsCount(input):
     Output: Number of stis science extensions in input
     """
     count = 0
-    f = pyfits.open(input)
+    f = fits.open(input)
     for ext in f:
         if 'extname' in ext.header:
             if (ext.header['extname'].upper() == 'SCI'):
@@ -213,12 +214,12 @@ def splitStis(stisfile, sci_count):
     """
     newfiles = []
 
-    f = pyfits.open(stisfile)
+    f = fits.open(stisfile)
     hdu0 = f[0].copy()
 
 
     for count in range(1,sci_count+1):
-        fitsobj = pyfits.HDUList()
+        fitsobj = fits.HDUList()
         fitsobj.append(hdu0)
         hdu = f[('sci',count)].copy()
         fitsobj.append(hdu)
@@ -262,7 +263,7 @@ def splitStis(stisfile, sci_count):
 
     sptfilename = fileutil.buildNewRootname(stisfile, extn='_spt.fits')
     try:
-        sptfile = pyfits.open(sptfilename)
+        sptfile = fits.open(sptfilename)
     except IOError:
         print 'SPT file not found %s \n' % sptfilename
         return newfiles
@@ -271,7 +272,7 @@ def splitStis(stisfile, sci_count):
         hdu0 = sptfile[0].copy()
         try:
             for count in range(1,sci_count+1):
-                fitsobj = pyfits.HDUList()
+                fitsobj = fits.HDUList()
                 fitsobj.append(hdu0)
                 hdu = sptfile[count].copy()
                 fitsobj.append(hdu)
@@ -304,15 +305,15 @@ def stisExt2PrimKw(stisfiles):
     for sfile in stisfiles:
         d = {}
         for k in kw_list:
-            d[k] = pyfits.getval(sfile, k, ext=1)
+            d[k] = fits.getval(sfile, k, ext=1)
 
         for item in d.items():
-            pyfits.setval(sfile, item[0], value=item[1], comment='Copied from extension header')
+            fits.setval(sfile, item[0], value=item[1], comment='Copied from extension header')
 
 
 def isSTISSpectroscopic(fname):
 
-    if pyfits.getval(fname, 'OBSTYPE') == 'SPECTROSCOPIC':
+    if fits.getval(fname, 'OBSTYPE') == 'SPECTROSCOPIC':
         print "Warning:  STIS spectroscopic files detected"
         print "Warning:  Removing %s from input list" % fname
         return True
@@ -323,17 +324,17 @@ def checkPA_V3(fnames):
     removed_files = []
     for f in fnames:
         try:
-            pav3 = pyfits.getval(f, 'PA_V3')
+            pav3 = fits.getval(f, 'PA_V3')
         except KeyError:
-            rootname = pyfits.getval(f, 'ROOTNAME')
+            rootname = fits.getval(f, 'ROOTNAME')
             sptfile = rootname+'_spt.fits'
             if fileutil.findFile(sptfile):
                 try:
-                    pav3 = pyfits.getval(sptfile, 'PA_V3')
+                    pav3 = fits.getval(sptfile, 'PA_V3')
                 except KeyError:
                     print "Warning:  Files without keyword PA_V3 detected"
                     removed_files.append(f)
-                pyfits.setval(f, 'PA_V3', value=pav3)
+                fits.setval(f, 'PA_V3', value=pav3)
             else:
                 print "Warning:  Files without keyword PA_V3 detected"
                 removed_files.append(f)
@@ -447,7 +448,7 @@ def countInput(input):
     for f in files[0]:
         if fileutil.isFits(f)[0]:
             try:
-                ins = pyfits.getval(f, 'INSTRUME')
+                ins = fits.getval(f, 'INSTRUME')
             except: # allow odd fits files; do not stop the count
                 ins = None
             if ins == 'STIS':

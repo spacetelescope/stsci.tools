@@ -73,6 +73,8 @@ userWorkingHome = _os.getcwd()
 
 if _os.path.exists('./login.cl'):
     userIrafHome = _os.path.join(userWorkingHome,'')
+elif _os.path.exists(_os.path.expanduser('~/.iraf/login.cl')):
+    userIrafHome = _os.path.expanduser('~/.iraf')
 else:
     userIrafHome = _os.path.join(_os.getenv('HOME','.'),'iraf','')
     if not _os.path.exists(userIrafHome):

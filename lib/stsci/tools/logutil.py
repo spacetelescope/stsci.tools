@@ -83,7 +83,7 @@ if not PY3K:
                 # Could be an AttributeError, an OSError, and IOError, or who
                 # knows what else...
                 return False
-    
+
             realfd = {'stdin': 0, 'stdout': 1, 'stderr': 2}[name]
 
             return fd == realfd and os.isatty(fd)
@@ -531,6 +531,7 @@ class _LogTeeHandler(logging.Handler):
                                    record.orig_pathname, record.orig_lineno,
                                    record.msg, record.args, record.exc_info,
                                    record.orig_func)
+        record.origin = ""
         logger = logging.getLogger(record.name)
         if not logger.handlers:
             logger.addHandler(logging.NullHandler())

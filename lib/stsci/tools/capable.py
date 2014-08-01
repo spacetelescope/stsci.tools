@@ -34,19 +34,29 @@ def which_darwin_linkage(force_otool_check=False):
     # sanity check
     assert sys.platform=='darwin', 'Incorrect usage, not on OSX'
 
-    # There will *usually* be PyObjC modules on sys.path on the natively-
-    # linked Python. This is assumed to be always correct on Python 2.x, as
-    # of 2012.  This is kludgy but quick and effective.
+    # If not forced to run otool, then make some quick and dirty
+    # simple checks/assumptions, which do not add to startup time and do not
+    # attempt to initialize any graphics.
     if not force_otool_check:
-        junk = ",".join(sys.path)
-        if junk.lower().find('/pyobjc') >= 0:
+
+        # There will (for now) only ever be an aqua-linked Python/Tkinter
+        # when using Ureka on darwin, so this is an easy short-circuit check.
+        if 'UR_DIR' in os.environ:
             return "aqua"
 
-    # OK, no PyObjC found.  What we do next is different per Python ver.
-    if not PY3K and not force_otool_check:
-        return "x11"
+        # There will *usually* be PyObjC modules on sys.path on the natively-
+        # linked Python. This is assumed to be always correct on Python 2.x, as
+        # of 2012.  This is kludgy but quick and effective.
+        sp = ",".join(sys.path)
+        sp = sp.lower().strip(',')
+        if '/pyobjc' in sp or 'pyobjc,' in sp or 'pyobjc/' in sp or sp.endswith('pyobjc'):
+            return "aqua"
 
-    # Is PY3K, use otool shell command (requires 2.7+)
+        # OK, no PyObjC found.  What we do next is different per Python ver.
+        if not PY3K:
+            return "x11"
+
+    # Use otool shell command (requires 2.7+)
     import Tkinter, subprocess
     libs = subprocess.check_output(('/usr/bin/otool', '-L', Tkinter._tkinter.__file__)).decode()
     if libs.find('/libX11.') >= 0:

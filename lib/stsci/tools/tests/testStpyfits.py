@@ -8,17 +8,19 @@ import numpy as np
 from nose.tools import assert_true, assert_false, assert_equal, assert_raises
 
 import stsci.tools.stpyfits as stpyfits
-import pyfits
-from pyfits.tests import PyfitsTestCase
+#import pyfits
+from astropy.io import fits
+#from pyfits.tests import PyfitsTestCase
+from astropy.io.fits.tests import FitsTestCase
 
 
-class TestStpyfitsFunctions(PyfitsTestCase):
+class TestStpyfitsFunctions(FitsTestCase):
     def setup(self):
         self.data_dir = os.path.dirname(__file__)
         self.temp_dir = tempfile.mkdtemp(prefix='stpyfits-test-')
 
     def testInfoConvienceFunction(self):
-        """Test the info convience function in both the pyfits and stpyfits
+        """Test the info convience function in both the fits and stpyfits
            namespace."""
 
         assert_equal(
@@ -33,7 +35,7 @@ class TestStpyfitsFunctions(PyfitsTestCase):
 
 
         assert_equal(
-            pyfits.info(self.data('o4sp040b0_raw.fits'), output=False),
+            fits.info(self.data('o4sp040b0_raw.fits'), output=False),
             [(0, 'PRIMARY', 'PrimaryHDU', 215, (), '', ''),
              (1, 'SCI', 'ImageHDU', 141, (62, 44), 'int16', ''),
              (2, 'ERR', 'ImageHDU', 71, (), '', ''),
@@ -47,16 +49,16 @@ class TestStpyfitsFunctions(PyfitsTestCase):
             [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'int32', '')])
 
         assert_equal(
-            pyfits.info(self.data('cdva2.fits'), output=False),
+            fits.info(self.data('cdva2.fits'), output=False),
             [(0, 'PRIMARY', 'PrimaryHDU', 7, (), '', '')])
 
 
     def testOpenConvienceFunction(self):
-        """Test the open convience function in both the pyfits and stpyfits
+        """Test the open convience function in both the fits and stpyfits
            namespace."""
 
         hdul = stpyfits.open(self.data('cdva2.fits'))
-        hdul1 = pyfits.open(self.data('cdva2.fits'))
+        hdul1 = fits.open(self.data('cdva2.fits'))
 
         assert_equal(hdul[0].header['NAXIS'], 2)
         assert_equal(hdul1[0].header['NAXIS'], 0)
@@ -79,11 +81,11 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         hdul1.close()
 
     def testGetHeaderConvienceFunction(self):
-        """Test the getheader convience function in both the pyfits and
+        """Test the getheader convience function in both the fits and
            stpyfits namespace."""
 
         hd = stpyfits.getheader(self.data('cdva2.fits'))
-        hd1 = pyfits.getheader(self.data('cdva2.fits'))
+        hd1 = fits.getheader(self.data('cdva2.fits'))
 
         assert_equal(hd['NAXIS'], 2)
         assert_equal(hd1['NAXIS'], 0)
@@ -99,7 +101,7 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         assert_equal(hd1['NPIX2'], 10)
 
         hd = stpyfits.getheader(self.data('o4sp040b0_raw.fits'), 2)
-        hd1 = pyfits.getheader(self.data('o4sp040b0_raw.fits'), 2)
+        hd1 = fits.getheader(self.data('o4sp040b0_raw.fits'), 2)
 
         assert_equal(hd['NAXIS'], 2)
         assert_equal(hd1['NAXIS'], 0)
@@ -115,44 +117,44 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         assert_equal(hd1['NPIX2'], 44)
 
     def testGetDataConvienceFunction(self):
-        """Test the getdata convience function in both the pyfits and
+        """Test the getdata convience function in both the fits and
            stpyfits namespace."""
 
         d = stpyfits.getdata(self.data('cdva2.fits'))
         assert_true((d == np.ones((10, 10), dtype=np.int32)).all())
 
-        assert_raises(IndexError, pyfits.getdata, self.data('cdva2.fits'))
+        assert_raises(IndexError, fits.getdata, self.data('cdva2.fits'))
 
     def testGetValConvienceFunction(self):
-        """Test the getval convience function in both the pyfits and
+        """Test the getval convience function in both the fits and
            stpyfits namespace."""
 
         val = stpyfits.getval(self.data('cdva2.fits'), 'NAXIS', 0)
-        val1 = pyfits.getval(self.data('cdva2.fits'), 'NAXIS', 0)
+        val1 = fits.getval(self.data('cdva2.fits'), 'NAXIS', 0)
         assert_equal(val, 2)
         assert_equal(val1, 0)
 
     def testwritetoConvienceFunction(self):
-        """Test the writeto convience function in both the pyfits and stpyfits
+        """Test the writeto convience function in both the fits and stpyfits
            namespace."""
 
         hdul = stpyfits.open(self.data('cdva2.fits'))
-        hdul1 = pyfits.open(self.data('cdva2.fits'))
+        hdul1 = fits.open(self.data('cdva2.fits'))
 
         header = hdul[0].header.copy()
         header['NAXIS'] = 0
 
         stpyfits.writeto(self.temp('new.fits'), hdul[0].data, header,
                          clobber=True)
-        pyfits.writeto(self.temp('new1.fits'), hdul1[0].data,hdul1[0].header,
-                       clobber=True)
+        fits.writeto(self.temp('new1.fits'), hdul1[0].data,hdul1[0].header,
+                     clobber=True)
 
         hdul.close()
         hdul1.close()
 
-        info1 = pyfits.info(self.temp('new.fits'), output=False)
+        info1 = fits.info(self.temp('new.fits'), output=False)
         info2 = stpyfits.info(self.temp('new.fits'), output=False)
-        info3 = pyfits.info(self.temp('new1.fits'), output=False)
+        info3 = fits.info(self.temp('new1.fits'), output=False)
         info4 = stpyfits.info(self.temp('new1.fits'), output=False)
 
         assert_equal(info1, [(0, 'PRIMARY', 'PrimaryHDU', 6, (), '', '')])
@@ -163,19 +165,19 @@ class TestStpyfitsFunctions(PyfitsTestCase):
             [(0, 'PRIMARY', 'PrimaryHDU', 6, (10, 10), 'uint8', '')])
 
     def testappendConvienceFunction(self):
-        """Test the append convience function in both the pyfits and stpyfits
+        """Test the append convience function in both the fits and stpyfits
            namespace."""
 
         hdul = stpyfits.open(self.data('cdva2.fits'))
-        hdul1 = pyfits.open(self.data('cdva2.fits'))
+        hdul1 = fits.open(self.data('cdva2.fits'))
 
         stpyfits.writeto(self.temp('new.fits'), hdul[0].data, hdul[0].header,
                          clobber=True)
-        pyfits.writeto(self.temp('new1.fits'), hdul1[0].data, hdul1[0].header,
+        fits.writeto(self.temp('new1.fits'), hdul1[0].data, hdul1[0].header,
                        clobber=True)
 
         hdu = stpyfits.ImageHDU()
-        hdu1 = pyfits.ImageHDU()
+        hdu1 = fits.ImageHDU()
 
         hdu.data = hdul[0].data
         hdu1.data = hdul1[0].data
@@ -193,7 +195,7 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         hdu1.header.set('NPIX2', 10, 'length of constant array axis 2',
                         after='NPIX1')
         stpyfits.append(self.temp('new.fits'), hdu.data, hdu.header)
-        pyfits.append(self.temp('new1.fits'), hdu1.data, hdu1.header)
+        fits.append(self.temp('new1.fits'), hdu1.data, hdu1.header)
 
         assert_equal(stpyfits.info(self.temp('new.fits'), output=False),
             [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'int32', ''),
@@ -201,15 +203,15 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         assert_equal(stpyfits.info(self.temp('new1.fits'), output=False),
             [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'uint8', ''),
              (1, '', 'ImageHDU', 8, (10, 10), 'uint8', '')])
-        assert_equal(pyfits.info(self.temp('new.fits'), output=False),
+        assert_equal(fits.info(self.temp('new.fits'), output=False),
             [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'int32', ''),
              (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')])
-        assert_equal(pyfits.info(self.temp('new1.fits'), output=False),
-            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), 'uint8', ''),
-             (1, '', 'ImageHDU', 8, (), 'uint8', '')])
+        assert_equal(fits.info(self.temp('new1.fits'), output=False),
+            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), '', ''),
+             (1, '', 'ImageHDU', 8, (), '', '')])
 
         hdul5 = stpyfits.open(self.temp('new.fits'))
-        hdul6 = pyfits.open(self.temp('new1.fits'))
+        hdul6 = fits.open(self.temp('new1.fits'))
         assert_equal(hdul5[1].header['NAXIS'], 2)
         assert_equal(hdul6[1].header['NAXIS'], 0)
         assert_equal(hdul5[1].header['NAXIS1'], 10)
@@ -233,11 +235,11 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         hdul1.close()
 
     def testupdateConvienceFunction(self):
-        """Test the update convience function in both the pyfits and stpyfits
+        """Test the update convience function in both the fits and stpyfits
            namespace."""
 
         hdul = stpyfits.open(self.data('cdva2.fits'))
-        hdul1 = pyfits.open(self.data('cdva2.fits'))
+        hdul1 = fits.open(self.data('cdva2.fits'))
 
         header = hdul[0].header.copy()
         header['NAXIS'] = 0
@@ -245,7 +247,7 @@ class TestStpyfitsFunctions(PyfitsTestCase):
                          clobber=True)
 
         hdu = stpyfits.ImageHDU()
-        hdu1 = pyfits.ImageHDU()
+        hdu1 = fits.ImageHDU()
 
         hdu.data = hdul[0].data
         hdu1.data = hdul1[0].data
@@ -264,9 +266,9 @@ class TestStpyfitsFunctions(PyfitsTestCase):
 
         stpyfits.update(self.temp('new.fits'), d, hdu.header, 1)
 
-        assert_equal(pyfits.info(self.temp('new.fits'), output=False),
-            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), 'int32', ''),
-             (1, '', 'ImageHDU', 8, (), 'int32', '')])
+        assert_equal(fits.info(self.temp('new.fits'), output=False),
+            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), '', ''),
+             (1, '', 'ImageHDU', 8, (), '', '')])
         assert_equal(stpyfits.info(self.temp('new.fits'), output=False),
             [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'int32', ''),
              (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')])
@@ -283,7 +285,7 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         assert_true((hdul7[1].data ==
                      np.zeros((10, 10), dtype=np.int32)).all())
 
-        hdul8 = pyfits.open(self.temp('new.fits'))
+        hdul8 = fits.open(self.temp('new.fits'))
         assert_equal(hdul8[1].header['NAXIS'], 0)
         assert_equal(hdul8[1].header['NPIX1'], 10)
         assert_equal(hdul8[1].header['NPIX2'], 10)
@@ -300,19 +302,19 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         hdul1.close()
 
     def testImageHDUConstructor(self):
-        """Test the ImageHDU constructor in both the pyfits and stpyfits
+        """Test the ImageHDU constructor in both the fits and stpyfits
            namespace."""
 
         hdu = stpyfits.ImageHDU()
         assert_true(isinstance(hdu, stpyfits.ConstantValueImageHDU))
-        hdu1 = pyfits.ImageHDU()
-        assert_true(isinstance(hdu, pyfits.ImageHDU))
+        hdu1 = fits.ImageHDU()
+        assert_true(isinstance(hdu, fits.ImageHDU))
 
     def testPrimaryHDUConstructor(self):
-        """Test the PrimaryHDU constructor in both the pyfits and stpyfits
+        """Test the PrimaryHDU constructor in both the fits and stpyfits
            namespace.  Although stpyfits does not reimplement the
            constructor, it does add _ConstantValueImageBaseHDU to the
-           inheritance hierarchy of pyfits.PrimaryHDU when accessed through the
+           inheritance hierarchy of fits.PrimaryHDU when accessed through the
            stpyfits namespace.  This method tests that that inheritance is
            working"""
 
@@ -325,7 +327,7 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         stpyfits.writeto(self.temp('new.fits'), hdu.data, hdu.header,
                          clobber=True)
         hdul = stpyfits.open(self.temp('new.fits'))
-        hdul1 = pyfits.open(self.temp('new.fits'))
+        hdul1 = fits.open(self.temp('new.fits'))
 
         assert_equal(hdul[0].header['NAXIS'], 1)
         assert_equal(hdul[0].header['NAXIS1'], 10)
@@ -347,7 +349,7 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         hdul1.close()
 
     def testHDUListWritetoMethod(self):
-        """Test the writeto method of HDUList in both the pyfits and stpyfits
+        """Test the writeto method of HDUList in both the fits and stpyfits
            namespace."""
 
         hdu = stpyfits.PrimaryHDU()
@@ -375,12 +377,12 @@ class TestStpyfitsFunctions(PyfitsTestCase):
             [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'int32', ''),
              (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')])
 
-        assert_equal(pyfits.info(self.temp('new.fits'), output=False),
-            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), 'int32', ''),
-             (1, '', 'ImageHDU', 8, (), 'int32', '')])
+        assert_equal(fits.info(self.temp('new.fits'), output=False),
+            [(0, 'PRIMARY', 'PrimaryHDU', 7, (), '', ''),
+             (1, '', 'ImageHDU', 8, (), '', '')])
 
         hdul1 = stpyfits.open(self.temp('new.fits'))
-        hdul2 = pyfits.open(self.temp('new.fits'))
+        hdul2 = fits.open(self.temp('new.fits'))
 
         assert_equal(hdul1[0].header['NAXIS'], 2)
         assert_equal(hdul1[0].header['NAXIS1'], 10)
@@ -438,7 +440,7 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         hdu.writeto(self.temp('new.fits'), clobber=True)
 
         hdul = stpyfits.open(self.temp('new.fits'))
-        hdul1 = pyfits.open(self.temp('new.fits'))
+        hdul1 = fits.open(self.temp('new.fits'))
 
         hdu = hdul[0]
         hdu1 = hdul1[0]
@@ -462,7 +464,7 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         hdul1.close()
 
     def testHDUListFlushMethod(self):
-        """Test the flush method of HDUList in both the pyfits and stpyfits
+        """Test the flush method of HDUList in both the fits and stpyfits
            namespace."""
 
         hdu = stpyfits.PrimaryHDU()
@@ -497,12 +499,12 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         assert_equal(stpyfits.info(self.temp('new.fits'), output=False),
             [(0, 'PRIMARY', 'PrimaryHDU', 6, (10,), 'int32', ''),
              (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')])
-        assert_equal(pyfits.info(self.temp('new.fits'), output=False),
-            [(0, 'PRIMARY', 'PrimaryHDU', 6, (), 'int32', ''),
-             (1, '', 'ImageHDU', 8, (), 'int32', '')])
+        assert_equal(fits.info(self.temp('new.fits'), output=False),
+            [(0, 'PRIMARY', 'PrimaryHDU', 6, (), '', ''),
+             (1, '', 'ImageHDU', 8, (), '', '')])
 
         hdul1 = stpyfits.open(self.temp('new.fits'))
-        hdul2 = pyfits.open(self.temp('new.fits'))
+        hdul2 = fits.open(self.temp('new.fits'))
 
         assert_equal(hdul1[0].header['NAXIS'], 1)
         assert_equal(hdul1[0].header['NAXIS1'], 10)
@@ -534,12 +536,12 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         assert_equal(stpyfits.info(self.temp('new.fits'), output=False),
             [(0, 'PRIMARY', 'PrimaryHDU', 6, (15,), 'int32', ''),
              (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')])
-        assert_equal(pyfits.info(self.temp('new.fits'), output=False),
-            [(0, 'PRIMARY', 'PrimaryHDU', 6, (), 'int32', ''),
-             (1, '', 'ImageHDU', 8, (), 'int32', '')])
+        assert_equal(fits.info(self.temp('new.fits'), output=False),
+            [(0, 'PRIMARY', 'PrimaryHDU', 6, (), '', ''),
+             (1, '', 'ImageHDU', 8, (), '', '')])
 
         hdul1 = stpyfits.open(self.temp('new.fits'))
-        hdul2 = pyfits.open(self.temp('new.fits'))
+        hdul2 = fits.open(self.temp('new.fits'))
 
         assert_equal(hdul1[0].header['NAXIS'], 1)
         assert_equal(hdul1[0].header['NAXIS1'], 15)
@@ -562,11 +564,11 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         hdul2.close()
 
     def testImageBaseHDU__getattr__Method(self):
-        """Test the __getattr__ method of ImageBaseHDU in both the pyfits
+        """Test the __getattr__ method of ImageBaseHDU in both the fits
            and stpyfits namespace."""
 
         hdul = stpyfits.open(self.data('cdva2.fits'))
-        hdul1 = pyfits.open(self.data('cdva2.fits'))
+        hdul1 = fits.open(self.data('cdva2.fits'))
 
         hdu = hdul[0]
         hdu1 = hdul1[0]
@@ -590,7 +592,7 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         hdu.writeto(self.temp('new.fits'), clobber=True)
 
         hdul = stpyfits.open(self.temp('new.fits'))
-        hdul1 = pyfits.open(self.temp('new.fits'))
+        hdul1 = fits.open(self.temp('new.fits'))
 
         assert_equal(hdul[0].header['NAXIS'], 1)
         assert_equal(hdul[0].header['NAXIS1'], 10)
@@ -620,13 +622,13 @@ class TestStpyfitsFunctions(PyfitsTestCase):
         """
 
         data = np.arange(100).reshape((10, 10))
-        phdu = pyfits.PrimaryHDU(data=data)
-        hdu = pyfits.ImageHDU(data=data)
+        phdu = fits.PrimaryHDU(data=data)
+        hdu = fits.ImageHDU(data=data)
 
         phdu.header['PIXVALUE'] = 10
         hdu.header['PIXVALUE'] = 10
 
-        hdul = pyfits.HDUList([phdu, hdu])
+        hdul = fits.HDUList([phdu, hdu])
         hdul.writeto(self.temp('test.fits'))
 
         with stpyfits.open(self.temp('test.fits')) as h:
@@ -671,7 +673,7 @@ class TestStpyfitsFunctions(PyfitsTestCase):
             assert_equal(h[0].header['PIXVALUE'], 1)
             h[0].data[20:80, 20:80] = 2
 
-        with pyfits.open(self.temp('test.fits')) as h:
+        with fits.open(self.temp('test.fits')) as h:
             assert_true('PIXVALUE' not in h[0].header)
             assert_true('NPIX1' not in h[0].header)
             assert_true('NPIX2' not in h[0].header)

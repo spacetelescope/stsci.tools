@@ -1,28 +1,23 @@
 # $Id$
 
 """
-The stpyfits module is an extension to the pyfits module which offers
+The stpyfits module is an extension to the `astropy.io.fits` module which offers
 additional features specific to STScI.  These features include the handling
 of Constant Data Value Arrays.
 
-The pyfits module is:
 """
-
-
 from __future__ import division
 
 import functools
 import re
 import numpy as np
 
-import pyfits
+from astropy.io import fits
 # A few imports for backward compatibility; in the earlier stpyfits these were
-# overridden, but with pyfits's new extension system it's not necessary
-from pyfits import HDUList
-from pyfits.util import _is_int
-
-
-__version__ = '1.1.0/%s' % pyfits.__version__
+# overridden, but with fits's new extension system it's not necessary
+from astropy.io.fits import HDUList
+from astropy.io.fits.util import _is_int
+from astropy.utils import lazyproperty
 
 
 STPYFITS_ENABLED = False # Not threadsafe TODO: (should it be?)
@@ -33,21 +28,19 @@ STPYFITS_ENABLED = False # Not threadsafe TODO: (should it be?)
 def enable_stpyfits():
     global STPYFITS_ENABLED
     if not STPYFITS_ENABLED:
-        pyfits.register_hdu(ConstantValuePrimaryHDU)
-        pyfits.register_hdu(ConstantValueImageHDU)
+        fits.register_hdu(ConstantValuePrimaryHDU)
+        fits.register_hdu(ConstantValueImageHDU)
         STPYFITS_ENABLED = True
 
 
 def disable_stpyfits():
     global STPYFITS_ENABLED
     if STPYFITS_ENABLED:
-        pyfits.unregister_hdu(ConstantValuePrimaryHDU)
-        pyfits.unregister_hdu(ConstantValueImageHDU)
+        fits.unregister_hdu(ConstantValuePrimaryHDU)
+        fits.unregister_hdu(ConstantValueImageHDU)
         STPYFITS_ENABLED = False
 
 
-# For backwards compatibility, provide the same convenience functions that this
-# module originally provided
 def with_stpyfits(func):
     @functools.wraps(func)
     def wrapped_with_stpyfits(*args, **kwargs):
@@ -64,27 +57,15 @@ def with_stpyfits(func):
     return wrapped_with_stpyfits
 
 
-open = fitsopen = with_stpyfits(pyfits.open)
-info = with_stpyfits(pyfits.info)
-append = with_stpyfits(pyfits.append)
-writeto = with_stpyfits(pyfits.writeto)
-update = with_stpyfits(pyfits.update)
-getheader = with_stpyfits(pyfits.getheader)
-getdata = with_stpyfits(pyfits.getdata)
-getval = with_stpyfits(pyfits.getval)
-setval = with_stpyfits(pyfits.setval)
-delval = with_stpyfits(pyfits.delval)
-
-
-class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
+class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
     """
-    A class that extends the pyfits.hdu.base._BaseHDU class to extend its
-    behavior to implement STScI specific extensions to Pyfits.
+    A class that extends the `astropy.io.fits.hdu.base._BaseHDU` class to extend its
+    behavior to implement STScI specific extensions to `astropy.io.fits`.
 
-    The pyfits.hdu.base._BaseHDU class is:
+    The `astropy.io.fits.hdu.base._BaseHDU class` is:
     """
 
-    __doc__ += pyfits.hdu.image._ImageBaseHDU.__doc__
+    __doc__ += fits.hdu.image._ImageBaseHDU.__doc__
 
     def __init__(self, data=None, header=None, do_not_scale_image_data=False,
                  uint=False, **kwargs):
@@ -159,7 +140,7 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
         else:
             return super(_ConstantValueImageBaseHDU, self).size
 
-    @pyfits.util.lazyproperty
+    @lazyproperty
     def data(self):
         if ('PIXVALUE' in self._header and 'NPIX1' not in self._header and
                self._header['NAXIS'] > 0):
@@ -246,7 +227,7 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
 
     def update_header(self):
         if (not self._modified and not self._header._modified and
-            (self._data_loaded and self.shape == self.data.shape)):
+            (self._has_data and self.shape == self.data.shape)):
             # Not likely that anything needs updating
             return
 
@@ -313,29 +294,36 @@ class _ConstantValueImageBaseHDU(pyfits.hdu.image._ImageBaseHDU):
 
 
 class ConstantValuePrimaryHDU(_ConstantValueImageBaseHDU,
-                              pyfits.hdu.PrimaryHDU):
+                              fits.hdu.PrimaryHDU):
     """Primary HDUs with constant value arrays."""
 
-# For backward-compatibility
-PrimaryHDU = ConstantValuePrimaryHDU
 
-
-class ConstantValueImageHDU(_ConstantValueImageBaseHDU, pyfits.hdu.ImageHDU):
+class ConstantValueImageHDU(_ConstantValueImageBaseHDU, fits.hdu.ImageHDU):
     """Image extension HDUs with constant value arrays."""
 
-# For backward-compatibility
+
+# Import the rest of the astropy.io.fits module
+from astropy.io.fits import *
+
+# For backward-compatibility with older code that thinks PrimaryHDU and
+# ImageHDU should support the ConstantValue features
+PrimaryHDU = ConstantValuePrimaryHDU
 ImageHDU = ConstantValueImageHDU
 
 
-#
-# Restrict what can be imported using from stpyfits import *
-#
-_locals = locals().keys()
-for n in _locals[::-1]:
-    if 'ConstantValue' not in n or \
-       n not in ('enable_stpyfits', 'disable_stpyfits', 'open', 'info',
-                 'append', 'writeto', 'update', 'getheader', 'getdata',
-                 'getval', 'setval', 'delval', 'HDUList', 'PrimaryHDU',
-                 'ImageHDU'):
-        _locals.remove(n)
-__all__ = _locals
+# Override the other "convenience" functions to use stpyfits
+open = fitsopen = with_stpyfits(fits.open)
+info = with_stpyfits(fits.info)
+append = with_stpyfits(fits.append)
+writeto = with_stpyfits(fits.writeto)
+update = with_stpyfits(fits.update)
+getheader = with_stpyfits(fits.getheader)
+getdata = with_stpyfits(fits.getdata)
+getval = with_stpyfits(fits.getval)
+setval = with_stpyfits(fits.setval)
+delval = with_stpyfits(fits.delval)
+
+
+__all__ = fits.__all__ + ['enable_stpyfits', 'disable_stpyfits',
+                          'with_stpyfits', 'ConstantValuePrimaryHDU',
+                          'ConstantValueImageHDU']

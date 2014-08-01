@@ -5,13 +5,11 @@ License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 """
 from __future__ import division # confidence high
 
-import numerixenv
-numerixenv.check()
+import types
 
-import pyfits
+from astropy.io import fits
 
-__version__ = '0.2 (06-October-2006)'
-
+__version__ = '0.3 (01-July-2014)'
 
 
 class IterFitsFile(object):
@@ -26,6 +24,7 @@ class IterFitsFile(object):
         self.extn = None
         self.handle = None
         self.inmemory = False
+        self.compress = False
 
         if not self.fname:
             self.fname,self.extn = parseFilename(name)
@@ -38,7 +37,7 @@ class IterFitsFile(object):
     def _shape(self):
         """ Returns the shape of the data array associated with this file."""
         hdu = self.open()
-        _shape = hdu.data.shape
+        _shape = hdu.shape
         if not self.inmemory:
             self.close()
             del hdu
@@ -66,16 +65,17 @@ class IterFitsFile(object):
         """ Opens the file for subsequent access. """
 
         if self.handle == None:
-            self.handle = pyfits.open(self.fname,mode='readonly')
+            self.handle = fits.open(self.fname, mode='readonly')
 
         if self.extn:
             if len(self.extn) == 1:
-                hdu = self.handle[self.extn]
+                hdu = self.handle[self.extn[0]]
             else:
                 hdu = self.handle[self.extn[0],self.extn[1]]
         else:
             hdu = self.handle[0]
-
+        if isinstance(hdu,fits.hdu.compressed.CompImageHDU):
+            self.compress = True
         return hdu
 
 
@@ -89,7 +89,7 @@ class IterFitsFile(object):
         """ Returns a PyFITS section for the rows specified. """
         # All I/O must be done here, starting with open
         hdu = self.open()
-        if self.inmemory:
+        if self.inmemory or self.compress:
             _data = hdu.data[i:j,:]
         else:
             _data = hdu.section[i:j,:]
@@ -139,7 +139,7 @@ def parseFilename(filename):
             # Only one extension value specified...
             if extn.isdigit():
                 # We only have an extension number specified as a string...
-                _nextn = [int(extn)]
+                _nextn = int(extn)
             else:
                 # We only have EXTNAME specified...
                 _nextn = extn

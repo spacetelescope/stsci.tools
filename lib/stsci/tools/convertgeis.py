@@ -6,7 +6,7 @@
         convertgeis: Read GEIS file and convert it to a waivered-FITS file.
 
         License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
-        
+
         Usage:
 
                 convertgeis.py [options] GEISname FITSname
@@ -22,9 +22,9 @@
                 abc.xyh will have an output name of abc_xyf.fits
 
         :Options:
-        
+
         -h     print the help (this text)
-        
+
         -n     do NOT over-write any pre-existing output file
 
 
@@ -38,13 +38,13 @@
             >>> hdulist.writeto(FITSFileName)
 
         The most basic usage from the command line::
-        
+
             convertgeis.py test1.hhh test1_c0f.fits
 
         This command will convert the input GEIS file test1.hhh to
         a waivered-FITS file test1_c0f.fits.
 
-        From the command line:: 
+        From the command line::
 
             convertgeis.py .
 
@@ -54,7 +54,7 @@
 
 
         Another example of usage from the command line::
-        
+
             convertgeis.py "u*" "*"
 
         this will convert all `u*.??h` files in the current directory
@@ -73,19 +73,19 @@ from __future__ import division # confidence high
 __version__ = "1.0 (25 Feb, 2011), \xa9 AURA"
 
 import os, sys, string, shutil
-import pyfits
+from astropy.io import fits
 import numpy
 
 # definitions used to convert GEIS record into numpy objects
 geis_fmt = {'REAL':'f', 'DOUBLE': 'f', 'INTEGER':'i', 'LOGICAL':'i','CHARACTER':'S'}
-# definitions used to convert data into numpy array for use in pyfits.Column
+# definitions used to convert data into numpy array for use in fits.Column
 cols_fmt = {'REAL':'float', 'DOUBLE':'float', 'INTEGER':'int', 'LOGICAL':'S', 'CHARACTER': 'S'}
-# definitions used to define print format for pyfits.Column
+# definitions used to define print format for fits.Column
 cols_pfmt = {'REAL':'E', 'DOUBLE': 'D', 'INTEGER': 'J', 'LOGICAL':'A', 'CHARACTER': 'A'}
 
 # Keywords which require special unit conversion
 # keywords which are output as long-floats without using exponential formatting
-kw_DOUBLE = ['CRVAL1','CRVAL2','FPKTTIME','LPKTTIME'] 
+kw_DOUBLE = ['CRVAL1','CRVAL2','FPKTTIME','LPKTTIME']
 
 def stsci2(hdulist, filename):
     """For STScI GEIS files, need to do extra steps."""
@@ -93,7 +93,7 @@ def stsci2(hdulist, filename):
     # Write output file name to the primary header
     instrument = hdulist[0].header.get('INSTRUME', '')
     if instrument in ("WFPC2", "FOC"):
-        hdulist[0].header.update('FILENAME', filename)
+        hdulist[0].header['FILENAME'] = filename
 
 def convert(input):
 
@@ -105,7 +105,7 @@ def convert(input):
     """
 
     global dat
-    cardLen = pyfits.Card.length
+    cardLen = fits.Card.length
 
     # input file(s) must be of the form *.??h and *.??d
     if input[-1] != 'h' or input[-4] != '.':
@@ -131,14 +131,14 @@ def convert(input):
         line = line[:8].upper() + line[8:]
         if line == end_card:
             break
-        cards.append(pyfits.Card('').fromstring(line))
+        cards.append(fits.Card.fromstring(line))
 
-    phdr = pyfits.Header(pyfits.CardList(cards))
+    phdr = fits.Header(cards)
     im.close()
-    
+
     # Determine starting point for adding Group Parameter Block keywords to Primary header
-    phdr_indx = phdr.ascard.index_of('PSIZE')
-    
+    phdr_indx = phdr.index('PSIZE')
+
     _naxis0 = phdr.get('NAXIS', 0)
     _naxis = [phdr['NAXIS'+`j`] for j in range(1, _naxis0+1)]
     _naxis.insert(0, _naxis0)
@@ -163,10 +163,10 @@ def convert(input):
     bools = []
     floats = []
     cols = [] # column definitions used for extension table
-    cols_dict = {} # provides name access to Column defs 
+    cols_dict = {} # provides name access to Column defs
     _range = range(1, pcount+1)
     key = [phdr['PTYPE'+`j`] for j in _range]
-    comm = [phdr.ascard['PTYPE'+`j`].comment for j in _range]
+    comm = [phdr.cards['PTYPE'+`j`].comment for j in _range]
 
     # delete group parameter definition header keywords
     _list = ['PTYPE'+`j` for j in _range] + \
@@ -184,16 +184,16 @@ def convert(input):
         _bytes = pdtype[star+1:]
 
         # collect boolean keywords since they need special attention later
-        
+
         if _type == 'LOGICAL':
             bools.append(i)
         if pdtype == 'REAL*4':
-            floats.append(i)        
-        
+            floats.append(i)
+
         # identify keywords which require conversion to special units
         if ptype in kw_DOUBLE:
             _type = 'DOUBLE'
-        
+
         fmt = geis_fmt[_type] + _bytes
         formats.append((ptype,fmt))
 
@@ -210,15 +210,15 @@ def convert(input):
         cfmt = cols_pfmt[_type]+nrpt
 
         #print 'Column format for ',ptype,': ',cfmt,' with dtype of ',afmt
-        cols_dict[ptype] = pyfits.Column(name=ptype,format=cfmt,array=numpy.zeros(gcount,dtype=afmt))
+        cols_dict[ptype] = fits.Column(name=ptype,format=cfmt,array=numpy.zeros(gcount,dtype=afmt))
         cols.append(cols_dict[ptype]) # This keeps the columns in order
 
     _shape = _naxis[1:]
     _shape.reverse()
-    _code = pyfits.core.ImageHDU.NumCode[_bitpix]
+    _code = fits.core.ImageHDU.NumCode[_bitpix]
     _bscale = phdr.get('BSCALE', 1)
     _bzero = phdr.get('BZERO', 0)
-        
+
     if phdr['DATATYPE'][:10] == 'UNSIGNED*2':
         _uint16 = 1
         _bzero = 32768
@@ -226,29 +226,29 @@ def convert(input):
         _uint16 = 0
 
     # delete from the end, so it will not conflict with previous delete
-    for i in range(len(phdr.ascard)-1, -1, -1):
-        if phdr.ascard[i].key in _list:
+    for i in range(len(phdr)-1, -1, -1):
+        if phdr.cards[i].keyword in _list:
             del phdr[i]
 
     # clean up other primary header keywords
-    phdr['SIMPLE']=pyfits.TRUE
-    phdr['GROUPS']=pyfits.FALSE
+    phdr['SIMPLE'] = True
+    phdr['GROUPS'] = False
     _after = 'NAXIS'
     if _naxis0 > 0:
         _after += `_naxis0`
-    phdr.update(key='EXTEND', value=pyfits.TRUE, comment="FITS dataset may contain extensions", after=_after)
+    phdr.set(key='EXTEND', value=True, comment="FITS dataset may contain extensions", after=_after)
 
     # Use copy-on-write for all data types since byteswap may be needed
     # in some platforms.
     f1 = open(data_file, mode='rb')
     dat = f1.read()
     errormsg = ""
-    
-    # Define data array for all groups 
+
+    # Define data array for all groups
     arr_shape = _naxis[:]
     arr_shape[0] = gcount
     arr_stack = numpy.zeros(arr_shape,dtype=_code)
-    
+
     loc = 0
     for k in range(gcount):
         ext_dat = numpy.fromstring(dat[loc:loc+data_size], dtype=_code)
@@ -256,7 +256,7 @@ def convert(input):
         if _uint16:
             ext_dat += _bzero
         # Check to see whether there are any NaN's or infs which might indicate
-        # a byte-swapping problem, such as being written out on little-endian 
+        # a byte-swapping problem, such as being written out on little-endian
         #   and being read in on big-endian or vice-versa.
         if _code.find('float') >= 0 and \
             (numpy.any(numpy.isnan(ext_dat)) or numpy.any(numpy.isinf(ext_dat))):
@@ -281,10 +281,10 @@ def convert(input):
                 errormsg += "===================================\n"
 
         arr_stack[k] = ext_dat
-        #ext_hdu = pyfits.ImageHDU(data=ext_dat)
-        
+        #ext_hdu = fits.ImageHDU(data=ext_dat)
+
         rec = numpy.fromstring(dat[loc+data_size:loc+group_size], dtype=formats)
-        
+
         loc += group_size
 
         # Add data from this GPB to table
@@ -296,7 +296,7 @@ def convert(input):
                 else:
                     val = 'F'
             cols[i-1].array[k] = val
-            
+
         # Based on the first group, add GPB keywords to PRIMARY header
         if k == 0:
             # Create separate PyFITS Card objects for each entry in 'rec'
@@ -304,33 +304,33 @@ def convert(input):
             for i in range(1, pcount+1):
                 #val = rec.field(i-1)[0]
                 val = rec[0][i-1]
-                
+
                 if i in bools:
                     if val:
-                        val = pyfits.TRUE
+                        val = True
                     else:
-                        val = pyfits.FALSE
-                
+                        val = False
+
                 if i in floats:
                     # use fromstring, format in Card is deprecated in pyfits 0.9
                     _str = '%-8s= %20.13G / %s' % (key[i-1], val, comm[i-1])
-                    _card = pyfits.Card("").fromstring(_str)
+                    _card = fits.Card.fromstring(_str)
                 else:
-                    _card = pyfits.Card(key=key[i-1], value=val, comment=comm[i-1])
-                phdr.ascard.insert(phdr_indx+i, _card)
+                    _card = fits.Card(key=key[i-1], value=val, comment=comm[i-1])
+                phdr.insert(phdr_indx+i, _card)
 
             # deal with bscale/bzero
             if (_bscale != 1 or _bzero != 0):
-                phdr.update('BSCALE', _bscale)
-                phdr.update('BZERO', _bzero)
+                phdr['BSCALE'] = _bscale
+                phdr['BZERO'] = _bzero
 
         #hdulist.append(ext_hdu)
     # Define new table based on Column definitions
-    ext_table = pyfits.new_table(cols,tbtype='TableHDU')
-    ext_table.header.update('EXTNAME',input+'.tab',after='TFIELDS')
+    ext_table = fits.new_table(cols,tbtype='TableHDU')
+    ext_table.header.set('EXTNAME', value=input+'.tab', after='TFIELDS')
     # Add column descriptions to header of table extension to match stwfits output
     for i in range(len(key)):
-        ext_table.header.ascard.append(pyfits.Card(key=key[i], value=comm[i]))
+        ext_table.header.append(fits.Card(keyword=key[i], value=comm[i]))
 
     if errormsg != "":
         errormsg += "===================================\n"
@@ -346,9 +346,9 @@ def convert(input):
 
     f1.close()
 
-    hdulist = pyfits.HDUList([pyfits.PrimaryHDU(header=phdr, data=arr_stack)])
+    hdulist = fits.HDUList([fits.PrimaryHDU(header=phdr, data=arr_stack)])
     hdulist.append(ext_table)
-    
+
     stsci2(hdulist,input)
     return hdulist
 
