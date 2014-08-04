@@ -8,7 +8,6 @@ from __future__ import division # confidence high
 import sys, traceback
 import eparoption, vtor_checks
 
-
 class TealActionParButton(eparoption.ActionEparButton):
 
     def getButtonLabel(self):
