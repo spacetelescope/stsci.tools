@@ -4,20 +4,29 @@ $Id$
 
 Taken from pyraf/lib/epar.py, originally signed "M.D. De La Pena, 2000 Feb. 4"
 """
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 #System level modules
 import os, sys, tempfile, time
 import capable
+
+PY3K = sys.version_info[0] > 2
+
 if capable.OF_GRAPHICS:
-    from Tkinter import  _default_root
-    from Tkinter import *
-    import tkFileDialog
-    from tkMessageBox import askokcancel, askyesno, showwarning
+    if PY3K:
+        from tkinter import  _default_root
+        from tkinter import *
+        from tkinter.filedialog import asksaveasfilename
+        from tkinter.messagebox import askokcancel, askyesno, showwarning
+    else:
+        from Tkinter import  _default_root
+        from Tkinter import *
+        from tkFileDialog import asksaveasfilename
+        from tkMessageBox import askokcancel, askyesno, showwarning
 
 # stsci.tools modules
 from irafglobals import userWorkingHome
-import basicpar, eparoption, irafutils, listdlg, taskpars
+import basicpar, eparoption, irafutils, taskpars
 
 # Constants
 MINVIEW     = 500
@@ -135,7 +144,10 @@ class EditParDialog(object):
         if self.parent == None:
             global _default_root
             if _default_root is None:
-                import Tkinter
+                if PY3K:
+                    import tkinter as Tkinter
+                else:
+                    import Tkinter
                 if not Tkinter._default_root:
                     _default_root = Tkinter.Tk()
                     _default_root.withdraw()
@@ -563,7 +575,7 @@ class EditParDialog(object):
         theParamList[:] = newList # fill with newList, keep same mem pointer
 
         # See if any got left out
-        extras = [fn for fn in ourpardict.keys() if not fn in migrated]
+        extras = [fn for fn in ourpardict if not fn in migrated]
         for fullName in extras:
             # this is an extra/unknown par - let subclass handle it
             if not self._handleParListMismatch('Unexpected par: "'+\
@@ -1128,7 +1140,7 @@ class EditParDialog(object):
         writeProtChoice = self._writeProtectOnSaveAs
         if capable.OF_TKFD_IN_EPAR:
             # Prompt using native looking dialog
-            fname = tkFileDialog.asksaveasfilename(parent=self.top,
+            fname = asksaveasfilename(parent=self.top,
                     title='Save Parameter File As',
                     defaultextension=self._defSaveAsExt,
                     initialdir=os.path.dirname(self._getSaveAsFilter()))
@@ -1229,7 +1241,7 @@ class EditParDialog(object):
         self.top.withdraw()
         self.top.destroy()
 
-        print "\nTask "+self.taskName+" is running...\n"
+        print("\nTask "+self.taskName+" is running...\n")
 
         # Before running the task, clear any already-handled exceptions that
         # will be erroneously picked up by the task's logger utility.
@@ -1742,7 +1754,7 @@ class EditParDialog(object):
                             self._pushMessages()
                     else:
                         # should never happen, but just in case
-                        print "Lost message!: "+msg+" (too far behind...)"
+                        print("Lost message!: "+msg+" (too far behind...)")
 
     # Run the task
     def runTask(self):
@@ -1752,6 +1764,6 @@ class EditParDialog(object):
         # Also turn on parameter saving
         try:
             self._taskParsObj.run(mode='h', _save=1)
-        except taskpars.NoExecError, nee:  # catch only this, let all else thru
+        except taskpars.NoExecError as nee:  # catch only this, let all else thru
             showwarning(message="No way found to run task\n\n"+\
                         str(nee), title="Can Not Run Task")

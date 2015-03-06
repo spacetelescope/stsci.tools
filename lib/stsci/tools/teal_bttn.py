@@ -3,9 +3,9 @@
 
 $Id$
 """
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
-import sys, traceback
+import traceback
 import eparoption, vtor_checks
 
 class TealActionParButton(eparoption.ActionEparButton):
@@ -58,7 +58,7 @@ class TealActionParButton(eparoption.ActionEparButton):
                                      tealGui, code)
             # done
             tealGui.debug('Finished: "'+self.getButtonLabel()+'"')
-        except Exception, ex:
+        except Exception as ex:
             msg = 'Error executing: "'+self.getButtonLabel()+'"\n'+ex.message
             msgFull = msg+'\n'+''.join(traceback.format_exc())
             msgFull+= "CODE:\n"+code
@@ -67,4 +67,4 @@ class TealActionParButton(eparoption.ActionEparButton):
                 tealGui.debug(msgFull)
             else:
                 if teal: teal.popUpErr(None, msg, "Action Button Error")
-                print msgFull
+                print(msgFull)

@@ -10,7 +10,7 @@ nmpfit.py is a version of mpfit.py which uses numarray.
 @version: '1.0 (2007-02-20)'
 
 """
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 __version__ = '1.0'          #Release version number only
 __vdate__ = '2007-02-20'     #Date of this version
@@ -40,7 +40,7 @@ weights=None):
     status = 0
     if weights != None:
         if err != None:
-            print "Warning: Ignoring errors and using weights.\n"
+            print("Warning: Ignoring errors and using weights.\n")
         return [status, (y - model) * weights]
     elif err != None:
         return [status, (y - model) / err]
@@ -101,7 +101,7 @@ maxiter=200, quiet=0):
 
     """
     if numerixenv.check_input(x) or numerixenv.check_input(y):
-        raise ValueError, "Input is a NumArray array. This version of %s requires a Numpy array\n" % __name__
+        raise ValueError("Input is a NumArray array. This version of %s requires a Numpy array\n" % __name__)
     
     y = y.astype(N.float)
     if weights != None:
@@ -111,7 +111,7 @@ maxiter=200, quiet=0):
     if x == None and len(y.shape)==1 :
         x = N.arange(len(y)).astype(N.float)
     if x.shape != y.shape:
-        print "input arrays X and Y must be of equal shape.\n"
+        print("input arrays X and Y must be of equal shape.\n")
         return
 
 
@@ -142,7 +142,7 @@ maxiter=200, quiet=0):
         p = [p1, p2, p3]
     m=nmpfit.mpfit(_gauss_funct, p,parinfo = parinfo, functkw=fa,
 maxiter=maxiter, quiet=quiet)
-    if (m.status <=0): print 'error message = ', m.errmsg
+    if (m.status <=0): print('error message = ', m.errmsg)
     return m
 
 
@@ -157,7 +157,7 @@ def plot_fit(y, mfit, x=None):
     try:
         import pylab
     except ImportError:
-        print "Matplotlib is not available.\n"
+        print("Matplotlib is not available.\n")
         return
     pylab.plot(x,yy)
 

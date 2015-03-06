@@ -9,16 +9,16 @@ of Constant Data Value Arrays.
 from __future__ import division
 
 import functools
-import re
+import sys
 import numpy as np
 
 from astropy.io import fits
 # A few imports for backward compatibility; in the earlier stpyfits these were
 # overridden, but with fits's new extension system it's not necessary
-from astropy.io.fits import HDUList
 from astropy.io.fits.util import _is_int
 from astropy.utils import lazyproperty
 
+PY3K = sys.version_info[0] > 2
 
 STPYFITS_ENABLED = False # Not threadsafe TODO: (should it be?)
 
@@ -100,7 +100,10 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
         elif header and 'PIXVALUE' in header:
             pixval = header['PIXVALUE']
             if header['BITPIX'] > 0:
-                pixval = long(pixval)
+                if PY3K:
+                    pixval = int(pixval)
+                else:
+                    pixval = long(pixval)
             arrayval = self._check_constant_value_data(data)
             if arrayval is not None:
                 header = header.copy()
@@ -155,7 +158,10 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
             code = self.NumCode[bitpix]
             pixval = self._header['PIXVALUE']
             if code in ['uint8', 'int16', 'int32', 'int64']:
-                pixval = long(pixval)
+                if PY3K:
+                    pixval = int(pixval)
+                else:
+                    pixval = long(pixval)
 
             raw_data = np.zeros(shape=dims, dtype=code) + pixval
 
@@ -238,7 +244,10 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
             # actually matches the PIXVALUE
             pixval = self._header['PIXVALUE']
             if self._header['BITPIX'] > 0:
-                pixval = long(pixval)
+                if PY3K:
+                    pixval = int(pixval)
+                else:
+                    pixval = long(pixval)
 
             if self.data is None or self.data.nbytes == 0:
                 # Empty data array; just keep the existing PIXVALUE
@@ -246,7 +255,6 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
             else:
                 arrayval = self._check_constant_value_data(self.data)
             if arrayval is not None:
-                st_ext = True
                 if arrayval != pixval:
                     self._header['PIXVALUE'] = arrayval
 

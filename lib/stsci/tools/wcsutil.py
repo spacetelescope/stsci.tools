@@ -1,4 +1,4 @@
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 import string, copy, os
 
@@ -61,8 +61,8 @@ DEFAULT_PREFIX = 'O'
 __version__ = '1.2.3 (11-Feb-2011)'
 
 def help():
-    print 'wcsutil Version '+str(__version__)+':\n'
-    print WCSObject.__doc__
+    print('wcsutil Version '+str(__version__)+':\n')
+    print(WCSObject.__doc__)
 #################
 #
 #
@@ -85,20 +85,20 @@ def ddtohms(xsky,ysky,verbose=no):
 
     if isinstance(xskyh,N.ndarray):
         rah,dech = [],[]
-        for i in xrange(len(xskyh)):
+        for i in range(len(xskyh)):
             rastr = repr(int(xskyh[i]))+':'+repr(int(xskym[i]))+':'+repr(xskys[i])
             decstr = repr(int(ysky[i]))+':'+repr(int(yskym[i]))+':'+repr(yskys[i])
             rah.append(rastr)
             dech.append(decstr)
             if verbose:
-                print 'RA = ',rastr,', Dec = ',decstr
+                print('RA = ',rastr,', Dec = ',decstr)
     else:
         rastr = repr(int(xskyh))+':'+repr(int(xskym))+':'+repr(xskys)
         decstr = repr(int(ysky))+':'+repr(int(yskym))+':'+repr(yskys)
         rah = rastr
         dech = decstr
         if verbose:
-            print 'RA = ',rastr,', Dec = ',decstr
+            print('RA = ',rastr,', Dec = ',decstr)
 
     return rah,dech
 
@@ -324,8 +324,8 @@ class WCSObject:
 
                 self.new = no
             except:
-                print 'Could not find WCS keyword: ',_dkey
-                raise IOError,'Image %s does not contain all required WCS keywords!' % self.rootname
+                print('Could not find WCS keyword: ',_dkey)
+                raise IOError('Image %s does not contain all required WCS keywords!' % self.rootname)
 
             # Now, try to read in POSTARG keyword values, if they exist...
             try:
@@ -418,7 +418,7 @@ class WCSObject:
 
     def print_archive(self,format=True):
         """ Prints out archived WCS keywords."""
-        if len(self.orig_wcs.keys()) > 0:
+        if len(list(self.orig_wcs.keys())) > 0:
             block  = 'Original WCS keywords for ' + self.rootname+ '\n'
             block += '    backed up on '+repr(self.orig_wcs['WCSCDATE'])+'\n'
             if not format:
@@ -435,7 +435,7 @@ class WCSObject:
                 block += 'Plate Scale : '+repr(self.get_archivekw('pixel scale'))+'\n'
                 block += 'ORIENTAT    : '+repr(self.get_archivekw('ORIENTAT'))+'\n'
 
-            print block
+            print(block)
 
     def get_archivekw(self,keyword):
         """ Return an archived/backup value for the keyword. """
@@ -578,7 +578,7 @@ class WCSObject:
         translate (x,y) to (ra, dec)
         """
         if self.ctype1.find('TAN') < 0 or self.ctype2.find('TAN') < 0:
-            print 'XY2RD only supported for TAN projections.'
+            print('XY2RD only supported for TAN projections.')
             raise TypeError
 
         if isinstance(pos,N.ndarray):
@@ -621,13 +621,13 @@ class WCSObject:
 
         """
         if self.ctype1.find('TAN') < 0 or self.ctype2.find('TAN') < 0:
-            print 'RD2XY only supported for TAN projections.'
+            print('RD2XY only supported for TAN projections.')
             raise TypeError
 
         det = self.cd11*self.cd22 - self.cd12*self.cd21
 
         if det == 0.0:
-            raise ArithmeticError,"singular CD matrix!"
+            raise ArithmeticError("singular CD matrix!")
 
         cdinv11 = self.cd22 / det
         cdinv12 = -self.cd12 / det
@@ -645,7 +645,7 @@ class WCSObject:
 
         bottom = float(N.sin(dec)*N.sin(dec0) + N.cos(dec)*N.cos(dec0)*N.cos(ra-ra0))
         if bottom == 0.0:
-            raise ArithmeticError,"Unreasonable RA/Dec range!"
+            raise ArithmeticError("Unreasonable RA/Dec range!")
 
         xi = RADTODEG((N.cos(dec) * N.sin(ra-ra0) / bottom))
         eta = RADTODEG((N.sin(dec)*N.cos(dec0) - N.cos(dec)*N.sin(dec0)*N.cos(ra-ra0)) / bottom)
@@ -684,7 +684,7 @@ class WCSObject:
         Algorithm used here developed by Colin Cox - 27-Jan-2004.
         """
         if self.ctype1.find('TAN') < 0 or self.ctype2.find('TAN') < 0:
-            print 'WCS.recenter() only supported for TAN projections.'
+            print('WCS.recenter() only supported for TAN projections.')
             raise TypeError
 
         # Check to see if WCS is already centered...
@@ -812,7 +812,7 @@ class WCSObject:
             backup keywords.
         """
         # If there are no backup keys, do nothing...
-        if len(self.backup.keys()) == 0:
+        if len(list(self.backup.keys())) == 0:
             return
         for key in self.backup.keys():
             if key != 'WCSCDATE':
@@ -828,10 +828,10 @@ class WCSObject:
             Set the WCSDATE at this time as well.
         """
         # Verify that existing backup values are not overwritten accidentally.
-        if len(self.backup.keys()) > 0 and overwrite == no:
+        if len(list(self.backup.keys())) > 0 and overwrite == no:
             if not quiet:
-                print 'WARNING: Backup WCS keywords already exist! No backup made.'
-                print '         The values can only be overridden if overwrite=yes.'
+                print('WARNING: Backup WCS keywords already exist! No backup made.')
+                print('         The values can only be overridden if overwrite=yes.')
             return
 
         # Establish what prepend string to use...
@@ -943,7 +943,7 @@ class WCSObject:
         _root,_iextn = fileutil.parseFilename(self.rootname)
         _extn = fileutil.getExtn(fimg,_iextn)
         if not quiet:
-            print 'Updating archive WCS keywords for ',_fitsname
+            print('Updating archive WCS keywords for ',_fitsname)
 
         # Write out values to header...
         for key in self.orig_wcs.keys():
@@ -955,7 +955,7 @@ class WCSObject:
             _old_key = key in _extn.header
             if  _old_key == True and overwrite == no:
                 if not quiet:
-                    print 'WCS keyword',key,' already exists! Not overwriting.'
+                    print('WCS keyword',key,' already exists! Not overwriting.')
                 continue
 
             # No archive keywords exist yet in file, or overwrite=yes...
@@ -966,7 +966,7 @@ class WCSObject:
                 _indx_key = _extn.header.index(_dkey)
                 _full_key = _extn.header.cards[_indx_key]
                 if not quiet:
-                    print 'updating ',key,' with value of: ',self.orig_wcs[key]
+                    print('updating ',key,' with value of: ',self.orig_wcs[key])
                 _extn.header[key] = (self.orig_wcs[key], _full_key.comment)
 
         key = 'WCSCDATE'
@@ -1013,10 +1013,10 @@ class WCSObject:
                     if _okey in _extn.header:
                         _extn.header[key] = _extn.header[_okey]
                     else:
-                        print 'No original WCS values found. Exiting...'
+                        print('No original WCS values found. Exiting...')
                         break
         else:
-            print 'No original WCS values found. Exiting...'
+            print('No original WCS values found. Exiting...')
 
         fimg.close()
         del fimg
@@ -1095,5 +1095,5 @@ class WCSObject:
 
     def help(self):
         """ Prints out help message."""
-        print 'wcsutil Version '+str(__version__)+':\n'
-        print self.__doc__
+        print('wcsutil Version '+str(__version__)+':\n')
+        print(self.__doc__)

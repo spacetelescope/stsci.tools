@@ -1,6 +1,6 @@
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
-from stsci.tools import parseinput, fileutil, readgeis, asnutil, irafglob
+from stsci.tools import parseinput, fileutil
 from astropy.io import fits
 import os
 
@@ -55,7 +55,7 @@ def checkFITSFormat(filelist, ivmlist=None):
     if ivmlist == None:
         ivmlist = [None for l in filelist]
 
-    sci_ivm = zip(filelist, ivmlist)
+    sci_ivm = list(zip(filelist, ivmlist))
 
     removed_files, translated_names, newivmlist = convert2fits(sci_ivm)
     newfilelist, ivmlist = update_input(filelist, ivmlist, removed_files)
@@ -80,7 +80,7 @@ def checkStisFiles(filelist, ivmlist=None):
     if len(filelist) != len(ivmlist):
         errormsg = "Input file list and ivm list have different lenghts\n"
         errormsg += "Quitting ...\n"
-        raise ValueError, errormsg
+        raise ValueError(errormsg)
 
     for t in zip(filelist, ivmlist):
 
@@ -98,15 +98,15 @@ def checkStisFiles(filelist, ivmlist=None):
             removed_files.append(t[0])
             if (isinstance(t[1], tuple) and t[1][0] is not None) or \
                (not isinstance(t[1], tuple) and t[1] is not None):
-                print 'Does not handle STIS IVM files and STIS association files\n'
+                print('Does not handle STIS IVM files and STIS association files\n')
             else:
                 assoc_ilist.extend([None]*len(assoc_files))
         elif sci_count == 1:
             newflist.append(t[0])
             newilist.append(t[1])
         else:
-            errormesg = "No valid 'SCI extension in STIS file\n"
-            raise ValueError, errormsg
+            errormsg = "No valid 'SCI extension in STIS file\n"
+            raise ValueError(errormsg)
 
         stisExt2PrimKw([t[0]])
 
@@ -124,16 +124,16 @@ def check_exptime(filelist):
             exptime = fileutil.getHeader(f+'[sci,1]')['EXPTIME']
         except KeyError:
             removed_files.append(f)
-            print "Warning:  There are files without keyword EXPTIME"
+            print("Warning:  There are files without keyword EXPTIME")
             continue
         if exptime <= 0:
             removed_files.append(f)
-            print "Warning:  There are files with zero exposure time: keyword EXPTIME = 0.0"
+            print("Warning:  There are files with zero exposure time: keyword EXPTIME = 0.0")
 
     if removed_files != []:
-        print "Warning:  Removing the following files from input list"
+        print("Warning:  Removing the following files from input list")
         for f in removed_files:
-            print '\t',f
+            print('\t',f)
     return removed_files
 
 def checkNGOODPIX(filelist):
@@ -160,10 +160,10 @@ def checkNGOODPIX(filelist):
                 removed_files.append(inputfile)
 
     if removed_files != []:
-        print "Warning:  Files without valid pixels detected: keyword NGOODPIX = 0.0"
-        print "Warning:  Removing the following files from input list"
+        print("Warning:  Files without valid pixels detected: keyword NGOODPIX = 0.0")
+        print("Warning:  Removing the following files from input list")
         for f in removed_files:
-            print '\t',f
+            print('\t',f)
 
     return removed_files
 
@@ -177,9 +177,9 @@ def update_input(filelist, ivmlist=None, removed_files=None):
     if removed_files == []:
         return filelist, ivmlist
     else:
-        sci_ivm = zip(filelist, ivmlist)
+        sci_ivm = list(zip(filelist, ivmlist))
         for f in removed_files:
-            result=[sci_ivm.remove(t) for t in sci_ivm if t[0] == f ]
+            result = [sci_ivm.remove(t) for t in sci_ivm if t[0] == f ]
         ivmlist = [el[1] for el in sci_ivm]
         newfilelist = [el[0] for el in sci_ivm]
         return newfilelist, ivmlist
@@ -242,10 +242,10 @@ def splitStis(stisfile, sci_count):
             fitsobj[2].header['EXTVER'] = 1
             fitsobj[3].header['EXTVER'] = 1
         except ValueError:
-            print '\nWarning:'
-            print 'Extension version %d of the input file %s does not' %(count, stisfile)
-            print 'contain all required image extensions. Each must contain'
-            print 'populates SCI, ERR and DQ arrays.'
+            print('\nWarning:')
+            print('Extension version %d of the input file %s does not' %(count, stisfile))
+            print('contain all required image extensions. Each must contain')
+            print('populates SCI, ERR and DQ arrays.')
 
             continue
 
@@ -254,7 +254,7 @@ def splitStis(stisfile, sci_count):
         # If the file does exist, replace it.
         if (os.path.exists(newfilename)):
             os.remove(newfilename)
-            print "       Replacing "+newfilename+"..."
+            print("       Replacing "+newfilename+"...")
 
             # Write out the new file
         fitsobj.writeto(newfilename)
@@ -265,7 +265,7 @@ def splitStis(stisfile, sci_count):
     try:
         sptfile = fits.open(sptfilename)
     except IOError:
-        print 'SPT file not found %s \n' % sptfilename
+        print('SPT file not found %s \n' % sptfilename)
         return newfiles
 
     if sptfile:
@@ -281,12 +281,12 @@ def splitStis(stisfile, sci_count):
                 fitsobj[1].header['EXTVER'] = 1
                 if (os.path.exists(newfilename)):
                     os.remove(newfilename)
-                    print "       Replacing "+newfilename+"..."
+                    print("       Replacing "+newfilename+"...")
 
                 # Write out the new file
                 fitsobj.writeto(newfilename)
         except:
-            print "Warning: Unable to split spt file %s " % sptfilename
+            print("Warning: Unable to split spt file %s " % sptfilename)
         sptfile.close()
 
     return newfiles
@@ -314,8 +314,8 @@ def stisExt2PrimKw(stisfiles):
 def isSTISSpectroscopic(fname):
 
     if fits.getval(fname, 'OBSTYPE') == 'SPECTROSCOPIC':
-        print "Warning:  STIS spectroscopic files detected"
-        print "Warning:  Removing %s from input list" % fname
+        print("Warning:  STIS spectroscopic files detected")
+        print("Warning:  Removing %s from input list" % fname)
         return True
     else:
         return False
@@ -332,16 +332,16 @@ def checkPA_V3(fnames):
                 try:
                     pav3 = fits.getval(sptfile, 'PA_V3')
                 except KeyError:
-                    print "Warning:  Files without keyword PA_V3 detected"
+                    print("Warning:  Files without keyword PA_V3 detected")
                     removed_files.append(f)
                 fits.setval(f, 'PA_V3', value=pav3)
             else:
-                print "Warning:  Files without keyword PA_V3 detected"
+                print("Warning:  Files without keyword PA_V3 detected")
                 removed_files.append(f)
     if removed_files != []:
-        print "Warning:  Removing the following files from input list"
+        print("Warning:  Removing the following files from input list")
         for f in removed_files:
-            print '\t',f
+            print('\t',f)
     return removed_files
 
 def convert2fits(sci_ivm):
@@ -358,8 +358,8 @@ def convert2fits(sci_ivm):
         try:
             imgfits,imgtype = fileutil.isFits(file[0])
         except IOError:
-            print "Warning:  File %s could not be found" %file[0]
-            print "Warning:  Removing file %s from input list" %file[0]
+            print("Warning:  File %s could not be found" %file[0])
+            print("Warning:  Removing file %s from input list" %file[0])
             removed_files.append(file[0])
             continue
 
@@ -368,7 +368,7 @@ def convert2fits(sci_ivm):
         if imgfits and imgtype == 'waiver':
             newfilename = waiver2mef(file[0], convert_dq=True)
             if newfilename == None:
-                print "Removing file %s from input list - could not convert WAIVER format to MEF\n" %file[0]
+                print("Removing file %s from input list - could not convert WAIVER format to MEF\n" %file[0])
                 removed_files.append(file[0])
             else:
                 removed_files.append(file[0])
@@ -381,7 +381,7 @@ def convert2fits(sci_ivm):
         if not imgfits:
             newfilename = geis2mef(file[0], convert_dq=True)
             if newfilename == None:
-                print "Removing file %s from input list - could not convert GEIS format to MEF\n" %file[0]
+                print("Removing file %s from input list - could not convert GEIS format to MEF\n" %file[0])
                 removed_files.append(file[0])
             else:
                 removed_files.append(file[0])
@@ -406,7 +406,7 @@ def waiver2mef(sciname, newname=None, convert_dq=True):
             del newimage
             return newfilename
         except IOError:
-            print 'Warning: File %s could not be found' % file
+            print('Warning: File %s could not be found' % file)
             return None
 
     newsciname = convert(sciname)
@@ -433,7 +433,7 @@ def geis2mef(sciname, convert_dq=True):
             del newimage
             return newfilename
         except IOError:
-            print 'Warning: File %s could not be found' % file
+            print('Warning: File %s could not be found' % file)
             return None
 
     newsciname = convert(sciname)

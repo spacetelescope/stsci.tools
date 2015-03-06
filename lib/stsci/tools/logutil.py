@@ -14,13 +14,13 @@ import threading
 try:
     from cStringIO import StringIO
 except ImportError:
-    from StringIO import StringIO
+    from io import StringIO
 
 
 global_logging_started = False
 
 
-PY3K = sys.version_info[:2] >= (3, 0)
+PY3K = sys.version_info[0] > 2
 
 
 # The global_logging system replaces the raw_input builtin (input on Python 3)
@@ -50,9 +50,8 @@ PY3K = sys.version_info[:2] >= (3, 0)
 #     fileno() method that returns the correct file descriptor for the
 #     console's stdout.
 if not PY3K:
-    import os
     import __builtin__ as builtins
-    from ctypes import pythonapi, py_object, c_void_p, c_char_p, c_int
+    from ctypes import pythonapi, py_object, c_void_p, c_char_p
 
     # PyFile_AsFile returns a FILE * from a python file object.
     # This is used later with pythonapi.PyOS_Readline to perform

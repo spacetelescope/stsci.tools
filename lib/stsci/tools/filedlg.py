@@ -22,10 +22,21 @@ $Id$
 """
 from __future__ import division # confidence high
 
-import os, commands
+import sys, os
 import capable
+
+PY3K = sys.version_info[0] > 2
+if PY3K:
+    from subprocess import getoutput
+else:
+    from commands import getoutput
+
 if capable.OF_GRAPHICS:
-    import Tkinter
+    if PY3K:
+        import tkinter as Tkinter
+    else:
+        import Tkinter
+        
     import alert
     from dialog import *
 else:
@@ -212,7 +223,7 @@ class FileDialog(ModalDialog):
         if filter == '*':
             filter = ''
         cmd = "/bin/ls " + os.path.join(cwd, filter)
-        cmdOutput = commands.getoutput(cmd)
+        cmdOutput = getoutput(cmd)
         files = cmdOutput.split("\n")
         files.sort()
         for i in range(len(files)):

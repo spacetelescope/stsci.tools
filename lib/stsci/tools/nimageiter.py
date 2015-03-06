@@ -30,7 +30,7 @@ def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
         through the image with this many rows of overlap, with
         the default being no overlap at all.
     """
-    if type(imglist) != types.ListType:
+    if type(imglist) != list:
         imgarr = imglist.data
         imgarr = N.asarray(imgarr)
         _imglen = 1
@@ -54,7 +54,7 @@ def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
 
     else:
         nrows = computeBuffRows(imgarr,bufsize=bufsize)
-#        niter = int(imgarr.shape[0] / nrows) * nrows
+#       niter = int(imgarr.shape[0] / nrows) * nrows
         nbuff,nrows = computeNumberBuff(imgarr.shape[0],nrows,overlap)
         niter = nbuff*nrows
 
@@ -83,16 +83,16 @@ def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
                     yield _cache,(pix,_prange)
                     N.multiply(_cache,0.,_cache)
                 else:
-                    for img in xrange(len(imglist)): _outlist[img] = imglist[img][pix:_prange].copy()
+                    for img in range(len(imglist)): _outlist[img] = imglist[img][pix:_prange].copy()
                     yield _outlist,(pix,_prange)
-                    for img in xrange(len(imglist)): N.multiply(_outlist[img],0.,_outlist[img])
+                    for img in range(len(imglist)): N.multiply(_outlist[img],0.,_outlist[img])
             else:
                 if single:
                     #yield imgarr.section[pix:_prange,:],(pix,_prange)
                     yield imgarr[pix:_prange],(pix,_prange)
                 else:
                     for hdu in imglist:
-                #_outlist.append(imglist[img][pix:pix+nrows])
+                        #_outlist.append(imglist[img][pix:pix+nrows])
                         _outlist.append(hdu.section[pix:_prange,:])
                     yield _outlist,(pix,_prange)
                     # This code is inserted to copy any values changed
@@ -167,7 +167,7 @@ def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
         through the image with this many rows of overlap, with
         the default being no overlap at all.
     """
-    if type(filelist) != types.ListType:
+    if type(filelist) != list:
         imgarr = filelist.data
         imgarr = N.asarray(imgarr)
         _imglen = 1
@@ -187,7 +187,7 @@ def FileIter(filelist,bufsize=BUFSIZE,overlap=0):
 
     else:
         nrows = computeBuffRows(imgarr,bufsize=bufsize)
-#        niter = int(imgarr.shape[0] / nrows) * nrows
+#       niter = int(imgarr.shape[0] / nrows) * nrows
         nbuff,nrows = computeNumberBuff(imgarr.shape[0],nrows,overlap)
         niter = nbuff * nrows
 

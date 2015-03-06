@@ -2,9 +2,14 @@
 
 $Id$
 """
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 import copy, glob, os, stat, sys
+
+if sys.version_info[0] > 2:
+    string_types = str
+else:
+    string_types = basestring
 
 # ConfigObj modules
 import configobj, validate
@@ -32,7 +37,7 @@ def getAppDir():
         try:
             os.mkdir(theDir)
         except OSError:
-            print 'Could not create "'+theDir+'" to save GUI settings.'
+            print('Could not create "'+theDir+'" to save GUI settings.')
             theDir = "./"+APP_NAME.lower()
     return theDir
 
@@ -142,7 +147,7 @@ def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
             # One last case to try is something like "csc_kill" from
             # "acstools.csc_kill", but this convenience capability will only be
             # allowed if the parent pkg (acstools) has already been imported.
-            if isinstance(pkgName, (str,unicode)) and pkgName.find('.') < 0:
+            if isinstance(pkgName, string_types) and pkgName.find('.') < 0:
                 matches = [x for x in sys.modules.keys() \
                            if x.endswith("."+pkgName)]
                 if len(matches)>0:
@@ -217,8 +222,8 @@ def getCfgFilesInDirForTask(aDir, aTask, recurse=False):
             try:
                 if aTask == getEmbeddedKeyVal(f, TASK_NAME_KEY, ''):
                     retval.append(f)
-            except Exception, e:
-                print 'Warning: '+str(e)
+            except Exception as e:
+                print('Warning: '+str(e))
         return retval
     else:
         return flist
@@ -416,10 +421,10 @@ def integrityTestAllPkgCfgFiles(pkgObj, output=True):
         try:
             if taskName:
                 if output:
-                    print 'In '+pkgObj.__name__+', checking task: '+ \
-                           taskName+', file: '+fname
+                    print('In '+pkgObj.__name__+', checking task: '+ 
+                           taskName+', file: '+fname)
                 integrityTestTaskCfgFile(taskName, fname)
-        except Exception, e:
+        except Exception as e:
             errors.append(str(e))
 
     assert len(errors) == 0, 'Errors found while integrity testing .cfg '+ \
@@ -585,7 +590,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 raise RuntimeError(msg)
             else:
                 # just inform them, but don't throw anything
-                print msg.replace('\n\n','\n')
+                print(msg.replace('\n\n','\n'))
 
         # get the initial param list out of the ConfigObj dict
         self.syncParamList(True)
@@ -887,7 +892,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             # a section
             if isinstance(val, dict):
                 if not toBeHidden:
-                    if len(val.keys())>0 and len(retval)>0:
+                    if len(list(val.keys()))>0 and len(retval)>0:
                         # Here is where we sneak in the section comment
                         # This is so incredibly kludgy (as the code was), it
                         # MUST be revamped eventually! This is for the epar GUI.
@@ -1002,9 +1007,9 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     # What triggers what? (thats why theres an 's' in the kwd)
                     # try "trigger" (old)
                     if chk_args_dict.get('trigger'):
-                        print "WARNING: outdated version of .cfgspc!! for "+\
-                              self.__taskName+", 'trigger' unused for "+\
-                              absKeyName
+                        print("WARNING: outdated version of .cfgspc!! for "+
+                              self.__taskName+", 'trigger' unused for "+
+                              absKeyName)
                     # try "triggers"
                     trgs = chk_args_dict.get('triggers')
                     if trgs and len(trgs)>0:
@@ -1130,7 +1135,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             theDict.pop(name)
 
         # Then go through the dict removing all hidden items ('_item_name_')
-        for k in dcopy.keys():
+        for k in dcopy:
             if isHiddenName(k):
                 dcopy.pop(k)
 
@@ -1237,10 +1242,10 @@ def findTheLost(config_file, configspec_file, skipHidden=True):
     ConfigObj docs. Return a stringified list of item errors. """
     # do some sanity checking, but don't (yet) make this a serious error
     if not os.path.exists(config_file):
-        print "ERROR: Config file not found: "+config_file
+        print("ERROR: Config file not found: "+config_file)
         return []
     if not os.path.exists(configspec_file):
-        print "ERROR: Configspec file not found: "+configspec_file
+        print("ERROR: Configspec file not found: "+configspec_file)
         return []
     tmpObj = configobj.ConfigObj(config_file, configspec=configspec_file)
     simval = configobj.SimpleVal()

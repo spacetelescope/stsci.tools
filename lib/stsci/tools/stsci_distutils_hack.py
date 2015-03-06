@@ -12,7 +12,7 @@
 # where XX is the version of stsci.tools you expect for the install to work
 #
 
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 """
 Special handling for stsci_python package installation.

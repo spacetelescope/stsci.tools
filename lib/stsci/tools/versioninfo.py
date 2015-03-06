@@ -13,21 +13,21 @@
 #                                 loop over a taskList object. -- CJH
 #
 #       Version 0.2.0, 31-Mar-06: Added numpy to the task list. -- CJH
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 __version__ = '0.2.0'
 
 def printVersionInfo():
     # Print the current path information
     try:
-        print "Path information:"
-        print "-----------------"
+        print("Path information:")
+        print("-----------------")
         import sys
-        print sys.path
-        print " "
+        print(sys.path)
+        print(" ")
     except:
-        print "Unable to get sys information."
-        print " "
+        print("Unable to get sys information.")
+        print(" ")
 
     # Define the list of tasks to test
     taskList = [
@@ -49,33 +49,33 @@ def printVersionInfo():
 
     # Test the list of software tasks
     for software in taskList:
-        print software+":"
-        print "-----------"
+        print(software+":")
+        print("-----------")
         try:
             package = __import__(software)
             try:
-                print "version -> ",package.__version__
+                print("version -> ",package.__version__)
             except:
-                print "__version__ attribute is not defined"
+                print("__version__ attribute is not defined")
             try:
-                print "SVN version -> ",package.__svn_version__
+                print("SVN version -> ",package.__svn_version__)
             except:
-                print "__svn_version__ attribute is not defined"
+                print("__svn_version__ attribute is not defined")
             try:
                 pathName = package.__path__
             except:
                 pathName = package.__file__
-            print "location -> ",pathName
+            print("location -> ",pathName)
         except:
-            print software+" not found in path..."
-        print " "
+            print(software+" not found in path...")
+        print(" ")
 
     # Print instruction message.
-    print "PLEASE PASTE THE OUTPUT FROM THIS TASK "
-    print "INTO AN E-MAIL MESSAGE AND SEND IT WITH"
-    print "YOUR PROBLEM DESCRIPTION TO SSB!"
-    print " "
-    print "SUPPORT ADDRESS: help@stsci.edu "
+    print("PLEASE PASTE THE OUTPUT FROM THIS TASK ")
+    print("INTO AN E-MAIL MESSAGE AND SEND IT WITH")
+    print("YOUR PROBLEM DESCRIPTION TO SSB!")
+    print(" ")
+    print("SUPPORT ADDRESS: help@stsci.edu ")
 
 if __name__ == '__main__':
     printVersionInfo()

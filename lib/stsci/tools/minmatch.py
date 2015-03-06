@@ -22,9 +22,15 @@ $Id$
 
 R. White, 2000 January 28
 """
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
-import copy
+import sys, copy
+PY3K = sys.version_info[0] > 2
+if PY3K:
+    string_types = str
+else:
+    string_types = basestring
+
 # Need to import UserDict - 3.x has it in collections, 2.x has it in UserDict,
 # and the 2to3 tool doesn't fix this for us; the following should handle it all
 try:
@@ -69,7 +75,7 @@ class MinMatchDict(UserDict):
             # always add at least one entry (even for key="")
             lenkey = len(key)
             start = min(minkeylength,lenkey)
-            for i in xrange(start,lenkey+1):
+            for i in range(start,lenkey+1):
                 mmkeysGet(key[0:i],[]).append(key)
         self.mmkeys = mmkeys
 
@@ -77,7 +83,7 @@ class MinMatchDict(UserDict):
         # check for exact match first
         # ambiguous key is ok if there is exact match
         if key in self.data: return key
-        if not isinstance(key, (str,unicode)):
+        if not isinstance(key, string_types):
             raise KeyError("MinMatchDict keys must be strings")
         # no exact match, so look for unique minimum match
         if self.mmkeys is None: self._mmInit()
@@ -108,7 +114,7 @@ class MinMatchDict(UserDict):
             start = min(self.minkeylength,lenkey)
             # cache references to speed up loop a bit
             mmkeysGet = mmkeys.setdefault
-            for i in xrange(start,lenkey+1):
+            for i in range(start,lenkey+1):
                 mmkeysGet(key[0:i],[]).append(key)
         self.data[key] = item
 
@@ -117,7 +123,7 @@ class MinMatchDict(UserDict):
         try:
             key = self.getfullkey(key)
             self.data[key] = item
-        except KeyError, e:
+        except KeyError as e:
             raise e.__class__(str(e) + "\nUse add() method to add new items")
 
     def __getitem__(self, key):
@@ -142,7 +148,7 @@ class MinMatchDict(UserDict):
         del self.data[key]
         if self.mmkeys is not None:
             start = min(self.minkeylength,len(key))
-            for i in xrange(start,len(key)+1):
+            for i in range(start,len(key)+1):
                 s = key[0:i]
                 value = self.mmkeys.get(s)
                 value.remove(key)
@@ -193,7 +199,7 @@ class MinMatchDict(UserDict):
         if self.mmkeys is None: self._mmInit()
         k = self.mmkeys.get(key)
         if not k: return failobj
-        return map(self.data.get, k)
+        return list(map(self.data.get, k))
 
     def getallkeys(self, key, failobj=None):
         """Returns a list of the full key names (not the items)
@@ -246,65 +252,65 @@ class QuietMinMatchDict(MinMatchDict):
 
 def test():
     d = MinMatchDict()
-    print "a few d.add() calls"
+    print("a few d.add() calls")
     d.add('test',1)
     d.add('text',2)
     d.add('ten',10)
-    print "d.items()", sorted(d.items())
-    print "d['tex']=", d['tex']
-    print "Changing d['tes'] to 3"
+    print("d.items()", sorted(d.items()))
+    print("d['tex']=", d['tex'])
+    print("Changing d['tes'] to 3")
     d['tes'] = 3
-    print "d.items()", sorted(d.items())
+    print("d.items()", sorted(d.items()))
     try:
-        print "Ambiguous assignment to d['te'] - expecting exception"
+        print("Ambiguous assignment to d['te'] - expecting exception")
         d['te'] = 5
-    except AmbiguousKeyError, e:
-        print str(e)
-        print '---'
-    print "d.get('tes')", d.get('tes')
-    print "d.get('teq'), expect None: ", d.get('teq')
-    print "d.getall('t')", sorted(d.getall('t'))
+    except AmbiguousKeyError as e:
+        print(str(e))
+        print('---')
+    print("d.get('tes')", d.get('tes'))
+    print("d.get('teq'), expect None: ", d.get('teq'))
+    print("d.getall('t')", sorted(d.getall('t')))
     try:
-        print "d.get('t') - expecting exception"
+        print("d.get('t') - expecting exception")
         d.get('t')
-    except AmbiguousKeyError, e:
-        print str(e)
-        print '---'
-    print "d.add('tesseract',100)"
+    except AmbiguousKeyError as e:
+        print(str(e))
+        print('---')
+    print("d.add('tesseract',100)")
     d.add('tesseract',100)
-    print "d.items()", sorted(d.items())
+    print("d.items()", sorted(d.items()))
     try:
-        print "d.get('tes') - expecting exception"
+        print("d.get('tes') - expecting exception")
         d.get('tes')
-    except AmbiguousKeyError, e:
-        print str(e)
-        print '---'
+    except AmbiguousKeyError as e:
+        print(str(e))
+        print('---')
     try:
-        print "del d['tes'] - expecting exception"
+        print("del d['tes'] - expecting exception")
         del d['tes']
-    except AmbiguousKeyError, e:
-        print str(e)
-        print '---'
-    print "del d['tess']"
+    except AmbiguousKeyError as e:
+        print(str(e))
+        print('---')
+    print("del d['tess']")
     del d['tess']
-    print "d.items()", sorted(d.items())
-    print "d.get('tes')", d.get('tes')
-    print "d.has_key('tes'):", d.has_key('tes')
-    print "d.has_key('tes', exact=True):", d.has_key('tes', exact=True)
-    print "'tes' in d:", 'tes' in d
-    print "d.clear()"
+    print("d.items()", sorted(d.items()))
+    print("d.get('tes')", d.get('tes'))
+    print("d.has_key('tes'):", 'tes' in d)
+    print("d.has_key('tes', exact=True):", d.has_key('tes', exact=True))
+    print("'tes' in d:", 'tes' in d)
+    print("d.clear()")
     d.clear()
-    print "d.items()", sorted(d.items())
-    print "d.update({'ab': 0, 'cd': 1, 'ce': 2})"
+    print("d.items()", sorted(d.items()))
+    print("d.update({'ab': 0, 'cd': 1, 'ce': 2})")
     d.update({'ab': 0, 'cd': 1, 'ce': 2})
-    print "d.items()", sorted(d.items())
-    print "d['a']", d['a']
+    print("d.items()", sorted(d.items()))
+    print("d['a']", d['a'])
     try:
-        print "d['t'] - expecting exception"
+        print("d['t'] - expecting exception")
         d['t']
-    except KeyError, e:
-        print str(e)
-        print '---'
+    except KeyError as e:
+        print(str(e))
+        print('---')
 
 
 if __name__ == "__main__":

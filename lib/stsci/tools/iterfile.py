@@ -5,8 +5,6 @@ License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 """
 from __future__ import division # confidence high
 
-import types
-
 from astropy.io import fits
 
 __version__ = '0.3 (01-July-2014)'
@@ -135,7 +133,7 @@ def parseFilename(filename):
             # We are working with GEIS group syntax
             _indx = str(extn[:extn.find('/')])
             _extn = [int(_indx)]
-        elif type(extn) == types.StringType:
+        elif isinstance(extn, str):
             # Only one extension value specified...
             if extn.isdigit():
                 # We only have an extension number specified as a string...

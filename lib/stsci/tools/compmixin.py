@@ -31,7 +31,13 @@
           File "<stdin>", line 1, in <module>
         TypeError: unorderable types: str() < int()
 """
+from __future__ import print_function
 
+import sys
+if sys.version_info[0] < 3:
+    string_types = basestring
+else:
+    string_types = str
 
 class ComparableMixin(object):
     def _compare(self, other, method):
@@ -100,7 +106,7 @@ class AnyTypeUnitTest(ComparableMixin):
     def _compare(self, other, method):
         if isinstance(other, self.__class__):
             return self._compare(other.val, method) # recurse, get 2 logic below
-        if isinstance(other, (str, unicode)):
+        if isinstance(other, string_types):
             return method(str(self.val), other)
         elif other==None and self.val==None:
             return method(0, 0)
@@ -108,7 +114,7 @@ class AnyTypeUnitTest(ComparableMixin):
             return method(str(self.val), '') # coerce to str compare
         elif isinstance(other, int):
             # handle ONLY case where self.val is a single char or an int
-            if isinstance(self.val, (str,unicode)) and len(self.val)==1:
+            if isinstance(self.val, string_types) and len(self.val)==1:
                 return method(ord(self.val), other)
             else:
                 return method(int(self.val), other) # assume we are int-like
@@ -142,7 +148,7 @@ def test():
     assert str(b>=two) == "True"
     assert str(b==two) == "False"
     assert str([str(jj) for jj in sorted([b,a,two,c])])=="['2', 'a', 'b', 'c']"
-    print 'Success in first set'
+    print('Success in first set')
 
     x = AnyTypeUnitTest('x')
     y = AnyTypeUnitTest('yyy')
@@ -166,7 +172,7 @@ def test():
     assert str(y==nn) == "False"
     assert str(nn==nn) == "True"
     assert str([str(jj) for jj in sorted([y,x,nn,z])]) == "['None', '0', 'x', 'yyy']"
-    print 'Success in second set'
+    print('Success in second set')
 
     # compare AnyTypeUnitTest objects to built-in types
     assert str(x<0) == "False"
@@ -194,23 +200,23 @@ def test():
     assert str(y>"abc") == "True"
     assert str(y!="abc") == "True"
     assert str(y=="abc") == "False"
-    print 'Success in third set'
+    print('Success in third set')
 
     # all of the above should work without errors; now raise some
-    print 'yyy == 0 ?'
+    print('yyy == 0 ?')
     try:
         y == z # AnyTypeUnitTest intentionally doesn't compare strlen>1 to ints
         assert 0, 'Exception expected but not found'
     except ValueError:
-        print '   ... exception handled'
+        print('   ... exception handled')
 
-    print 'sorted([0, yyy]) ?'
+    print('sorted([0, yyy]) ?')
     try:
         sorted([z,y])
         assert 0, 'Exception expected but not found'
     except ValueError:
-        print '   ... exception handled'
-    print 'Test successful'
+        print('   ... exception handled')
+    print('Test successful')
 
 # -----------------------------------------------------------------------------
 

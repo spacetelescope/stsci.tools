@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #
+from __future__ import print_function
 import math, time
 
 class WatchedProcess(object):
@@ -116,7 +117,7 @@ def takes_time(x):
         s = (s + x) * s % 2399232
 
     elap = time.time() - START
-    print('Done "takes_time" x='+str(x)+': s = '+str(s)+', elapsed time = %.2f s' % elap)
+    print(('Done "takes_time" x='+str(x)+': s = '+str(s)+', elapsed time = %.2f s' % elap))
 
 
 def do_main():
@@ -126,7 +127,7 @@ def do_main():
     p = None
     subprocs = []
     for item in [2,3,4,5,6,7,8,9]:
-        print("mputil: instantiating Process for x = "+str(item))
+        print(("mputil: instantiating Process for x = "+str(item)))
         p = multiprocessing.Process(target=takes_time, args=(item,),
                                     name='takes_time()')
         subprocs.append(p)
@@ -200,7 +201,7 @@ def test_best_tile_layout():
         x,y = best_tile_layout(i)
         assert (x*y <= i) or (i == 0), "Total num resulting tiles > pool_size"
         unused_cores = i - (x*y)
-        print i, (x,y), unused_cores
+        print(i, (x,y), unused_cores)
         if i < 10:
             assert unused_cores <= 1, "Too many idle cores at i = "+str(i)
         else:

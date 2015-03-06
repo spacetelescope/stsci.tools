@@ -132,9 +132,15 @@
 
 # Developed by Science Software Branch, STScI, USA.
 
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 __version__ = "1.0 (31 January, 2008)"
+
+import sys
+if sys.version_info[0] < 3:
+    string_types = basestring
+else:
+    string_types = str
 
 #
 # -----------------------------------------------------------------------------
@@ -142,7 +148,6 @@ __version__ = "1.0 (31 January, 2008)"
 # -----------------------------------------------------------------------------
 #
 import os
-import types
 import sys
 import string
 from astropy.io import fits
@@ -162,8 +167,7 @@ def _usage():
         Exceptions: NONE
     """
 
-    print "usage: convertwaiveredfits.py [-hmv] [-o <outputFileName>, ...]",
-    print "FILE ..."
+    print("usage: convertwaiveredfits.py [-hmv] [-o <outputFileName>, ...] FILE ...")
 
 def _processCommandLineArgs():
     """
@@ -196,8 +200,8 @@ def _processCommandLineArgs():
                                     "verbose",
                                     "multiExtensionConversion",
                                     "outputFileName"])
-    except getopt.GetoptError, e:
-        print str(e)
+    except getopt.GetoptError as e:
+        print(str(e))
         _usage()
         sys.exit(1)
 
@@ -208,21 +212,14 @@ def _processCommandLineArgs():
     for o, a in opts:
         if o in ("-h", "--help"):
             _usage()
-            print "       Convert the waivered FITS Files (FILEs)",
-            print "to various formats."
-            print "       The default conversion format is multi-extension",
-            print "FITS."
-            print "       Options:"
-            print "         -h,  --help                       display this",
-            print "help message and exit"
-            print "         -v,  --verbose                    provide verbose",
-            print "output"
-            print "         -m,  --multiExtensionConversion   convert to",
-            print "multiExtension FITS format"
-            print "         -o,  --outputFileName             comma separated",
-            print "list of output file"
-            print "                                           specifications",
-            print "(one per input FILE)"
+            print("       Convert the waivered FITS Files (FILEs) to various formats.")
+            print("       The default conversion format is multi-extension FITS.")
+            print("       Options:")
+            print("         -h,  --help                       display this help message and exit")
+            print("         -v,  --verbose                    provide verbose output")
+            print("         -m,  --multiExtensionConversion   convert to multiExtension FITS format")
+            print("         -o,  --outputFileName             comma separated list of output file")
+            print("                                           specifications (one per input FILE)")
             sys.exit()
 
         if o in ("-v", "--verbose"):
@@ -230,8 +227,7 @@ def _processCommandLineArgs():
 
         if o in ("-m", "--multiExtensionConversion"):
             if conversionFormat != "":
-                print "convertwaiveredfits.py: only one conversion format",
-                print "allowed"
+                print("convertwaiveredfits.py: only one conversion format allowed")
                 _usage()
                 sys.exit(1)
 
@@ -247,7 +243,7 @@ def _processCommandLineArgs():
         conversionFormat = "multiExtension"
 
     if not args:
-        print "convertwaiveredfits.py: nothing to convert"
+        print("convertwaiveredfits.py: nothing to convert")
         _usage()
         sys.exit(1)
     else:
@@ -255,9 +251,8 @@ def _processCommandLineArgs():
 
         if outputFileNames:
             if len(files) != len(outputFileNames):
-                print "convertwaiveredfits.py: number of output file names",
-                print "does not match the number"
-                print "                        of FILEs to convert"
+                print("convertwaiveredfits.py: number of output file names does not match")
+                print("                        the number of FILEs to convert")
                 _usage()
                 sys.exit(1)
         else:
@@ -305,8 +300,8 @@ def _verify(waiveredHdul):
     #
     # Not a valid waivered Fits file
     #
-    raise ValueError, "Input object does not represent a valid waivered" + \
-                      " FITS file"
+    raise ValueError("Input object does not represent a valid waivered" + \
+                      " FITS file")
 
 def toMultiExtensionFits(waiveredObject,
                          multiExtensionFileName=None,
@@ -349,17 +344,16 @@ def toMultiExtensionFits(waiveredObject,
     if isinstance(waiveredObject, fits.HDUList):
         whdul = waiveredObject
         inputObjectDescription = "HDUList object"
-    elif isinstance(waiveredObject, file) or \
-         isinstance(waiveredObject,types.StringType):
-        if isinstance(waiveredObject, file):
-            inputObjectDescription = "file " + waiveredObject.name
-        else:
-            inputObjectDescription = "file " + waiveredObject
-
-        whdul = fits.open(waiveredObject)
     else:
-        raise TypeError, "Input object must be HDUList, file object, " + \
-                         "or file name"
+        try:
+            whdul = fits.open(waiveredObject)
+            if isinstance(waiveredObject, string_types):
+                inputObjectDescription = "file " + waiveredObject
+            else:
+                inputObjectDescription = "file " + waiveredObject.name
+        except TypeError:
+            raise TypeError("Input object must be HDUList, file object, " + \
+                            "or file name")
 
     _verify(whdul)
 
@@ -524,7 +518,7 @@ def toMultiExtensionFits(waiveredObject,
                         multiExtensionFileName + "."
 
     if verbose:
-        print verboseString
+        print(verboseString)
 
     return mhdul
 
@@ -575,9 +569,9 @@ def convertwaiveredfits(waiveredObject,
     if convertTo == 'multiExtension':
         func = toMultiExtensionFits
     else:
-        raise ValueError, 'Conversion type ' + convertTo + ' unknown'
+        raise ValueError('Conversion type ' + convertTo + ' unknown')
 
-    return apply(func,(waiveredObject,outputFileName,forceFileOutput,verbose))
+    return func(*(waiveredObject,outputFileName,forceFileOutput,verbose))
 #
 # *****************************************************************************
 # Main Program callable from the shell

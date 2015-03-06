@@ -27,6 +27,16 @@ Taken from pyraf.irafglobals, originally signed "R. White, 2000 Jan 5"
 """
 from __future__ import division
 
+import sys
+PY3K = sys.version_info[0] > 2
+
+if PY3K:
+    string_types = str
+    number_types = (int, float)
+else:
+    string_types = basestring
+    number_types = (int, long, float)
+
 import os
 import compmixin
 _os = os
@@ -53,7 +63,8 @@ class _VerboseClass(_compmixin.ComparableIntBaseMixin):
     def set(self, value): self.value = value
     def get(self): return self.value
     def _cmpkey(self): return self.value
-    def __nonzero__(self): return self.value != 0 # need bool return type
+    def __nonzero__(self): return self.value != 0
+    def __bool__(self): return self.value != 0
     def __str__(self): return str(self.value)
 
 Verbose = _VerboseClass()
@@ -111,7 +122,7 @@ class _Boolean(_compmixin.ComparableMixin):
         # If a string, compare with string value of this parameter.
         # Allow uppercase "YES", "NO" as well as lowercase.
         # Also allows single letter abbrevation "y" or "n".
-        if isinstance(other, (str,unicode)):
+        if isinstance(other, string_types):
             ovalue = other.lower()
             if len(ovalue)==1:
                 return method(self.__strvalue[0], ovalue)
@@ -121,7 +132,8 @@ class _Boolean(_compmixin.ComparableMixin):
         # value like an integer
         return method(self.__value, other)
 
-    def __nonzero__(self): return self.__value != 0 # need bool return type
+    def __nonzero__(self): return self.__value != 0
+    def __bool__(self): return self.value != 0
     def __repr__(self): return self.__strvalue
     def __str__(self): return self.__strvalue
     def __int__(self): return self.__value
@@ -162,10 +174,10 @@ class _EOFClass(_compmixin.ComparableMixin):
             # Despite trying to create only one EOF object, there
             # could be more than one.  All EOFs are equal.
             return method(1, 1)
-        if isinstance(other, (str,unicode)):
+        if isinstance(other, string_types):
             # If a string, compare with 'EOF'
             return method("EOF", other)
-        if isinstance(other, (int,float,long)):
+        if isinstance(other, number_types):
             # If a number, compare with -2
             return method(-2, other)
         # what else could it be?
@@ -342,7 +354,7 @@ class _EPSILONClass(_compmixin.ComparableFloatBaseMixin):
             if self.__dict__["_value"] is None:
                 self.__dict__["_value"] = value
             else:
-                raise RuntimeError, "epsilon cannot be modified"
+                raise RuntimeError("epsilon cannot be modified")
         else:
             pass
 
