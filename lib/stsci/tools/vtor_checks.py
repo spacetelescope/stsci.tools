@@ -6,7 +6,7 @@
 
 $Id$
 """
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 import configobj, validate
 import irafutils
@@ -68,67 +68,67 @@ def addKwdArgsToSig(sigStr, kwArgsDict):
 
 
 def boolean_check_kw(val, *args, **kw):
-    if OVCDBG: print "boolean_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw)
+    if OVCDBG: print("boolean_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw))
     vtor = validate.Validator()
     checkFuncStr = "boolean"+str(tuple(args))
     checkFuncStr = addKwdArgsToSig(checkFuncStr, separateKeywords(kw)[0])
-    if OVCDBG: print "CFS: "+checkFuncStr+'\n'
+    if OVCDBG: print("CFS: "+checkFuncStr+'\n')
     return vtor.check(checkFuncStr, val)
 
 
 def option_check_kw(val, *args, **kw):
-    if OVCDBG: print "option_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw)
+    if OVCDBG: print("option_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw))
     vtor = validate.Validator()
     checkFuncStr = "option"+str(tuple(args))
     checkFuncStr = addKwdArgsToSig(checkFuncStr, separateKeywords(kw)[0])
-    if OVCDBG: print "CFS: "+checkFuncStr+'\n'
+    if OVCDBG: print("CFS: "+checkFuncStr+'\n')
     return vtor.check(checkFuncStr, val)
 
 
 def integer_check_kw(val, *args, **kw):
-    if OVCDBG: print "integer_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw)
+    if OVCDBG: print("integer_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw))
     vtor = validate.Validator()
     checkFuncStr = "integer"+str(tuple(args))
     checkFuncStr = addKwdArgsToSig(checkFuncStr, separateKeywords(kw)[0])
-    if OVCDBG: print "CFS: "+checkFuncStr+'\n'
+    if OVCDBG: print("CFS: "+checkFuncStr+'\n')
     return vtor.check(checkFuncStr, val)
 
 
 def integer_or_none_check_kw(val, *args, **kw):
-    if OVCDBG: print "integer_or_none_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw)
+    if OVCDBG: print("integer_or_none_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw))
     if val in (None,'','None','NONE','INDEF'): return None # only difference
     vtor = validate.Validator()
     checkFuncStr = "integer"+str(tuple(args))
     checkFuncStr = addKwdArgsToSig(checkFuncStr, separateKeywords(kw)[0])
-    if OVCDBG: print "CFS: "+checkFuncStr+'\n'
+    if OVCDBG: print("CFS: "+checkFuncStr+'\n')
     return vtor.check(checkFuncStr, val)
 
 
 def float_check_kw(val, *args, **kw):
-    if OVCDBG: print "float_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw)
+    if OVCDBG: print("float_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw))
     vtor = validate.Validator()
     checkFuncStr = "float"+str(tuple(args))
     checkFuncStr = addKwdArgsToSig(checkFuncStr, separateKeywords(kw)[0])
-    if OVCDBG: print "CFS: "+checkFuncStr+'\n'
+    if OVCDBG: print("CFS: "+checkFuncStr+'\n')
     return vtor.check(checkFuncStr, val)
 
 
 def float_or_none_check_kw(val, *args, **kw):
-    if OVCDBG: print "float_or_none_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw)
+    if OVCDBG: print("float_or_none_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw))
     if val in (None,'','None','NONE','INDEF'): return None # only difference
     vtor = validate.Validator()
     checkFuncStr = "float"+str(tuple(args))
     checkFuncStr = addKwdArgsToSig(checkFuncStr, separateKeywords(kw)[0])
-    if OVCDBG: print "CFS: "+checkFuncStr+'\n'
+    if OVCDBG: print("CFS: "+checkFuncStr+'\n')
     return vtor.check(checkFuncStr, val)
 
 
 def string_check_kw(val, *args, **kw):
-    if OVCDBG: print "string_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw)
+    if OVCDBG: print("string_kw for: "+str(val)+", args: "+str(args)+", kw: "+str(kw))
     vtor = validate.Validator()
     checkFuncStr = "string"+str(tuple(args))
     checkFuncStr = addKwdArgsToSig(checkFuncStr, separateKeywords(kw)[0])
-    if OVCDBG: print "CFS: "+checkFuncStr+'\n'
+    if OVCDBG: print("CFS: "+checkFuncStr+'\n')
     return vtor.check(checkFuncStr, val)
 
 

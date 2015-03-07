@@ -21,14 +21,22 @@ $Id$
 
 M.D. De La Pena, 1999 August 05
 """
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 # System level modules
-import os, sys, string, commands
+import sys, string
 import capable
+
+PY3K = sys.version_info[0] > 2
+
 if capable.OF_GRAPHICS:
-    from Tkinter import *
-    import tkFileDialog
+    if PY3K:
+        from tkinter import *
+        from tkinter.filedialog import askdirectory, askopenfilename
+    else:
+        from Tkinter import *
+        from tkFileDialog import askdirectory, askopenfilename
+
 else:
     StringVar = None
 
@@ -286,7 +294,7 @@ class EparOption(object):
             if i1 >= 0 and i2 >= 0 and i2 > i1:
                 sel = self.entry.get()[i1:i2]
                 # Add to clipboard on platforms where necessary.
-                print 'selected: "'+sel+'"'
+                print('selected: "'+sel+'"')
 #               The following is unneeded if the selected text stays selected
 #               when focus is lost or another app is bought to the forground.
 #               if sel and USING_X and sys.platform == 'darwin':
@@ -323,7 +331,7 @@ class EparOption(object):
             # fire any applicable triggers, whether value has changed or not
             self.widgetEdited(action='entry')
             return None
-        except ValueError, exceptionInfo:
+        except ValueError as exceptionInfo:
             # Reset the entry to the previous (presumably valid) value
             if repair:
                 self.choice.set(self.previousValue)
@@ -431,8 +439,7 @@ class EparOption(object):
     def fileBrowser(self):
         """Invoke a Tkinter file dialog"""
         if capable.OF_TKFD_IN_EPAR:
-           fname = tkFileDialog.askopenfilename(parent=self.entry,
-                                                title="Select File")
+           fname = askopenfilename(parent=self.entry, title="Select File")
         else:
             import filedlg
             self.fd = filedlg.PersistLoadFileDialog(self.entry,
@@ -452,8 +459,7 @@ class EparOption(object):
     def dirBrowser(self):
         """Invoke a Tkinter directory dialog"""
         if capable.OF_TKFD_IN_EPAR:
-            fname = tkFileDialog.askdirectory(parent=self.entry,
-                                              title="Select Directory")
+            fname = askdirectory(parent=self.entry, title="Select Directory")
         else:
             raise NotImplementedError('Fix popupChoices() logic.')
         if not fname: return # canceled
@@ -624,7 +630,7 @@ class EnumEparOption(EparOption):
         self.entry.pack(side = LEFT)
 
         # shortcut keys jump to items
-        for letter in self.shortcuts.keys():
+        for letter in self.shortcuts:
             self.entry.bind('<%s>' % letter, self.keypress)
 
         # Left button sets focus (as well as popping up menu)

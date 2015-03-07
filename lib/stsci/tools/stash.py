@@ -10,6 +10,7 @@ use this in shell scripts:
 
 '''
 
+from __future__ import print_function
 import sys
 import os
 
@@ -23,7 +24,7 @@ except OSError :
     pass
 
 if __name__ == '__main__' :
-    print stash_dir
+    print(stash_dir)
     if not os.path.exists(stash_dir) :
         sys.exit(1)
 

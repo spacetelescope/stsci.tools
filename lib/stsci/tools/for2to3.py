@@ -22,7 +22,7 @@ def ndarr2str(arr, encoding='ascii'):
     retval = arr.tostring()
     # would rather check "if isinstance(retval, bytes)", but support 2.5.
     # could rm the if PY3K check, but it makes this faster on 2.x.
-    if PY3K and not isinstance(retval, (str, unicode)):
+    if PY3K and not isinstance(retval, str):
         return retval.decode(encoding)
     else: # is str
         return retval
@@ -40,7 +40,7 @@ def ndarr2bytes(arr, encoding='ascii'):
     # call will fail anyway if not
     retval = arr.tostring()
     # would rather check "if not isinstance(retval, bytes)", but support 2.5.
-    if PY3K and isinstance(retval, (str, unicode)):
+    if PY3K and isinstance(retval, str):
         # Take note if this ever gets used.  If this ever occurs, it
         # is likely wildly inefficient since numpy.tostring() is now
         # returning unicode and numpy surely has a tobytes() func by now.

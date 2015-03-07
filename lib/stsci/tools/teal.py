@@ -1,15 +1,23 @@
 """ Main module for the ConfigObj version of the parameter task editor: TEAL.
 $Id$
 """
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
-import glob, os, sys, traceback
+import os, sys, traceback
 import configobj, cfgpars, editpar, vtor_checks
 from cfgpars import APP_NAME
 from irafutils import printColsAuto, rglob, setWritePrivs
 import capable
+
+PY3K = sys.version_info[0] > 2
+
 if capable.OF_GRAPHICS:
-    import tkFileDialog, tkMessageBox
+    if PY3K:
+        from tkinter.filedialog import askopenfilename
+        from tkinter.messagebox import showerror, showwarning
+    else:
+        from tkFileDialog import askopenfilename
+        from tkMessageBox import showerror, showwarning
 
 # tool help
 tealHelpString = """\
@@ -166,7 +174,7 @@ def teal(theTask, parent=None, loadOnly=False, returnAs="dict",
         try:
             obj = cfgpars.getObjectFromTaskArg(theTask, strict, defaults)
 #           obj.strictUpdate(overrides) # ! would need to re-verify after this !
-        except Exception, re: # catches RuntimeError and KeyError and ...
+        except Exception as re: # catches RuntimeError and KeyError and ...
             # Since we are loadOnly, don't pop up the GUI for this
             if strict:
                 raise
@@ -187,13 +195,13 @@ def teal(theTask, parent=None, loadOnly=False, returnAs="dict",
                                       strict=strict,
                                       canExecute=canExecute)
 #                                     overrides=overrides)
-        except cfgpars.NoCfgFileError, ncf:
+        except cfgpars.NoCfgFileError as ncf:
             log_last_error()
             if errorsToTerm:
                 print(str(ncf).replace('\n\n','\n'))
             else:
                 popUpErr(parent=parent,message=str(ncf),title="Unfound Task")
-        except Exception, re: # catches RuntimeError and KeyError and ...
+        except Exception as re: # catches RuntimeError and KeyError and ...
             log_last_error()
             if errorsToTerm:
                 print(re.message.replace('\n\n','\n'))
@@ -274,12 +282,12 @@ def diffFromDefaults(theTask, report=False):
     thisFlat    = cfgpars.flattenDictTree(thisTree)
     # use the "set" operations till there is a dict.diff()
     # thanks to:  http://stackoverflow.com/questions/715234
-    diffFlat = dict( set(thisFlat.iteritems()) - \
-                     set(defaultFlat.iteritems()) )
+    diffFlat = dict( set(thisFlat.items()) - \
+                     set(defaultFlat.items()) )
     if report:
         defaults_of_diffs_only = {}
 #       { k:defaultFlat[k] for k in diffFlat.keys() }
-        for k in diffFlat.keys():
+        for k in diffFlat:
             defaults_of_diffs_only[k] = defaultFlat[k]
         msg = 'Non-default values of "'+str(theTask)+'":\n'+ \
               _flat2str(diffFlat)+ \
@@ -314,11 +322,15 @@ def _isInstalled(fullFname):
 def popUpErr(parent=None, message="", title="Error"):
     # withdraw root, could standardize w/ EditParDialog.__init__()
     if parent == None:
-        import Tkinter
-        root = Tkinter.Tk()
+        if PY3K:
+            import tkinter
+            root = tkinter.Tk()
+        else:
+            import Tkinter
+            root = Tkinter.Tk()
 #       root.lift()
         root.after_idle(root.withdraw)
-    tkMessageBox.showerror(message=message, title=title, parent=parent)
+    showerror(message=message, title=title, parent=parent)
 
 # We'd love to somehow force the dialog to the front here in popUpErr (on OSX)
 # but cannot since the Python process started from the Terminal is not an
@@ -556,7 +568,7 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
                 msg = 'Installed config file for task "'
             msg += self._taskParsObj.getName()+'" is not to be overwritten.'+\
                   '  Values will be saved to: \n\n\t"'+fname+'".'
-            tkMessageBox.showwarning(message=msg, title="Will not overwrite!")
+            showwarning(message=msg, title="Will not overwrite!")
             # Try saving to their local copy
             rv=self._taskParsObj.saveParList(filename=fname, comment=comment)
 
@@ -719,9 +731,9 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
                     # execute it and retrieve the outcome
                     try:
                         outval = execEmbCode(scope, name, newVal, self, codeStr)
-                    except Exception, ex:
+                    except Exception as ex:
                         outval = 'ERROR in '+triggerName+': '+str(ex)
-                        print outval
+                        print(outval)
                         msg = outval+':\n'+('-'*99)+'\n'+traceback.format_exc()
                         msg += 'CODE:  '+codeStr+'\n'+'-'*99+'\n'
                         self.debug(msg)
@@ -862,8 +874,8 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
         # (could use Tkinter's FileDialog, but this one is prettier)
         if fname[-3:] == '...':
             if capable.OF_TKFD_IN_EPAR:
-                fname = tkFileDialog.askopenfilename(title="Load Config File",
-                                                     parent=self.top)
+                fname = askopenfilename(title="Load Config File",
+                                        parent=self.top)
             else:
                 import filedlg
                 fd = filedlg.PersistLoadFileDialog(self.top,
@@ -883,9 +895,8 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
             tmpObj = cfgpars.ConfigObjPars(fname, associatedPkg=\
                                            self._taskParsObj.getAssocPkg(),
                                            strict=self._strict)
-        except Exception, ex:
-            tkMessageBox.showerror(message=ex.message,
-                title='Error in '+os.path.basename(fname))
+        except Exception as ex:
+            showerror(message=ex.message, title='Error in '+os.path.basename(fname))
             self.debug('Error in '+os.path.basename(fname))
             self.debug(traceback.format_exc())
             return
@@ -895,8 +906,7 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
             msg = 'The current task is "'+self._taskParsObj.getName()+ \
                   '", but the selected file is for task "'+ \
                   str(tmpObj.getName())+'".  This file was not loaded.'
-            tkMessageBox.showerror(message=msg,
-                title="Error in "+os.path.basename(fname))
+            showerror(message=msg, title="Error in "+os.path.basename(fname))
             self.debug(msg)
             self.debug(traceback.format_exc())
             return
@@ -907,9 +917,8 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
             self.setAllEntriesFromParList(newParList, updateModel=True)
                 # go ahead and updateModel, even though it will take longer,
                 # we need it updated for the copy of the dict we make below
-        except editpar.UnfoundParamError, pe:
-            tkMessageBox.showwarning(message=str(pe), title="Error in "+\
-                                     os.path.basename(fname))
+        except editpar.UnfoundParamError as pe:
+            showwarning(message=str(pe), title="Error in "+os.path.basename(fname))
         # trip any triggers
         self.checkAllTriggers('fopen')
 
@@ -966,10 +975,9 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
                                            self._taskParsObj.getAssocPkg(),
                                            setAllToDefaults=self.taskName,
                                            strict=False)
-        except Exception, ex:
+        except Exception as ex:
             msg = "Error Determining Defaults"
-            tkMessageBox.showerror(message=msg+'\n\n'+ex.message,
-                                   title="Error Determining Defaults")
+            showerror(message=msg+'\n\n'+ex.message, title="Error Determining Defaults")
             return
 
         # Set the GUI entries to these values (let the user Save after)
@@ -981,9 +989,8 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
             self.updateTitle('')
             self.showStatus("Loaded default "+self.taskName+" values via: "+ \
                  os.path.basename(tmpObj._original_configspec), keep=1)
-        except editpar.UnfoundParamError, pe:
-            tkMessageBox.showerror(message=str(pe),
-                                   title="Error Setting to Default Values")
+        except editpar.UnfoundParamError as pe:
+            showerror(message=str(pe), title="Error Setting to Default Values")
 
     def getDict(self):
         """ Retrieve the current parameter settings from the GUI."""
@@ -1019,9 +1026,8 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
             self.freshenFocus()
             self.showStatus('Loaded '+str(len(theDict))+ \
                 ' user par values for: '+self.taskName, keep=1)
-        except Exception, ex:
-            tkMessageBox.showerror(message=ex.message,
-                                   title="Error Setting to Loaded Values")
+        except Exception as ex:
+            showerror(message=ex.message, title="Error Setting to Loaded Values")
 
 
     def _getGuiSettings(self):
@@ -1075,7 +1081,7 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
         # e.g. { scope1.name1 : dep'cy-type, scope2.name2 : dep'cy-type, ... }
         depParsDict = self._taskParsObj.getParsWhoDependOn(triggerName)
         if not depParsDict: return
-        if 0: print "Dependent parameters:\n"+str(depParsDict)+"\n"
+        if 0: print("Dependent parameters:\n"+str(depParsDict)+"\n")
 
         # Get model data, the list of pars
         theParamList = self._taskParsObj.getParList()

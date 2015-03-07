@@ -8,7 +8,7 @@ Y = b0 + b1* X
 :version: '1.0 (2007-02-20)'
 
 """
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 import numerixenv
 numerixenv.check()
@@ -49,10 +49,10 @@ def linefit(x,y,weights=None):
     """
     
     if numerixenv.check_input(x) or numerixenv.check_input(y):
-        raise ValueError, "Input is a NumArray array. This version of %s requires a Numpy array\n" % __name__
+        raise ValueError("Input is a NumArray array. This version of %s requires a Numpy array\n" % __name__)
     
     if len(x) != len(y):
-        print "Error: X and Y must have equal size\n"
+        print("Error: X and Y must have equal size\n")
         return
     n = len(x)
     w = N.zeros((n,n)).astype(N.float)
@@ -61,7 +61,7 @@ def linefit(x,y,weights=None):
             w[i,i] = 1
     else:
         if len(weights) != n:
-            print "Error: Weights must have the same size as X and Y.\n"
+            print("Error: Weights must have the same size as X and Y.\n")
             return
         for i in N.arange(n):
             w[i,i] = weights[i]

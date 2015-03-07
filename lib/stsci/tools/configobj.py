@@ -25,6 +25,13 @@ import sys
 
 from codecs import BOM_UTF8, BOM_UTF16, BOM_UTF16_BE, BOM_UTF16_LE
 
+# To conditionally use version dependent code
+PY3K = sys.version_info[0] > 2
+
+if PY3K:
+    string_types = str
+else:
+    string_types = basestring
 
 # imported lazily to avoid startup performance hit if it isn't used
 compiler = None
@@ -162,16 +169,21 @@ class Builder(object):
         return m(o)
     
     def build_List(self, o):
-        return map(self.build, o.getChildren())
+        return list(map(self.build, o.getChildren()))
     
     def build_Const(self, o):
         return o.value
     
     def build_Dict(self, o):
         d = {}
-        i = iter(map(self.build, o.getChildren()))
-        for el in i:
-            d[el] = i.next()
+        if PY3K:
+            i = map(self.build, o.getChildren())
+            for el in i:
+                d[el] = next(i)
+        else:
+            i = iter(map(self.build, o.getChildren()))
+            for el in i:
+                d[el] = i.next()
         return d
     
     def build_Tuple(self, o):
@@ -189,7 +201,7 @@ class Builder(object):
         raise UnknownType('Undefined Name')
     
     def build_Add(self, o):
-        real, imag = map(self.build_Const, o.getChildren())
+        real, imag = list(map(self.build_Const, o.getChildren()))
         try:
             real = float(real)
         except TypeError:
@@ -519,7 +531,7 @@ class Section(dict):
         self._initialise()
         # we do this explicitly so that __setitem__ is used properly
         # (rather than just passing to ``dict.__init__``)
-        for entry, value in indict.iteritems():
+        for entry, value in indict.items():
             self[entry] = value
             
             
@@ -567,11 +579,11 @@ class Section(dict):
         """Fetch the item and do string interpolation."""
         val = dict.__getitem__(self, key)
         if self.main.interpolation: 
-            if isinstance(val, basestring):
+            if isinstance(val, str):
                 return self._interpolate(key, val)
             if isinstance(val, list):
                 def _check(entry):
-                    if isinstance(entry, basestring):
+                    if isinstance(entry, string_types):
                         return self._interpolate(key, entry)
                     return entry
                 new = [_check(entry) for entry in val]
@@ -594,7 +606,7 @@ class Section(dict):
         ``unrepr`` must be set when setting a value to a dictionary, without
         creating a new sub-section.
         """
-        if not isinstance(key, basestring):
+        if not isinstance(key, string_types):
             raise ValueError('The key "%s" is not a string.' % key)
         
         # add the comment
@@ -628,11 +640,11 @@ class Section(dict):
             if key not in self:
                 self.scalars.append(key)
             if not self.main.stringify:
-                if isinstance(value, basestring):
+                if isinstance(value, string_types):
                     pass
                 elif isinstance(value, (list, tuple)):
                     for entry in value:
-                        if not isinstance(entry, basestring):
+                        if not isinstance(entry, string_types):
                             raise TypeError('Value is not a string "%s".' % entry)
                 else:
                     raise TypeError('Value is not a string "%s".' % value)
@@ -722,7 +734,7 @@ class Section(dict):
 
     def items(self):
         """D.items() -> list of D's (key, value) pairs, as 2-tuples"""
-        return zip((self.scalars + self.sections), self.values())
+        return list(zip((self.scalars + self.sections), list(self.values())))
 
 
     def keys(self):
@@ -737,7 +749,7 @@ class Section(dict):
 
     def iteritems(self):
         """D.iteritems() -> an iterator over the (key, value) items of D"""
-        return iter(self.items())
+        return iter(list(self.items()))
 
 
     def iterkeys(self):
@@ -749,7 +761,7 @@ class Section(dict):
 
     def itervalues(self):
         """D.itervalues() -> an iterator over the values of D"""
-        return iter(self.values())
+        return iter(list(self.values()))
 
 
     def __repr__(self):
@@ -815,7 +827,7 @@ class Section(dict):
         >>> c2
         ConfigObj({'section1': {'option1': 'False', 'subsection': {'more_options': 'False'}}})
         """
-        for key, val in indict.items():
+        for key, val in list(indict.items()):
             if (key in self and isinstance(self[key], dict) and
                                 isinstance(val, dict)):
                 self[key].merge(val)
@@ -973,7 +985,7 @@ class Section(dict):
             return False
         else:
             try:
-                if not isinstance(val, basestring):
+                if not isinstance(val, string_types):
                     # TODO: Why do we raise a KeyError here?
                     raise KeyError()
                 else:
@@ -1225,7 +1237,7 @@ class ConfigObj(Section):
             for entry in options:
                 if entry not in OPTION_DEFAULTS:
                     raise TypeError('Unrecognised option "%s".' % entry)
-            for entry, value in OPTION_DEFAULTS.items():
+            for entry, value in list(OPTION_DEFAULTS.items()):
                 if entry not in options:
                     options[entry] = value
                 keyword_value = _options[entry]
@@ -1244,7 +1256,7 @@ class ConfigObj(Section):
         
         
     def _load(self, infile, configspec):
-        if isinstance(infile, basestring):
+        if isinstance(infile, string_types):
             self.filename = infile
             if os.path.isfile(infile):
                 h = open(infile) # !!! was 'rb' but fails PY3K and we dont need
@@ -1424,7 +1436,7 @@ class ConfigObj(Section):
             enc = BOM_LIST[self.encoding.lower()]
             if enc == 'utf_16':
                 # For UTF16 we try big endian and little endian
-                for BOM, (encoding, final_encoding) in BOMS.items():
+                for BOM, (encoding, final_encoding) in list(BOMS.items()):
                     if not final_encoding:
                         # skip UTF8
                         continue
@@ -1454,7 +1466,7 @@ class ConfigObj(Section):
             return self._decode(infile, self.encoding)
         
         # No encoding specified - so we need to check for UTF8/UTF16
-        for BOM, (encoding, final_encoding) in BOMS.items():
+        for BOM, (encoding, final_encoding) in list(BOMS.items()):
             if not isinstance(BOM, str) or not line.startswith(BOM):
                 continue
             else:
@@ -1470,7 +1482,7 @@ class ConfigObj(Section):
                     else:
                         infile = newline
                     # UTF8 - don't decode
-                    if isinstance(infile, basestring):
+                    if isinstance(infile, string_types):
                         return infile.splitlines(True)
                     else:
                         return infile
@@ -1478,7 +1490,7 @@ class ConfigObj(Section):
                 return self._decode(infile, encoding)
             
         # No BOM discovered and no encoding specified, just return
-        if isinstance(infile, basestring):
+        if isinstance(infile, string_types):
             # infile read from a file will be a single string
             return infile.splitlines(True)
         return infile
@@ -1498,16 +1510,20 @@ class ConfigObj(Section):
         
         if is a string, it also needs converting to a list.
         """
-        if isinstance(infile, basestring):
+        if isinstance(infile, string_types):
             # can't be unicode
             # NOTE: Could raise a ``UnicodeDecodeError``
             return infile.decode(encoding).splitlines(True)
         for i, line in enumerate(infile):
-            if not isinstance(line, unicode):
-                # NOTE: The isinstance test here handles mixed lists of unicode/string
-                # NOTE: But the decode will break on any non-string values
-                # NOTE: Or could raise a ``UnicodeDecodeError``
-                infile[i] = line.decode(encoding)
+            # NOTE: The isinstance test here handles mixed lists of unicode/string
+            # NOTE: But the decode will break on any non-string values
+            # NOTE: Or could raise a ``UnicodeDecodeError``
+            if PY3K:
+                if not isinstance(line, str):
+                    infile[i] = line.decode(encoding)
+            else:    
+                if not isinstance(line, unicode):
+                    infile[i] = line.decode(encoding)
         return infile
 
 
@@ -1525,7 +1541,7 @@ class ConfigObj(Section):
         Used by ``stringify`` within validate, to turn non-string values
         into strings.
         """
-        if not isinstance(value, basestring):
+        if not isinstance(value, string_types):
             return str(value)
         else:
             return value
@@ -1642,7 +1658,7 @@ class ConfigObj(Section):
                             comment = ''
                             try:
                                 value = unrepr(value)
-                            except Exception, e:
+                            except Exception as e:
                                 if type(e) == UnknownType:
                                     msg = 'Unknown name or type in value at line %s.'
                                 else:
@@ -1655,7 +1671,7 @@ class ConfigObj(Section):
                         comment = ''
                         try:
                             value = unrepr(value)
-                        except Exception, e:
+                        except Exception as e:
                             if isinstance(e, UnknownType):
                                 msg = 'Unknown name or type in value at line %s.'
                             else:
@@ -1778,7 +1794,7 @@ class ConfigObj(Section):
                 return self._quote(value[0], multiline=False) + ','
             return ', '.join([self._quote(val, multiline=False)
                 for val in value])
-        if not isinstance(value, basestring):
+        if not isinstance(value, string_types):
             if self.stringify:
                 value = str(value)
             else:
@@ -1930,11 +1946,11 @@ class ConfigObj(Section):
                                        raise_errors=True,
                                        file_error=True,
                                        _inspec=True)
-            except ConfigObjError, e:
+            except ConfigObjError as e:
                 # FIXME: Should these errors have a reference
                 #        to the already parsed ConfigObj ?
                 raise ConfigspecError('Parsing configspec failed: %s' % e)
-            except IOError, e:
+            except IOError as e:
                 raise IOError('Reading configspec failed: %s' % e)
         
         self.configspec = configspec
@@ -2191,7 +2207,7 @@ class ConfigObj(Section):
                                         val,
                                         missing=missing
                                         )
-            except validator.baseErrorClass, e:
+            except validator.baseErrorClass as e:
                 if not preserve_errors or isinstance(e, self._vdtMissingValue):
                     out[entry] = False
                 else:
@@ -2340,7 +2356,7 @@ class ConfigObj(Section):
         This method raises a ``ReloadError`` if the ConfigObj doesn't have
         a filename attribute pointing to a file.
         """
-        if not isinstance(self.filename, basestring):
+        if not isinstance(self.filename, string_types):
             raise ReloadError()
 
         filename = self.filename

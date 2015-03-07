@@ -3,12 +3,17 @@
 
 $Id$
 """
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 import re, sys
 import irafutils, minmatch
 from irafglobals import INDEF, Verbose, yes, no
 
+if sys.version_info[0] > 2:
+    int_types = (int, )
+else:
+    int_types = (int, long)
+    
 # container class used for __deepcopy__ method
 class _EmptyClass: pass
 
@@ -111,7 +116,7 @@ def isParField(s):
     """Returns true if string s appears to be a parameter field"""
     try:
         return (s[:2] == "p_") and s in _getFieldDict
-    except minmatch.AmbiguousKeyError, e:
+    except minmatch.AmbiguousKeyError:
         # If ambiguous match, assume it is a parameter field.
         # An exception will doubtless be raised later, but
         # there's really no good choice here.
@@ -209,7 +214,7 @@ class IrafPar:
         #
         try:
             self.checkValue(self.value,strict)
-        except ValueError, e:
+        except ValueError as e:
             warning("Illegal initial value for parameter\n" + str(e),
                     strict, exception=ValueError)
             # Set illegal values to None, just like IRAF
@@ -295,7 +300,7 @@ class IrafPar:
         else:
             pstring = self.name
         if self.choice:
-            schoice = map(self.toString, self.choice)
+            schoice = list(map(self.toString, self.choice))
             pstring = pstring + " (" + "|".join(schoice) + ")"
         elif self.min not in [None, INDEF] or \
                  self.max not in [None, INDEF]:
@@ -342,9 +347,9 @@ class IrafPar:
                 if ovalue == "":
                     stdout.flush()
                     raise EOFError("EOF on parameter prompt")
-                print "Error: specify a value for the parameter"
-            except ValueError, e:
-                print str(e)
+                print("Error: specify a value for the parameter")
+            except ValueError as e:
+                print(str(e))
             stdout.write(pstring)
             stdout.flush()
             ovalue = irafutils.tkreadline(stdin)
@@ -413,7 +418,7 @@ class IrafPar:
             # most parameters treat null string as omitted value
             return None
         elif self.choice is not None and v not in self.choiceDict:
-            schoice = map(self.toString, self.choice)
+            schoice = list(map(self.toString, self.choice))
             schoice = "|".join(schoice)
             raise ValueError("Parameter %s: "
                     "value %s is not in choice list (%s)" %
@@ -448,7 +453,7 @@ class IrafPar:
         """Return pretty list description of parameter"""
         # split prompt lines and add blanks in later lines to align them
         plines = self.prompt.split('\n')
-        for i in xrange(len(plines)-1): plines[i+1] = 32*' ' + plines[i+1]
+        for i in range(len(plines)-1): plines[i+1] = 32*' ' + plines[i+1]
         plines = '\n'.join(plines)
         namelen = min(len(self.name), 12)
         pvalue = self.get(prompt=0,lpar=1)
@@ -465,7 +470,7 @@ class IrafPar:
         if self.choice is not None:
             s = s + "\n" + 32*" " + "|"
             nline = 33
-            for i in xrange(len(self.choice)):
+            for i in range(len(self.choice)):
                 sch = str(self.choice[i]) + "|"
                 s = s + sch
                 nline = nline + len(sch) + 1
@@ -494,7 +499,7 @@ class IrafPar:
         fields[2] = self.mode
         fields[3] = self.toString(self.value,quoted=quoted)
         if self.choice is not None:
-            schoice = map(self.toString, self.choice)
+            schoice = list(map(self.toString, self.choice))
             schoice.insert(0,'')
             schoice.append('')
             fields[4] = repr('|'.join(schoice))
@@ -536,7 +541,7 @@ class IrafPar:
             raise AttributeError(field)
         try:
             return self._getField(field, native=1)
-        except SyntaxError, e:
+        except SyntaxError as e:
             if field in _IrafPar_attr_dict:
                 # handle odd-ball case of new code accessing par's new
                 # attr (e.g. scope), with old-code-cached version of par
@@ -589,12 +594,12 @@ class IrafPar:
     def __str__(self):
         """Return readable description of parameter"""
         s = "<" + self.__class__.__name__ + " " + self.name + " " + self.type
-        s = s + " " + self.mode + " " + `self.value`
+        s = s + " " + self.mode + " " + repr(self.value)
         if self.choice is not None:
-            schoice = map(self.toString, self.choice)
+            schoice = list(map(self.toString, self.choice))
             s = s + " |" + "|".join(schoice) + "|"
         else:
-            s = s + " " + `self.min` + " " + `self.max`
+            s = s + " " + repr(self.min) + " " + repr(self.max)
         s = s + ' "' + self.prompt + '">'
         return s
 
@@ -610,7 +615,7 @@ class IrafPar:
     def _setChoice(self,s,strict=0):
         """Set choice parameter from string s"""
         clist = _getChoice(s,strict)
-        self.choice = map(self._coerceValue, clist)
+        self.choice = list(map(self._coerceValue, clist))
         self._setChoiceDict()
 
     def _setChoiceDict(self):
@@ -667,7 +672,7 @@ class IrafPar:
         try:
             # expand field name using minimum match
             field = _getFieldDict[field]
-        except KeyError, e:
+        except KeyError as e:
             # re-raise the exception with a bit more info
             raise SyntaxError("Cannot get field " + field +
                     " for parameter " + self.name + "\n" + str(e))
@@ -701,7 +706,7 @@ class IrafPar:
                 if native:
                     return self.choice
                 else:
-                    schoice = map(self.toString, self.choice)
+                    schoice = list(map(self.toString, self.choice))
                     return "|" + "|".join(schoice) + "|"
             else:
                 if native:
@@ -719,7 +724,7 @@ class IrafPar:
         try:
             # expand field name using minimum match
             field = _setFieldDict[field]
-        except KeyError, e:
+        except KeyError as e:
             raise SyntaxError("Cannot set field " + field +
                     " for parameter " + self.name + "\n" + str(e))
         if field == "p_prompt":
@@ -846,7 +851,7 @@ class IrafArrayPar(IrafPar):
         #
         try:
             self.checkValue(self.value,strict)
-        except ValueError, e:
+        except ValueError as e:
             warning("Illegal initial value for parameter\n" + str(e),
                     strict, exception=ValueError)
             # Set illegal values to None, just like IRAF
@@ -878,7 +883,7 @@ class IrafArrayPar(IrafPar):
             fields[next] = '1';    next += 1
         nvstart = 7+2*ndim
         if self.choice is not None:
-            schoice = map(self.toString, self.choice)
+            schoice = list(map(self.toString, self.choice))
             schoice.insert(0,'')
             schoice.append('')
             fields[nvstart-3] = repr('|'.join(schoice))
@@ -915,7 +920,7 @@ class IrafArrayPar(IrafPar):
         dpar doesn't even work for arrays in the CL, so we just use
         Python syntax here.
         """
-        sval = map(self.toString, self.value, len(self.value)*[1])
+        sval = list(map(self.toString, self.value, len(self.value)*[1]))
         for i in range(len(sval)):
             if sval[i] == "":
                 sval[i] = "None"
@@ -944,7 +949,7 @@ class IrafArrayPar(IrafPar):
                     return self.toString(self.value[sumindex])
             except IndexError:
                 # should never happen
-                raise SyntaxError("Illegal index [" + `sumindex` +
+                raise SyntaxError("Illegal index [" + repr(sumindex) +
                         "] for array parameter " + self.name)
         elif native:
             # return object itself for an array because it is
@@ -971,7 +976,7 @@ class IrafArrayPar(IrafPar):
                 return
             except IndexError:
                 # should never happen
-                raise SyntaxError("Illegal index [" + `sumindex` +
+                raise SyntaxError("Illegal index [" + repr(sumindex) +
                         "] for array parameter " + self.name)
         if field:
             self._setField(value,field,check=check)
@@ -1013,7 +1018,7 @@ class IrafArrayPar(IrafPar):
         # This differs from non-arrays in that it returns a
         # print string with just the values.  That's because
         # the object itself is returned as the native value.
-        sv = map(str, self.value)
+        sv = list(map(str, self.value))
         for i in range(len(sv)):
             if self.value[i] is None:
                 sv[i] = "INDEF"
@@ -1066,7 +1071,7 @@ class IrafArrayPar(IrafPar):
                 v[i] = self._coerceOneValue(value[i],strict)
             return v
         except (IndexError, TypeError):
-            raise ValueError("Value must be a " + `len(self.value)` +
+            raise ValueError("Value must be a " + repr(len(self.value)) +
                     "-element array for " + self.name)
 
     def isLegal(self):
@@ -1095,7 +1100,7 @@ class _StringMixin:
         if value is None:
             return ""
         elif quoted:
-            return `value`
+            return repr(value)
         else:
             return value
 
@@ -1107,12 +1112,12 @@ class _StringMixin:
         elif self.choice is not None:
             try:
                 v = self.choiceDict[v]
-            except minmatch.AmbiguousKeyError, e:
+            except minmatch.AmbiguousKeyError:
                 clist = self.choiceDict.getall(v)
                 raise ValueError("Parameter %s: "
                         "ambiguous value `%s', could be %s" %
                         (self.name, str(v), "|".join(clist)))
-            except KeyError, e:
+            except KeyError:
                 raise ValueError("Parameter %s: "
                         "value `%s' is not in choice list (%s)" %
                         (self.name, str(v), "|".join(self.choice)))
@@ -1215,7 +1220,7 @@ class _BooleanMixin:
         elif isinstance(value,str):
             # presumably an indirection value ')task.name'
             if quoted:
-                return `value`
+                return repr(value)
             else:
                 return value
         else:
@@ -1269,7 +1274,7 @@ class _BooleanMixin:
                 # assume this is indirection -- just save it as a string
                 return v2
         raise ValueError("Parameter %s: illegal boolean value %s or type %s" %
-                (self.name, `value`, str(type(value))))
+                (self.name, repr(value), str(type(value))))
 
 # -----------------------------------------------------
 # IRAF boolean parameter class
@@ -1354,7 +1359,7 @@ class _IntMixin:
             except ValueError:
                 pass
         raise ValueError("Parameter %s: illegal integer value %s" %
-                (self.name, `value`))
+                (self.name, repr(value)))
 
 # -----------------------------------------------------
 # IRAF integer parameter class
@@ -1413,7 +1418,7 @@ class _StrictIntMixin(_IntMixin):
                     pass
         # otherwise it is not a strict integer
         raise ValueError("Parameter %s: illegal integer value %s" %
-                (self.name, `value`))
+                (self.name, repr(value)))
 
 # -----------------------------------------------------
 # Strict integer parameter class
@@ -1465,7 +1470,7 @@ class _RealMixin:
             return value
         elif value in ("", "None", "NONE"):
             return None
-        elif isinstance(value, (int,long)):
+        elif isinstance(value, int_types):
             return float(value)
         elif isinstance(value,str):
             s2 = irafutils.stripQuotes(value.strip())
@@ -1510,7 +1515,7 @@ class _RealMixin:
             except ValueError:
                 pass
         raise ValueError("Parameter %s: illegal float value %s" %
-                (self.name, `value`))
+                (self.name, repr(value)))
 
 
 # -----------------------------------------------------
@@ -1554,7 +1559,7 @@ class _StrictRealMixin(_RealMixin):
     def _coerceOneValue(self,value,strict=0):
         if value is None or isinstance(value,float):
             return value
-        elif isinstance(value, (int,long)):
+        elif isinstance(value, int_types):
             return float(value)
         elif isinstance(value,str):
             s2 = irafutils.stripQuotes(value.strip())
@@ -1594,10 +1599,10 @@ class _StrictRealMixin(_RealMixin):
                 return float(s2)
             except ValueError:
                 raise ValueError("Parameter %s: illegal float value %s" %
-                                 (self.name, `value`))
+                                 (self.name, repr(value)))
         # Otherwise it is not a strict float
         raise ValueError("Parameter %s: illegal float value %s" %
-                         (self.name, `value`))
+                         (self.name, repr(value)))
 
 
 # -----------------------------------------------------

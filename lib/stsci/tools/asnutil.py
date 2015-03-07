@@ -6,7 +6,7 @@ association tables and shift files.
 :version: '0.1 (2008-01-03)'
 """
 
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 import fileutil as fu
 import wcsutil
@@ -63,7 +63,7 @@ def readASNTable(fname, output=None, prodonly=False):
     try:
         f = fits.open(fu.osfn(fname))
     except:
-        raise IOError, "Can't open file %s\n" % fname
+        raise IOError("Can't open file %s\n" % fname)
 
     colnames = f[1].data.names
     try:
@@ -74,7 +74,7 @@ def readASNTable(fname, output=None, prodonly=False):
 
     if 'MEMNAME' not in colnames or 'MEMTYPE' not in colnames:
         msg = 'Association table incomplete: required column(s) MEMNAME/MEMTYPE NOT found!'
-        raise ValueError, msg
+        raise ValueError(msg)
 
     d = {}
     for n in colnames:
@@ -106,12 +106,12 @@ def readASNTable(fname, output=None, prodonly=False):
         input = (d['MEMTYPE'].find('EXP')==0)
     valid_input *= input
 
-    for k in d.keys():
+    for k in d:
         d[k] = d[k][valid_input]
 
     infiles = list(d['MEMNAME'].lower())
     if not infiles:
-        print "No valid input specified"
+        print("No valid input specified")
         return None
 
     if ('XOFFSET' in colnames and d['XOFFSET'].any()) or ('YOFFSET' in colnames and d['YOFFSET'].any()):
@@ -251,7 +251,7 @@ class ASNTable(dict):
                 else:
                     # This may mean corrupted asn table in which a file is listed as present
                     # when it is missing.
-                    raise IOError,  'File %s not found.\n' %fn
+                    raise IOError('File %s not found.\n' %fn)
         dict.__init__(self, output=self.output, order=[], members={})
         if inlist != None:
             self.input = [fu.buildRootname(f) for f in inlist]
@@ -471,7 +471,7 @@ class ASNTable(dict):
             # Open img1 to obtain keyword values for updating template
             fimg1 = fits.open(fullname)
         except:
-            print 'File %s does not exist' % fullname
+            print('File %s does not exist' % fullname)
 
 
         kws = ['INSTRUME', 'PRIMESI', 'TARGNAME', 'DETECTOR', 'RA_TARG', 'DEC_TARG']
@@ -610,7 +610,7 @@ class ShiftFile(dict):
             msg += "The keyword in the shift file has changed from 'reference' to 'refimage'.\n"
             msg += "Make sure this keyword is specified as 'refimage' in %s." %filename
 
-            raise ValueError, msg
+            raise ValueError(msg)
 
     def readShiftFile(self, filename):
         """
@@ -652,23 +652,23 @@ class ShiftFile(dict):
             # some backwards compatibility.
             if not os.path.exists(f[0]):
                 f[0] = fu.buildRootname(f[0])
-                print 'Defining filename in shiftfile as: ',f[0]
+                print('Defining filename in shiftfile as: ', f[0])
 
             f[1] = f[1].split()
             try:
                 f[1] = [float(s) for s in f[1]]
             except:
                 msg = 'Cannot read in ', s, ' from shiftfile ', filename, ' as a float number'
-                raise ValueError, msg
+                raise ValueError(msg)
             msg = "At least 2 and at most 4 shift values should be provided in a shiftfile"
             if len(f[1]) < 2:
-                raise ValueError, msg
+                raise ValueError(msg)
             elif len(f[1]) == 3:
                 f[1].append(1.0)
             elif len(f[1]) == 2:
                 f[1].extend([0.0, 1.0])
             elif len(f[1]) > 4:
-                raise ValueError, msg
+                raise ValueError(msg)
 
         fdict = dict(files)
         self.update(fdict)

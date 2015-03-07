@@ -18,14 +18,18 @@ $Id$
 
 R. White, 1999 Jul 16
 """
-from __future__ import division
+from __future__ import division, print_function
 
-import os, stat, string, struct, sys, re, fnmatch, keyword, types, select
+import os, stat, string, sys, re, fnmatch, keyword, select
 import capable
-if capable.OF_GRAPHICS:
-    import Tkinter
-from capable import PY3K
 
+PY3K = sys.version_info[0] > 2
+
+if capable.OF_GRAPHICS:
+    if PY3K:
+        import tkinter as Tkinter
+    else:
+        import Tkinter
 
 def printColsAuto(in_strings, term_width=80, min_pad=1):
     """ Print a list of strings centered in columns.  Determine the number
@@ -69,7 +73,7 @@ def printCols(strlist,cols=5,width=80):
 
     nlines = (len(strlist)+cols-1)//cols
     line = nlines*[""]
-    for i in xrange(len(strlist)):
+    for i in range(len(strlist)):
         c, r = divmod(i,nlines)
         nwid = c*width//cols - len(line[r])
         if nwid>0:
@@ -77,7 +81,7 @@ def printCols(strlist,cols=5,width=80):
         else:
             line[r] = line[r] + " " + strlist[i]
     for s in line:
-        print s
+        print(s)
 
 _re_doubleq2 = re.compile('""')
 _re_singleq2 = re.compile("''")
@@ -269,7 +273,7 @@ def testCsvSplit(quiet=True):
 ("a='s1', b='has,comma,s', c",  3, """["a='s1'", " b='has,comma,s'", ' c']"""),
     )
     for c in cases:
-        if not quiet: print "Testing: "+repr(c[0])
+        if not quiet: print("Testing: "+repr(c[0]))
         ll = csvSplit(c[0], ',', True)
         assert len(ll) == c[1] and repr(ll) == c[2], \
            "For case: "+repr(c[0])+" expected:\n"+c[2]+"\nbut got:\n"+repr(ll)
@@ -438,7 +442,7 @@ class _TkRead:
         """Read nbytes characters from file while running Tk mainloop"""
         if not capable.OF_GRAPHICS:
             raise RuntimeError("Cannot run this command without graphics")
-        if isinstance(file, types.IntType):
+        if isinstance(file, int):
             fd = file
         elif hasattr(file, "fileno"):
             fd = file.fileno()
@@ -488,7 +492,7 @@ class _TkRead:
             if (self.nbytes <= 0 or len(snew) == 0) and self.widget:
                 # stop the mainloop
                 self.widget.quit()
-        except OSError, error:
+        except OSError:
             raise IOError("Error reading from %s" % (fd,))
 
 def launchBrowser(url, brow_bin='mozilla', subj=None):
@@ -503,9 +507,9 @@ def launchBrowser(url, brow_bin='mozilla', subj=None):
     if sys.platform not in ('os2warp, iphone'): # try webbrowser w/ everything?
         import webbrowser
         if not webbrowser.open(url):
-            print "Error opening URL: "+url
+            print("Error opening URL: "+url)
         else:
-            print 'Help on "'+subj+'" is now being displayed in a web browser'
+            print('Help on "'+subj+'" is now being displayed in a web browser')
         return
 
     # Go ahead and fork a subprocess to call the correct binary
@@ -513,7 +517,7 @@ def launchBrowser(url, brow_bin='mozilla', subj=None):
     if pid == 0: # child
         if sys.platform == 'darwin':
             if 0 != os.system('open "'+url+'"'): # does not seem to keep '#.*'
-                print "Error opening URL: "+url
+                print("Error opening URL: "+url)
         os._exit(0)
 #       The following retries if "-remote" doesnt work, opening a new browser
 #       cmd = brow_bin+" -remote 'openURL("+url+")' '"+url+"' 1> /dev/null 2>&1"
@@ -525,4 +529,4 @@ def launchBrowser(url, brow_bin='mozilla', subj=None):
     else: # parent
         if not subj:
             subj = url
-        print 'Help on "'+subj+'" is now being displayed in a browser'
+        print('Help on "'+subj+'" is now being displayed in a browser')

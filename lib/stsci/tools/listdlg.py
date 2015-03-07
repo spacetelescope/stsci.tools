@@ -1,16 +1,23 @@
 #
 # A home-grown list-selection convenience dialog.  As *soon* as Tkinter comes
-# with one of these, replace all uses of his one with that.  This currently
+# with one of these, replace all uses of this one with that.  This currently
 # only allows single selection.
 #
 """
 $Id$
 """
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
+import sys
+PY3K = sys.version_info[0] > 2
+
 import capable
 if capable.OF_GRAPHICS:
-    from Tkinter import *
-    from tkSimpleDialog import Dialog
+    if PY3K:        
+        from tkinter import *
+        from tkinter.simpledialog import Dialog
+    else:
+        from Tkinter import *
+        from tkSimpleDialog import Dialog
 else:
     Dialog = object
 
@@ -19,8 +26,12 @@ class ListSingleSelectDialog(Dialog):
     def __init__(self, title, prompt, choiceList, parent=None):
 
         if not parent:
-            import Tkinter
-            parent = Tkinter._default_root
+            if PY3K:
+                import tkinter
+                parent = tkinter._default_root
+            else:
+                import Tkinter
+                parent = Tkinter._default_root
             parent.withdraw()
 
         self.__prompt = prompt
@@ -109,4 +120,4 @@ if __name__ == "__main__":
     x = ListSingleSelectDialog("Select Parameter File", \
                                "Select which file you prefer for task/pkg:", \
                                ['abc','def','ghi','jkl','1'], None)
-    print str(x.getresult())
+    print(str(x.getresult()))

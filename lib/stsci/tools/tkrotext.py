@@ -10,7 +10,13 @@ $Id$
 from __future__ import division # confidence high
 
 # System level modules
-import Tkinter
+import sys
+PY3K = sys.version_info[0] > 2
+
+if PY3K:
+    import tkinter as Tkinter
+else:
+    import Tkinter
 
 ALLOWED_SYMS = ('Up','Down','Left','Right','Home','End','Prior','Next', \
                 'Shift_L', 'Shift_R')

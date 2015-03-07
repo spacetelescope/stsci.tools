@@ -11,7 +11,6 @@ from __future__ import division # confidence high
 import os, sys
 PY3K = sys.version_info[0] > 2
 
-
 def is_darwin_and_x():
     """ Convenience function.  Returns True if is an X11-linked Python/Tkinter
     build on OSX.  This is intended to be quick and easy without further
@@ -57,11 +56,18 @@ def which_darwin_linkage(force_otool_check=False):
             return "x11"
 
     # Use otool shell command (requires 2.7+)
-    import Tkinter, subprocess
-    libs = subprocess.check_output(('/usr/bin/otool', '-L', Tkinter._tkinter.__file__)).decode()
+
+    if PY3K:
+        import tkinter as Tkinter
+    else:
+        import Tkinter
+    import subprocess
+    libs = subprocess.check_output(('/usr/bin/otool', '-L', Tkinter._tkinter.__file__)).decode('ascii')
     if libs.find('/libX11.') >= 0:
+        print("x11")
         return "x11"
     else:
+        print("aqua")
         return "aqua"
 
 
@@ -131,7 +137,10 @@ if OF_GRAPHICS and sys.platform == 'darwin':
 # is there.  If it is not, we are not capable of graphics.
 if OF_GRAPHICS :
     try :
-        import Tkinter
+        if PY3K:
+            import tkinter
+        else:
+            import Tkinter
     except ImportError :
         TKINTER_IMPORT_FAILED = 1
         OF_GRAPHICS = False
@@ -141,4 +150,4 @@ if OF_GRAPHICS :
 OF_TKFD_IN_EPAR = True
 if sys.platform == 'darwin' and OF_GRAPHICS and \
    not is_darwin_and_x(): # if framework ver
-    OF_TKFD_IN_EPAR = 'TEAL_TRY_TKFD' in os.environ
+    OF_TKFD_IN_EPAR = 'TEAL_TRY_TKFD' in list(os.environ.keys())

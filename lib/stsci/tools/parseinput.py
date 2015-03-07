@@ -112,7 +112,7 @@ def parseinput(inputlist,outputname=None, atfile=None):
                 errorstr += "# parseinput.py module.           #\n"
                 errorstr += "#                                 #\n"
                 errorstr += "###################################\n"
-                raise ValueError, errorstr
+                raise ValueError(errorstr)
                 
             # Extract the output name from the association table if None
             # was provided on input.

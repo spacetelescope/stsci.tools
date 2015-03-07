@@ -1,7 +1,7 @@
 """
 Python/Numeric version of this module was called mpfit. This version was modified to use numpy.
 """
-from __future__ import division # confidence medium
+from __future__ import division, print_function # confidence medium
 __version__ = '0.2'
 
 """
@@ -406,7 +406,7 @@ Perform Levenberg-Marquardt least-squares minimization, based on MINPACK-1.
         Translated from MPFIT (Craig Markwardt's IDL package) to Python,
         August, 2002.  Mark Rivers
 """
-import numerixenv
+from . import numerixenv
 numerixenv.check()
 
 import numpy
@@ -878,11 +878,11 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         ## Be sure that PARINFO is of the right type
         if (parinfo != None):
-            if (type(parinfo) != types.ListType):
+            if (type(parinfo) != list):
                 self.errmsg = 'ERROR: PARINFO must be a list of dictionaries.'
                 return
             else:
-                if (type(parinfo[0]) != types.DictionaryType):
+                if (type(parinfo[0]) != dict):
                     self.errmsg = 'ERROR: PARINFO must be a list of dictionaries.'
                     return
             if ((xall != None) and (len(xall) != len(parinfo))):
@@ -1359,7 +1359,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                                                             quiet=0, iterstop=None, parinfo=None,
                                                             format=None, pformat='%.10g', dof=1):
 
-        if (self.debug): print 'Entering defiter...'
+        if (self.debug): print('Entering defiter...')
         if (quiet): return
         if (fnorm == None):
             [status, fvec] = self.call(fcn, x, functkw)
@@ -1367,7 +1367,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         ## Determine which parameters to print
         nprint = len(x)
-        print "Iter ", ('%6i' % iter),"   CHI-SQUARE = ",('%.10g' % fnorm)," DOF = ", ('%i' % dof)
+        print("Iter ", ('%6i' % iter),"   CHI-SQUARE = ",('%.10g' % fnorm)," DOF = ", ('%i' % dof))
         for i in range(nprint):
             if (parinfo != None) and ('parname' in parinfo[i]):
                 p = '   ' + parinfo[i]['parname'] + ' = '
@@ -1378,7 +1378,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
             else:
                 iprint = 1
             if (iprint):
-                print p + (pformat % x[i]) + '  '
+                print(p + (pformat % x[i]) + '  ')
         return(0)
 
     ##  DO_ITERSTOP:
@@ -1400,7 +1400,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
     ## Procedure to parse the parameter values in PARINFO, which is a list of dictionaries
     def parinfo(self, parinfo=None, key='a', default=None, n=0):
-        if (self.debug): print 'Entering parinfo...'
+        if (self.debug): print('Entering parinfo...')
         if (n == 0) and (parinfo != None): n = len(parinfo)
         if (n == 0):
             values = default
@@ -1415,10 +1415,10 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         # Convert to numeric arrays if possible
         test = default
-        if (type(default) == types.ListType): test=default[0]
-        if (type(test) == types.IntType):
+        if (type(default) == list): test=default[0]
+        if (type(test) == int):
             values = numpy.asarray(values, dtype=numpy.int)
-        elif (type(test) == types.FloatType):
+        elif (type(test) == float):
             values = numpy.asarray(values, dtype=numpy.float)
         return(values)
 
@@ -1426,7 +1426,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
     ## Call user function or procedure, with _EXTRA or not, with
     ## derivatives or not.
     def call(self, fcn, x, functkw, fjac=None):
-        if (self.debug): print 'Entering call...'
+        if (self.debug): print('Entering call...')
         if (self.qanytied): x = self.tie(x, self.ptied)
         self.nfev = self.nfev + 1
         if (fjac == None):
@@ -1444,7 +1444,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
     def enorm(self, vec):
 
-        if (self.debug): print 'Entering enorm...'
+        if (self.debug): print('Entering enorm...')
         ## NOTE: it turns out that, for systems that have a lot of data
         ## points, this routine is a big computing bottleneck.  The extended
         ## computations that need to be done cannot be effectively
@@ -1477,7 +1477,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                                     epsfcn=None, autoderivative=1,
                                     functkw=None, xall=None, ifree=None, dstep=None):
 
-        if (self.debug): print 'Entering fdjac2...'
+        if (self.debug): print('Entering fdjac2...')
         machep = self.machar.machep
         if epsfcn == None:  epsfcn = machep
         if xall == None:    xall = x
@@ -1497,7 +1497,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
             [status, fp] = self.call(fcn, xall, functkw, fjac=fjac)
 
             if len(fjac) != m*nall:
-                print 'ERROR: Derivative matrix was not computed properly.'
+                print('ERROR: Derivative matrix was not computed properly.')
                 return(None)
 
             ## This definition is c1onsistent with CURVEFIT
@@ -1693,7 +1693,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
     def qrfac(self, a, pivot=0):
 
-        if (self.debug): print 'Entering qrfac...'
+        if (self.debug): print('Entering qrfac...')
         machep = self.machar.machep
         sz = numpy.shape(a)
         m = sz[0]
@@ -1845,7 +1845,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
     #
 
     def qrsolv(self, r, ipvt, diag, qtb, sdiag):
-        if (self.debug): print 'Entering qrsolv...'
+        if (self.debug): print('Entering qrsolv...')
         sz = numpy.shape(r)
         m = sz[0]
         n = sz[1]
@@ -2014,7 +2014,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
     def lmpar(self, r, ipvt, diag, qtb, delta, x, sdiag, par=None):
 
-        if (self.debug): print 'Entering lmpar...'
+        if (self.debug): print('Entering lmpar...')
         dwarf = self.machar.minnum
         sz = numpy.shape(r)
         m = sz[0]
@@ -2121,7 +2121,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
     ## Procedure to tie one parameter to another.
     def tie(self, p, ptied=None):
-        if (self.debug): print 'Entering tie...'
+        if (self.debug): print('Entering tie...')
         if (ptied == None): return
         for i in range(len(ptied)):
             if ptied[i] == '': continue
@@ -2199,14 +2199,14 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
     def calc_covar(self, rr, ipvt=None, tol=1.e-14):
 
-        if (self.debug): print 'Entering calc_covar...'
+        if (self.debug): print('Entering calc_covar...')
         if numpy.rank(rr) != 2:
-            print 'ERROR: r must be a two-dimensional matrix'
+            print('ERROR: r must be a two-dimensional matrix')
             return(-1)
         s = numpy.shape(rr)
         n = s[0]
         if s[0] != s[1]:
-            print 'ERROR: r must be a square matrix'
+            print('ERROR: r must be a square matrix')
             return(-1)
 
         if (ipvt == None): ipvt = numpy.arange(n)

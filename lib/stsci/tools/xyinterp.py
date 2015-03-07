@@ -77,17 +77,17 @@ def xyinterp(x,y,xval):
     #Enforce conditions on x, y, and xval:
     #x and y must correspond
     if len(x) != len(y):
-        raise ValueError,"Input arrays must be equal lengths"
+        raise ValueError("Input arrays must be equal lengths")
 
     #Extrapolation not supported
     if xval < x[0]:
-        raise ValueError,"Value %f < min(x) %f: Extrapolation unsupported"%(xval,x[0])
+        raise ValueError("Value %f < min(x) %f: Extrapolation unsupported"%(xval,x[0]))
     if xval > x[-1]:
-        raise ValueError,"Value > max(x): Extrapolation unsupported"
+        raise ValueError("Value > max(x): Extrapolation unsupported")
 
     #This algorithm only works on sorted data
     if x.argsort().all() != N.arange(len(x)).all():
-        raise ValueError,"Input array x must be sorted"
+        raise ValueError("Input array x must be sorted")
     
     # Now do the real work.
     hi = x.searchsorted(xval)

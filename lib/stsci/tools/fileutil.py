@@ -72,14 +72,14 @@ IRAF compatibility functions (abbreviated list)::
         Returns true if file exists, where filename can include IRAF variables
 """
 
-from __future__ import division  # confidence high
+from __future__ import division, print_function # confidence high
 
-from . import numerixenv
+import numerixenv
 numerixenv.check()
 
-from . import stpyfits as fits
-from . import readgeis
-from . import convertwaiveredfits
+import stpyfits as fits
+import readgeis
+import convertwaiveredfits
 
 import datetime
 import copy
@@ -89,8 +89,14 @@ import shutil
 import sys
 
 import time as _time
-
 import numpy as np
+
+PY3K = sys.version_info[0] > 2
+if PY3K:
+    string_types = str
+else:
+    string_types = basestring
+    
 # Environment variable handling - based on iraffunctions.py
 # define INDEF, yes, no, EOF, Verbose, userIrafHome
 
@@ -117,7 +123,7 @@ BLANK_ASNDICT = {
 
 
 def help():
-    print __doc__
+    print(__doc__)
 
 
 #################
@@ -263,7 +269,7 @@ def isFits(input):
             try:
                 f = fits.open(input, mode='readonly')
                 fileclose = True
-            except Exception, e:
+            except Exception:
                 if f is not None:
                     f.close()
                 raise
@@ -330,9 +336,9 @@ def verifyWriteMode(files):
             writable = False
 
     if not writable:
-        print 'The following file(s) do not have write permission!'
+        print('The following file(s) do not have write permission!')
         for fname in not_writable:
-            print '    ', fname
+            print('    ', fname)
 
     return writable
 
@@ -575,7 +581,7 @@ def getKeyword(filename, keyword, default=None, handle=None):
     # So, the following piece of code CHECKS for this and FIXES the string,
     # very simply by removing the last character if it is a "/".
     # This fix courtesy of Anton Koekemoer, 2002.
-    elif isinstance(value, basestring):
+    elif isinstance(value, string_types):
         if value[-1:] == '/':
             value = value[:-1]
 
@@ -640,7 +646,7 @@ def updateKeyword(filename, key, value,show=yes):
         _hdr[key] = value
     except KeyError:
         if show:
-            print 'Adding new keyword ', key, '=', value
+            print('Adding new keyword ', key, '=', value)
         _hdr[key] = value
 
     # Close image
@@ -716,7 +722,7 @@ def openImage(filename, mode='readonly', memmap=0, writefits=True,
                     dqfile = convertwaiveredfits.convertwaiveredfits(_dqname)
                     dqfitsname = buildNewRootname(_dqname, extn='_c1h.fits')
                 except:
-                    print "Could not read data quality file %s" % _dqname
+                    print("Could not read data quality file %s" % _dqname)
             if writefits:
                 # User wants to make a FITS copy and update it
                 # using the filename they have provided
@@ -727,10 +733,10 @@ def openImage(filename, mode='readonly', memmap=0, writefits=True,
                 # Write out GEIS image as multi-extension FITS.
                 fexists = os.path.exists(fitsname)
                 if (fexists and clobber) or not fexists:
-                    print 'Writing out WAIVERED as MEF to ', fitsname
+                    print('Writing out WAIVERED as MEF to ', fitsname)
                     fimg.writeto(fitsname, clobber=clobber)
                     if dqexists:
-                        print 'Writing out WAIVERED as MEF to ', dqfitsname
+                        print('Writing out WAIVERED as MEF to ', dqfitsname)
                         dqfile.writeto(dqfitsname, clobber=clobber)
                 # Now close input GEIS image, and open writable
                 # handle to output FITS image instead...
@@ -758,7 +764,7 @@ def openImage(filename, mode='readonly', memmap=0, writefits=True,
                 dqfile = readgeis.readgeis(_dqname)
                 dqfitsname = buildFITSName(_dqname)
             except:
-                print "Could not read data quality file %s" % _dqname
+                print("Could not read data quality file %s" % _dqname)
 
         # Check to see if user wanted to update GEIS header.
         # or write out a multi-extension FITS file and return a handle to it
@@ -771,10 +777,10 @@ def openImage(filename, mode='readonly', memmap=0, writefits=True,
             # Write out GEIS image as multi-extension FITS.
             fexists = os.path.exists(fitsname)
             if (fexists and clobber) or not fexists:
-                    print 'Writing out GEIS as MEF to ', fitsname
+                    print('Writing out GEIS as MEF to ', fitsname)
                     fimg.writeto(fitsname, clobber=clobber)
                     if dqexists:
-                        print 'Writing out GEIS as MEF to ', dqfitsname
+                        print('Writing out GEIS as MEF to ', dqfitsname)
                         dqfile.writeto(dqfitsname, clobber=clobber)
             # Now close input GEIS image, and open writable
             # handle to output FITS image instead...
@@ -852,7 +858,7 @@ def countExtn(fimg, extname='SCI'):
     """
 
     closefits = False
-    if isinstance(fimg, basestring):
+    if isinstance(fimg, string_types):
         fimg = fits.open(fimg)
         closefits = True
 
@@ -915,7 +921,7 @@ def getExtn(fimg, extn=None):
             # We are working with GEIS group syntax
             _indx = str(extn[:extn.find('/')])
             _extn = fimg[int(_indx)]
-        elif isinstance(extn, basestring):
+        elif isinstance(extn, string_types):
             if extn.strip() == '':
                 _extn = None  # force error since invalid name was provided
             # Only one extension value specified...
@@ -1052,7 +1058,7 @@ def _remove(file):
     if file.find('.fits') > 0:
         try:
             os.remove(file)
-        except StandardError:
+        except (IOError, OSError):
             pass
     elif file.find('.imh') > 0:
         # Delete both .imh and .pix files
@@ -1079,7 +1085,7 @@ def removeFile(inlist):
     like 'iraf.imdelete'.
     """
 
-    if not isinstance(inlist, basestring):
+    if not isinstance(inlist, string_types):
     # We do have a list, so delete all filenames in list.
         # Treat like a list of full filenames
         _ldir = os.listdir('.')
@@ -1231,7 +1237,7 @@ def getVarDict():
 def getVarList():
     """Returns list of names of all IRAF variables."""
 
-    return _varDict.keys()
+    return list(_varDict.keys())
 
 
 # -----------------------------------------------------
@@ -1244,11 +1250,11 @@ def listVars(prefix="", equals="\t= ", **kw):
 
     keylist = getVarList()
     if len(keylist) == 0:
-        print 'No IRAF variables defined'
+        print('No IRAF variables defined')
     else:
         keylist.sort()
         for word in keylist:
-            print "%s%s%s%s" % (prefix, word, equals, envget(word))
+            print("%s%s%s%s" % (prefix, word, equals, envget(word)))
 
 
 def untranslateName(s):
@@ -1290,7 +1296,7 @@ def envget(var, default=None):
                     # Return a default value for TERM
                     # TERM gets caught as it is found in the default
                     # login.cl file setup by IRAF.
-                    print "Using default TERM value for session."
+                    print("Using default TERM value for session.")
                     return 'xterm'
                 else:
                     raise KeyError("Undefined environment variable `%s'" % var)
@@ -1354,7 +1360,6 @@ def set(*args, **kw):
     if len(args) == 0:
         if len(kw) != 0:
             # normal case is only keyword,value pairs
-            msg = []
             for keyword, value in kw.items():
                 keyword = untranslateName(keyword)
                 svalue = str(value)
@@ -1372,7 +1377,7 @@ def set(*args, **kw):
         #
         # Flag any other syntax as an error.
         if (len(args) != 1 or len(kw) != 0 or
-                not isinstance(args[0], basestring) or args[0][:1] != '@'):
+                not isinstance(args[0], string_types) or args[0][:1] != '@'):
             raise SyntaxError("set requires name=value pairs")
 
 # currently do not distinguish set from reset
@@ -1388,7 +1393,7 @@ def show(*args, **kw):
 
     if args:
         for arg in args:
-            print envget(arg)
+            print(envget(arg))
     else:
         # print them all
         listVars(prefix="    ", equals="=")
@@ -1414,7 +1419,7 @@ def unset(*args, **kw):
 def time(**kw):
     """Print current time and date."""
 
-    print _time.ctime(_time.time())
+    print(_time.ctime(_time.time()))
 
 
 # -----------------------------------------------------

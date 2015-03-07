@@ -22,7 +22,6 @@ $Id$
 
 from __future__ import division # confidence high
 
-import string
 from dialog import *
 
 class AlertDialog(ModalDialog):

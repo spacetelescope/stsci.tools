@@ -9,7 +9,11 @@ $Id$
 """
 from __future__ import division # confidence high
 
-from Tkinter import *
+import sys
+if sys.version_info[0] < 3:
+    from Tkinter import *
+else:
+    from tkinter import *
 
 class Dialog:
 
@@ -62,7 +66,6 @@ class ModalDialog(Dialog):
         Dialog__init__(self, master)
 
     def Show(self):
-        import string
         self.SetupDialog()
         self.CenterDialog()
         try:

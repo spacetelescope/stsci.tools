@@ -7,7 +7,13 @@ For now, this is Tkinter based, but it is imported lazily.
 $Id$
 """
 
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
+
+import sys
+if sys.version_info[0] > 2:
+    import tkinter as Tkinter
+else:
+    import Tkinter
 
 _theRoot = None
 _lastSel = '' # our own copy of the last selected text (for PRIMARY)
@@ -70,16 +76,15 @@ def get(cbname):
 
 def dump():
     _checkTkInit()
-    print 'primary   = '+str(get('PRIMARY'))
-    print 'clipboard = '+str(get('CLIPBOARD'))
-    print 'owner     = '+str(_theRoot.selection_own_get())
+    print ('primary   = '+str(get('PRIMARY')))
+    print ('clipboard = '+str(get('CLIPBOARD')))
+    print ('owner     = '+str(_theRoot.selection_own_get()))
 
 
 def _checkTkInit():
     """ Make sure the Tkinter root is defined. """
     global _theRoot
     if _theRoot is None:
-        import Tkinter
         if Tkinter._default_root:
             # use it
             _theRoot = Tkinter._default_root

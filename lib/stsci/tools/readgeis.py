@@ -1,5 +1,3 @@
-
-
 #!/usr/bin/env python
 
 # $Id$
@@ -68,7 +66,7 @@
 # This version needs pyfits 0.9.6.3 or later
 # and numpy version 1.0.4 or later
 
-from __future__ import division # confidence high
+from __future__ import division, print_function # confidence high
 
 __version__ = "2.2 (18 Feb, 2011), \xa9 AURA"
 
@@ -76,6 +74,7 @@ import os, sys, string
 from astropy.io import fits
 import numpy
 from numpy import memmap
+from functools import reduce
 
 def stsci(hdulist):
     """For STScI GEIS files, need to do extra steps."""
@@ -150,7 +149,7 @@ def readgeis(input):
     im.close()
 
     _naxis0 = phdr.get('NAXIS', 0)
-    _naxis = [phdr['NAXIS'+`j`] for j in range(1, _naxis0+1)]
+    _naxis = [phdr['NAXIS'+str(j)] for j in range(1, _naxis0+1)]
     _naxis.insert(0, _naxis0)
     _bitpix = phdr['BITPIX']
     _psize = phdr['PSIZE']
@@ -173,20 +172,20 @@ def readgeis(input):
     bools = []
     floats = []
     _range = range(1, pcount+1)
-    key = [phdr['PTYPE'+`j`] for j in _range]
-    comm = [phdr.cards['PTYPE'+`j`].comment for j in _range]
+    key = [phdr['PTYPE'+str(j)] for j in _range]
+    comm = [phdr.cards['PTYPE'+str(j)].comment for j in _range]
 
     # delete group parameter definition header keywords
-    _list = ['PTYPE'+`j` for j in _range] + \
-            ['PDTYPE'+`j` for j in _range] + \
-            ['PSIZE'+`j` for j in _range] + \
+    _list = ['PTYPE'+str(j) for j in _range] + \
+            ['PDTYPE'+str(j) for j in _range] + \
+            ['PSIZE'+str(j) for j in _range] + \
             ['DATATYPE', 'PSIZE', 'GCOUNT', 'PCOUNT', 'BSCALE', 'BZERO']
 
     # Construct record array formats for the group parameters
     # as interpreted from the Primary header file
     for i in range(1, pcount+1):
         ptype = key[i-1]
-        pdtype = phdr['PDTYPE'+`i`]
+        pdtype = phdr['PDTYPE'+str(i)]
         star = pdtype.find('*')
         _type = pdtype[:star]
         _bytes = pdtype[star+1:]
@@ -203,7 +202,7 @@ def readgeis(input):
 
     _shape = _naxis[1:]
     _shape.reverse()
-    _code = fits.core.ImageHDU.NumCode[_bitpix]
+    _code = fits.hdu.ImageHDU.NumCode[_bitpix]
     _bscale = phdr.get('BSCALE', 1)
     _bzero = phdr.get('BZERO', 0)
     if phdr['DATATYPE'][:10] == 'UNSIGNED*2':
@@ -223,9 +222,9 @@ def readgeis(input):
     phdr['GROUPS'] = False
     _after = 'NAXIS'
     if _naxis0 > 0:
-        _after += `_naxis0`
-    phdr.set(key='EXTEND', value=True, comment="FITS dataset may contain extensions", after=_after)
-    phdr.set(key='NEXTEND', value=gcount, comment="Number of standard extensions")
+        _after += str(_naxis0)
+    phdr.set('EXTEND', value=True, comment="FITS dataset may contain extensions", after=_after)
+    phdr.set('NEXTEND', value=gcount, comment="Number of standard extensions")
 
     hdulist = fits.HDUList([fits.PrimaryHDU(header=phdr, data=None)])
 
@@ -279,18 +278,22 @@ def readgeis(input):
         for i in range(1, pcount+1):
             #val = rec.field(i-1)[0]
             val = rec[0][i-1]
+            if val.dtype.kind == 'S':
+                val = val.decode('ascii')
 
             if i in bools:
                 if val:
                     val = True
                 else:
                     val = False
+
             if i in floats:
                 # use fromstring, format in Card is deprecated in pyfits 0.9
                 _str = '%-8s= %20.7G / %s' % (key[i-1], val, comm[i-1])
                 _card = fits.Card.fromstring(_str)
             else:
                 _card = fits.Card(keyword=key[i-1], value=val, comment=comm[i-1])
+
             ext_hdu.header.append(_card)
 
         # deal with bscale/bzero
@@ -310,7 +313,7 @@ def readgeis(input):
         errormsg += "=  are correct or apply the       =\n"
         errormsg += "=  '.byteswap()' method.          =\n"
         errormsg += "===================================\n"
-        print errormsg
+        print(errormsg)
 
     f1.close()
     stsci(hdulist)
@@ -332,7 +335,7 @@ def parse_path(f1, f2):
     if os.path.isdir(f1):
         f1 = os.path.join(f1, '*.??h')
     list1 = glob.glob(f1)
-    list1 = filter(lambda name: name[-1] == 'h' and name[-4] == '.', list1)
+    list1 = [name for name in list1 if name[-1] == 'h' and name[-4] == '.']
 
     # if the second argument is a directory, use file names in the
     # first argument to construct file names, i.e.
@@ -345,13 +348,13 @@ def parse_path(f1, f2):
             list2.append(os.path.join(f2, fitsname))
     else:
         list2 = f2.split(",")
-        list2 = map(string.strip, list2)
+        list2 = list(map(string.strip, list2))
 
     if (list1 == [] or list2 == []):
         str = ""
         if (list1 == []): str += "Input files `%s` not usable/available. " % f1
         if (list2 == []): str += "Input files `%s` not usable/available. " % f2
-        raise IOError, str
+        raise IOError(str)
     else:
         return list1, list2
 
@@ -364,10 +367,10 @@ if __name__ == "__main__":
 
     try:
         optlist, args = getopt.getopt(sys.argv[1:], 'h')
-    except getopt.error, e:
-        print str(e)
-        print __doc__
-        print "\t", __version__
+    except getopt.error as e:
+        print(str(e))
+        print(__doc__)
+        print("\t", __version__)
 
     # initialize default values
     help = 0
@@ -378,8 +381,8 @@ if __name__ == "__main__":
             help = 1
 
     if (help):
-        print __doc__
-        print "\t", __version__
+        print(__doc__)
+        print("\t", __version__)
     else:
         if len(args) == 1:
             args.append('')
@@ -387,16 +390,16 @@ if __name__ == "__main__":
         npairs = min (len(list1), len(list2))
         for i in range(npairs):
             if os.path.exists(list2[i]):
-                print "Output file %s already exists, skip." % list2[i]
+                print("Output file %s already exists, skip." % list2[i])
                 break
             try:
                 hdulist = readgeis(list1[i])
                 stsci2(hdulist, list2[i])
                 hdulist.writeto(list2[i])
                 hdulist.close()
-                print "%s -> %s" % (list1[i], list2[i])
-            except:
-                print "Conversion fails for %s." % list1[i]
+                print("%s -> %s" % (list1[i], list2[i]))
+            except Exception as e :
+                print("Conversion fails for %s: %s" % (list1[i], str(e)))
                 break
 
 """

@@ -1,4 +1,4 @@
-from __future__ import division
+from __future__ import division, print_function
 import math, os, sys, time
 import unittest
 import numpy as N
@@ -106,9 +106,9 @@ class LogTestCase(unittest.TestCase):
             name=self.id()
       try:
          f=open(name+'.log','w')
-      except IOError, e:
-         print "Error opening log file: %s"%e.strerror
-         print "***No Logging Performed***"
+      except IOError as e:
+         print("Error opening log file: %s"%e.strerror)
+         print("***No Logging Performed***")
          return
 
       f.write("%s:: Name=%s\n"%(name,name))
