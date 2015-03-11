@@ -64,7 +64,7 @@ class _VerboseClass(_compmixin.ComparableIntBaseMixin):
     def get(self): return self.value
     def _cmpkey(self): return self.value
     def __nonzero__(self): return self.value != 0
-    def __bool__(self): return self.value != 0
+    def __bool__(self):    return self.value != 0
     def __str__(self): return str(self.value)
 
 Verbose = _VerboseClass()
@@ -133,7 +133,7 @@ class _Boolean(_compmixin.ComparableMixin):
         return method(self.__value, other)
 
     def __nonzero__(self): return self.__value != 0
-    def __bool__(self): return self.value != 0
+    def __bool__(self):    return self.__value != 0
     def __repr__(self): return self.__strvalue
     def __str__(self): return self.__strvalue
     def __int__(self): return self.__value
