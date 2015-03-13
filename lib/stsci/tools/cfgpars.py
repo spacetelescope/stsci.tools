@@ -1135,7 +1135,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             theDict.pop(name)
 
         # Then go through the dict removing all hidden items ('_item_name_')
-        for k in dcopy:
+        for k in list(dcopy.keys()):
             if isHiddenName(k):
                 dcopy.pop(k)
 
