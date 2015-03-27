@@ -28,7 +28,11 @@ def which_darwin_linkage(force_otool_check=False):
     built (framework, Aqua) one.  This is only for OSX.
     On Python 2.*, this relies on the assumption that on OSX, PyObjC
     is installed only in the Framework builds of Python.  On Python 3.*,
-    this inspects the actual tkinter library binary via otool. """
+    this inspects the actual tkinter library binary via otool.
+
+    One driving requirement here is to try to make the determination quickly
+    and quietly without actually importing/loading any GUI libraries.
+    """
 
     # sanity check
     assert sys.platform=='darwin', 'Incorrect usage, not on OSX'
@@ -51,12 +55,18 @@ def which_darwin_linkage(force_otool_check=False):
         if '/pyobjc' in sp or 'pyobjc,' in sp or 'pyobjc/' in sp or sp.endswith('pyobjc'):
             return "aqua"
 
+        # Try one more thing - look for the physical PyObjC install dir under site-packages
+        # The assumption above using sys.path does not seem to be correct as of the
+        # combination of Python2.7.9/PyObjC3.0.4/2015.
+        sitepacksloc = os.path.split(os.__file__)[0]+'/site-packages/objc'
+        if os.path.exists(sitepacksloc):
+            return "aqua"
+
         # OK, no PyObjC found.  What we do next is different per Python ver.
         if not PY3K:
             return "x11"
 
     # Use otool shell command (requires 2.7+)
-
     if PY3K:
         import tkinter as Tkinter
     else:
@@ -64,10 +74,8 @@ def which_darwin_linkage(force_otool_check=False):
     import subprocess
     libs = subprocess.check_output(('/usr/bin/otool', '-L', Tkinter._tkinter.__file__)).decode('ascii')
     if libs.find('/libX11.') >= 0:
-        print("x11")
         return "x11"
     else:
-        print("aqua")
         return "aqua"
 
 
