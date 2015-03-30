@@ -12,11 +12,12 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-   
+
    basicutils
    fitsutil
    imgutils
    analysis
+   bitmask
 
 Building a TEAL Interface for Tasks
 -----------------------------------
