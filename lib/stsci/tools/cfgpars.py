@@ -2,7 +2,7 @@
 
 $Id$
 """
-from __future__ import division, print_function # confidence high
+from __future__ import absolute_import, division, print_function # confidence high
 
 import copy, glob, os, stat, sys
 
@@ -12,10 +12,10 @@ else:
     string_types = basestring
 
 # ConfigObj modules
-import configobj, validate
+from . import configobj, validate
 
 # Local modules
-import basicpar, eparoption, irafutils, taskpars, vtor_checks
+from . import basicpar, eparoption, irafutils, taskpars, vtor_checks
 
 # Globals and useful functions
 

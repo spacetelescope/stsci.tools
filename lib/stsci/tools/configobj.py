@@ -16,8 +16,7 @@
 # http://lists.sourceforge.net/lists/listinfo/configobj-develop
 # Comments, suggestions and bug reports welcome.
 
-from __future__ import generators
-from __future__ import division # confidence high
+from __future__ import absolute_import, division, generators
 
 import os
 import re
@@ -2173,7 +2172,7 @@ class ConfigObj(Section):
             if preserve_errors:
                 # We do this once to remove a top level dependency on the validate module
                 # Which makes importing configobj faster
-                from validate import VdtMissingValue
+                from .validate import VdtMissingValue
                 self._vdtMissingValue = VdtMissingValue
                 
             section = self

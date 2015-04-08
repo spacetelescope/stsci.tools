@@ -8,9 +8,9 @@ Y = b0 + b1* X
 :version: '1.0 (2007-02-20)'
 
 """
-from __future__ import division, print_function # confidence high
+from __future__ import absolute_import, division, print_function # confidence high
 
-import numerixenv
+from . import numerixenv
 numerixenv.check()
 
 

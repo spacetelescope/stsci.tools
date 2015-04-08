@@ -21,7 +21,7 @@ R. White, 1999 Jul 16
 from __future__ import division, print_function
 
 import os, stat, string, sys, re, fnmatch, keyword, select
-import capable
+from . import capable
 
 PY3K = sys.version_info[0] > 2
 

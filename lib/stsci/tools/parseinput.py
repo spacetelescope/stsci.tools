@@ -22,10 +22,10 @@ __author__  = 'Christopher Hanley'
 
 # irafglob provides the ability to recursively parse user input that
 # is in the form of wildcards and '@' files.
-import irafglob
-from irafglob import irafglob
+from . import irafglob
+from .irafglob import irafglob
 
-import fileutil
+from . import fileutil
 from stsci.tools.asnutil import readASNTable
 
 def parseinput(inputlist,outputname=None, atfile=None):

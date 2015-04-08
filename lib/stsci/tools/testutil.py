@@ -173,7 +173,7 @@ class LogTextRunner(unittest.TextTestRunner):
         self.stream.writeln()
         if not result.wasSuccessful():
             self.stream.write("FAILED (")
-            failed, errored = map(len, (result.failures, result.errors))
+            failed, errored = list(map(len, (result.failures, result.errors)))
             if failed:
                 self.stream.write("failures=%d" % failed)
                 test.log("F")

@@ -6,7 +6,7 @@ $Id$
 from __future__ import division, print_function # confidence high
 
 import traceback
-import eparoption, vtor_checks
+from . import eparoption, vtor_checks
 
 class TealActionParButton(eparoption.ActionEparButton):
 
@@ -31,7 +31,7 @@ class TealActionParButton(eparoption.ActionEparButton):
     def clicked(self):
         """ Called when this button is clicked. Execute code from .cfgspc """
         try:
-            import teal
+            from . import teal
         except:
             teal = None
         try:

@@ -4,11 +4,11 @@ $Id$
 
 Taken from pyraf/lib/epar.py, originally signed "M.D. De La Pena, 2000 Feb. 4"
 """
-from __future__ import division, print_function # confidence high
+from __future__ import absolute_import, division, print_function # confidence high
 
 #System level modules
 import os, sys, tempfile, time
-import capable
+from . import capable
 
 PY3K = sys.version_info[0] > 2
 
@@ -25,8 +25,8 @@ if capable.OF_GRAPHICS:
         from tkMessageBox import askokcancel, askyesno, showwarning
 
 # stsci.tools modules
-from irafglobals import userWorkingHome
-import basicpar, eparoption, irafutils, taskpars
+from .irafglobals import userWorkingHome
+from . import basicpar, eparoption, irafutils, taskpars
 
 # Constants
 MINVIEW     = 500
@@ -1147,7 +1147,7 @@ class EditParDialog(object):
         else:
             # Prompt. (could use Tkinter's FileDialog, but this one is prettier)
             # initWProtState is only used in the 1st call of a session
-            import filedlg
+            from . import filedlg
             fd = filedlg.PersistSaveFileDialog(self.top,
                          "Save Parameter File As", self._getSaveAsFilter(),
                          initWProtState=writeProtChoice)

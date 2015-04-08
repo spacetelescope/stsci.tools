@@ -6,10 +6,10 @@ association tables and shift files.
 :version: '0.1 (2008-01-03)'
 """
 
-from __future__ import division, print_function # confidence high
+from __future__ import absolute_import, division, print_function # confidence high
 
-import fileutil as fu
-import wcsutil
+from . import fileutil as fu
+from . import wcsutil
 #import pyfits
 import astropy
 from astropy.io import fits# as pyfits
