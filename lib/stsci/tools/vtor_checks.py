@@ -6,10 +6,10 @@
 
 $Id$
 """
-from __future__ import division, print_function # confidence high
+from __future__ import absolute_import, division, print_function # confidence high
 
-import configobj, validate
-import irafutils
+from . import configobj, validate
+from . import irafutils
 
 STANDARD_KEYS = ['min', 'max', 'missing', 'default']
 OVCDBG = False

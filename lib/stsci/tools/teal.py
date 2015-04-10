@@ -1,13 +1,13 @@
 """ Main module for the ConfigObj version of the parameter task editor: TEAL.
 $Id$
 """
-from __future__ import division, print_function # confidence high
+from __future__ import absolute_import, division, print_function # confidence high
 
 import os, sys, traceback
-import configobj, cfgpars, editpar, vtor_checks
-from cfgpars import APP_NAME
-from irafutils import printColsAuto, rglob, setWritePrivs
-import capable
+from . import configobj, cfgpars, editpar, vtor_checks
+from .cfgpars import APP_NAME
+from .irafutils import printColsAuto, rglob, setWritePrivs
+from . import capable
 
 PY3K = sys.version_info[0] > 2
 
@@ -634,7 +634,7 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
         Return None or a class which derives from EparOption. """
 
         if paramTypeStr == 'z':
-            import teal_bttn
+            from . import teal_bttn
             return teal_bttn.TealActionParButton
         else:
             return None
@@ -877,7 +877,7 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
                 fname = askopenfilename(title="Load Config File",
                                         parent=self.top)
             else:
-                import filedlg
+                from . import filedlg
                 fd = filedlg.PersistLoadFileDialog(self.top,
                                                    "Load Config File",
                                                    self._getSaveAsFilter())

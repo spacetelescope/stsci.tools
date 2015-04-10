@@ -1,10 +1,10 @@
 """
 License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 """
-from __future__ import division # confidence high
+from __future__ import absolute_import, division # confidence high
 import glob
 try:
-    from fileutil import osfn # added to provide interpretation of environment variables
+    from .fileutil import osfn # added to provide interpretation of environment variables
 except:
     osfn = None
 __author__ = 'Paul Barrett'

@@ -3,11 +3,11 @@
 
 $Id$
 """
-from __future__ import division, print_function # confidence high
+from __future__ import absolute_import, division, print_function # confidence high
 
 import re, sys
-import irafutils, minmatch
-from irafglobals import INDEF, Verbose, yes, no
+from . import irafutils, minmatch
+from .irafglobals import INDEF, Verbose, yes, no
 
 if sys.version_info[0] > 2:
     int_types = (int, )

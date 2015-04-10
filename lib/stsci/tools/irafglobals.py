@@ -25,7 +25,7 @@ $Id$
 
 Taken from pyraf.irafglobals, originally signed "R. White, 2000 Jan 5"
 """
-from __future__ import division
+from __future__ import absolute_import, division
 
 import sys
 PY3K = sys.version_info[0] > 2
@@ -38,7 +38,7 @@ else:
     number_types = (int, long, float)
 
 import os
-import compmixin
+from . import compmixin
 _os = os
 _compmixin = compmixin
 del os, compmixin

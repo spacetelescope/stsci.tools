@@ -1,4 +1,4 @@
-from __future__ import division, print_function # confidence high
+from __future__ import absolute_import, division, print_function # confidence high
 
 import string, copy, os
 
@@ -6,7 +6,7 @@ from astropy.io import fits
 import numpy as N
 from math import *
 
-import fileutil
+from . import fileutil
 
 # Convenience definitions...
 yes = True

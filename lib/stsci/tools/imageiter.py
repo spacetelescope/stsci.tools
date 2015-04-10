@@ -3,10 +3,9 @@
 License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
 
 """
-from __future__ import division # confidence medium
+from __future__ import absolute_import, division, generators # confidence medium
 
-from __future__ import generators
-import numerixenv
+from . import numerixenv
 numerixenv.check()
 
 import numpy as N

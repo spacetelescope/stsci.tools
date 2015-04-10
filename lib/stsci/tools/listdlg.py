@@ -6,11 +6,11 @@
 """
 $Id$
 """
-from __future__ import division, print_function # confidence high
+from __future__ import absolute_import, division, print_function # confidence high
 import sys
 PY3K = sys.version_info[0] > 2
 
-import capable
+from . import capable
 if capable.OF_GRAPHICS:
     if PY3K:        
         from tkinter import *

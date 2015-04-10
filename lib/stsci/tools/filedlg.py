@@ -20,10 +20,10 @@
 """
 $Id$
 """
-from __future__ import division # confidence high
+from __future__ import absolute_import, division # confidence high
 
 import sys, os
-import capable
+from . import capable
 
 PY3K = sys.version_info[0] > 2
 if PY3K:
@@ -37,8 +37,8 @@ if capable.OF_GRAPHICS:
     else:
         import Tkinter
         
-    import alert
-    from dialog import *
+    from . import alert
+    from .dialog import *
 else:
     ModalDialog = object
 

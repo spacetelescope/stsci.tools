@@ -74,12 +74,12 @@ IRAF compatibility functions (abbreviated list)::
 
 from __future__ import division, print_function # confidence high
 
-import numerixenv
+from . import numerixenv
 numerixenv.check()
 
-import stpyfits as fits
-import readgeis
-import convertwaiveredfits
+from . import stpyfits as fits
+from . import readgeis
+from . import convertwaiveredfits
 
 import datetime
 import copy

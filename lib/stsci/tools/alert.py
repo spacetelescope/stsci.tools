@@ -20,9 +20,9 @@
 $Id$
 """
 
-from __future__ import division # confidence high
+from __future__ import absolute_import, division # confidence high
 
-from dialog import *
+from .dialog import *
 
 class AlertDialog(ModalDialog):
 

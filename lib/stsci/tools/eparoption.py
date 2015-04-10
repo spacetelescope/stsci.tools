@@ -21,11 +21,11 @@ $Id$
 
 M.D. De La Pena, 1999 August 05
 """
-from __future__ import division, print_function # confidence high
+from __future__ import absolute_import, division, print_function # confidence high
 
 # System level modules
 import sys, string
-import capable
+from . import capable
 
 PY3K = sys.version_info[0] > 2
 
@@ -441,7 +441,7 @@ class EparOption(object):
         if capable.OF_TKFD_IN_EPAR:
            fname = askopenfilename(parent=self.entry, title="Select File")
         else:
-            import filedlg
+            from . import filedlg
             self.fd = filedlg.PersistLoadFileDialog(self.entry,
                               "Select File", "*")
             if self.fd.Show() != 1:
