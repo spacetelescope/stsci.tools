@@ -66,13 +66,13 @@ def which_darwin_linkage(force_otool_check=False):
         if not PY3K:
             return "x11"
 
-    # Use otool shell command (requires 2.7+)
+    # Use otool shell command
     if PY3K:
-        import tkinter as Tkinter
+        import tkinter as TK
     else:
-        import Tkinter
+        import Tkinter as TK
     import subprocess
-    libs = subprocess.check_output(('/usr/bin/otool', '-L', Tkinter._tkinter.__file__)).decode('ascii')
+    libs = subprocess.check_output(('/usr/bin/otool', '-L', TK._tkinter.__file__)).decode('ascii')
     if libs.find('/libX11.') >= 0:
         return "x11"
     else:
