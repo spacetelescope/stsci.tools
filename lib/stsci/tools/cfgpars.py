@@ -438,7 +438,7 @@ def integrityTestTaskCfgFile(taskName, cfgFileName=None):
     found in the installed .cfgspc file.  They should be the same.
     If the file name is not given, the installed one is found and used. """
 
-    import teal # don't import above, to avoid circular import (may need to mv)
+    from . import teal # don't import above, to avoid circular import (may need to mv)
     if not cfgFileName:
         ignored, cfgFileName = findCfgFileForPkg(taskName, '.cfg')
     diffDict = teal.diffFromDefaults(cfgFileName, report=False)

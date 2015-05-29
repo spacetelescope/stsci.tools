@@ -234,7 +234,7 @@ def _processCommandLineArgs():
             conversionFormat = "multiExtension"
 
         if o in ("-o", "--outputFileName"):
-            outputFileNames = string.split(a,',')
+            outputFileNames = a.split(',')
 
     if conversionFormat == "":
         #
