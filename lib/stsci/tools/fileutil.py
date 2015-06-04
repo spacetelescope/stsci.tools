@@ -616,7 +616,7 @@ def getHeader(filename, handle=None):
     if _hdr['NAXIS'] == 0:
         del _hdr['NAXIS']
 
-    if _extn > 0:
+    if not (_extn is None or (_extn.isdigit() and int(_extn) == 0)):
         # Append correct extension/chip/group header to PRIMARY...
         #for _card in getExtn(_fimg,_extn).header.ascard:
             #_hdr.ascard.append(_card)
