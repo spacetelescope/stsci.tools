@@ -369,7 +369,8 @@ def setup_global_logging():
 
     global global_logging_started
 
-    sys.exc_clear()
+    if sys.version_info[0] < 3:
+        sys.exc_clear()
 
     if global_logging_started:
         return
