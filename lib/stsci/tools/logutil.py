@@ -258,9 +258,12 @@ class StreamTeeLogger(logging.Logger):
         """
 
         # Gleaned from code in the logging module itself...
-        f = inspect.currentframe(1)
+        try:
+            f = inspect.currentframe(1)
+        except Exception:
+            f = None
         # On some versions of IronPython, currentframe() returns None if
-        # IronPython isn't run with -X:Frames.
+         # IronPython isn't run with -X:Frames.
         if f is not None:
             f = f.f_back
         rv = "(unknown module)", "(unknown file)", 0, "(unknown function)"
@@ -369,7 +372,8 @@ def setup_global_logging():
 
     global global_logging_started
 
-    sys.exc_clear()
+    if sys.version_info[0] < 3:
+        sys.exc_clear()
 
     if global_logging_started:
         return
