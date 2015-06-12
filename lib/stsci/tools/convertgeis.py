@@ -72,7 +72,7 @@ from __future__ import division, print_function # confidence high
 
 __version__ = "1.0 (25 Feb, 2011), \xa9 AURA"
 
-import os, sys, string
+import os, sys
 from astropy.io import fits
 import numpy
 import array
@@ -388,9 +388,8 @@ def parse_path(f1, f2):
             fitsname = name[:-4] + '_' + name[-3:-1] + 'f.fits'
             list2.append(os.path.join(f2, fitsname))
     else:
-        list2 = f2.split(",")
-        list2 = list(map(string.strip, list2))
-
+        list2 = [s.strip() for s in f2.split(",")]
+        
     if (list1 == [] or list2 == []):
         str = ""
         if (list1 == []): str += "Input files `%s` not usable/available. " % f1

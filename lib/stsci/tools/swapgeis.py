@@ -542,8 +542,7 @@ def parse_path(f1, f2):
             fitsname = name[:-4] + '_' + name[-3:-1] + 'f.fits'
             list2.append(os.path.join(f2, fitsname))
     else:
-        list2 = f2.split(",")
-        list2 = list(map(string.strip, list2))
+        list2 = [s.strip() for s in f2.split(",")]
 
     if (list1 == [] or list2 == []):
         str = ""

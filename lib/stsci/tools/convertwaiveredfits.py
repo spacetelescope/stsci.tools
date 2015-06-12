@@ -149,7 +149,6 @@ else:
 #
 import os
 import sys
-import string
 from astropy.io import fits
 #
 # -----------------------------------------------------------------------------
@@ -438,7 +437,7 @@ def toMultiExtensionFits(waiveredObject,
                 #
                 # Handle logical values
                 #
-                if string.strip(whdul[1].data.field(keyword)[i]) == 'T':
+                if whdul[1].data.field(keyword)[i].strip() == 'T':
                     d = True
                 else:
                     d = False
