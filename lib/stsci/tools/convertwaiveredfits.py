@@ -128,13 +128,16 @@
     this will convert the waivered FITS file u9zh010bm_c0f.fits
     to multi-extension FITS format; no output file is generated;
     the returned HDUList is in multi-extension format
+
+__version__ = "1.0 (31 January, 2008)"
+
 """
 
 # Developed by Science Software Branch, STScI, USA.
 
 from __future__ import division, print_function # confidence high
 
-__version__ = "1.0 (31 January, 2008)"
+__version__ = "1.1 (15 June, 2015)"
 
 import sys
 if sys.version_info[0] < 3:
@@ -450,9 +453,12 @@ def toMultiExtensionFits(waiveredObject,
             else:
                 d = whdul[1].data.field(keyword)[i]
 
+            kw_descr = ""
+            if keyword in whdul[1].header:
+                kw_descr = whdul[1].header[keyword]
             mhdul[i+1].header.update(keyword,
                                      d,
-                                     whdul[1].header[keyword])
+                                     kw_descr)
         #
         # If original data is unsigned short then scale the data.
         #
@@ -620,4 +626,3 @@ TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
 USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 """
-
