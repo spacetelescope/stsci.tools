@@ -1,6 +1,6 @@
 from __future__ import absolute_import, division, print_function # confidence high
 
-import string, copy, os
+import copy, os
 
 from astropy.io import fits
 import numpy as N
@@ -257,7 +257,7 @@ class WCSObject:
         self.geisname = None
 
         # Look for extension specification in rootname
-        _indx = _section = string.find(self.rootname,'[')
+        _indx = _section = self.rootname.find('[')
         # If none are found, use entire rootname
         if _indx < 0:
             _indx = len(self.rootname)
@@ -396,7 +396,7 @@ class WCSObject:
         if not self.__format__:
             for key in self.wcstrans.keys():
                 _dkey = self.wcstrans[key]
-                strn = string.upper(key) + " = " + repr(self.__dict__[_dkey]) + '\n'
+                strn = key.upper() + " = " + repr(self.__dict__[_dkey]) + '\n'
                 block += strn
             block += 'PA_V3: '+repr(self.pa_obs)+'\n'
 
@@ -423,7 +423,7 @@ class WCSObject:
             block += '    backed up on '+repr(self.orig_wcs['WCSCDATE'])+'\n'
             if not format:
                 for key in self.wcstrans.keys():
-                    block += string.upper(key) + " = " + repr(self.get_archivekw(key)) + '\n'
+                    block += key.upper() + " = " + repr(self.get_archivekw(key)) + '\n'
                 block = 'PA_V3: '+repr(self.pa_obs)+'\n'
 
             else:
