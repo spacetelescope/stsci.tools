@@ -10,12 +10,12 @@ import os
 import sys
 import threading
 
+PY3K = sys.version_info[0] > 2
 
-try:
-    from cStringIO import StringIO
-except ImportError:
+if PY3K:
     from io import StringIO
-
+else:
+    from cStringIO import StringIO
 
 global_logging_started = False
 
