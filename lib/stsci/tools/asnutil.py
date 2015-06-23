@@ -10,53 +10,51 @@ from __future__ import absolute_import, division, print_function # confidence hi
 
 from . import fileutil as fu
 from . import wcsutil
-#import pyfits
 import astropy
-from astropy.io import fits# as pyfits
+from astropy.io import fits
 import numpy as N
 import os.path, time
 
-__docformat__ = 'restructuredtext'
 
-__version__ = '0.2(2008-08-27)'
+__version__ = '0.2(2015-06-23)'
+
 
 def readASNTable(fname, output=None, prodonly=False):
     """
     Given a fits filename repesenting an association table reads in the table as a
     dictionary which can be used by pydrizzle and multidrizzle.
 
-    :Algorithm: An association table is a FITS binary table with 2 required columns: 'MEMNAME',
-                'MEMTYPE'. It checks 'MEMPRSNT' column and removes all files for which its value is 'no'.
+    An association table is a FITS binary table with 2 required columns: 'MEMNAME',
+    'MEMTYPE'. It checks 'MEMPRSNT' column and removes all files for which its value is 'no'.
+
+    Parameters
+    ----------
+    fname : str
+        name of association table
+    output : str
+        name of output product - if not specified by the user,
+        the first PROD-DTH name is used if present,
+        if not, the first PROD-RPT name is used if present,
+        if not, the rootname of the input association table is used.
+    prodonly : bool
+        what files should be considered as input
+        if True - select only MEMTYPE=PROD* as input
+        if False - select only MEMTYPE=EXP as input
+
+    Returns
+    -------
+    asndict : dict
+        A dictionary-like object with all the association information.
 
     Examples
-    ========
+    --------
     An association table can be read from a file using the following commands::
 
-        >>> from stsci.tools import asnutil
-        >>> asntab = asnutil.readASNTable('j8bt06010_shifts_asn.fits', prodonly=False)
+    >>> from stsci.tools import asnutil
+    >>> asntab = asnutil.readASNTable('j8bt06010_shifts_asn.fits', prodonly=False)
 
     The `asntab` object can now be passed to other code to provide relationships
     between input and output images defined by the association table.
-
-
-    Parameters
-    ==========
-    `fname`: string
-             name of association table
-    `output`: string
-              name of output product - if not specified by the user,
-              the first PROD-DTH name is used if present,
-              if not, the first PROD-RPT name is used if present,
-              if not, the rootname of the input association table is used.
-    `prodonly`: bool
-                what files should be considered as input
-                if True - select only MEMTYPE=PROD* as input
-                if False - select only MEMTYPE=EXP as input
-
-    Returns
-    =======
-    `asndict`: dict-object
-               A dictionary-like object with all the association information
 
     """
 
@@ -170,8 +168,6 @@ def readASNTable(fname, output=None, prodonly=False):
 
 class ASNTable(dict):
     """
-    Notes
-    =======
     A dictionary like object which represents an association table.
     An ASNTable object looks like this::
 
@@ -204,30 +200,30 @@ class ASNTable(dict):
                 'output': 'j8bt06nyq'}
 
     Examples
-    ========
+    --------
     Creating an ASNTable object from 3 filenames and a shift file would be done using::
 
-      >>> asnt=ASNTable([fname1,fname2,  fname3], shiftfile='shifts.txt')
+    >>> asnt=ASNTable([fname1,fname2,  fname3], shiftfile='shifts.txt')
 
     The ASNTable object would have the 'members' and 'order'
     in the association table populated based on `infiles` and `shiftfile`.
 
     This creates a blank association table from the ASNTable object::
 
-      >>> asnt.create()
+    >>> asnt.create()
 
     """
     def __init__(self, inlist=None, output=None, shiftfile=None):
         """
         Parameters
-        ===========
-        `inlist`: a list
-                  a python list of filenames
-        `output`  a string
-                  a user specified output name or 'final'
-        `shiftfile`: a string
-                  a name of a shift file, if given, the association table will be
-                  updated with the values in the shift file
+        ----------
+        inlist : list
+            A list of filenames.
+        output :  str
+            A user specified output name or 'final'.
+        shiftfile : str
+            A name of a shift file, if given, the association table will be
+            updated with the values in the shift file.
 
         """
 
@@ -303,21 +299,20 @@ class ASNTable(dict):
 
     def update(self, members=None, shiftfile=None, replace=False):
         __help_update="""
-        :Purpose:
-        Update an existing association table
+        Update an existing association table.
 
         Parameters
-        ==========
-        `members`: dictionary
-                   a dictionary representing asndict['members']
-        `shiftfile`: string
-                   the name of a shift file
-                   If given, shiftfile will replace shifts in an asndict.
-        `replace`: bool False(default)
-                   a flag which indicates whether the 'members' item
-                   of an association table should be updated or replaced.
-                   default: False
-                   If True, it's up to the user to replace also asndict['order']
+        ----------
+        members : dict
+            A dictionary representing asndict['members'].
+        shiftfile : str
+            The name of a shift file
+            If given, shiftfile will replace shifts in an asndict.
+        replace : bool False(default)
+            A flag which indicates whether the 'members' item
+            of an association table should be updated or replaced.
+            default: False
+            If True, it's up to the user to replace also asndict['order']
         """
         if members and isinstance(members, dict):
             if not replace:
@@ -355,7 +350,7 @@ class ASNTable(dict):
 
     def write(self, output=None):
         """
-        :Purpose: Write association table to a file.
+        Write association table to a file.
 
         """
         if not output:
@@ -413,8 +408,8 @@ class ASNTable(dict):
         ydelta = fits.Column(name='YDELTA', format='E', array=N.array(ysh))
         rotation = fits.Column(name='ROTATION', format='E', array=N.array(rot))
         scale = fits.Column(name='SCALE', format='E', array=N.array(scl))
-
-        hdu = fits.new_table([memname,memtype,memprsn,xoffset,yoffset,xdelta,ydelta,rotation,scale],nrows=len(mname))
+        cols = fits.ColDefs([memname,memtype,memprsn,xoffset,yoffset,xdelta,ydelta,rotation,scale])
+        hdu = fits.BinTableHDU.from_columns(cols)
         fasn.append(hdu)
         fasn.writeto(outfile, clobber=True)
         fasn.close()
@@ -503,8 +498,6 @@ class ASNTable(dict):
 
 class ASNMember(dict):
     """
-    Notes
-    =====
     A dictionary like object representing a member of an association table. It looks like this::
 
         'j8bt06nzq': {'abshift': False,
@@ -554,43 +547,44 @@ class ShiftFile(dict):
                   variables in memory. If a file name is provided all other parameters are ignored.
 
         Examples
-        ========
+        ---------
         These examples demonstrate a couple of the most common usages.
-          1. Read a shift file on disk using::
 
-                >>> sdict = ShiftFile('shifts.txt')
+        Read a shift file on disk using::
 
-          2. Pass values for the fields of the shift file and a dictionary with all files::
+        >>> sdict = ShiftFile('shifts.txt')
 
-                >>> d={'j8bt06nyq_flt.fits': [0.0, 0.0, 0.0, 1.0],
-               'j8bt06nzq_flt.fits': [0.4091132, -0.5670202, 359.9983, 1.000165]}
+        Pass values for the fields of the shift file and a dictionary with all files::
 
-                >>> sdict = ShiftFile(form='absolute', frame='output', units='pixels', order=['j8bt06nyq_flt.fits',
-                'j8bt06nzq_flt.fits'], refimage='tweak_wcs.fits[wcs]', **d)
+        >>> d={'j8bt06nyq_flt.fits': [0.0, 0.0, 0.0, 1.0],
+              'j8bt06nzq_flt.fits': [0.4091132, -0.5670202, 359.9983, 1.000165]}
+
+        >>> sdict = ShiftFile(form='absolute', frame='output', units='pixels', order=['j8bt06nyq_flt.fits',
+                             'j8bt06nzq_flt.fits'], refimage='tweak_wcs.fits[wcs]', **d)
 
         The return value can then be used to provide the shift information to code in memory.
 
         Parameters
-        ==========
-        `filename`: string
-                    name of shift file on disk, see above the expected format
-        `form`:     string
-                    form of shifts (absolute|delta)
-        `frame`:    string
-                    frame in which the shifts should be applied (input|output)
-        `units`:    string
-                    in which the shofts are measured (pixels?)
-        `order`:    list
-                    Keeps track of the order of the files
-        `refimage`: string
+        ----------
+        filename : str
+            Name of shift file on disk, see above the expected format
+        form : str
+            Form of shifts (absolute|delta)
+        frame : str
+            Frame in which the shifts should be applied (input|output)
+        units : str
+            Units in which the shifts are measured.
+        order : list
+            Keeps track of the order of the files.
+        refimage : str
                     name of reference image
-        `**d`:      dictionary
+         **d :  dict
                     keys: file names
                     values: a list:  [Xsh, Ysh, Rot, Scale]
                     The keys must match the files in the order parameter.
 
         Raises
-        ======
+        ------
         ValueError
             If reference file can't be found
 
