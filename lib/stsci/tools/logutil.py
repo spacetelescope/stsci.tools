@@ -213,7 +213,7 @@ class StreamTeeLogger(logging.Logger):
             if self.__thread_local_ctx.write_count > 1:
                 return
 
-            self.buffer.write(message)
+            self.buffer.write(str(message))
             # For each line in the buffer ending with \n, output that line to
             # the logger
             self.buffer.seek(0)
