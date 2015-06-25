@@ -10,12 +10,12 @@ import os
 import sys
 import threading
 
+PY3K = sys.version_info[0] > 2
 
-try:
-    from cStringIO import StringIO
-except ImportError:
+if PY3K:
     from io import StringIO
-
+else:
+    from cStringIO import StringIO
 
 global_logging_started = False
 
@@ -213,7 +213,7 @@ class StreamTeeLogger(logging.Logger):
             if self.__thread_local_ctx.write_count > 1:
                 return
 
-            self.buffer.write(message)
+            self.buffer.write(str(message))
             # For each line in the buffer ending with \n, output that line to
             # the logger
             self.buffer.seek(0)
