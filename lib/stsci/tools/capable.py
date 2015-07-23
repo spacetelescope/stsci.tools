@@ -68,11 +68,11 @@ def which_darwin_linkage(force_otool_check=False):
 
     # Use otool shell command
     if PY3K:
-        import tkinter as TK
+        import tkinter as Tkinter
     else:
-        import Tkinter as TK
+        import Tkinter
     import subprocess
-    libs = subprocess.check_output(('/usr/bin/otool', '-L', TK._tkinter.__file__)).decode('ascii')
+    libs = subprocess.check_output(('/usr/bin/otool', '-L', Tkinter._tkinter.__file__)).decode('ascii')
     if libs.find('/libX11.') >= 0:
         return "x11"
     else:
@@ -146,7 +146,7 @@ if OF_GRAPHICS and sys.platform == 'darwin':
 if OF_GRAPHICS :
     try :
         if PY3K:
-            import tkinter
+            import tkinter as Tkinter
         else:
             import Tkinter
     except ImportError :
