@@ -425,11 +425,13 @@ def tkreadline(file=None):
     # BUT, if we get in here for something not GUI-related (e.g. terminal-
     # focused code in a sometimes-GUI app) then skip tkread and simply call
     # readline on the input eg. stdin.  Otherwise we'd fail in _TkRead().read()
-    if (hasattr(file, 'fileno') 
-        and not hasattr(file, 'getvalue') 
-        and capable.OF_GRAPHICS):
-        
+
+    try:
         fd = file.fileno()
+    except:
+        fd = None
+        
+    if (fd and capable.OF_GRAPHICS):
         tkread(fd, 0)
         # if EOF was encountered on a tty, avoid reading again because
         # it actually requests more data
@@ -447,9 +449,9 @@ class _TkRead:
             raise RuntimeError("Cannot run this command without graphics")
         if isinstance(file, int):
             fd = file
-        elif hasattr(file, "fileno"):
+        try:
             fd = file.fileno()
-        else:
+        except:
             raise TypeError("file must be an integer or a filehandle/socket")
         init_tk_default_root() # harmless if already done
         self.widget = Tkinter._default_root
