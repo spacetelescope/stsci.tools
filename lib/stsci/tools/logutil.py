@@ -238,10 +238,16 @@ class StreamTeeLogger(logging.Logger):
             handler.flush()
 
     def fileno(self):
-        if self.stream and hasattr(self.stream, 'fileno'):
-            return self.stream.fileno()
-        raise IOError('fileno() not defined for logger stream %r' %
-                      self.stream)
+        fd = None
+        if self.stream:
+            try:
+                fd = self.stream.fileno()
+            except:
+                fd = None
+        if fd is None:
+            raise IOError('fileno() not defined for logger stream %r' %
+                          self.stream)
+        return fd
 
     def log_orig(self, message, echo=True):
         modname, path, lno, func = self.find_actual_caller()

@@ -451,6 +451,7 @@ class _TkRead:
             fd = file
         try:
             fd = file.fileno()
+
         except:
             raise TypeError("file must be an integer or a filehandle/socket")
         init_tk_default_root() # harmless if already done
