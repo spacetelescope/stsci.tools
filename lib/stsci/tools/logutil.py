@@ -21,9 +21,6 @@ else:
 global_logging_started = False
 
 
-PY3K = sys.version_info[0] > 2
-
-
 # The global_logging system replaces the raw_input builtin (input on Python 3)
 # for two reasons:
 #
@@ -214,7 +211,9 @@ class StreamTeeLogger(logging.Logger):
             if self.__thread_local_ctx.write_count > 1:
                 return
 
+            if len(message) > 512: message = message[:512]
             self.buffer.write(tostr(message, encoding='latin_1'))
+
             # For each line in the buffer ending with \n, output that line to
             # the logger
             self.buffer.seek(0)
@@ -239,10 +238,16 @@ class StreamTeeLogger(logging.Logger):
             handler.flush()
 
     def fileno(self):
-        if self.stream and hasattr(self.stream, 'fileno'):
-            return self.stream.fileno()
-        raise IOError('fileno() not defined for logger stream %r' %
-                      self.stream)
+        fd = None
+        if self.stream:
+            try:
+                fd = self.stream.fileno()
+            except:
+                fd = None
+        if fd is None:
+            raise IOError('fileno() not defined for logger stream %r' %
+                          self.stream)
+        return fd
 
     def log_orig(self, message, echo=True):
         modname, path, lno, func = self.find_actual_caller()
@@ -373,7 +378,7 @@ def setup_global_logging():
 
     global global_logging_started
 
-    if sys.version_info[0] < 3:
+    if not PY3K:
         sys.exc_clear()
 
     if global_logging_started:
@@ -428,7 +433,8 @@ def teardown_global_logging():
     del exc_type
     del exc_value
     del exc_traceback
-    sys.exc_clear()
+    if not PY3K:
+        sys.exc_clear()
 
     del sys.excepthook
     logging.captureWarnings(False)
