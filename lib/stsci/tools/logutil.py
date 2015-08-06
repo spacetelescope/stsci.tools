@@ -266,7 +266,8 @@ class StreamTeeLogger(logging.Logger):
 
         # Gleaned from code in the logging module itself...
         try:
-            f = inspect.currentframe(1)
+            f = inspect.stack()[1]
+            ##f = inspect.currentframe(1)
         except Exception:
             f = None
         # On some versions of IronPython, currentframe() returns None if
@@ -562,7 +563,8 @@ class _LogTeeHandler(logging.Handler):
             counts[logger.name] -= 1
 
     def _search_stack(self):
-        curr_frame = inspect.currentframe(3)
+        curr_frame = inspect.stack()[3]
+        ##curr_frame = inspect.currentframe(3)
         while curr_frame:
             if 'self' in curr_frame.f_locals:
                 s = curr_frame.f_locals['self']
