@@ -205,14 +205,15 @@ class StreamTeeLogger(logging.Logger):
         then published to the logging system through ``self.log()``.
         """
 
+        line = ''
         self.__thread_local_ctx.write_count += 1
 
         try:
             if self.__thread_local_ctx.write_count > 1:
                 return
 
-            if len(message) > 512: message = message[:512]
-            self.buffer.write(tostr(message, encoding='latin_1'))
+            line = tostr(message, encoding='latin_1')
+            self.buffer.write(line)
 
             # For each line in the buffer ending with \n, output that line to
             # the logger
@@ -225,6 +226,9 @@ class StreamTeeLogger(logging.Logger):
                 else:
                     self.log_orig(line.rstrip(), echo=True)
             self.buffer.truncate(0)
+        except:
+            if len(line) > 60: line = line[:60]
+            raise ValueError("Error when logging " + line)
         finally:
             self.__thread_local_ctx.write_count -= 1
 
