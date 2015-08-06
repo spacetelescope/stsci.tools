@@ -224,8 +224,9 @@ class StreamTeeLogger(logging.Logger):
                 else:
                     self.log_orig(line.rstrip(), echo=True)
             self.buffer.truncate(0)
-        except:
-            raise 
+        except MemoryError:
+            # leads to recursion if not caught
+            self.buffer.truncate(0)
         finally:
             self.__thread_local_ctx.write_count -= 1
 
@@ -266,7 +267,7 @@ class StreamTeeLogger(logging.Logger):
 
         # Gleaned from code in the logging module itself...
         try:
-            f = inspect.stack()[1]
+            f = sys._getframe(1)
             ##f = inspect.currentframe(1)
         except Exception:
             f = None
@@ -563,7 +564,7 @@ class _LogTeeHandler(logging.Handler):
             counts[logger.name] -= 1
 
     def _search_stack(self):
-        curr_frame = inspect.stack()[3]
+        curr_frame = sys._getframe(3)
         ##curr_frame = inspect.currentframe(3)
         while curr_frame:
             if 'self' in curr_frame.f_locals:
