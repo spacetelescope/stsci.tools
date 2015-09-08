@@ -449,11 +449,13 @@ class _TkRead:
             raise RuntimeError("Cannot run this command without graphics")
         if isinstance(file, int):
             fd = file
-        try:
-            fd = file.fileno()
+        else: 
+            # Otherwise, assume we have Python file object
+            try:
+                fd = file.fileno()
 
-        except:
-            raise TypeError("file must be an integer or a filehandle/socket")
+            except:
+                raise TypeError("file must be an integer or a filehandle/socket")
         init_tk_default_root() # harmless if already done
         self.widget = Tkinter._default_root
         if not self.widget:
