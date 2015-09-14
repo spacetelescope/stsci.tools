@@ -96,7 +96,7 @@ if PY3K:
     string_types = str
 else:
     string_types = basestring
-    
+
 # Environment variable handling - based on iraffunctions.py
 # define INDEF, yes, no, EOF, Verbose, userIrafHome
 
@@ -694,6 +694,8 @@ def openImage(filename, mode='readonly', memmap=0, writefits=True,
         name to use for GEIS-derived MEF file,
         if None and writefits==True, will use 'buildFITSName()' to generate one
     """
+    from stwcs import updatewcs
+
     # Insure that the filename is always fully expanded
     # This will not affect filenames without paths or
     # filenames specified with extensions.
@@ -742,6 +744,9 @@ def openImage(filename, mode='readonly', memmap=0, writefits=True,
                 # handle to output FITS image instead...
                 fimg.close()
                 del fimg
+                # Image re-written as MEF, now it needs its WCS updated
+                updatewcs.updatewcs(fitsname)
+
                 fimg = fits.open(fitsname, mode=mode, memmap=memmap)
 
         # Return handle for use by user
@@ -786,6 +791,9 @@ def openImage(filename, mode='readonly', memmap=0, writefits=True,
             # handle to output FITS image instead...
             fimg.close()
             del fimg
+            # Image re-written as MEF, now it needs its WCS updated
+            updatewcs.updatewcs(fitsname)
+
             fimg = fits.open(fitsname, mode=mode, memmap=memmap)
 
         # Return handle for use by user
