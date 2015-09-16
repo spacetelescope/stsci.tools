@@ -172,7 +172,7 @@ class StreamTeeLogger(logging.Logger):
         self.__thread_local_ctx = threading.local()
         self.__thread_local_ctx.write_count = 0
         self.propagate = False
-        self.buffer = StringIO()
+        self.buffer = ''
 
         self.stream = None
         self.set_stream(stream)
@@ -211,22 +211,18 @@ class StreamTeeLogger(logging.Logger):
             if self.__thread_local_ctx.write_count > 1:
                 return
 
-            self.buffer.write(tostr(message, encoding='latin_1'))
-
             # For each line in the buffer ending with \n, output that line to
             # the logger
-            self.buffer.seek(0)
-            for line in self.buffer:
-                if line[-1] != '\n':
-                    self.buffer.truncate(0)
-                    self.buffer.write(line)
-                    return
-                else:
-                    self.log_orig(line.rstrip(), echo=True)
-            self.buffer.truncate(0)
-        except MemoryError:
-            # leads to recursion if not caught
-            self.buffer.truncate(0)
+            begin = 0
+            end = message.find('\n', begin) + 1
+            while end > begin:
+                if self.buffer:
+                    self.log_orig(self.buffer, echo=True)
+                    self.buffer = ''
+                self.log_orig(message[begin:end].rstrip(), echo=True)
+                begin = end
+                end = message.find('\n', begin) + 1
+            self.buffer = self.buffer + message[begin:]
         finally:
             self.__thread_local_ctx.write_count -= 1
 
