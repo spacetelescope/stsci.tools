@@ -26,12 +26,13 @@ def which_darwin_linkage(force_otool_check=False):
     """ Convenience function.  Returns one of ('x11', 'aqua') in answer to the
     question of whether this is an X11-linked Python/Tkinter, or a natively
     built (framework, Aqua) one.  This is only for OSX.
-    On Python 2.*, this relies on the assumption that on OSX, PyObjC
-    is installed only in the Framework builds of Python.  On Python 3.*,
+    This relies on the assumption that on OSX, PyObjC is installed
+    in the Framework builds of Python.  If it doesn't find PyObjC,
     this inspects the actual tkinter library binary via otool.
 
     One driving requirement here is to try to make the determination quickly
-    and quietly without actually importing/loading any GUI libraries.
+    and quietly without actually importing/loading any GUI libraries.  We
+    even want to avoid importing Tkinter if we can.
     """
 
     # sanity check
@@ -62,9 +63,7 @@ def which_darwin_linkage(force_otool_check=False):
         if os.path.exists(sitepacksloc):
             return "aqua"
 
-        # OK, no PyObjC found.  What we do next is different per Python ver.
-        if not PY3K:
-            return "x11"
+        # OK, no trace of PyObjC found - need to fall through to the forced otool check.
 
     # Use otool shell command
     if PY3K:
