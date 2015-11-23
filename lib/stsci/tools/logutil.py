@@ -178,8 +178,30 @@ class StreamTeeLogger(logging.Logger):
         self.set_stream(stream)
 
         self.addHandler(_LogTeeHandler())
-        self.errors = 'strict'
-        self.encoding = 'utf8'
+        #self.errors = 'strict'
+        #self.encoding = 'utf8'
+
+    @property
+    def encoding(self):
+        if self.stream:
+            try:
+                return self.stream.encoding
+            except AttributeError:
+                pass
+
+        # Default value
+        return 'utf-8'
+
+    @property
+    def errors(self):
+        if self.stream:
+            try:
+                return self.stream.errors
+            except AttributeError:
+                pass
+
+        # Default value
+        return 'strict'
 
     def set_stream(self, stream):
         """
