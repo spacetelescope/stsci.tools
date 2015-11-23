@@ -117,7 +117,7 @@ if not PY3K:
 else:
     import builtins
     def global_logging_raw_input(prompt):
-        retval = builtins._original_raw_input(prompt)
+        retval = builtins._original_raw_input(prompt)        
         if isinstance(sys.stdout, StreamTeeLogger):
             sys.stdout.log_orig(str(prompt) + retval, echo=False)
         return retval
@@ -178,6 +178,8 @@ class StreamTeeLogger(logging.Logger):
         self.set_stream(stream)
 
         self.addHandler(_LogTeeHandler())
+        self.errors = 'strict'
+        self.encoding = 'utf8'
 
     def set_stream(self, stream):
         """
