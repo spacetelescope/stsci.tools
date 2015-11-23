@@ -83,20 +83,21 @@ class IterFitsFile(object):
             self.handle.close()
         self.handle = None
 
-    def __getslice__(self,i,j):
+    def __getitem__(self,i):
         """ Returns a PyFITS section for the rows specified. """
         # All I/O must be done here, starting with open
         hdu = self.open()
         if self.inmemory or self.compress:
-            _data = hdu.data[i:j,:]
+            _data = hdu.data[i,:]
         else:
-            _data = hdu.section[i:j,:]
+            _data = hdu.section[i,:]
 
         if not self.inmemory:
             self.close()
             del hdu
 
         return _data
+        
 
     def __getattribute__(self,name):
         if name == 'data':
