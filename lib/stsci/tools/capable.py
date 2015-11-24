@@ -74,7 +74,10 @@ def which_darwin_linkage(force_otool_check=False):
     try:
         tk_dyn_lib = Tkinter._tkinter.__file__
     except AttributeError: # happens on Ureka
-        return 'aqua'
+        if 'UR_DIR' in os.environ:
+            return 'aqua'
+        else:
+            return 'unknown'
     libs = subprocess.check_output(('/usr/bin/otool', '-L', tk_dyn_lib)).decode('ascii')
     if libs.find('/libX11.') >= 0:
         return "x11"
