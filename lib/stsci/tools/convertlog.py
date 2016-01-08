@@ -125,7 +125,6 @@ def main():
         print("\t", __version__)
         sys.exit(2)
 
-    trl_file = args[0]
     output = None
     width = 132
     clobber=False
@@ -143,6 +142,9 @@ def main():
             keep = True
         else:
             assert False, "unhandled option"
+
+
+    trl_file = args[0]
     try:
         print("Converting {}...".format(trl_file))
         convert(trl_file, width=width, output=output,keep=keep)
