@@ -450,7 +450,9 @@ def buildRootname(filename, ext=None):
     if filename in ['' ,' ', None]:
         return None
 
-    fpath, froot = os.path.split(filename)
+    fpath, fname = os.path.split(filename)
+    froot = os.path.splitext(fname)[0].split('_')[0]
+
     if fpath in ['', ' ', None]:
         fpath = os.curdir
     # Get complete list of filenames from current directory
@@ -467,6 +469,7 @@ def buildRootname(filename, ext=None):
         elif name == froot + '.fits':
             rootname = froot + '.fits'
             break
+
     # If we have an incomplete filename, try building a default
     # name and seeing if it exists...
     #
@@ -501,7 +504,7 @@ def buildRootname(filename, ext=None):
 
             if rootname is not None:
                 break
-
+    
     # If we still haven't found the file, see if we have the
     # info to build one...
     if rootname is None and ext is not None:
