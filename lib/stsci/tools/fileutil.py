@@ -451,7 +451,10 @@ def buildRootname(filename, ext=None):
         return None
 
     fpath, fname = os.path.split(filename)
+    if ext is not None and '_' in ext[0]:
     froot = os.path.splitext(fname)[0].split('_')[0]
+    else:
+        froot = fname
 
     if fpath in ['', ' ', None]:
         fpath = os.curdir
