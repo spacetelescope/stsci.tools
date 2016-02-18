@@ -10,15 +10,15 @@ nmpfit.py is a version of mpfit.py which uses numarray.
 @version: '1.0 (2007-02-20)'
 
 """
-from __future__ import division, print_function # confidence high
+from __future__ import absolute_import, division, print_function
 
 __version__ = '1.0'          #Release version number only
 __vdate__ = '2007-02-20'     #Date of this version
 
-import numerixenv
+from . import numerixenv
 numerixenv.check()
 
-import nmpfit
+from . import nmpfit
 import numpy as N
 from numpy import random
 
@@ -163,5 +163,5 @@ def plot_fit(y, mfit, x=None):
 
 def test():
     import doctest
-    import gfit
+    from . import gfit
     return doctest.testmod(gfit)
