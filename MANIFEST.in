@@ -1,0 +1,2 @@
+include RELIC-INFO
+recursive-include lib/stsci/tools/tests *

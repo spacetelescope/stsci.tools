@@ -1,6 +1,5 @@
 from __future__ import division  # confidence high
+from .version import *
 
-try:
-    from .version import *
-except Exception:
-    __version__ = 'unknown'
+
+__vdate__ = __version_date__

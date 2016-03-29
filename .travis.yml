@@ -12,9 +12,9 @@ env:
         # overridden underneath. They are defined here in order to save having
         # to repeat them for all configurations.
         - NUMPY_VERSION=stable
-        - MAIN_CMD='pytest lib/stsci/tools/tests/'
+        - MAIN_CMD='python setup.py'
         - ASTROPY_VERSION=stable
-        - SETUP_CMD=''
+        - SETUP_CMD='build'
         - PIP_DEPENDENCIES=''
         # For this package-template, we include examples of Cython modules,
         # so Cython is required for testing. If your package does not include
@@ -74,6 +74,7 @@ install:
 
 script:
     - $MAIN_CMD $SETUP_CMD
+    - pytest "lib/stsci/tools/tests/"
 
 after_success:
     # If coveralls.io is set up for this package, uncomment the line
