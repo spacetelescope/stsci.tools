@@ -489,7 +489,7 @@ def byteswap(input,output=None,clobber=True):
 
         #hdulist.append(ext_hdu)
     # Define new table based on Column definitions
-    ext_table = fits.new_table(cols, tbtype='TableHDU')
+    ext_table = fits.BinTableHDU.from_columns(cols, tbtype='TableHDU')
     ext_table.header.set('EXTNAME', value=input+'.tab', after='TFIELDS')
     # Add column descriptions to header of table extension to match stwfits output
     for i in range(len(key)):
