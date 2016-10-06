@@ -456,9 +456,7 @@ def toMultiExtensionFits(waiveredObject,
             kw_descr = ""
             if keyword in whdul[1].header:
                 kw_descr = whdul[1].header[keyword]
-            mhdul[i+1].header.update(keyword,
-                                     d,
-                                     kw_descr)
+            mhdul[i+1].header[keyword] = (d, kw_descr)
         #
         # If original data is unsigned short then scale the data.
         #
