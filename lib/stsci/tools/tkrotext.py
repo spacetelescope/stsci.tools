@@ -14,14 +14,14 @@ import sys
 PY3K = sys.version_info[0] > 2
 
 if PY3K:
-    import tkinter as Tkinter
+    import tkinter as TKNTR
 else:
-    import Tkinter
+    import Tkinter as TKNTR
 
 ALLOWED_SYMS = ('c','Up','Down','Left','Right','Home','End','Prior','Next', \
                 'Shift_L', 'Shift_R')
 
-class ROText(Tkinter.Text):
+class ROText(TKNTR.Text):
 
     def __init__(self, master, **kw):
         """  defer most of __init__ to the base class """
@@ -29,7 +29,7 @@ class ROText(Tkinter.Text):
         if 'focusBackTo' in kw:
             self._fbto = kw['focusBackTo']
             del kw['focusBackTo']
-        Tkinter.Text.__init__(self, master, **kw)
+        TKNTR.Text.__init__(self, master, **kw)
         # override some bindings to return a "break" string
         self.bind("<Key>", self.ignoreMostKeys)
         self.bind("<Button-2>", lambda e: "break")
@@ -41,12 +41,12 @@ class ROText(Tkinter.Text):
     # disallow common insert calls, but allow a backdoor when needed
     def insert(self, index, text, *tags, **kw):
         if 'force' in kw and kw['force']:
-            Tkinter.Text.insert(self, index, text, *tags)
+            TKNTR.Text.insert(self, index, text, *tags)
 
     # disallow common delete calls, but allow a backdoor when needed
     def delete(self, start, end=None, force=False):
         if force:
-            Tkinter.Text.delete(self, start, end)
+            TKNTR.Text.delete(self, start, end)
 
     # a way to disable text manip
     def ignoreMostKeys(self, event):
@@ -78,26 +78,26 @@ if __name__ == '__main__':
         sys.exit()
 
     def clicked():
-        rot.insert(Tkinter.END, "\nClicked at "+time.asctime(), force=True)
-        rot.see(Tkinter.END)
+        rot.insert(TKNTR.END, "\nClicked at "+time.asctime(), force=True)
+        rot.see(TKNTR.END)
 
     # make our test window
-    top = Tkinter.Tk()
-    f = Tkinter.Frame(top)
+    top = TKNTR.Tk()
+    f = TKNTR.Frame(top)
 
-    sc = Tkinter.Scrollbar(f)
-    sc.pack(side=Tkinter.RIGHT, fill=Tkinter.Y)
-    rot = ROText(f, wrap=Tkinter.WORD, height=10, yscrollcommand=sc.set,
+    sc = TKNTR.Scrollbar(f)
+    sc.pack(side=TKNTR.RIGHT, fill=TKNTR.Y)
+    rot = ROText(f, wrap=TKNTR.WORD, height=10, yscrollcommand=sc.set,
                  focusBackTo=top)
-    rot.pack(side=Tkinter.TOP, fill=Tkinter.X, expand=True)
+    rot.pack(side=TKNTR.TOP, fill=TKNTR.X, expand=True)
     sc.config(command=rot.yview)
-    f.pack(side=Tkinter.TOP, fill=Tkinter.X)
+    f.pack(side=TKNTR.TOP, fill=TKNTR.X)
 
-    b = Tkinter.Button(top, text='Click Me', command=clicked)
-    b.pack(side=Tkinter.TOP, fill=Tkinter.X, expand=1)
+    b = TKNTR.Button(top, text='Click Me', command=clicked)
+    b.pack(side=TKNTR.TOP, fill=TKNTR.X, expand=1)
 
-    q = Tkinter.Button(top, text='Quit', command=quit)
-    q.pack(side=Tkinter.TOP)
+    q = TKNTR.Button(top, text='Quit', command=quit)
+    q.pack(side=TKNTR.TOP)
 
     # start
     top.mainloop()

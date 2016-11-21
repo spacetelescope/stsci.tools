@@ -10,7 +10,7 @@ from __future__ import division # confidence high
 
 import os, sys
 PY3K = sys.version_info[0] > 2
-descrip = "basic capabilities file, last edited: 22 Sep 2016"
+descrip = "basic capabilities file, last edited: 21 Nov 2016"
 
 def is_darwin_and_x():
     """ Convenience function.  Returns True if is an X11-linked Python/Tkinter
@@ -29,7 +29,7 @@ def which_darwin_linkage(force_otool_check=False):
     built (framework, Aqua) one.  This is only for OSX.
     This relies on the assumption that on OSX, PyObjC is installed
     in the Framework builds of Python.  If it doesn't find PyObjC,
-    this inspects the actual tkinter library binary via otool.
+    this inspects the actual Tkinter library binary via otool.
 
     One driving requirement here is to try to make the determination quickly
     and quietly without actually importing/loading any GUI libraries.  We
@@ -68,12 +68,12 @@ def which_darwin_linkage(force_otool_check=False):
 
     # Use otool shell command
     if PY3K:
-        import tkinter as Tkinter
+        import tkinter as TKNTR
     else:
-        import Tkinter
+        import Tkinter as TKNTR
     import subprocess
     try:
-        tk_dyn_lib = Tkinter._tkinter.__file__
+        tk_dyn_lib = TKNTR._tkinter.__file__
     except AttributeError: # happens on Ureka
         if 'UR_DIR' in os.environ:
             return 'aqua'
@@ -153,9 +153,9 @@ if OF_GRAPHICS and sys.platform == 'darwin':
 if OF_GRAPHICS :
     try :
         if PY3K:
-            import tkinter as Tkinter
+            import tkinter as TKNTR
         else:
-            import Tkinter
+            import Tkinter as TKNTR
     except ImportError :
         TKINTER_IMPORT_FAILED = 1
         OF_GRAPHICS = False

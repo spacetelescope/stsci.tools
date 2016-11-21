@@ -12,7 +12,7 @@ PY3K = sys.version_info[0] > 2
 
 from . import capable
 if capable.OF_GRAPHICS:
-    if PY3K:        
+    if PY3K:
         from tkinter import *
         from tkinter.simpledialog import Dialog
     else:
@@ -27,11 +27,10 @@ class ListSingleSelectDialog(Dialog):
 
         if not parent:
             if PY3K:
-                import tkinter
-                parent = tkinter._default_root
+                import tkinter as TKNTR
             else:
-                import Tkinter
-                parent = Tkinter._default_root
+                import Tkinter as TKNTR
+            parent = TKNTR._default_root
             parent.withdraw()
 
         self.__prompt = prompt

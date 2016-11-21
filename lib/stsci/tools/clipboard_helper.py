@@ -11,9 +11,9 @@ from __future__ import division, print_function # confidence high
 
 import sys
 if sys.version_info[0] > 2:
-    import tkinter as Tkinter
+    import tkinter as TKNTR
 else:
-    import Tkinter
+    import Tkinter as TKNTR
 
 _theRoot = None
 _lastSel = '' # our own copy of the last selected text (for PRIMARY)
@@ -82,14 +82,14 @@ def dump():
 
 
 def _checkTkInit():
-    """ Make sure the Tkinter root is defined. """
+    """ Make sure the TKNTR root is defined. """
     global _theRoot
     if _theRoot is None:
-        if Tkinter._default_root:
+        if TKNTR._default_root:
             # use it
-            _theRoot = Tkinter._default_root
+            _theRoot = TKNTR._default_root
         else:
             # create it but withdraw it immediately
-            _theRoot = Tkinter.Tk()
+            _theRoot = TKNTR.Tk()
             _theRoot.withdraw()
-        del Tkinter
+        del TKNTR
