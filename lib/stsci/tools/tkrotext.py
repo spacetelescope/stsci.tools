@@ -1,9 +1,9 @@
-""" Read-Only Tkinter Text Widget.  This is a variation of the Tkinter Text
+""" Read-Only tkinter Text Widget.  This is a variation of the tkinter Text
 widget in that the text itself is not editable (it is read-only), but it allows
 selection for cut/paste to other apps.  Cut-paste may currently only work
 under X11. (9/2015 enabled under OSX by adding 'c' to ALLOWED_SYMS)
 
-A vastly simpler way of doing this is to use a Tkinter.Text widget and set
+A vastly simpler way of doing this is to use a tkinter.Text widget and set
 it to DISABLED, but then you cannot select text.
 $Id$
 """

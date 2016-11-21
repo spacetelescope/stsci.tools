@@ -2,7 +2,7 @@
 and correctly on a given platform, when the user applies the right keystrokes
 or mouse events for that platform.  In some corner cases this might not be
 true, so this module exists to help facilitate any needed copying or pasting.
-For now, this is Tkinter based, but it is imported lazily.
+For now, this is tkinter based, but it is imported lazily.
 
 $Id$
 """

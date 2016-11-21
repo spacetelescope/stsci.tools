@@ -13,7 +13,7 @@ PY3K = sys.version_info[0] > 2
 descrip = "basic capabilities file, last edited: 21 Nov 2016"
 
 def is_darwin_and_x():
-    """ Convenience function.  Returns True if is an X11-linked Python/Tkinter
+    """ Convenience function.  Returns True if is an X11-linked Python/tkinter
     build on OSX.  This is intended to be quick and easy without further
     imports.  As a result, this relies on the assumption that on OSX, PyObjC
     is installed (only) in the Framework builds of Python. """
@@ -25,15 +25,15 @@ def is_darwin_and_x():
 
 def which_darwin_linkage(force_otool_check=False):
     """ Convenience function.  Returns one of ('x11', 'aqua') in answer to the
-    question of whether this is an X11-linked Python/Tkinter, or a natively
+    question of whether this is an X11-linked Python/tkinter, or a natively
     built (framework, Aqua) one.  This is only for OSX.
     This relies on the assumption that on OSX, PyObjC is installed
     in the Framework builds of Python.  If it doesn't find PyObjC,
-    this inspects the actual Tkinter library binary via otool.
+    this inspects the actual tkinter library binary via otool.
 
     One driving requirement here is to try to make the determination quickly
     and quietly without actually importing/loading any GUI libraries.  We
-    even want to avoid importing Tkinter if we can.
+    even want to avoid importing tkinter if we can.
     """
 
     # sanity check
@@ -44,7 +44,7 @@ def which_darwin_linkage(force_otool_check=False):
     # attempt to initialize any graphics.
     if not force_otool_check:
 
-        # There will (for now) only ever be an aqua-linked Python/Tkinter
+        # There will (for now) only ever be an aqua-linked Python/tkinter
         # when using Ureka on darwin, so this is an easy short-circuit check.
         if 'UR_DIR' in os.environ:
             return "aqua"
@@ -114,7 +114,7 @@ if 'PYRAF_NO_DISPLAY' in os.environ or 'PYTOOLS_NO_DISPLAY' in os.environ:
 if OF_GRAPHICS and sys.platform == 'darwin':
     #
     # On OSX, there is an AppKit error where Python itself will abort if
-    # Tkinter operations (e.g. Tkinter._test() ...) are attempted when running
+    # tkinter operations (e.g. tkinter._test() ...) are attempted when running
     # from a remote terminal.  In these situations, it is not even safe to put
     # the code in a try/except block, since the AppKit error seems to happen
     # *asynchronously* within ObjectiveC code.  See PyRAF ticket #149.
@@ -148,7 +148,7 @@ if OF_GRAPHICS and sys.platform == 'darwin':
         #    An OSX Python build linked natively where PyObjC was left out
 
 # After all that, we may have decided that we want graphics.  Now
-# that we know it is ok to try to import Tkinter, we can test if it
+# that we know it is ok to try to import tkinter, we can test if it
 # is there.  If it is not, we are not capable of graphics.
 if OF_GRAPHICS :
     try :

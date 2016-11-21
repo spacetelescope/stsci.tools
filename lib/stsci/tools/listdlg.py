@@ -1,5 +1,5 @@
 #
-# A home-grown list-selection convenience dialog.  As *soon* as Tkinter comes
+# A home-grown list-selection convenience dialog.  As *soon* as tkinter comes
 # with one of these, replace all uses of this one with that.  This currently
 # only allows single selection.
 #
