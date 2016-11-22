@@ -10,7 +10,8 @@ from __future__ import absolute_import, division, print_function # confidence hi
 import sys
 PY3K = sys.version_info[0] > 2
 
-from . import capable
+from . import capable, irafutils
+
 if capable.OF_GRAPHICS:
     if PY3K:
         from tkinter import *
@@ -26,12 +27,7 @@ class ListSingleSelectDialog(Dialog):
     def __init__(self, title, prompt, choiceList, parent=None):
 
         if not parent:
-            if PY3K:
-                import tkinter as TKNTR
-            else:
-                import Tkinter as TKNTR
-            parent = TKNTR._default_root
-            parent.withdraw()
+            parent = irafutils.init_tk_default_root()
 
         self.__prompt = prompt
         self.__choices = choiceList

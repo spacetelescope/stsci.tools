@@ -31,6 +31,7 @@ if capable.OF_GRAPHICS:
     else:
         import Tkinter as TKNTR
 
+
 def printColsAuto(in_strings, term_width=80, min_pad=1):
     """ Print a list of strings centered in columns.  Determine the number
     of columns and lines on the fly.  Return the result, ready to print.
@@ -376,19 +377,24 @@ def untranslateName(s):
 
 # procedures to read while still allowing Tk widget updates
 
-def init_tk_default_root():
+def init_tk_default_root(withdraw=True):
 
     """ In case the _default_root value is required, you may
     safely call this ahead of time to ensure that it has been
     initialized.  If it has already been, this is a no-op.
     """
-
     if not capable.OF_GRAPHICS:
         raise RuntimeError("Cannot run this command without graphics")
 
     if not TKNTR._default_root: # TKNTR imported above
         newdfrt = TKNTR.Tk()
+
+    # tkinter._default_root is now populated
+    if withdraw:
         newdfrt.withdraw()
+
+    return TKNTR._default_root
+
 
 def tkread(file, n=0):
 
@@ -430,7 +436,7 @@ def tkreadline(file=None):
         fd = file.fileno()
     except:
         fd = None
-        
+
     if (fd and capable.OF_GRAPHICS):
         tkread(fd, 0)
         # if EOF was encountered on a tty, avoid reading again because

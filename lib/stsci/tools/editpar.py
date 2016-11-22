@@ -144,15 +144,7 @@ class EditParDialog(object):
         if self.parent == None:
             global _default_root
             if _default_root is None:
-                if PY3K:
-                    import tkinter as TKNTR
-                else:
-                    import Tkinter as TKNTR
-                if not TKNTR._default_root:
-                    _default_root = TKNTR.Tk()
-                    _default_root.withdraw()
-                else:
-                    _default_root = TKNTR._default_root
+                _default_root = irafutils.init_tk_default_root()
 
         # Track whether this is a parent or child window
         self.isChild = isChild
@@ -450,7 +442,7 @@ class EditParDialog(object):
         return self._taskParsObj
 
     def mwl(self, event):
-        """Mouse Wheel - under TKNTR we seem to need Tk v8.5+ for this """
+        """Mouse Wheel - under tkinter we seem to need Tk v8.5+ for this """
         if event.num == 4: # up on Linux
             self.top.f.canvas.yview_scroll(-1*self._tmwm, 'units')
         elif event.num == 5: # down on Linux
@@ -468,7 +460,7 @@ class EditParDialog(object):
         try:
             event.widget.tk_focusNext().focus_set()
         except TypeError:
-            # see TKNTR equivalent code for tk_focusNext to see
+            # see tkinter equivalent code for tk_focusNext to see
             # commented original version
             name = event.widget.tk.call('tk_focusNext', event.widget._w)
             event.widget._nametowidget(str(name)).focus_set()
@@ -478,7 +470,7 @@ class EditParDialog(object):
         try:
             event.widget.tk_focusPrev().focus_set()
         except TypeError:
-            # see TKNTR equivalent code for tk_focusPrev to see
+            # see tkinter equivalent code for tk_focusPrev to see
             # commented original version
             name = event.widget.tk.call('tk_focusPrev', event.widget._w)
             event.widget._nametowidget(str(name)).focus_set()
@@ -1145,7 +1137,7 @@ class EditParDialog(object):
                     defaultextension=self._defSaveAsExt,
                     initialdir=os.path.dirname(self._getSaveAsFilter()))
         else:
-            # Prompt. (could use TKNTR's FileDialog, but this one is prettier)
+            # Prompt. (could use tkinter's FileDialog, but this one is prettier)
             # initWProtState is only used in the 1st call of a session
             from . import filedlg
             fd = filedlg.PersistSaveFileDialog(self.top,

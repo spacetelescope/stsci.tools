@@ -10,10 +10,7 @@ $Id$
 from __future__ import division, print_function # confidence high
 
 import sys
-if sys.version_info[0] > 2:
-    import tkinter as TKNTR
-else:
-    import Tkinter as TKNTR
+from . import irafutils
 
 _theRoot = None
 _lastSel = '' # our own copy of the last selected text (for PRIMARY)
@@ -82,14 +79,6 @@ def dump():
 
 
 def _checkTkInit():
-    """ Make sure the TKNTR root is defined. """
+    """ Make sure the tkinter root is defined. """
     global _theRoot
-    if _theRoot is None:
-        if TKNTR._default_root:
-            # use it
-            _theRoot = TKNTR._default_root
-        else:
-            # create it but withdraw it immediately
-            _theRoot = TKNTR.Tk()
-            _theRoot.withdraw()
-        del TKNTR
+    _theRoot = irafutils.init_tk_default_root()
