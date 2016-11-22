@@ -33,10 +33,10 @@ else:
 
 if capable.OF_GRAPHICS:
     if PY3K:
-        import tkinter as Tkinter
+        import tkinter as TKNTR
     else:
-        import Tkinter
-        
+        import Tkinter as TKNTR
+
     from . import alert
     from .dialog import *
 else:
@@ -246,7 +246,7 @@ class FileDialog(ModalDialog):
         field = self.fileNameEntry
         field.delete(0, AtEnd())
         field.insert(0, os.path.join(self.cwd_print(), lb.get(lb.nearest(event.y))))
-        if Tkinter.TkVersion >= 4.0:
+        if TKNTR.TkVersion >= 4.0:
             lb.select_clear(0, "end")
             lb.select_anchor(lb.nearest(event.y))
         else:

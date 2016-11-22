@@ -27,9 +27,10 @@ PY3K = sys.version_info[0] > 2
 
 if capable.OF_GRAPHICS:
     if PY3K:
-        import tkinter as Tkinter
+        import tkinter as TKNTR
     else:
-        import Tkinter
+        import Tkinter as TKNTR
+
 
 def printColsAuto(in_strings, term_width=80, min_pad=1):
     """ Print a list of strings centered in columns.  Determine the number
@@ -376,19 +377,24 @@ def untranslateName(s):
 
 # procedures to read while still allowing Tk widget updates
 
-def init_tk_default_root():
+def init_tk_default_root(withdraw=True):
 
     """ In case the _default_root value is required, you may
     safely call this ahead of time to ensure that it has been
     initialized.  If it has already been, this is a no-op.
     """
-
     if not capable.OF_GRAPHICS:
         raise RuntimeError("Cannot run this command without graphics")
 
-    if not Tkinter._default_root: # Tkinter imported above
-        newdfrt = Tkinter.Tk()
+    if not TKNTR._default_root: # TKNTR imported above
+        newdfrt = TKNTR.Tk()
+
+    # tkinter._default_root is now populated
+    if withdraw:
         newdfrt.withdraw()
+
+    return TKNTR._default_root
+
 
 def tkread(file, n=0):
 
@@ -430,7 +436,7 @@ def tkreadline(file=None):
         fd = file.fileno()
     except:
         fd = None
-        
+
     if (fd and capable.OF_GRAPHICS):
         tkread(fd, 0)
         # if EOF was encountered on a tty, avoid reading again because
@@ -449,7 +455,7 @@ class _TkRead:
             raise RuntimeError("Cannot run this command without graphics")
         if isinstance(file, int):
             fd = file
-        else: 
+        else:
             # Otherwise, assume we have Python file object
             try:
                 fd = file.fileno()
@@ -457,7 +463,7 @@ class _TkRead:
             except:
                 raise TypeError("file must be an integer or a filehandle/socket")
         init_tk_default_root() # harmless if already done
-        self.widget = Tkinter._default_root
+        self.widget = TKNTR._default_root
         if not self.widget:
             # no Tk widgets yet, so no need for mainloop
             # (shouldnt happen now with init_tk_default_root)
@@ -476,7 +482,7 @@ class _TkRead:
             self.nbytes = nbytes
             self.value = []
             self.widget.tk.createfilehandler(fd,
-                                    Tkinter.READABLE | Tkinter.EXCEPTION,
+                                    TKNTR.READABLE | TKNTR.EXCEPTION,
                                     self._read)
             try:
                 self.widget.mainloop()

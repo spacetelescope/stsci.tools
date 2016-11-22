@@ -437,7 +437,7 @@ class EparOption(object):
         self.menu.tk_popup(xcoord, ycoord)
 
     def fileBrowser(self):
-        """Invoke a Tkinter file dialog"""
+        """Invoke a tkinter file dialog"""
         if capable.OF_TKFD_IN_EPAR:
            fname = askopenfilename(parent=self.entry, title="Select File")
         else:
@@ -457,7 +457,7 @@ class EparOption(object):
         self.lastSelection = None
 
     def dirBrowser(self):
-        """Invoke a Tkinter directory dialog"""
+        """Invoke a tkinter directory dialog"""
         if capable.OF_TKFD_IN_EPAR:
             fname = askdirectory(parent=self.entry, title="Select Directory")
         else:

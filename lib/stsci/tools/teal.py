@@ -871,7 +871,7 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
         fname = self._openMenuChoice.get()
 
         # Also allow them to simply find any file - do not check _task_name_...
-        # (could use Tkinter's FileDialog, but this one is prettier)
+        # (could use tkinter's FileDialog, but this one is prettier)
         if fname[-3:] == '...':
             if capable.OF_TKFD_IN_EPAR:
                 fname = askopenfilename(title="Load Config File",
