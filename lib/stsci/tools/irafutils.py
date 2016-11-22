@@ -387,13 +387,14 @@ def init_tk_default_root(withdraw=True):
         raise RuntimeError("Cannot run this command without graphics")
 
     if not TKNTR._default_root: # TKNTR imported above
-        newdfrt = TKNTR.Tk()
+        junk = TKNTR.Tk()
 
-    # tkinter._default_root is now populated
-    if withdraw:
-        newdfrt.withdraw()
+    # tkinter._default_root is now populated (== junk)
+    retval = TKNTR._default_root
+    if withdraw and retval:
+        retval.withdraw()
 
-    return TKNTR._default_root
+    return retval
 
 
 def tkread(file, n=0):
