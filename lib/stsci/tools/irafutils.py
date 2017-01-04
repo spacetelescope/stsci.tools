@@ -472,7 +472,7 @@ class _TkRead:
             while nbytes>0:
                 snew = os.read(fd, nbytes) # returns bytes in PY3K
                 if snew:
-                    if PY3K: snew = snew.decode('ascii')
+                    if PY3K: snew = snew.decode('ascii','replace')
                     s.append(snew)
                     nbytes -= len(snew)
                 else:
@@ -499,7 +499,7 @@ class _TkRead:
             # it actually requests more data
             if select.select([fd],[],[],0)[0]:
                 snew = os.read(fd, self.nbytes) # returns bytes in PY3K
-                if PY3K: snew = snew.decode('ascii')
+                if PY3K: snew = snew.decode('ascii','replace')
                 self.value.append(snew)
                 self.nbytes -= len(snew)
             else:
