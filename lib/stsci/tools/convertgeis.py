@@ -316,12 +316,12 @@ def convert(input):
                         val = True
                     else:
                         val = False
-                    
+
                 elif i in floats:
                     # use fromstring, format in Card is deprecated in pyfits 0.9
                     _str = '%-8s= %20.13G / %s' % (key[i-1], val, comm[i-1])
                     _card = fits.Card.fromstring(_str)
-                    
+
                 else:
                     _card = fits.Card(key=key[i-1], value=val, comment=comm[i-1])
 
@@ -334,7 +334,7 @@ def convert(input):
 
         #hdulist.append(ext_hdu)
     # Define new table based on Column definitions
-    ext_table = fits.new_table(cols,tbtype='TableHDU')
+    ext_table = fits.TableHDU.from_columns(cols)
     ext_table.header.set('EXTNAME', value=input+'.tab', after='TFIELDS')
     # Add column descriptions to header of table extension to match stwfits output
     for i in range(len(key)):
@@ -389,7 +389,7 @@ def parse_path(f1, f2):
             list2.append(os.path.join(f2, fitsname))
     else:
         list2 = [s.strip() for s in f2.split(",")]
-        
+
     if (list1 == [] or list2 == []):
         str = ""
         if (list1 == []): str += "Input files `%s` not usable/available. " % f1
