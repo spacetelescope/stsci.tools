@@ -15,6 +15,8 @@ from astropy.io import fits
 import numpy as N
 import os.path, time
 
+# USE_FITS_OVERWRITE is necessary as long as we support astropy versions < 1.3
+USE_FITS_OVERWRITE = astropy.version.major >= 1 and astropy.version.minor >=3
 
 __version__ = '0.2(2015-06-23)'
 
@@ -411,7 +413,10 @@ class ASNTable(dict):
         cols = fits.ColDefs([memname,memtype,memprsn,xoffset,yoffset,xdelta,ydelta,rotation,scale])
         hdu = fits.BinTableHDU.from_columns(cols)
         fasn.append(hdu)
-        fasn.writeto(outfile, clobber=True)
+        if USE_FITS_OVERWRITE:
+            fasn.writeto(outfile, overwrite=True)
+        else:
+            fasn.writeto(outfile, clobber=True)
         fasn.close()
         mem0 = self['order'][0]
         refimg = self['members'][mem0]['refimage']

@@ -152,7 +152,12 @@ else:
 #
 import os
 import sys
+import astropy
 from astropy.io import fits
+
+# USE_FITS_OVERWRITE is necessary as long as we support astropy versions < 1.3
+USE_FITS_OVERWRITE = astropy.version.major >= 1 and astropy.version.minor >=3
+
 #
 # -----------------------------------------------------------------------------
 # Function definitions
@@ -516,7 +521,11 @@ def toMultiExtensionFits(waiveredObject,
             head,tail = os.path.split(multiExtensionFileName)
             mhdul[0].header.set('FILENAME', value=tail, after='NEXTEND')
 
-        mhdul.writeto(multiExtensionFileName,clobber=True)
+        if USE_FITS_OVERWRITE:
+            mhdul.writeto(multiExtensionFileName, overwrite=True)
+        else:
+            mhdul.writeto(multiExtensionFileName, clobber=True)
+
         verboseString = verboseString[:-1] + " and written to " + \
                         multiExtensionFileName + "."
 
