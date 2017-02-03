@@ -15,7 +15,9 @@ from astropy.io import fits
 from astropy.io.fits.tests import FitsTestCase
 
 # USE_FITS_OVERWRITE is necessary as long as we support astropy versions < 1.3
-USE_FITS_OVERWRITE = astropy.version.major >= 1 and astropy.version.minor >=3
+USE_FITS_OVERWRITE = ((astropy.version.major == 1 and
+                       astropy.version.minor >= 3) or
+                      astropy.version.major >= 2)
 
 class TestStpyfitsFunctions(FitsTestCase):
     def setup(self):

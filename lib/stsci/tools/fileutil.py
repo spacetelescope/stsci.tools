@@ -99,7 +99,9 @@ else:
     string_types = basestring
 
 # USE_FITS_OVERWRITE is necessary as long as we support astropy versions < 1.3
-USE_FITS_OVERWRITE = astropy.version.major >= 1 and astropy.version.minor >=3
+USE_FITS_OVERWRITE = ((astropy.version.major == 1 and
+                       astropy.version.minor >= 3) or
+                      astropy.version.major >= 2)
 
 # Environment variable handling - based on iraffunctions.py
 # define INDEF, yes, no, EOF, Verbose, userIrafHome
