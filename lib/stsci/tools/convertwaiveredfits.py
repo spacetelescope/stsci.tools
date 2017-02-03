@@ -154,9 +154,9 @@ import os
 import sys
 import astropy
 from astropy.io import fits
+from distutils.version import LooseVersion
 
-# USE_FITS_OVERWRITE is necessary as long as we support astropy versions < 1.3
-USE_FITS_OVERWRITE = astropy.version.major >= 1 and astropy.version.minor >=3
+ASTROPY_VER_GE13 = LooseVersion(astropy.__version__) >= LooseVersion('1.3')
 
 #
 # -----------------------------------------------------------------------------
@@ -521,7 +521,7 @@ def toMultiExtensionFits(waiveredObject,
             head,tail = os.path.split(multiExtensionFileName)
             mhdul[0].header.set('FILENAME', value=tail, after='NEXTEND')
 
-        if USE_FITS_OVERWRITE:
+        if ASTROPY_VER_GE13:
             mhdul.writeto(multiExtensionFileName, overwrite=True)
         else:
             mhdul.writeto(multiExtensionFileName, clobber=True)

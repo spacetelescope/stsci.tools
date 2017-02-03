@@ -91,6 +91,7 @@ import sys
 
 import time as _time
 import numpy as np
+from distutils.version import LooseVersion
 
 PY3K = sys.version_info[0] > 2
 if PY3K:
@@ -98,10 +99,7 @@ if PY3K:
 else:
     string_types = basestring
 
-# USE_FITS_OVERWRITE is necessary as long as we support astropy versions < 1.3
-USE_FITS_OVERWRITE = ((astropy.version.major == 1 and
-                       astropy.version.minor >= 3) or
-                      astropy.version.major >= 2)
+ASTROPY_VER_GE13 = LooseVersion(astropy.__version__) >= LooseVersion('1.3')
 
 # Environment variable handling - based on iraffunctions.py
 # define INDEF, yes, no, EOF, Verbose, userIrafHome
@@ -748,13 +746,13 @@ def openImage(filename, mode='readonly', memmap=0, writefits=True,
                 fexists = os.path.exists(fitsname)
                 if (fexists and clobber) or not fexists:
                     print('Writing out WAIVERED as MEF to ', fitsname)
-                    if USE_FITS_OVERWRITE:
+                    if ASTROPY_VER_GE13:
                         fimg.writeto(fitsname, overwrite=clobber)
                     else:
                         fimg.writeto(fitsname, clobber=clobber)
                     if dqexists:
                         print('Writing out WAIVERED as MEF to ', dqfitsname)
-                        if USE_FITS_OVERWRITE:
+                        if ASTROPY_VER_GE13:
                             dqfile.writeto(dqfitsname, overwrite=clobber)
                         else:
                             dqfile.writeto(dqfitsname, clobber=clobber)
@@ -801,13 +799,13 @@ def openImage(filename, mode='readonly', memmap=0, writefits=True,
             fexists = os.path.exists(fitsname)
             if (fexists and clobber) or not fexists:
                     print('Writing out GEIS as MEF to ', fitsname)
-                    if USE_FITS_OVERWRITE:
+                    if ASTROPY_VER_GE13:
                         fimg.writeto(fitsname, overwrite=clobber)
                     else:
                         fimg.writeto(fitsname, clobber=clobber)
                     if dqexists:
                         print('Writing out GEIS as MEF to ', dqfitsname)
-                        if USE_FITS_OVERWRITE:
+                        if ASTROPY_VER_GE13:
                             dqfile.writeto(dqfitsname, overwrite=clobber)
                         else:
                             dqfile.writeto(dqfitsname, clobber=clobber)

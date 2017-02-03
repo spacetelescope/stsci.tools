@@ -5,6 +5,8 @@ import os
 import tempfile
 
 import numpy as np
+from distutils.version import LooseVersion
+
 from nose.tools import assert_true, assert_false, assert_equal, assert_raises
 
 import stsci.tools.stpyfits as stpyfits
@@ -14,10 +16,7 @@ from astropy.io import fits
 #from pyfits.tests import PyfitsTestCase
 from astropy.io.fits.tests import FitsTestCase
 
-# USE_FITS_OVERWRITE is necessary as long as we support astropy versions < 1.3
-USE_FITS_OVERWRITE = ((astropy.version.major == 1 and
-                       astropy.version.minor >= 3) or
-                      astropy.version.major >= 2)
+ASTROPY_VER_GE13 = LooseVersion(astropy.__version__) >= LooseVersion('1.3')
 
 class TestStpyfitsFunctions(FitsTestCase):
     def setup(self):
@@ -149,14 +148,14 @@ class TestStpyfitsFunctions(FitsTestCase):
         header = hdul[0].header.copy()
         header['NAXIS'] = 0
 
-        if USE_FITS_OVERWRITE:
+        if ASTROPY_VER_GE13:
             stpyfits.writeto(self.temp('new.fits'), hdul[0].data, header,
                              overwrite=True)
         else:
             stpyfits.writeto(self.temp('new.fits'), hdul[0].data, header,
                              clobber=True)
 
-        if USE_FITS_OVERWRITE:
+        if ASTROPY_VER_GE13:
             fits.writeto(self.temp('new1.fits'), hdul1[0].data,
                          hdul1[0].header, overwrite=True)
         else:
@@ -185,14 +184,14 @@ class TestStpyfitsFunctions(FitsTestCase):
         hdul = stpyfits.open(self.data('cdva2.fits'))
         hdul1 = fits.open(self.data('cdva2.fits'))
 
-        if USE_FITS_OVERWRITE:
+        if ASTROPY_VER_GE13:
             stpyfits.writeto(self.temp('new.fits'), hdul[0].data,
                              hdul[0].header, overwrite=True)
         else:
             stpyfits.writeto(self.temp('new.fits'), hdul[0].data,
                              hdul[0].header, clobber=True)
 
-        if USE_FITS_OVERWRITE:
+        if ASTROPY_VER_GE13:
             fits.writeto(self.temp('new1.fits'), hdul1[0].data,
                          hdul1[0].header, overwrite=True)
         else:
@@ -267,7 +266,7 @@ class TestStpyfitsFunctions(FitsTestCase):
         header = hdul[0].header.copy()
         header['NAXIS'] = 0
 
-        if USE_FITS_OVERWRITE:
+        if ASTROPY_VER_GE13:
             stpyfits.writeto(self.temp('new.fits'), hdul[0].data,
                              header, overwrite=True)
         else:
@@ -354,7 +353,7 @@ class TestStpyfitsFunctions(FitsTestCase):
         hdu.header.set('PIXVALUE', 1.0, 'Constant pixel value', after='EXTEND')
         hdu.header.set('NAXIS', 0)
 
-        if USE_FITS_OVERWRITE:
+        if ASTROPY_VER_GE13:
             stpyfits.writeto(self.temp('new.fits'), hdu.data, hdu.header,
                              overwrite=True)
         else:
@@ -406,7 +405,7 @@ class TestStpyfitsFunctions(FitsTestCase):
         hdu1.header.set('NAXIS2', 10, 'length of constant array axis 2',
                         after='NAXIS1')
         hdul = stpyfits.HDUList([hdu,hdu1])
-        if USE_FITS_OVERWRITE:
+        if ASTROPY_VER_GE13:
             hdul.writeto(self.temp('new.fits'), overwrite=True)
         else:
             hdul.writeto(self.temp('new.fits'), clobber=True)
@@ -475,7 +474,7 @@ class TestStpyfitsFunctions(FitsTestCase):
         hdu = stpyfits.PrimaryHDU(n)
         hdu.header.set('PIXVALUE', 1., 'constant pixel value', after='EXTEND')
 
-        if USE_FITS_OVERWRITE:
+        if ASTROPY_VER_GE13:
             hdu.writeto(self.temp('new.fits'), overwrite=True)
         else:
             hdu.writeto(self.temp('new.fits'), clobber=True)
@@ -527,7 +526,7 @@ class TestStpyfitsFunctions(FitsTestCase):
         hdu1.header.set('NAXIS2', 10, 'length of constant array axis 2',
                         after='NAXIS1')
         hdul = stpyfits.HDUList([hdu, hdu1])
-        if USE_FITS_OVERWRITE:
+        if ASTROPY_VER_GE13:
             hdul.writeto(self.temp('new.fits'), overwrite=True)
         else:
             hdul.writeto(self.temp('new.fits'), clobber=True)
@@ -633,7 +632,7 @@ class TestStpyfitsFunctions(FitsTestCase):
         hdu = stpyfits.PrimaryHDU(n)
         hdu.header.set('PIXVALUE', 1., 'constant pixel value', after='EXTEND')
 
-        if USE_FITS_OVERWRITE:
+        if ASTROPY_VER_GE13:
             hdu.writeto(self.temp('new.fits'), overwrite=True)
         else:
             hdu.writeto(self.temp('new.fits'), clobber=True)
