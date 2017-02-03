@@ -152,7 +152,12 @@ else:
 #
 import os
 import sys
+import astropy
 from astropy.io import fits
+from distutils.version import LooseVersion
+
+ASTROPY_VER_GE13 = LooseVersion(astropy.__version__) >= LooseVersion('1.3')
+
 #
 # -----------------------------------------------------------------------------
 # Function definitions
@@ -516,7 +521,11 @@ def toMultiExtensionFits(waiveredObject,
             head,tail = os.path.split(multiExtensionFileName)
             mhdul[0].header.set('FILENAME', value=tail, after='NEXTEND')
 
-        mhdul.writeto(multiExtensionFileName,clobber=True)
+        if ASTROPY_VER_GE13:
+            mhdul.writeto(multiExtensionFileName, overwrite=True)
+        else:
+            mhdul.writeto(multiExtensionFileName, clobber=True)
+
         verboseString = verboseString[:-1] + " and written to " + \
                         multiExtensionFileName + "."
 

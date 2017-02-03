@@ -77,6 +77,7 @@ from __future__ import division, print_function # confidence high
 from . import numerixenv
 numerixenv.check()
 
+import astropy
 from . import stpyfits as fits
 from . import readgeis
 from . import convertwaiveredfits
@@ -90,12 +91,15 @@ import sys
 
 import time as _time
 import numpy as np
+from distutils.version import LooseVersion
 
 PY3K = sys.version_info[0] > 2
 if PY3K:
     string_types = str
 else:
     string_types = basestring
+
+ASTROPY_VER_GE13 = LooseVersion(astropy.__version__) >= LooseVersion('1.3')
 
 # Environment variable handling - based on iraffunctions.py
 # define INDEF, yes, no, EOF, Verbose, userIrafHome
@@ -507,7 +511,7 @@ def buildRootname(filename, ext=None):
 
             if rootname is not None:
                 break
-    
+
     # If we still haven't found the file, see if we have the
     # info to build one...
     if rootname is None and ext is not None:
@@ -742,10 +746,16 @@ def openImage(filename, mode='readonly', memmap=0, writefits=True,
                 fexists = os.path.exists(fitsname)
                 if (fexists and clobber) or not fexists:
                     print('Writing out WAIVERED as MEF to ', fitsname)
-                    fimg.writeto(fitsname, clobber=clobber)
+                    if ASTROPY_VER_GE13:
+                        fimg.writeto(fitsname, overwrite=clobber)
+                    else:
+                        fimg.writeto(fitsname, clobber=clobber)
                     if dqexists:
                         print('Writing out WAIVERED as MEF to ', dqfitsname)
-                        dqfile.writeto(dqfitsname, clobber=clobber)
+                        if ASTROPY_VER_GE13:
+                            dqfile.writeto(dqfitsname, overwrite=clobber)
+                        else:
+                            dqfile.writeto(dqfitsname, clobber=clobber)
                 # Now close input GEIS image, and open writable
                 # handle to output FITS image instead...
                 fimg.close()
@@ -789,10 +799,16 @@ def openImage(filename, mode='readonly', memmap=0, writefits=True,
             fexists = os.path.exists(fitsname)
             if (fexists and clobber) or not fexists:
                     print('Writing out GEIS as MEF to ', fitsname)
-                    fimg.writeto(fitsname, clobber=clobber)
+                    if ASTROPY_VER_GE13:
+                        fimg.writeto(fitsname, overwrite=clobber)
+                    else:
+                        fimg.writeto(fitsname, clobber=clobber)
                     if dqexists:
                         print('Writing out GEIS as MEF to ', dqfitsname)
-                        dqfile.writeto(dqfitsname, clobber=clobber)
+                        if ASTROPY_VER_GE13:
+                            dqfile.writeto(dqfitsname, overwrite=clobber)
+                        else:
+                            dqfile.writeto(dqfitsname, clobber=clobber)
             # Now close input GEIS image, and open writable
             # handle to output FITS image instead...
             fimg.close()

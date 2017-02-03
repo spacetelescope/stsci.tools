@@ -14,7 +14,9 @@ import astropy
 from astropy.io import fits
 import numpy as N
 import os.path, time
+from distutils.version import LooseVersion
 
+ASTROPY_VER_GE13 = LooseVersion(astropy.__version__) >= LooseVersion('1.3')
 
 __version__ = '0.2(2015-06-23)'
 
@@ -411,7 +413,10 @@ class ASNTable(dict):
         cols = fits.ColDefs([memname,memtype,memprsn,xoffset,yoffset,xdelta,ydelta,rotation,scale])
         hdu = fits.BinTableHDU.from_columns(cols)
         fasn.append(hdu)
-        fasn.writeto(outfile, clobber=True)
+        if ASTROPY_VER_GE13:
+            fasn.writeto(outfile, overwrite=True)
+        else:
+            fasn.writeto(outfile, clobber=True)
         fasn.close()
         mem0 = self['order'][0]
         refimg = self['members'][mem0]['refimage']
