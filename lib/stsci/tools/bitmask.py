@@ -9,8 +9,8 @@ A module that provides functions for manipulating bitmasks and data quality (DQ)
 
 import numpy as np
 
-__version__ = '0.1.0'
-__vdate__ = '29-March-2015'
+__version__ = '0.1.1'
+__vdate__ = '20-February-2017'
 __author__ = 'Mihai Cara'
 
 
@@ -96,7 +96,7 @@ def interpret_bits_value(val):
 
 def bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=np.uint8):
     """
-    bitmask2mask(bitmask, ignore_bits, good_pix_value=1, dtype=numpy.uint8)
+    bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=numpy.uint8)
     Interprets an array of bit flags and converts it to a "binary" mask array.
     This function is particularly useful to convert data quality arrays to
     binary masks.
@@ -192,13 +192,13 @@ def bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=np.uint8):
         >>> bitmask.bitmask2mask(dqbits, ignore_bits=0, dtype=bool)
         array([[ True,  True, False, False,  True, False, False,  True],
                [False, False,  True,  True,  True, False, False,  True]], dtype=bool)
-        >>> bitmask.bitmask2mask(dqbits, ignore_bits=6, good_pix_value=0, dtype=int)
+        >>> bitmask.bitmask2mask(dqbits, ignore_bits=6, good_mask_value=0, dtype=int)
         array([[0, 0, 1, 0, 0, 1, 1, 0],
                [1, 0, 0, 0, 0, 1, 0, 0]])
-        >>> bitmask.bitmask2mask(dqbits, ignore_bits=~6, good_pix_value=0, dtype=int)
+        >>> bitmask.bitmask2mask(dqbits, ignore_bits=~6, good_mask_value=0, dtype=int)
         array([[0, 0, 0, 1, 0, 0, 1, 0],
                [1, 1, 0, 0, 0, 0, 1, 0]])
-        >>> bitmask.bitmask2mask(dqbits, ignore_bits='~(2+4)', good_pix_value=0, dtype=int)
+        >>> bitmask.bitmask2mask(dqbits, ignore_bits='~(2+4)', good_mask_value=0, dtype=int)
         array([[0, 0, 0, 1, 0, 0, 1, 0],
                [1, 1, 0, 0, 0, 0, 1, 0]])
 
