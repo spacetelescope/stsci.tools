@@ -10,8 +10,12 @@ A module that provides functions for manipulating bitmasks and data quality (DQ)
 import numpy as np
 
 __version__ = '0.1.1'
-__vdate__ = '20-February-2017'
+__vdate__ = '21-February-2017'
 __author__ = 'Mihai Cara'
+
+# Revision history:
+# 0.1.0 (29-March-2015) - initial release based on code from stsci.skypac
+# 0.1.1 (21-February-2017) - documentation typo fix
 
 
 def interpret_bits_value(val):
