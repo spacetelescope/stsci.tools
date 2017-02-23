@@ -16,6 +16,8 @@ __author__ = 'Mihai Cara'
 # Revision history:
 # 0.1.0 (29-March-2015) - initial release based on code from stsci.skypac
 # 0.1.1 (21-February-2017) - documentation typo fix
+# 0.2.0 (23-February-2017) - performance and stability improvements. Changed
+#       default output mask type from numpy.uint8 to numpy.bool_.
 
 
 def interpret_bits_value(val):
@@ -98,9 +100,9 @@ def interpret_bits_value(val):
     return bitmask
 
 
-def bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=np.uint8):
+def bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=np.bool_):
     """
-    bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=numpy.uint8)
+    bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=numpy.bool_)
     Interprets an array of bit flags and converts it to a "binary" mask array.
     This function is particularly useful to convert data quality arrays to
     binary masks.
@@ -207,21 +209,24 @@ def bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=np.uint8):
                [1, 1, 0, 0, 0, 0, 1, 0]])
 
     """
+    if not np.issubdtype(bitmask.dtype, np.integer):
+        raise TypeError("Input 'bitmask' array must be of integer type.")
 
     ignore_bits = interpret_bits_value(ignore_bits)
 
+    if ignore_bits is None:
+        if good_mask_value:
+            mask = np.ones_like(bitmask, dtype=dtype)
+        else:
+            mask = np.zeros_like(bitmask, dtype=dtype)
+        return mask
+
+    ignore_bits = ~bitmask.dtype.type(ignore_bits)
+
+    mask = np.empty_like(bitmask, dtype=np.bool_)
+    np.bitwise_and(bitmask, ignore_bits, out=mask, casting='unsafe')
+
     if good_mask_value:
-        mask = np.ones_like(bitmask, dtype=dtype)
-        if ignore_bits is None:
-            return mask
-        bad_mask_value = 0
+        np.logical_not(mask, out=mask)
 
-    else:
-        mask = np.zeros_like(bitmask, dtype=dtype)
-        if ignore_bits is None:
-            return mask
-        bad_mask_value = 1
-
-    mask[np.bitwise_and(bitmask, ~ignore_bits) > 0] = bad_mask_value
-
-    return mask
+    return mask.astype(dtype=dtype, subok=False, copy=False)
