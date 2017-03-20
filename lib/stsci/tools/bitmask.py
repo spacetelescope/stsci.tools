@@ -13,6 +13,14 @@ import warnings
 import six
 from astropy.utils import deprecated
 
+try:
+    # starting with Python 3.3:
+    from math import log2
+    USE_NUMPY_LOG2 = False
+except:
+    from numpy import log2
+    USE_NUMPY_LOG2 = True
+
 
 __version__ = '1.0.0'
 __vdate__ = '16-March-2017'
@@ -60,24 +68,10 @@ def is_bit_flag(n):
         ``True`` if input ``n`` is a bit flag and ``False`` if it is not.
 
     """
-    if hasattr(n, '__iter__'):
-        return all(map(is_bit_flag, n))
-
     if n < 1:
         return False
 
-    if n < 512:
-        s = 1
-        while True:
-            ns = n >> s
-            if ns == 0:
-                return True
-            if ns << s != n:
-                return False
-            s += 1
-
-    # more efficient for larger values of 'n':
-    return n == (1 << int(np.log2(n)))
+    return bin(n).count('1') == 1
 
 
 def interpret_bit_flags(bit_flags, flip_bits=None):
@@ -153,9 +147,6 @@ def interpret_bit_flags(bit_flags, flip_bits=None):
             )
         return None
 
-    elif hasattr(bit_flags, '__iter__'):
-        pass
-
     elif isinstance(bit_flags, six.string_types):
         if has_flip_bits:
             raise TypeError(
@@ -166,17 +157,38 @@ def interpret_bit_flags(bit_flags, flip_bits=None):
 
         bit_flags = str(bit_flags).strip()
 
-        if bit_flags.startswith('~'):
+        if bit_flags.upper() in ['', 'NONE', 'INDEF']:
+            return None
+
+        # check whether bitwise-NOT is present and if it is, check that it is
+        # in the first position:
+        bitflip_pos = bit_flags.find('~')
+        if bitflip_pos == 0:
             flip_bits = True
             bit_flags = bit_flags[1:].lstrip()
         else:
+            if bitflip_pos > 0:
+                raise ValueError("Bitwise-NOT must precede bit flag list.")
             flip_bits = False
 
-        if bit_flags.startswith('('):
-            if bit_flags.endswith(')'):
-                bit_flags = bit_flags[1:-1].strip()
-            else:
-                raise ValueError('Unbalanced parantheses or incorrect syntax.')
+        # basic check for correct use of parenthesis:
+        while True:
+            nlpar = bit_flags.count('(')
+            nrpar = bit_flags.count(')')
+
+            if nlpar == 0 and nrpar == 0:
+                break
+
+            if nlpar != nrpar:
+                raise ValueError("Unbalanced parantheses in bit flag list.")
+
+            lpar_pos = bit_flags.find('(')
+            rpar_pos = bit_flags.rfind(')')
+            if lpar_pos > 0 or rpar_pos < (len(bit_flags) - 1):
+                raise ValueError("Incorrect syntax (incorrect use of "
+                                 "parenthesis) in bit flag list.")
+
+            bit_flags = bit_flags[1:-1].strip()
 
         if ',' in bit_flags:
             bit_flags = bit_flags.split(',')
@@ -184,13 +196,22 @@ def interpret_bit_flags(bit_flags, flip_bits=None):
         elif '+' in bit_flags:
             bit_flags = bit_flags.split('+')
 
-        elif bit_flags.upper() in ['', 'NONE', 'INDEF']:
-            return None
-
         else:
+            if bit_flags == '':
+                raise ValueError(
+                    "Empty bit flag lists not allowed when either bitwise-NOT "
+                    "or parenthesis are present."
+                )
             bit_flags = [bit_flags]
 
         allow_non_flags = len(bit_flags) == 1
+
+    elif hasattr(bit_flags, '__iter__'):
+        if not all([isinstance(flag, int) for flag in bit_flags]):
+            raise TypeError("Each bit flag in a list must be an integer.")
+
+    else:
+        raise TypeError("Unsupported type for argument 'bit_flags'.")
 
     bitset = set(map(int, bit_flags))
     if len(bitset) != len(bit_flags):
