@@ -13,14 +13,6 @@ import warnings
 import six
 from astropy.utils import deprecated
 
-try:
-    # starting with Python 3.3:
-    from math import log2
-    USE_NUMPY_LOG2 = False
-except:
-    from numpy import log2
-    USE_NUMPY_LOG2 = True
-
 
 __version__ = '1.0.0'
 __vdate__ = '16-March-2017'
@@ -72,6 +64,13 @@ def is_bit_flag(n):
         return False
 
     return bin(n).count('1') == 1
+
+
+def _is_int(n):
+    return (
+        (isinstance(n, int) and not isinstance(n, bool)) or
+        (isinstance(n, np.generic) and np.issubdtype(n, np.integer))
+    )
 
 
 def interpret_bit_flags(bit_flags, flip_bits=None):
@@ -136,8 +135,8 @@ def interpret_bit_flags(bit_flags, flip_bits=None):
     flip_bits = bool(flip_bits)
     allow_non_flags = False
 
-    if isinstance(bit_flags, int):
-        return (~bit_flags if flip_bits else bit_flags)
+    if _is_int(bit_flags):
+        return (~int(bit_flags) if flip_bits else bit_flags)
 
     elif bit_flags is None:
         if has_flip_bits:
@@ -207,7 +206,7 @@ def interpret_bit_flags(bit_flags, flip_bits=None):
         allow_non_flags = len(bit_flags) == 1
 
     elif hasattr(bit_flags, '__iter__'):
-        if not all([isinstance(flag, int) for flag in bit_flags]):
+        if not all([_is_int(flag) for flag in bit_flags]):
             raise TypeError("Each bit flag in a list must be an integer.")
 
     else:
@@ -410,7 +409,7 @@ good_mask_value=True, dtype=numpy.bool\_)
             mask = np.zeros_like(bitfield, dtype=dtype)
         return mask
 
-    ignore_mask = ~bitfield.dtype.type(ignore_mask)
+    ignore_mask = np.bitwise_not(bitfield.dtype.type(ignore_mask))
 
     mask = np.empty_like(bitfield, dtype=np.bool_)
     np.bitwise_and(bitfield, ignore_mask, out=mask, casting='unsafe')
@@ -636,5 +635,3 @@ def bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=np.bool_):
         np.logical_not(mask, out=mask)
 
     return mask.astype(dtype=dtype, subok=False, copy=False)
-
-
