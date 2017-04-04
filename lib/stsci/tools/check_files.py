@@ -3,6 +3,7 @@ from __future__ import division, print_function # confidence high
 from stsci.tools import parseinput, fileutil
 from astropy.io import fits
 import os
+from stwcs import updatewcs
 
 def checkFiles(filelist,ivmlist = None):
     """
@@ -70,7 +71,7 @@ def checkFITSFormat(filelist, ivmlist=None):
     return newfilelist, ivmlist
 
 
-def checkStisFiles(filelist, ivmlist=None):
+def checkStisFiles(filelist, ivmlist=None, asn_updatewcs=False):
     newflist = []
     newilist = []
     removed_files = []
@@ -94,13 +95,17 @@ def checkStisFiles(filelist, ivmlist=None):
         sci_count = stisObsCount(t[0])
         if sci_count >1:
             newfilenames = splitStis(t[0], sci_count)
+            if asn_updatewcs:
+                for f in newfilenames:
+                    updatewcs.updatewcs(f)
             assoc_files.extend(newfilenames)
             removed_files.append(t[0])
             if (isinstance(t[1], tuple) and t[1][0] is not None) or \
                (not isinstance(t[1], tuple) and t[1] is not None):
                 print('Does not handle STIS IVM files and STIS association files\n')
             else:
-                assoc_ilist.extend([None]*len(assoc_files))
+                asn_ivmlist = list(zip(sci_count * [None], newfilenames))
+                assoc_ilist.extend(asn_ivmlist)
         elif sci_count == 1:
             newflist.append(t[0])
             newilist.append(t[1])
