@@ -3,7 +3,6 @@ from __future__ import division, print_function # confidence high
 from stsci.tools import parseinput, fileutil
 from astropy.io import fits
 import os
-from stwcs import updatewcs
 
 def checkFiles(filelist,ivmlist = None):
     """
@@ -95,9 +94,6 @@ def checkStisFiles(filelist, ivmlist=None):
         sci_count = stisObsCount(t[0])
         if sci_count >1:
             newfilenames = splitStis(t[0], sci_count)
-            import inspect
-            curframe = inspect.currentframe()
-            calframe = inspect.getouterframes(curframe, 2)
             assoc_files.extend(newfilenames)
             removed_files.append(t[0])
             if (isinstance(t[1], tuple) and t[1][0] is not None) or \
