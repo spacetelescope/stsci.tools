@@ -71,7 +71,7 @@ def checkFITSFormat(filelist, ivmlist=None):
     return newfilelist, ivmlist
 
 
-def checkStisFiles(filelist, ivmlist=None, asn_updatewcs=False):
+def checkStisFiles(filelist, ivmlist=None):
     newflist = []
     newilist = []
     removed_files = []
@@ -95,9 +95,9 @@ def checkStisFiles(filelist, ivmlist=None, asn_updatewcs=False):
         sci_count = stisObsCount(t[0])
         if sci_count >1:
             newfilenames = splitStis(t[0], sci_count)
-            if asn_updatewcs:
-                for f in newfilenames:
-                    updatewcs.updatewcs(f)
+            import inspect
+            curframe = inspect.currentframe()
+            calframe = inspect.getouterframes(curframe, 2)
             assoc_files.extend(newfilenames)
             removed_files.append(t[0])
             if (isinstance(t[1], tuple) and t[1][0] is not None) or \
