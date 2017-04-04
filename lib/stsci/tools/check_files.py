@@ -100,7 +100,8 @@ def checkStisFiles(filelist, ivmlist=None):
                (not isinstance(t[1], tuple) and t[1] is not None):
                 print('Does not handle STIS IVM files and STIS association files\n')
             else:
-                assoc_ilist.extend([None]*len(assoc_files))
+                asn_ivmlist = list(zip(sci_count * [None], newfilenames))
+                assoc_ilist.extend(asn_ivmlist)
         elif sci_count == 1:
             newflist.append(t[0])
             newilist.append(t[1])
