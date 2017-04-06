@@ -57,9 +57,9 @@ class FileDialog(ModalDialog):
         self.filter = filter.strip()
         self.orig_dir = os.getcwd()
         self.cwd = os.getcwd()       # the logical current working directory
-        self.showChmod = initWProtState != None
+        self.showChmod = initWProtState is not None
         # normally we use persistence for lastWrtPrtChoice; use this 1st time
-        if FileDialog.lastWrtPrtChoice == None:
+        if FileDialog.lastWrtPrtChoice is None:
             FileDialog.lastWrtPrtChoice = initWProtState
         # Allow a start-directory as part of the given filter
         if self.filter.find(os.sep) >= 0:
@@ -112,7 +112,8 @@ class FileDialog(ModalDialog):
         # write-protect option
 
         junk = FileDialog.lastWrtPrtChoice
-        if junk == None: junk = 0
+        if junk is None:
+            junk = 0
         self.wpVar = IntVar(value=junk) # use class attr
         if self.showChmod:
             self.writeProtFrame = Frame(self.top)

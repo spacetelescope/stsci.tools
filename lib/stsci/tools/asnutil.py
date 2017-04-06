@@ -88,7 +88,7 @@ def readASNTable(fname, output=None, prodonly=False):
     prod_crj = (memtype.find('PROD-CRJ')==0).nonzero()[0]
 
     # set output name
-    if output == None:
+    if output is None:
         if prod_dth:
             output = d['MEMNAME'][prod_dth[0]]
         elif prod_rpt:
@@ -229,7 +229,7 @@ class ASNTable(dict):
 
         """
 
-        if output == None:
+        if output is None:
             if len(inlist) == 1:
                 self.output = fu.buildNewRootname(inlist[0])
             else:
@@ -242,7 +242,7 @@ class ASNTable(dict):
                 self.output = self.output[:_indx]
 
         self.order = []
-        if inlist != None:
+        if inlist is not None:
             for fn in inlist:
                 if fu.findFile(fu.buildRootname(fn)):
                     self.order.append(fu.buildNewRootname(fn))
@@ -251,7 +251,7 @@ class ASNTable(dict):
                     # when it is missing.
                     raise IOError('File %s not found.\n' %fn)
         dict.__init__(self, output=self.output, order=[], members={})
-        if inlist != None:
+        if inlist is not None:
             self.input = [fu.buildRootname(f) for f in inlist]
         self.shiftfile = shiftfile
 
@@ -262,9 +262,9 @@ class ASNTable(dict):
         abshift = False
 
         # Parse out shift file, if provided
-        if shiftfile != None:
+        if shiftfile is not None:
             sdict = ShiftFile(shiftfile)
-        elif self.shiftfile != None:
+        elif self.shiftfile is not None:
             sdict = ShiftFile(self.shiftfile)
 
             shift_frame = sdict['frame']
@@ -420,7 +420,7 @@ class ASNTable(dict):
         fasn.close()
         mem0 = self['order'][0]
         refimg = self['members'][mem0]['refimage']
-        if refimg != None:
+        if refimg is not None:
             whdu = wcsutil.WCSObject(refimg)
             whdu.createReferenceWCS(outfile,overwrite=False)
             ftab = fits.open(outfile)

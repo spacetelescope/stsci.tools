@@ -151,7 +151,7 @@ def csvSplit(line, delim=',', allowEol=True):
     # For now, we will not specially handle escaped quotes.
     tokens = []
     ldl = len(delim)
-    keepOnRollin = line != None and len(line) > 0
+    keepOnRollin = line is not None and len(line) > 0
     while keepOnRollin:
         tok = _getCharsUntil(line, delim, True, allowEol=allowEol)
         # len of token should always be > 0 because it includes end delimiter
@@ -198,13 +198,13 @@ def _getCharsUntil(buf, stopChar, branchForQuotes, allowEol):
         if stopChar == '"': theRe = _re_dq # pre-compiled common case
         if stopChar == "'": theRe = _re_sq # pre-compiled common case
 
-    if theRe == None:
+    if theRe is None:
         theRe = re.compile('['+''.join(sought)+']')
 
     mo = theRe.search(buf)
 
     # No match found; stop
-    if mo == None:
+    if mo is None:
         if not stopChar in ('"', "'"):
             # this is a primary search, not a branch into quoted text
             return buf # searched until we hit the EOL, must be last token

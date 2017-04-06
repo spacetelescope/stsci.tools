@@ -63,7 +63,7 @@ def launch_and_wait(mp_proc_list, pool_size):
             if p.state == 1: # been started
                 if not p.process.is_alive():
                     p.state = 2 # process has finished or been terminated
-                    assert p.process.exitcode != None, \
+                    assert p.process.exitcode is not None, \
                            "Process is not alive but has no exitcode? "+ \
                            str(p.process)
 

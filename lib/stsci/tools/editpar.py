@@ -141,7 +141,7 @@ class EditParDialog(object):
 
         # Create the root window as required, but hide it
         self.parent = parent
-        if self.parent == None:
+        if self.parent is None:
             global _default_root
             if _default_root is None:
                 _default_root = irafutils.init_tk_default_root()
@@ -197,7 +197,7 @@ class EditParDialog(object):
         # Create an empty list to hold child dialogs
         # *** Not a good way, REDESIGN with Mediator!
         # Also, build the parent menu bar
-        if (self.parent == None):
+        if self.parent is None:
             self.top.childList = []
         elif childList is not None:
             # all children share a list
@@ -290,7 +290,7 @@ class EditParDialog(object):
 
         # The parent has the control, unless there are children
         # Fix the geometry of where the windows first appear on the screen
-        if (self.parent == None):
+        if self.parent is None:
             #self.top.grab_set()
 
             # Position this dialog relative to the parent
@@ -639,7 +639,7 @@ class EditParDialog(object):
     def _isUnpackagedTask(self):
         """ Hook to allow subclasses to state that this is a rogue task, not
             affiliated with a specific package, affecting its display. """
-        return self.pkgName == None or len(self.pkgName) < 1
+        return self.pkgName is None or len(self.pkgName) < 1
 
 
     def _toggleSectionActiveState(self, sectionName, state, skipList):
@@ -1555,7 +1555,7 @@ class EditParDialog(object):
             par = theParamList[i] # IrafPar or subclass
             entry = self.entryNo[i] # EparOption or subclass
             if par.fullName() == fullName or \
-               (scope == None and par.name == name):
+               (scope is None and par.name == name):
                 if native:
                     return entry.convertToNative(entry.choice.get())
                 else:

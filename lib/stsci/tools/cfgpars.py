@@ -108,7 +108,7 @@ def getEmbeddedKeyVal(cfgFileName, kwdName, dflt=None):
         del junkObj
         return retval
     # Not found
-    if dflt != None:
+    if dflt is not None:
         del junkObj
         return dflt
     else:
@@ -171,18 +171,18 @@ def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
 
         # Go through these and find the first one for the assumed or given task
         # name.  The task name for 'BigBlackBox.drizzle' would be 'drizzle'.
-        if taskName == None:
+        if taskName is None:
             taskName = aPkgName.split(".")[-1]
         flist.sort()
         for f in flist:
             # A .cfg file gets checked for _task_name_=val, but a .cfgspc file
             # will have a string check function signature as the val.
             if ext == '.cfg':
-               itsTask = getEmbeddedKeyVal(f, TASK_NAME_KEY, '')
+                itsTask = getEmbeddedKeyVal(f, TASK_NAME_KEY, '')
             else: # .cfgspc
-               sigStr  = getEmbeddedKeyVal(f, TASK_NAME_KEY, '')
-               # .cfgspc file MUST have an entry for TASK_NAME_KEY w/ a default
-               itsTask = vtor_checks.sigStrToKwArgsDict(sigStr)['default']
+                sigStr  = getEmbeddedKeyVal(f, TASK_NAME_KEY, '')
+                # .cfgspc file MUST have an entry for TASK_NAME_KEY w/ a default
+                itsTask = vtor_checks.sigStrToKwArgsDict(sigStr)['default']
             if itsTask == taskName:
                 # We've found the correct file in an installation area.  Return
                 # the package object and the found file.
@@ -244,7 +244,7 @@ def getParsObjForPyPkg(pkgName, strict):
     tname = getEmbeddedKeyVal(installedFile, TASK_NAME_KEY)
 
     # See if the user has any of their own .cfg files in the cwd for this task
-    if theFile == None:
+    if theFile is None:
         flist = getCfgFilesInDirForTask(os.getcwd(), tname)
         if len(flist) > 0:
             if len(flist) == 1: # can skip file times sort
@@ -258,7 +258,7 @@ def getParsObjForPyPkg(pkgName, strict):
                 theFile = ftups[-1][1]
 
     # See if the user has any of their own app-dir .cfg files for this task
-    if theFile == None:
+    if theFile is None:
         flist = getCfgFilesInDirForTask(getAppDir(), tname) # verifies tname
         flist = [f for f in flist if os.path.basename(f) == tname+'.cfg']
         if len(flist) > 0:
@@ -269,7 +269,7 @@ def getParsObjForPyPkg(pkgName, strict):
 
     # Did we find one yet?  If not, use the installed version
     useInstVer = False
-    if theFile == None:
+    if theFile is None:
         theFile = installedFile
         useInstVer = True
 
@@ -359,7 +359,7 @@ def findFirstPar(theDict, name, _depth=0):
 #       print _depth*'   ', key, str(val)[:40]
         if isinstance(val, dict):
             retval = findFirstPar(val, name, _depth=_depth+1) # recurse
-            if retval != None:
+            if retval is not None:
                 return retval
             # else keep looking
         else:
@@ -421,7 +421,7 @@ def integrityTestAllPkgCfgFiles(pkgObj, output=True):
         try:
             if taskName:
                 if output:
-                    print('In '+pkgObj.__name__+', checking task: '+ 
+                    print('In '+pkgObj.__name__+', checking task: '+
                            taskName+', file: '+fname)
                 integrityTestTaskCfgFile(taskName, fname)
         except Exception as e:
@@ -601,7 +601,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # see if we are using a package with it's own run() function
         self._runFunc = None
         self._helpFunc = None
-        if self.__assocPkg != None:
+        if self.__assocPkg is not None:
             if hasattr(self.__assocPkg, 'run'):
                 self._runFunc = self.__assocPkg.run
             if hasattr(self.__assocPkg, 'getHelpAsString'):
@@ -684,7 +684,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # GUI does not call this.  But this can be used to set the order seen.
 
         # But first check for rare case of no cfg file name
-        if self.filename == None:
+        if self.filename is None:
             # this is a .cfgspc-only kind of object so far
             self.filename = self.getDefaultSaveFilename(stub=True)
             return copy.deepcopy(self.__paramList)
@@ -699,9 +699,11 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         else:
             return self.filename
 
-    def getAssocPkg(self): return self.__assocPkg
+    def getAssocPkg(self):
+        return self.__assocPkg
 
-    def canExecute(self): return self._runFunc != None
+    def canExecute(self):
+        return self._runFunc is not None
 
     def isSameTaskAs(self, aCfgObjPrs):
         """ Return True if the passed in object is for the same task as
@@ -712,7 +714,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 #       """ Override the current values with those in the given dict.  This
 #           is like dict's update, except it doesn't allow new keys and it
 #           verifies the values (it does?!) """
-#       if aDict == None:
+#       if aDict is None:
 #           return
 #       for k in aDict:
 #           v = aDict[k]
@@ -741,7 +743,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # of the data:  the ConfigObj dict, and the __paramList ...
         # We rely on the idxHint arg so we don't have to search the __paramList
         # every time this is called, which could really slows things down.
-        assert idxHint != None, "ConfigObjPars relies on a valid idxHint"
+        assert idxHint is not None, "ConfigObjPars relies on a valid idxHint"
         assert name == self.__paramList[idxHint].name, \
                'Error in setParam, name: "'+name+'" != name at idxHint: "'+\
                self.__paramList[idxHint].name+'", idxHint: '+str(idxHint)
@@ -789,7 +791,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
     def run(self, *args, **kw):
         """ This may be overridden by a subclass. """
-        if self._runFunc != None:
+        if self._runFunc is not None:
             # remove the two args sent by EditParDialog which we do not use
             if 'mode' in kw: kw.pop('mode')
             if '_save' in kw: kw.pop('_save')
@@ -815,7 +817,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
     def getHelpAsString(self):
         """ This may be overridden by a subclass. """
-        if self._helpFunc != None:
+        if self._helpFunc is not None:
             return self._helpFunc()
         else:
             return 'No help string found for task "'+self.__taskName+ \
@@ -840,7 +842,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
 
         # Now try and see if there is a matching .cfgspc file in/under an
         # associated package, if one is defined.
-        if self.__assocPkg != None:
+        if self.__assocPkg is not None:
             x, theFile = findCfgFileForPkg(None, '.cfgspc',
                                            pkgObj = self.__assocPkg,
                                            taskName = self.__taskName)
@@ -954,9 +956,12 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                 # overrides from .cfg file (1) if different.
                 dscrp0 = chk_args_dict.get('comment','').strip() # ok if missing
                 dscrp1 = cfgObj.inline_comments[key]
-                if dscrp1==None: dscrp1 = ''
-                while len(dscrp1)>0 and dscrp1[0] in (' ','#'):
+                if dscrp1 is None:
+                    dscrp1 = ''
+
+                while len(dscrp1) > 0 and dscrp1[0] in (' ','#'):
                     dscrp1 = dscrp1[1:] # .cfg file comments start with '#'
+
                 dscrp1 = dscrp1.strip()
                 # Now, decide what to do/say about the descriptions
                 if len(dscrp1) > 0:
@@ -964,7 +969,7 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     if dscrp0 != dscrp1: # allow override if different
                         dscrp = dscrp1+eparoption.DSCRPTN_FLAG # flag it
                         if initialPass:
-                            if dscrp0 == '' and cspc == None:
+                            if dscrp0 == '' and cspc is None:
                                 # this is a case where this par isn't in the
                                 # .cfgspc; ignore, it is caught/error later
                                 pass
@@ -1267,7 +1272,7 @@ def findTheLost(config_file, configspec_file, skipHidden=True):
             if len(tup[0])>0 and isHiddenName(tup[0][-1]):
                 keep = False
             # hidden par (in a section, or at the top level)
-            elif tup[1] != None and isHiddenName(tup[1]):
+            elif tup[1] is not None and isHiddenName(tup[1]):
                 keep = False
             if keep:
                 keepers.append(tup)
@@ -1278,7 +1283,7 @@ def findTheLost(config_file, configspec_file, skipHidden=True):
 
 def isHiddenName(astr):
     """ Return True if this string name denotes a hidden par or section """
-    if astr != None and len(astr) > 2 and astr.startswith('_') and \
+    if astr is not None and len(astr) > 2 and astr.startswith('_') and \
        astr.endswith('_'):
         return True
     else:
@@ -1296,15 +1301,15 @@ def flattened2str(flattened, missing=False, extra=False):
     problems are from missing items.  Set extra to True if all the input
     problems are from extra items. """
 
-    if flattened == None or len(flattened) < 1:
+    if flattened is None or len(flattened) < 1:
         return ''
     retval = ''
     for sections, key, result in flattened:
         # Name the section and item, to start the message line
-        if sections == None or len(sections) == 0:
+        if sections is None or len(sections) == 0:
             retval += '\t"'+key+'"'
         elif len(sections) == 1:
-            if key == None:
+            if key is None:
                 # a whole section is missing at the top-level; see if hidden
                 junk = sections[0]
                 if isHiddenName(junk):
@@ -1316,7 +1321,7 @@ def flattened2str(flattened, missing=False, extra=False):
         else: # len > 1
             joined = '.'.join(sections)
             joined = '"'+joined+'"'
-            if key == None:
+            if key is None:
                 retval +=  '\tSection '+joined
             else:
                 retval +=  '\t"'+key+'" from '+joined

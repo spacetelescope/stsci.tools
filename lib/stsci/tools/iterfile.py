@@ -62,7 +62,7 @@ class IterFitsFile(object):
     def open(self):
         """ Opens the file for subsequent access. """
 
-        if self.handle == None:
+        if self.handle is None:
             self.handle = fits.open(self.fname, mode='readonly')
 
         if self.extn:
@@ -79,7 +79,7 @@ class IterFitsFile(object):
 
     def close(self):
         """ Closes file handle for this FITS object."""
-        if self.handle != None:
+        if self.handle is not None:
             self.handle.close()
         self.handle = None
 
@@ -97,7 +97,7 @@ class IterFitsFile(object):
             del hdu
 
         return _data
-        
+
 
     def __getattribute__(self,name):
         if name == 'data':

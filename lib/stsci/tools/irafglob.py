@@ -21,7 +21,7 @@ def irafglob(inlist, atfile=None):
     """
 
     # Sanity check
-    if inlist == None or len(inlist) == 0:
+    if inlist is None or len(inlist) == 0:
         return []
 
     # Determine which form of input was provided:

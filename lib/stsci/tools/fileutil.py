@@ -1176,7 +1176,7 @@ def findExtname(fimg, extname, extver=None):
         hdr = chip.header
         if 'EXTNAME' in hdr:
             if hdr['EXTNAME'].strip() == extname.upper():
-                if extver == None or hdr['EXTVER'] == extver:
+                if extver is None or hdr['EXTVER'] == extver:
                     extnum = i
                     break
         i += 1

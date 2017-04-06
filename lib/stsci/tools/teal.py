@@ -210,7 +210,7 @@ def teal(theTask, parent=None, loadOnly=False, returnAs="dict",
                          title="Bad Parameters")
 
         # Return, depending on the mode in which we are operating
-        if returnAs == None:
+        if returnAs is None:
             return
 
         if returnAs == "dict":
@@ -256,7 +256,7 @@ def unlearn(taskPkgName, deleteAll=False):
 
     # this WILL throw an exception if the taskPkgName isn't found
     flist = cfgpars.getUsrCfgFilesForPyPkg(taskPkgName) # can raise
-    if flist == None or len(flist) == 0:
+    if flist is None or len(flist) == 0:
         return 0
     if len(flist) == 1:
         os.remove(flist[0])
@@ -321,7 +321,7 @@ def _isInstalled(fullFname):
 
 def popUpErr(parent=None, message="", title="Error"):
     # withdraw root, could standardize w/ EditParDialog.__init__()
-    if parent == None:
+    if parent is None:
         if PY3K:
             import tkinter
             root = tkinter.Tk()
@@ -596,7 +596,7 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
         saved (e.g. to a file). """
 
         # Sanity check - this case shouldn't occur
-        assert self._lastSavedState != None, \
+        assert self._lastSavedState is not None, \
                "BUG: Please report this as it should never occur."
 
         # Force the current GUI values into our model in memory, but don't
@@ -659,7 +659,7 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
 
         # Get name(s) of any triggers that this par triggers
         triggerNamesTup = self._taskParsObj.getTriggerStrings(scope, name)
-        assert triggerNamesTup != None and len(triggerNamesTup) > 0, \
+        assert triggerNamesTup is not None and len(triggerNamesTup) > 0, \
                'Empty trigger name for: "'+name+'", consult the .cfgspc file.'
 
         # Loop through all trigger names - each one is a trigger to kick off -

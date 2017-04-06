@@ -246,7 +246,7 @@ class WCSObject:
         # Simplistic, but easy to understand what you are asking for.
 
         _exists = yes
-        if rootname != None:
+        if rootname is not None:
             self.rootname = rootname
         else:
             self.rootname = 'New'
@@ -347,7 +347,7 @@ class WCSObject:
             for key in self.wcsdef.keys():
                 self.__dict__[key] = self.wcsdef[key]
 
-            if shape != None:
+            if shape is not None:
                 # ... and update with user values.
                 self.naxis1 = int(shape[0])
                 self.naxis2 = int(shape[1])
@@ -361,10 +361,10 @@ class WCSObject:
 
         # If no keyword provided pa_obs value (PA_V3), then default to
         # image orientation from CD matrix.
-        if self.pa_obs == None:
+        if self.pa_obs is None:
             self.pa_obs = self.orient
 
-        if shape == None:
+        if shape is None:
             self.set_pscale()
             #self.pscale = N.sqrt(N.power(self.cd11,2)+N.power(self.cd21,2)) * 3600.
             # Use Jacobian determination of pixel scale instead of X or Y separately...
@@ -475,7 +475,7 @@ class WCSObject:
         # If not, fall back on old value as the default
 
         _updateCD = no
-        if orient != None and orient != self.orient:
+        if orient is not None and orient != self.orient:
             pa = DEGTORAD(orient)
             self.orient = orient
             self._orient_lin = orient
@@ -484,7 +484,7 @@ class WCSObject:
             # In case only pixel_scale was specified
             pa = DEGTORAD(self.orient)
 
-        if pixel_scale != None and pixel_scale != self.pscale:
+        if pixel_scale is not None and pixel_scale != self.pscale:
             _ratio = pixel_scale / self.pscale
             self.pscale = pixel_scale
             _updateCD = yes
@@ -497,7 +497,7 @@ class WCSObject:
         # the default size should be revised accordingly
         # along with the default reference pixel position.
         # Added 31 Mar 03, WJH.
-        if _ratio != None:
+        if _ratio is not None:
             self.naxis1 /= _ratio
             self.naxis2 /= _ratio
             self.crpix1 = self.naxis1/2.
@@ -505,7 +505,7 @@ class WCSObject:
 
         # However, if the user provides a given size,
         # set it to use that no matter what.
-        if size != None:
+        if size is not None:
             self.naxis1 = size[0]
             self.naxis2 = size[1]
 
@@ -513,14 +513,14 @@ class WCSObject:
         self.naxis1 = int(self.naxis1)
         self.naxis2 = int(self.naxis2)
 
-        if refpos != None:
+        if refpos is not None:
             self.crpix1 = refpos[0]
             self.crpix2 = refpos[1]
-        if self.crpix1 == None:
+        if self.crpix1 is None:
             self.crpix1 = self.naxis1/2.
             self.crpix2 = self.naxis2/2.
 
-        if refval != None:
+        if refval is not None:
             self.crval1 = refval[0]
             self.crval2 = refval[1]
 
@@ -778,7 +778,7 @@ class WCSObject:
         image = self.rootname
         _fitsname = fitsname
 
-        if image.find('.fits') < 0 and _fitsname != None:
+        if image.find('.fits') < 0 and _fitsname is not None:
             # A non-FITS image was provided, and openImage made a copy
             # Update attributes to point to new copy instead
             self.geisname = image
@@ -835,8 +835,8 @@ class WCSObject:
             return
 
         # Establish what prepend string to use...
-        if prepend == None:
-            if self.prepend != None:
+        if prepend is None:
+            if self.prepend is not None:
                 _prefix = self.prepend
             else:
                 _prefix = DEFAULT_PREFIX
@@ -873,7 +873,7 @@ class WCSObject:
         # the prefix used.
         _prefix = None
         _archive = False
-        if header != None:
+        if header is not None:
             for kw in header.items():
                 if kw[0][1:] in self.wcstrans.keys():
                     _prefix = kw[0][0]
@@ -886,7 +886,7 @@ class WCSObject:
 
         # We have archive keywords and a defined prefix
         # Go through and append them to self.backup
-        if _prefix != None:
+        if _prefix is not None:
             self.prepend = _prefix
         else:
             self.prepend = DEFAULT_PREFIX
@@ -923,7 +923,7 @@ class WCSObject:
             as new keywords with the user-supplied 'prepend'
             character(s) prepended to the old keyword names.
 
-            If the file is a GEIS image and 'fitsname' != None, create
+            If the file is a GEIS image and 'fitsname' is not None, create
             a FITS copy and update that version; otherwise, raise
             an Exception and do not update anything.
 
@@ -933,7 +933,7 @@ class WCSObject:
         # Open image in update mode
         #    Copying of GEIS images handled by 'openImage'.
         fimg = fileutil.openImage(self.rootname,mode='update',fitsname=_fitsname)
-        if self.rootname.find('.fits') < 0 and _fitsname != None:
+        if self.rootname.find('.fits') < 0 and _fitsname is not None:
             # A non-FITS image was provided, and openImage made a copy
             # Update attributes to point to new copy instead
             self.geisname = self.rootname

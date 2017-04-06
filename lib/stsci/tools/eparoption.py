@@ -167,7 +167,7 @@ class EparOption(object):
         self.clearEnabled = DISABLED
         self.unlearnEnabled = DISABLED
         self.helpEnabled = DISABLED
-        if self._helpCallbackObj != None:
+        if self._helpCallbackObj is not None:
             self.helpEnabled = NORMAL
 
         # Generate the input widget depending upon the datatype
@@ -252,8 +252,7 @@ class EparOption(object):
 
     def convertToNative(self, aVal):
         """ The basic type is natively a string. """
-        if aVal == None: return None
-        return str(aVal)
+        return None if aVal is None else str(aVal)
 
     def focusOut(self, event=None):
         """Clear selection (if text is selected in this widget)"""
@@ -337,7 +336,7 @@ class EparOption(object):
                 self.choice.set(self.previousValue)
                 self.status.bell()
             errorMsg = str(exceptionInfo)
-            if event != None:
+            if event is not None:
                 self.status.config(text = errorMsg)
             # highlight the text again and terminate processing so
             # focus stays in this widget
@@ -362,7 +361,7 @@ class EparOption(object):
 
         # get the current value
         curVal = val # take this first, if it is given
-        if curVal == None:
+        if curVal is None:
             curVal = self.choice.get()
 
         # do any flagging
@@ -462,7 +461,9 @@ class EparOption(object):
             fname = askdirectory(parent=self.entry, title="Select Directory")
         else:
             raise NotImplementedError('Fix popupChoices() logic.')
-        if not fname: return # canceled
+
+        if not fname:
+            return # canceled
 
         self.choice.set(fname)
         # don't select when we go back to widget to reduce risk of
@@ -475,7 +476,8 @@ class EparOption(object):
 
     def forceValue(self, newVal, noteEdited=False):
         """Force-set a parameter entry to the given value"""
-        if newVal == None: newVal = ""
+        if newVal is None:
+            newVal = ""
         self.choice.set(newVal)
         if noteEdited:
             self.widgetEdited(val=newVal, skipDups=False)
@@ -494,7 +496,7 @@ class EparOption(object):
 
     def helpOnParam(self):
         """ Try to display help specific to this parameter. """
-        if self._helpCallbackObj != None:
+        if self._helpCallbackObj is not None:
             self._helpCallbackObj.showParamHelp(self.name)
 
     def setEditedCallbackObj(self, ecbo):
@@ -671,7 +673,8 @@ class BooleanEparOption(EparOption):
 
     def convertToNative(self, aVal):
         """ Convert to native bool; interpret certain strings. """
-        if aVal == None: return None
+        if aVal is None:
+            return None
         if isinstance(aVal, bool): return aVal
         # otherwise interpret strings
         return str(aVal).lower() in ('1','on','yes','true')
@@ -914,11 +917,11 @@ def eparOptionFactory(master, statusBar, param, defaultParam,
     """Return EparOption item of appropriate type for the parameter param"""
 
     # Allow passed-in overrides
-    if plugIn != None:
+    if plugIn is not None:
         eparOption = plugIn
 
     # If there is an enumerated list, regardless of datatype use EnumEparOption
-    elif param.choice != None:
+    elif param.choice is not None:
         eparOption = EnumEparOption
 
     else:
