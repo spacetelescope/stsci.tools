@@ -390,11 +390,16 @@ def parse_path(f1, f2):
     else:
         list2 = [s.strip() for s in f2.split(",")]
 
-    if (list1 == [] or list2 == []):
-        str = ""
-        if (list1 == []): str += "Input files `%s` not usable/available. " % f1
-        if (list2 == []): str += "Input files `%s` not usable/available. " % f2
-        raise IOError(str)
+    if list1 == [] or list2 == []:
+        err_msg = ""
+        if list1 == []:
+            err_msg += "Input files `{:s}` not usable/available. ".format(f1)
+
+        if list2 == []:
+            err_msg += "Input files `{:s}` not usable/available. ".format(f2)
+
+        raise IOError(err_msg)
+
     else:
         return list1, list2
 

@@ -323,8 +323,8 @@ class LoadFileDialog(FileDialog):
     def OkPressed(self):
         fileName = self.GetFileName()
         if os.path.exists(fileName) == 0:
-            str = 'File ' + fileName + ' not found.'
-            errorDlg = alert.ErrorDialog(self.top, str)
+            msg = 'File ' + fileName + ' not found.'
+            errorDlg = alert.ErrorDialog(self.top, msg)
             errorDlg.Show()
             errorDlg.DialogCleanup()
             return
@@ -348,8 +348,8 @@ class SaveFileDialog(FileDialog):
     def OkPressed(self):
         fileName = self.GetFileName()
         if os.path.exists(fileName) == 1:
-            str = 'File ' + fileName + ' exists.\nDo you wish to overwrite it?'
-            warningDlg = alert.WarningDialog(self.top, str)
+            msg = 'File ' + fileName + ' exists.\nDo you wish to overwrite it?'
+            warningDlg = alert.WarningDialog(self.top, msg)
             if warningDlg.Show() == 0:
                 warningDlg.DialogCleanup()
                 return
@@ -412,8 +412,8 @@ class PersistLoadFileDialog(PersistFileDialog):
     def OkPressed(self):
         fileName = self.GetFileName()
         if os.path.exists(fileName) == 0:
-            str = 'File ' + fileName + ' not found.'
-            errorDlg = alert.ErrorDialog(self.top, str)
+            msg = 'File ' + fileName + ' not found.'
+            errorDlg = alert.ErrorDialog(self.top, msg)
             errorDlg.Show()
             errorDlg.DialogCleanup()
             return
@@ -437,8 +437,8 @@ class PersistSaveFileDialog(PersistFileDialog):
     def OkPressed(self):
         fileName = self.GetFileName()
         if os.path.exists(fileName) == 1:
-            str = 'File ' + fileName + ' exists.\nDo you wish to overwrite it?'
-            warningDlg = alert.WarningDialog(self.top, str)
+            msg = 'File ' + fileName + ' exists.\nDo you wish to overwrite it?'
+            warningDlg = alert.WarningDialog(self.top, msg)
             if warningDlg.Show() == 0:
                 warningDlg.DialogCleanup()
                 return
