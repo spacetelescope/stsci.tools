@@ -23,7 +23,7 @@ __vdate__ = '2007-02-20'     #Date of this version
 
 
 
-def linefit(x,y,weights=None):
+def linefit(x, y, weights=None):
 
     """
     Parameters
@@ -47,16 +47,16 @@ def linefit(x,y,weights=None):
     >>> around(linefit(x,y), decimals=5)
     array([ 1.42564,  0.31579])
     """
-    
+
     if numerixenv.check_input(x) or numerixenv.check_input(y):
         raise ValueError("Input is a NumArray array. This version of %s requires a Numpy array\n" % __name__)
-    
+
     if len(x) != len(y):
         print("Error: X and Y must have equal size\n")
         return
     n = len(x)
     w = N.zeros((n,n)).astype(N.float)
-    if weights == None:
+    if weights is None:
         for i in N.arange(n):
             w[i,i] = 1
     else:

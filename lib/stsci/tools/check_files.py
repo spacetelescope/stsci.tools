@@ -52,7 +52,7 @@ def checkFITSFormat(filelist, ivmlist=None):
     the input filelist, in the case that some inputs get dropped during
     the check/conversion.
     """
-    if ivmlist == None:
+    if ivmlist is None:
         ivmlist = [None for l in filelist]
 
     sci_ivm = list(zip(filelist, ivmlist))
@@ -228,10 +228,10 @@ def splitStis(stisfile, sci_count):
         newfilename = fileutil.buildNewRootname(rootname, extn='_flt.fits')
         try:
             # Verify error array exists
-            if f[('err',count)].data == None:
+            if f[('err', count)].data is None:
                 raise ValueError
             # Verify dq array exists
-            if f[('dq',count)].data == None:
+            if f[('dq', count)].data is None:
                 raise ValueError
             # Copy the err extension
             hdu = f[('err',count)].copy()
@@ -368,7 +368,7 @@ def convert2fits(sci_ivm):
         # Or should we print a warning and continue but not use that file
         if imgfits and imgtype == 'waiver':
             newfilename = waiver2mef(file[0], convert_dq=True)
-            if newfilename == None:
+            if newfilename is None:
                 print("Removing file %s from input list - could not convert WAIVER format to MEF\n" %file[0])
                 removed_files.append(file[0])
             else:
@@ -381,7 +381,7 @@ def convert2fits(sci_ivm):
         # Convert the corresponding data quality file if present
         if not imgfits:
             newfilename = geis2mef(file[0], convert_dq=True)
-            if newfilename == None:
+            if newfilename is None:
                 print("Removing file %s from input list - could not convert GEIS format to MEF\n" %file[0])
                 removed_files.append(file[0])
             else:

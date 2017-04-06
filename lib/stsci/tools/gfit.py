@@ -29,21 +29,22 @@ weights=None):
     Defines the gaussian function to be used as the model.
 
     """
-
     if p[2] != 0.0:
         Z = (x - p[1]) / p[2]
         model = p[0]*N.e ** (-Z**2 / 2.0)
     else:
         model = N.zeros(N.size(x))
 
-
     status = 0
-    if weights != None:
-        if err != None:
+    if weights is not None:
+        if err is not None:
             print("Warning: Ignoring errors and using weights.\n")
+
         return [status, (y - model) * weights]
-    elif err != None:
+
+    elif err is not None:
         return [status, (y - model) / err]
+
     else:
         return [status, y-model]
 
@@ -61,7 +62,7 @@ def test_gaussfit():
     return gfit1d(y,x, maxiter=20)
 
 def gfit1d(y, x=None, err = None, weights=None, par=None, parinfo=None,
-maxiter=200, quiet=0):
+           maxiter=200, quiet=0):
     """
     Return the gaussian fit as an object.
 
@@ -102,13 +103,13 @@ maxiter=200, quiet=0):
     """
     if numerixenv.check_input(x) or numerixenv.check_input(y):
         raise ValueError("Input is a NumArray array. This version of %s requires a Numpy array\n" % __name__)
-    
+
     y = y.astype(N.float)
-    if weights != None:
+    if weights is not None:
         weights = weights.astype(N.float)
-    if err != None:
+    if err is not None:
         err = err.astype(N.float)
-    if x == None and len(y.shape)==1 :
+    if x is None and len(y.shape)==1 :
         x = N.arange(len(y)).astype(N.float)
     if x.shape != y.shape:
         print("input arrays X and Y must be of equal shape.\n")
@@ -117,7 +118,7 @@ maxiter=200, quiet=0):
 
     fa = {'x':x, 'y':y, 'err':err, 'weights':weights}
 
-    if par != None:
+    if par is not None:
         p = par
     else:
         ysigma = y.std()
@@ -147,8 +148,8 @@ maxiter=maxiter, quiet=quiet)
 
 
 def plot_fit(y, mfit, x=None):
-    if x == None:
-        x=N.arange(len(y))
+    if x is None:
+        x = N.arange(len(y))
     else:
         x = x
     p = mfit.params

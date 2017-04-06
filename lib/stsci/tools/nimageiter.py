@@ -97,7 +97,7 @@ def ImageIter(imglist,bufsize=BUFSIZE,overlap=0,copy=0,updateSection = None):
                     yield _outlist,(pix,_prange)
                     # This code is inserted to copy any values changed
                     # in the image sections back into the original image.
-                    if (updateSection != None):
+                    if updateSection is not None:
                         #for _index in xrange(len(_outlist)):
                         imglist[updateSection][pix:_prange] = _outlist[updateSection]
                     del _outlist

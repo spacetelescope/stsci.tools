@@ -108,9 +108,9 @@ class AnyTypeUnitTest(ComparableMixin):
             return self._compare(other.val, method) # recurse, get 2 logic below
         if isinstance(other, string_types):
             return method(str(self.val), other)
-        elif other==None and self.val==None:
+        elif other is None and self.val is None:
             return method(0, 0)
-        elif other==None:
+        elif other is None:
             return method(str(self.val), '') # coerce to str compare
         elif isinstance(other, int):
             # handle ONLY case where self.val is a single char or an int
