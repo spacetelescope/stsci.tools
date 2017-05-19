@@ -155,7 +155,7 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
             if sum(dims) == 0:
                 return None
 
-            code = self.NumCode[bitpix]
+            code = BITPIX2DTYPE[bitpix]
             pixval = self._header['PIXVALUE']
             if code in ['uint8', 'int16', 'int32', 'int64']:
                 if PY3K:
