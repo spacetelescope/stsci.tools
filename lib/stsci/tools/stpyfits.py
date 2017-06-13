@@ -48,6 +48,10 @@ def with_stpyfits(func):
         was_enabled = STPYFITS_ENABLED
         enable_stpyfits()
         try:
+            # BUG: Forcefully disable lazy loading.
+            # Lazy loading breaks ability to initialize ConstantValueHDUs
+            # TODO: Investigate the cause upstream (astropy.io.fits)
+            kwargs['lazy_load_hdus'] = False
             retval = func(*args, **kwargs)
         finally:
             # Only disable stpyfits if it wasn't already enabled
