@@ -190,7 +190,7 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
                 # delete the keywords BSCALE and BZERO after scaling
                 del self._header['BSCALE']
                 del self._header['BZERO']
-                self._header['BITPIX'] = self.ImgCode[data.dtype.name]
+                self._header['BITPIX'] = DTYPE2BITPIX[data.dtype.name]
             else:
                 data = raw_data
             return data
@@ -211,7 +211,7 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
                                 'ndarray' % data)
 
         if isinstance(data, np.ndarray):
-            self._bitpix = self.ImgCode[data.dtype.name]
+            self._bitpix = DTYPE2BITPIX[data.dtype.name]
             self._axes = list(data.shape)
             self._axes.reverse()
         elif self.data is None:
