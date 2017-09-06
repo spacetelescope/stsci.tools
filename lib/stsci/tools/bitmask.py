@@ -503,7 +503,7 @@ def interpret_bits_value(val):
 
 
 @deprecated(since='3.4.6', message='', name='bitmask2mask',
-            alternative='flags_to_boolean_mask')
+            alternative='bitfield_to_boolean_mask')
 def bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=np.bool_):
     """
     bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=numpy.bool\_)
