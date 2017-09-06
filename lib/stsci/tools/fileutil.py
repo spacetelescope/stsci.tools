@@ -35,7 +35,7 @@ General functions included are::
 
     updateKeyword(filename, key, value)
 
-    openImage(filename,mode='readonly',memmap=0,fitsname=None)
+    openImage(filename,mode='readonly',memmap=False,fitsname=None)
          Opens file and returns PyFITS object.
          It will work on both FITS and GEIS formatted images.
 
@@ -674,7 +674,7 @@ def buildFITSName(geisname):
     return _fitsname
 
 
-def openImage(filename, mode='readonly', memmap=0, writefits=True,
+def openImage(filename, mode='readonly', memmap=False, writefits=True,
               clobber=True, fitsname=None):
     """
     Opens file and returns PyFITS object.  Works on both FITS and GEIS
@@ -693,16 +693,16 @@ def openImage(filename, mode='readonly', memmap=0, writefits=True,
         name of input file
     mode: str
         mode for opening file based on PyFITS `mode` parameter values
-    memmap: int
-        switch for using memory mapping, 0 for no, 1 for yes
+    memmap: bool
+        switch for using memory mapping, `False` for no, `True` for yes
     writefits: bool
-        if True, will write out GEIS as multi-extension FITS
+        if `True`, will write out GEIS as multi-extension FITS
         and return handle to that opened GEIS-derived MEF file
     clobber: bool
         overwrite previously written out GEIS-derived MEF file
     fitsname: str
         name to use for GEIS-derived MEF file,
-        if None and writefits==True, will use 'buildFITSName()' to generate one
+        if None and writefits==`True`, will use 'buildFITSName()' to generate one
     """
     from stwcs import updatewcs
 
