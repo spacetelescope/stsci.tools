@@ -29,26 +29,29 @@ def irafglob(inlist, atfile=None):
         #  python list
         flist = []
         for f in inlist:
-            flist += irafglob(f)
+            fs = f.strip()
+            if fs == '':
+                continue
+            flist += irafglob(fs)
     elif ',' in inlist:
         #  comma-separated string list
         flist = []
         for f in inlist.split(','):
-            f = f.strip()
-            if f == '':
+            fs = f.strip()
+            if fs == '':
                 continue
-            flist += irafglob(f)
+            flist += irafglob(fs)
     elif inlist[0] == '@':
         #  file list
         flist = []
         for f in open(inlist[1:], 'r').readlines():
-            f = f.strip()
-            if f == '':
+            fs = f.strip()
+            if fs == '':
                 continue
             # hook for application specific atfiles.
             if atfile:
-                f = atfile(f)
-            flist += irafglob(f)
+                fs = atfile(fs)
+            flist += irafglob(fs)
     else:
         #  shell globbing
         if osfn:
