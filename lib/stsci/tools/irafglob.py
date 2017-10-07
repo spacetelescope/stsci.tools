@@ -35,12 +35,16 @@ def irafglob(inlist, atfile=None):
         flist = []
         for f in inlist.split(','):
             f = f.strip()
+            if f == '':
+                continue
             flist += irafglob(f)
     elif inlist[0] == '@':
         #  file list
         flist = []
         for f in open(inlist[1:], 'r').readlines():
-            f = f.rstrip()
+            f = f.strip()
+            if f == '':
+                continue
             # hook for application specific atfiles.
             if atfile:
                 f = atfile(f)
