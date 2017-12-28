@@ -10,7 +10,7 @@ from __future__ import division # confidence high
 
 import os, sys
 PY3K = sys.version_info[0] > 2
-descrip = "basic capabilities file, last edited: 6 Dec 2017"
+descrip = "basic capabilities file, last edited: 28 Dec 2017"
 
 def is_darwin_and_x():
     """ Convenience function.  Returns True if is an X11-linked Python/tkinter
