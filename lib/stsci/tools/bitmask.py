@@ -8,14 +8,14 @@ A module that provides functions for manipulating bitmasks and data quality
 
 """
 
-import numpy as np
+import sys
 import warnings
 import six
+import numpy as np
 from astropy.utils import deprecated
 
-
-__version__ = '1.0.0'
-__vdate__ = '16-March-2017'
+__version__ = '1.1.0'
+__vdate__ = '29-January-2018'
 __author__ = 'Mihai Cara'
 
 
@@ -41,7 +41,17 @@ __all__ = ['interpret_bits_value', 'interpret_bit_flags', 'bitmask2mask',
 #          and string comma- (or '+') separated lists of bit flags).
 #       5. Added 'is_bit_flag()' function to check if an integer number has
 #          only one bit set (i.e., that it is a power of 2).
-
+# 1.1.0 (29-January-2018) - Multiple enhancements:
+#       1. Added support for long type in Python 2.7 in
+#          `interpret_bit_flags()` and `bitfield_to_boolean_mask()`.
+#       2. `interpret_bit_flags()` now always returns `int` (or `int` or `long`
+#           in Python 2.7). Previously when input was of integer-like type
+#           (i.e., `numpy.uint64`), it was not converted to Python `int`.
+#       3. `bitfield_to_boolean_mask()` will no longer crash when
+#          `ignore_flags` argument contains bit flags beyond what the type of
+#          the argument `bitfield` can hold.
+#
+INT_TYPE = (int, long,) if sys.version_info < (3,) else (int,)
 
 def is_bit_flag(n):
     """
@@ -68,7 +78,7 @@ def is_bit_flag(n):
 
 def _is_int(n):
     return (
-        (isinstance(n, int) and not isinstance(n, bool)) or
+        (isinstance(n, INT_TYPE) and not isinstance(n, bool)) or
         (isinstance(n, np.generic) and np.issubdtype(n, np.integer))
     )
 
@@ -107,7 +117,7 @@ def interpret_bit_flags(bit_flags, flip_bits=None):
 
     Returns
     -------
-    bitmask : int or None
+    bitmask : int, or None
         Returns and integer bit mask formed from the input bit value
         or `None` if input `bit_flags` parameter is `None` or an empty string.
         If input string value was prepended with '~' (or `flip_bits` was
@@ -136,7 +146,7 @@ def interpret_bit_flags(bit_flags, flip_bits=None):
     allow_non_flags = False
 
     if _is_int(bit_flags):
-        return (~int(bit_flags) if flip_bits else bit_flags)
+        return (~int(bit_flags) if flip_bits else int(bit_flags))
 
     elif bit_flags is None:
         if has_flip_bits:
@@ -409,6 +419,11 @@ good_mask_value=True, dtype=numpy.bool\_)
             mask = np.zeros_like(bitfield, dtype=dtype)
         return mask
 
+    # filter out bits beyond the maximum supported by the data type:
+    supported_flags = int(np.bitwise_not(bitfield.dtype.type(0)))
+    ignore_mask = ignore_mask & supported_flags
+
+    # invert the "ignore" mask:
     ignore_mask = np.bitwise_not(bitfield.dtype.type(ignore_mask))
 
     mask = np.empty_like(bitfield, dtype=np.bool_)
