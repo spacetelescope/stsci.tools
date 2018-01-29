@@ -117,7 +117,7 @@ def interpret_bit_flags(bit_flags, flip_bits=None):
 
     Returns
     -------
-    bitmask : int, or None
+    bitmask : int or None
         Returns and integer bit mask formed from the input bit value
         or `None` if input `bit_flags` parameter is `None` or an empty string.
         If input string value was prepended with '~' (or `flip_bits` was
