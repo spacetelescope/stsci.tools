@@ -14,8 +14,8 @@ import six
 import numpy as np
 from astropy.utils import deprecated
 
-__version__ = '1.1.0'
-__vdate__ = '29-January-2018'
+__version__ = '1.1.1'
+__vdate__ = '30-January-2018'
 __author__ = 'Mihai Cara'
 
 
@@ -50,8 +50,14 @@ __all__ = ['interpret_bits_value', 'interpret_bit_flags', 'bitmask2mask',
 #       3. `bitfield_to_boolean_mask()` will no longer crash when
 #          `ignore_flags` argument contains bit flags beyond what the type of
 #          the argument `bitfield` can hold.
+# 1.1.1 (30-January-2018) - Improved filtering of high bits in flags.
 #
 INT_TYPE = (int, long,) if sys.version_info < (3,) else (int,)
+MAX_UINT_TYPE = np.maximum_sctype(np.uint)
+SUPPORTED_FLAGS = int(np.bitwise_not(
+    0, dtype=MAX_UINT_TYPE, casting='unsafe'
+))
+
 
 def is_bit_flag(n):
     """
@@ -420,11 +426,11 @@ good_mask_value=True, dtype=numpy.bool\_)
         return mask
 
     # filter out bits beyond the maximum supported by the data type:
-    supported_flags = int(np.bitwise_not(bitfield.dtype.type(0)))
-    ignore_mask = ignore_mask & supported_flags
+    ignore_mask = ignore_mask & SUPPORTED_FLAGS
 
     # invert the "ignore" mask:
-    ignore_mask = np.bitwise_not(bitfield.dtype.type(ignore_mask))
+    ignore_mask = np.bitwise_not(ignore_mask, dtype=bitfield.dtype,
+                                 casting='unsafe')
 
     mask = np.empty_like(bitfield, dtype=np.bool_)
     np.bitwise_and(bitfield, ignore_mask, out=mask, casting='unsafe')
