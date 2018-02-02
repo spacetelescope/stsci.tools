@@ -3,8 +3,6 @@ A module containing unit tests for the `bitmask` modue.
 
 :Authors: Mihai Cara (contact: help@stsci.edu)
 
-:License: `<http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE>`_
-
 """
 from __future__ import (absolute_import, division, unicode_literals,
                         print_function)
