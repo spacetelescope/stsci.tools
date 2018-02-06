@@ -31,7 +31,10 @@ env:
 
 matrix:
     include:
+        - python: 3.6
+          env: ASTROPY_VERSION=stable
 
+        # TODO: Bump Astropy version to LTS in the future?
         # Do a test in Python 2.
         - python: 2.7
           env: ASTROPY_VERSION=1.3
