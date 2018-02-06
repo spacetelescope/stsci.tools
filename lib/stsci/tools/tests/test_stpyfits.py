@@ -50,17 +50,17 @@ class TestStpyfitsFunctions(FitsTestCase):
             ans4 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (), '', '')]
         else:
             ans1 = [(0, 'PRIMARY', 'PrimaryHDU', 215, (), '', ''),
-                    (1, 'SCI', 'ImageHDU', 141, (62, 44), 'int16', ''),
+                    (1, 'SCI', 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
                     (2, 'ERR', 'ImageHDU', 71, (62, 44), 'int16', ''),
                     (3, 'DQ', 'ImageHDU', 71, (62, 44), 'int16', ''),
-                    (4, 'SCI', 'ImageHDU', 141, (62, 44), 'int16', ''),
+                    (4, 'SCI', 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
                     (5, 'ERR', 'ImageHDU', 71, (62, 44), 'int16', ''),
                     (6, 'DQ', 'ImageHDU', 71, (62, 44), 'int16', '')]
             ans2 = [(0, 'PRIMARY', 'PrimaryHDU', 215, (), '', ''),
-                    (1, 'SCI', 'ImageHDU', 141, (62, 44), 'int16', ''),
+                    (1, 'SCI', 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
                     (2, 'ERR', 'ImageHDU', 71, (), '', ''),
                     (3, 'DQ', 'ImageHDU', 71, (), '', ''),
-                    (4, 'SCI', 'ImageHDU', 141, (62, 44), 'int16', ''),
+                    (4, 'SCI', 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
                     (5, 'ERR', 'ImageHDU', 71, (), '', ''),
                     (6, 'DQ', 'ImageHDU', 71, (), '', '')]
             ans3 = [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'int32', '')]

@@ -25,9 +25,6 @@ env:
         # Cython code, you can set CONDA_DEPENDENCIES=''
         #- CONDA_DEPENDENCIES='Cython'
         - CONDA_DEPENDENCIES='pytest'
-    matrix:
-        # Make sure that egg_info works without dependencies
-        - SETUP_CMD='egg_info'
 
 matrix:
     include:
