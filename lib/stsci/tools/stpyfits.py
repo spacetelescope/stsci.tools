@@ -12,15 +12,19 @@ import functools
 import sys
 import numpy as np
 
+import astropy
 from astropy.io import fits
 # A few imports for backward compatibility; in the earlier stpyfits these were
 # overridden, but with fits's new extension system it's not necessary
 from astropy.io.fits.util import _is_int
 from astropy.utils import lazyproperty
+from distutils.version import LooseVersion
 
 PY3K = sys.version_info[0] > 2
+ASTROPY_VER_GE20 = LooseVersion(astropy.__version__) >= LooseVersion('2.0')
 
-STPYFITS_ENABLED = False # Not threadsafe TODO: (should it be?)
+STPYFITS_ENABLED = False  # Not threadsafe TODO: (should it be?)
+
 
 # Register the extension classes; simply importing stpyfits does not
 # automatically enable it.  Instead, it can be enabled/disabled using these
@@ -51,7 +55,8 @@ def with_stpyfits(func):
             # BUG: Forcefully disable lazy loading.
             # Lazy loading breaks ability to initialize ConstantValueHDUs
             # TODO: Investigate the cause upstream (astropy.io.fits)
-            kwargs['lazy_load_hdus'] = False
+            if 'write' not in func.__name__:
+                kwargs['lazy_load_hdus'] = False
             retval = func(*args, **kwargs)
         finally:
             # Only disable stpyfits if it wasn't already enabled
@@ -150,7 +155,7 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
     @lazyproperty
     def data(self):
         if ('PIXVALUE' in self._header and 'NPIX1' not in self._header and
-               self._header['NAXIS'] > 0):
+                self._header['NAXIS'] > 0):
             bitpix = self._header['BITPIX']
             dims = self.shape
 
@@ -231,13 +236,12 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
         naxis = header.get('NAXIS', 0)
 
         return (super(_ConstantValueImageBaseHDU, cls).match_header(header) and
-                   (isinstance(pixvalue, float) or _is_int(pixvalue)) and
-                   naxis == 0)
-
+                (isinstance(pixvalue, float) or _is_int(pixvalue)) and
+                naxis == 0)
 
     def update_header(self):
         if (not self._modified and not self._header._modified and
-            (self._has_data and self.shape == self.data.shape)):
+                (self._has_data and self.shape == self.data.shape)):
             # Not likely that anything needs updating
             return
 
@@ -285,15 +289,20 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
 
     def _summary(self):
         summ = super(_ConstantValueImageBaseHDU, self)._summary()
-        return (summ[0], summ[1].replace('ConstantValue', '')) + summ[2:]
+        if ASTROPY_VER_GE20:
+            outsumm = ((summ[0], summ[1],
+                        summ[2].replace('ConstantValue', '')) + summ[3:])
+        else:
+            outsumm = ((summ[0],
+                        summ[1].replace('ConstantValue', '')) + summ[2:])
+        return outsumm
 
     def _writedata_internal(self, fileobj):
         if 'PIXVALUE' in self._header:
             # This is a Constant Value Data Array, so no data is written
             return 0
         else:
-            return super(_ConstantValueImageBaseHDU, self).\
-                    _writedata_internal(fileobj)
+            return super(_ConstantValueImageBaseHDU, self)._writedata_internal(fileobj)
 
     def _check_constant_value_data(self, data):
         """Verify that the HDU's data is a constant value array."""
@@ -302,7 +311,6 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
         if np.all(data == arrayval):
             return arrayval
         return None
-
 
 
 class ConstantValuePrimaryHDU(_ConstantValueImageBaseHDU,
@@ -315,7 +323,7 @@ class ConstantValueImageHDU(_ConstantValueImageBaseHDU, fits.hdu.ImageHDU):
 
 
 # Import the rest of the astropy.io.fits module
-from astropy.io.fits import *
+from astropy.io.fits import *  # noqa
 
 # For backward-compatibility with older code that thinks PrimaryHDU and
 # ImageHDU should support the ConstantValue features
