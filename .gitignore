@@ -9,3 +9,4 @@ version.py
 *.dylib
 *.pyc
 .DS_Store
+.cache
