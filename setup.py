@@ -20,8 +20,6 @@ else:
             print(e)
             exit(1)
 
-needs_pytest = {'pytest', 'test', 'ptr'}.intersection(sys.argv)
-pytest_runner = ['pytest-runner'] if needs_pytest else []
 version = relic.release.get_info()
 relic.release.write_template(version, 'lib/stsci/tools')
 
@@ -40,11 +38,15 @@ setup(
         'Topic :: Scientific/Engineering :: Astronomy',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    setup_requires = pytest_runner,
     install_requires = [
         'astropy',
-        'nose',
         'numpy',
+    ],
+    setup_requires = [
+        'pytest-runner'
+    ],
+    tests_require = [
+        'pytest'
     ],
     package_dir = {
         '': 'lib',
