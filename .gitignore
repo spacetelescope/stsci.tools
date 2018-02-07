@@ -1,5 +1,4 @@
 RELIC-INFO
-relic/
 lib/stsci/*/version.py
 */*/version.py
 __pycache__/
@@ -16,4 +15,3 @@ dist/
 *.so
 *.pyc
 *.swp
-
