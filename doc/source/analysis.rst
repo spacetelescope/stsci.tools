@@ -9,10 +9,10 @@ linefit
    :members:
 
 nmpfit
-======   
+======
 .. automodule:: stsci.tools.nmpfit
    :members:
-   
+
 xyinterp
 ========
 .. automodule:: stsci.tools.xyinterp
@@ -22,11 +22,9 @@ gfit
 ====
 .. automodule:: stsci.tools.gfit
    :members:
-   
+
 Image Combination Modules
 *************************
-The `numcombine` module serves as a limited replacement for IRAF's 'imcombine' task.
 
-.. automodule:: stsci.image.numcombine
-   :members:
-   :undoc-members:
+The ``stsci.image.numcombine`` module serves as a limited replacement for
+IRAF's 'imcombine' task.

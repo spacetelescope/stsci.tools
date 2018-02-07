@@ -11,12 +11,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
-
-from stsci.sphinxext.conf import *
-
-# Check Sphinx version
-import sphinx
+from stsci.tools import __version__
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -27,10 +22,12 @@ import sphinx
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions += ['sphinx.ext.autodoc', 'sphinx.ext.pngmath', 'numpydoc',
-               'sphinx.ext.intersphinx', 'sphinx.ext.coverage',
-               'sphinx.ext.autosummary',
-               'sphinx.ext.doctest', 'parameter_anchor']
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.imgmath',
+              'sphinx.ext.napoleon',
+              'sphinx.ext.intersphinx',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.doctest']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -46,14 +43,13 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'stsci.tools'
-copyright = u'2010, SSB'
+copyright = u'2018, STScI'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-from stsci.tools import __version__
 version = __version__
 # The full version, including alpha/beta/rc tags.
 release = __version__
@@ -181,10 +177,10 @@ htmlhelp_basename = 'stsci.toolsdoc'
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
-latex_documents = [
-  ('index', 'stsci.tools.tex', u'stsci.tools Documentation',
-   u'SSB', 'manual'),
-]
+#latex_documents = [
+#  ('index', 'stsci.tools.tex', u'stsci.tools Documentation',
+#   u'SSB', 'manual'),
+#]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
@@ -204,8 +200,9 @@ latex_documents = [
 #latex_use_modindex = True
 
 intersphinx_mapping = {
-    'python': ('http://docs.python.org/2', None),
+    'python': ('http://docs.python.org/3', None),
     'numpy': ('http://docs.scipy.org/doc/numpy/', None),
     'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
-    'matplotlib': ('http://matplotlib.sourceforge.net/', None)
+    'matplotlib': ('http://matplotlib.sourceforge.net/', None),
+    'astropy': ('http://docs.astropy.org/en/stable/', None)
 }
