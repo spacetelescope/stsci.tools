@@ -3,18 +3,16 @@
 # $Id$
 
 """
-    convertwaiveredfits: Convert a waivered FITS file to various other formats.
+Convert a waivered FITS file to various other formats.
 
-    :License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
+Syntax for the command line::
 
-    :Syntax From the command line:
+    convertwaiveredfits.py [-hm] [-o <outputFileName>,...] FILE ...
 
-        convertwaiveredfits.py [-hm] [-o <outputFileName>,...] FILE ...
+Convert the waivered FITS files (wFITS) to various formats.
+The default conversion format is multi-extension FITS (MEF).
 
-    Convert the waivered FITS files (FILEs) to various formats.
-    The default conversion format is multi-extension FITS.
-
-    :Options:
+Options::
 
     -h, --help                       print this help message and exit
 
@@ -31,119 +29,89 @@
                                      character of the base name
                                      changed to `h` in multi-extension FITS format
 
-    Examples
-    ========
-    Conversion of a WFPC2 waivered FITS file obtained from the HST archive::
+For example, conversion of a WFPC2 waivered FITS file obtained
+from the MAST archive::
 
-        convertwaiveredfits u9zh010bm_c0f.fits
+    convertwaiveredfits u9zh010bm_c0f.fits
 
-    This will convert the waivered FITS file `u9zh010bm_c0f.fits`
-    to multi-extension FITS format and generate the output file
-    `u9zh010bm_c0h.fits`.
+This will convert the waivered FITS file ``u9zh010bm_c0f.fits``
+to multi-extension FITS format and generate the output file
+``u9zh010bm_c0h.fits``.
 
+Conversion of multiple FITS files can be done using::
 
-    Conversion of multiple FITS files can be done using::
+    convertwaiveredfits -o out1.fits,out2.fits u9zh010bm_c0f.fits u9zh010bm_c1f.fits
 
-        convertwaiveredfits -o out1.fits,out2.fits
-                             u9zh010bm_c0f.fits u9zh010bm_c1f.fits
+This will convert the waivered FITS files ``u9zh010bm_c0f.fits``
+and ``u9zh010bm_c1f.fits`` to multi-extension FITS format and
+generate the output files ``out1.fits`` and ``out2.fits``.
 
-    This will convert the waivered FITS files u9zh010bm_c0f.fits
-    and u9zh010bm_c1f.fits to multi-extension FITS format and
-    generate the output files out1.fits and out2.fits
+Parameters
+==========
+waiveredObject: obj
+    input object representing a waivered FITS
+    file; either a ``astropy.io.fits.HDUList`` object, a file
+    object, or a file specification.
 
+outputFileName : string
+    file specification for the output file.
+    Default: `None` - do not generate an output file
 
-    :Python Syntax: You can run this code interactively from within Python using the syntax:
+forceFileOutput: boolean
+    force the generation of an output file when
+    the ``outputFileName`` parameter is `None`; the
+    output file specification will be the same as
+    the input file specification with the last
+    character of the base name replaced with the
+    character ``h`` in multi-extension FITS format.
 
-        >>> from stsci.tools import convertwaiveredfits
-        >>> fobj = convertwaiveredfits.convertwaiveredfits(waiveredObject,
-        >>>                    outputFileName=None,
-        >>>                    forceFileOutput=False,
-        >>>                    convertTo='multiExtension',
-        >>>                    verbose=False)
+    Default: False
 
-    The returned object `fobj` is a PyFITS object using the multi-extension FITS format.
+convertTo: string
+    target conversion type.
+    Default: 'multiExtension'
 
+verbose: boolean
+    provide verbose output.
+    Default: `False`
 
-    Parameters
-    ==========
-    waiveredObject: obj
-        input object representing a waivered FITS
-        file; either a astropy.io.fits.HDUList object, a file
-        object, or a file specification
+Returns
+=======
+hduList : fits.HDUList
+    ``astropy.io.fits`` multi-extension FITS object containing converted output
 
-    outputFileName : string
-        file specification for the output file
-        Default: None - do not generate an output file
+Examples
+========
 
-    forceFileOutput: boolean
-        force the generation of an output file when
-        the outputFileName parameter is None; the
-        output file specification will be the same as
-        the input file specification with the last
-        character of the base name replaced with the
-        character `h` in multi-extension FITS format.
+>>> import convertwaiveredfits
+>>> hdulist = convertwaiveredfits.convertwaiveredfits(
+...     'u9zh010bm_c0f.fits', forceFileOutput=True)
 
-        Default: False
+This will convert the waivered FITS file ``u9zh010bm_c0f.fits``
+to multi-extension FITS format and write the output to the
+file ``u9zh010bm_c0h.fits``;  the returned ``HDUList`` is in
+multi-extension FITS format.
 
-    convertTo: string
-        target conversion type
-        Default: 'multiExtension'
+>>> import convertwaiveredfits
+>>> with open('u9zh010bm_c0f.fits', mode='rb') as inFile:
+...     hdulist = convertwaiveredfits.convertwaiveredfits(inFile, 'out.fits')
 
-    verbose: boolean
-        provide verbose output
-        Default: False
+This will convert the waivered FITS file ``u9zh010bm_c0f.fits``
+to multi-extension FITS format and write the output to the
+file ``out.fits``; the returned ``HDUList`` is in multi-extension
+FITS format.
 
-    Returns
-    =======
-    hduList
-        fits.HDUList (PyFITS multi-extension FITS object) containing converted output
+>>> from astropy.io import fits
+>>> import convertwaiveredfits
+>>> with fits.open('u9zh010bm_c0f.fits') as inHdul:
+...     hdulist = convertwaiveredfits.convertwaiveredfits(inHdul)
 
-    Examples
-    ========
-      >>> import convertwaiveredfits
-      >>> hdulist = convertwaiveredfits.convertwaiveredfits('u9zh010bm_c0f.fits',
-                                               forceFileOutput=True)
-
-    this will convert the waivered FITS file u9zh010bm_c0f.fits
-    to multi-extension FITS format and write the output to the
-    file u9zh010bm_c0h.fits;  the returned HDUList is in
-    multi-extension FITS format
-
-
-      >>> import convertwaiveredfits
-      >>> inFile = open('u9zh010bm_c0f.fits',mode='rb')
-      >>> hdulist = convertwaiveredfits.convertwaiveredfits(inFile,
-                                                        'out.fits')
-
-    this will convert the waivered FITS file u9zh010bm_c0f.fits
-    to multi-extension FITS format and write the output to the
-    file out.fits; the returned HDUList is in multi-extension
-    FITS format
-
-      >>> from astropy.io import fits
-      >>> import convertwaiveredfits
-      >>> inHdul = fits.open('u9zh010bm_c0f.fits')
-      >>> hdulist = convertwaiveredfits.convertwaiveredfits(inHdul)
-
-    this will convert the waivered FITS file u9zh010bm_c0f.fits
-    to multi-extension FITS format; no output file is generated;
-    the returned HDUList is in multi-extension format
-
-__version__ = "1.0 (31 January, 2008)"
+This will convert the waivered FITS file ``u9zh010bm_c0f.fits``
+to multi-extension FITS format; no output file is generated;
+the returned ``HDUList`` is in multi-extension format.
 
 """
-
-# Developed by Science Software Branch, STScI, USA.
-
-from __future__ import division, print_function # confidence high
-
-__version__ = "1.1 (15 June, 2015)"
-
-import sys
-if sys.version_info[0] < 3:
-    string_types = basestring
-else:
-    string_types = str
+from __future__ import division, print_function  # confidence high
 
 #
 # -----------------------------------------------------------------------------
@@ -156,7 +124,15 @@ import astropy
 from astropy.io import fits
 from distutils.version import LooseVersion
 
+if sys.version_info[0] < 3:
+    string_types = basestring
+else:
+    string_types = str
+
 ASTROPY_VER_GE13 = LooseVersion(astropy.__version__) >= LooseVersion('1.3')
+
+__version__ = "1.1 (15 June, 2015)"
+
 
 #
 # -----------------------------------------------------------------------------
@@ -175,6 +151,7 @@ def _usage():
     """
 
     print("usage: convertwaiveredfits.py [-hmv] [-o <outputFileName>, ...] FILE ...")
+
 
 def _processCommandLineArgs():
     """
