@@ -2,10 +2,7 @@
 import os
 import subprocess
 import sys
-from glob import glob
-from numpy import get_include as np_include
-from setuptools import setup, find_packages, Extension
-
+from setuptools import setup, find_packages
 
 if os.path.exists('relic'):
     sys.path.insert(1, 'relic')
@@ -15,8 +12,8 @@ else:
         import relic.release
     except ImportError:
         try:
-            subprocess.check_call(['git', 'clone',
-                'https://github.com/jhunkeler/relic.git'])
+            subprocess.check_call(
+                ['git', 'clone', 'https://github.com/jhunkeler/relic.git'])
             sys.path.insert(1, 'relic')
             import relic.release
         except subprocess.CalledProcessError as e:
