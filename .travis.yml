@@ -28,7 +28,8 @@ env:
 
 matrix:
     include:
-        - python: 3.6
+        # TODO: Bump Python to 3.6 when pipeline upgrades to it.
+        - python: 3.5
           env: ASTROPY_VERSION=stable MAIN_CMD="pytest lib/stsci/tools/tests/" SETUP_CMD=""
 
         # TODO: Bump Astropy version to LTS in the future?
