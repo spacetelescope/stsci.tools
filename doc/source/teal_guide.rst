@@ -2,17 +2,16 @@
 Cookbook for Building TEAL Interfaces
 =====================================
 
-.. abstract::
-   :author: Warren J. Hack, Chris Sontag, Pey Lian Lim
-   :date: 30 January 2014
+Authors: Warren J. Hack, Chris Sontag, Pey Lian Lim
+Date: January 30, 2014
 
-   The release of the Task Editor And Launcher(TEAL) with STScI_Python
-   v2.10 in June 2010 provided the tools for building powerful GUI
-   interfaces for editing the parameters of complex tasks and running those
-   tasks with minimal effort. Learning how to use something new always
-   takes a special effort, and this document provides a step-by-step
-   walkthrough of how to build TEAL interfaces for any Python task to
-   make this effort as easy as possible.
+The release of the Task Editor And Launcher(TEAL) with STScI_Python
+v2.10 in June 2010 provided the tools for building powerful GUI
+interfaces for editing the parameters of complex tasks and running those
+tasks with minimal effort. Learning how to use something new always
+takes a special effort, and this document provides a step-by-step
+walkthrough of how to build TEAL interfaces for any Python task to
+make this effort as easy as possible.
 
 ------------
 Introduction
