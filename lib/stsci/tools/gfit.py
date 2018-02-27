@@ -48,18 +48,6 @@ weights=None):
     else:
         return [status, y-model]
 
-def test_gaussfit():
-    x=N.arange(10,20, 0.1)
-    #x1=N.arange(0,10,0.1)
-    #y1=5*N.e**(-(5-x1)**2/4)
-    n=random.randn(100)
-    y= 10*N.e**(-(15-x)**2/4) +n*3
-    #x=N.arange(100, typecode=N.Int)
-    #y=n.zeros(10, typecode=n.Float)
-    #y= random.rand(100)
-    #err = N.zeros(100)
-    #return gaussfit(x,y, maxiter=20) #, x,y, n
-    return gfit1d(y,x, maxiter=20)
 
 def gfit1d(y, x=None, err = None, weights=None, par=None, parinfo=None,
            maxiter=200, quiet=0):
@@ -97,8 +85,8 @@ def gfit1d(y, x=None, err = None, weights=None, par=None, parinfo=None,
     --------
     >>> x=N.arange(10,20, 0.1)
     >>> y= 10*N.e**(-(x-15)**2/4)
-    >>> print gfit1d(y,x=x, maxiter=20,quiet=1).params
-    [ 10.          15.           1.41421356]
+    >>> print(gfit1d(y,x=x, maxiter=20,quiet=1).params)
+    [10.         15.          1.41421356]
 
     """
     if numerixenv.check_input(x) or numerixenv.check_input(y):
