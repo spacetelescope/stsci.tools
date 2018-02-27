@@ -68,8 +68,10 @@ def test_getall(mmd, mmd_values):
     return mmd.getall('t')
 
 
-def test_getall_returns_min_max(mmd, mmd_values):
-    assert mmd.getall('t') == mmd_values
+def test_getall_returns_expected_values(mmd, mmd_values):
+    result = mmd.getall('t')
+    for value in mmd_values:
+        assert value in result
 
 
 def test_del_key(mmd):
