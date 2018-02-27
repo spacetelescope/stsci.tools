@@ -256,30 +256,6 @@ def _getCharsUntil(buf, stopChar, branchForQuotes, allowEol):
     else:
         return buf # at end
 
-def testCsvSplit(quiet=True):
-    # test cases ( input-string, len(output-list), repr(output-list) )
-    cases = ( \
-(None,                0, "[]"),
-('',                  0, "[]"),
-(' ',                 1, "[' ']"),
-('a',                 1, "['a']"),
-(',',                 2, "['', '']"),
-(',a',                2, "['', 'a']"),
-('a,',                2, "['a', '']"),
-(',a,',               3, "['', 'a', '']"),
-("abc'-hi,ya-'xyz",   1, """["abc'-hi,ya-'xyz"]"""),
-('abc"double-quote,eg"xy,z',    2, """['abc"double-quote,eg"xy', 'z']"""),
-('abc"""triple-quote,eg"""xyz', 1, '[\'abc"""triple-quote,eg"""xyz\']'),
-("'s1', 'has, comma', z",       3, """["'s1'", " 'has, comma'", ' z']"""),
-("a='s1', b='has,comma,s', c",  3, """["a='s1'", " b='has,comma,s'", ' c']"""),
-    )
-    for c in cases:
-        if not quiet: print("Testing: "+repr(c[0]))
-        ll = csvSplit(c[0], ',', True)
-        assert len(ll) == c[1] and repr(ll) == c[2], \
-           "For case: "+repr(c[0])+" expected:\n"+c[2]+"\nbut got:\n"+repr(ll)
-    return True
-
 def rglob(root, pattern):
     """ Same thing as glob.glob, but recursively checks subdirs. """
     # Thanks to Alex Martelli for basics on Stack Overflow
