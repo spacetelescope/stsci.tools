@@ -394,7 +394,7 @@ good_mask_value=True, dtype=numpy.bool\_)
                [0, 0, 1, 1, 1, 0, 0, 1]])
         >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=0, dtype=bool)
         array([[ True,  True, False, False,  True, False, False,  True],
-               [False, False,  True,  True,  True, False, False,  True]], dtype=bool)
+               [False, False,  True,  True,  True, False, False,  True]])
         >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=6, good_mask_value=0, dtype=int)
         array([[0, 0, 1, 0, 0, 1, 1, 0],
                [1, 0, 0, 0, 0, 1, 0, 0]])
@@ -468,17 +468,6 @@ def interpret_bits_value(val):
         or `None` if input `val` parameter is `None` or an empty string.
         If input string value was prepended with '~', then returned
         value will have its bits flipped (inverse mask).
-
-    Examples
-    --------
-        >>> "{0:016b}".format(0xFFFF & interpret_bits_value(28) )
-        '0000000000011100'
-        >>> "{0:016b}".format(0xFFFF & interpret_bits_value('4,8,16') )
-        '0000000000011100'
-        >>> "{0:016b}".format(0xFFFF & interpret_bits_value('~4,8,16') )
-        '1111111111100011'
-        >>> "{0:016b}".format(0xFFFF & interpret_bits_value('~(4+8+16)') )
-        '1111111111100011'
 
     """
     if isinstance(val, int) or val is None:
@@ -623,7 +612,7 @@ def bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=np.bool_):
                [0, 0, 1, 1, 1, 0, 0, 1]])
         >>> bitmask.bitmask2mask(dqbits, ignore_bits=0, dtype=bool)
         array([[ True,  True, False, False,  True, False, False,  True],
-               [False, False,  True,  True,  True, False, False,  True]], dtype=bool)
+               [False, False,  True,  True,  True, False, False,  True]])
         >>> bitmask.bitmask2mask(dqbits, ignore_bits=6, good_mask_value=0, dtype=int)
         array([[0, 0, 1, 0, 0, 1, 1, 0],
                [1, 0, 0, 0, 0, 1, 0, 0]])

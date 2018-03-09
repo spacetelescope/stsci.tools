@@ -12,18 +12,19 @@ nmpfit.py is a version of mpfit.py which uses numarray.
 """
 from __future__ import absolute_import, division, print_function
 
-__version__ = '1.0'          #Release version number only
-__vdate__ = '2007-02-20'     #Date of this version
+import numpy as N
 
 from . import numerixenv
+from . import nmpfit
+
+__version__ = '1.0'          # Release version number only
+__vdate__ = '2007-02-20'     # Date of this version
+
 numerixenv.check()
 
-from . import nmpfit
-import numpy as N
-from numpy import random
 
 def _gauss_funct(p, fjac = None, x = None, y=None, err=None,
-weights=None):
+                 weights=None):
 
     """
     Defines the gaussian function to be used as the model.
@@ -103,7 +104,6 @@ def gfit1d(y, x=None, err = None, weights=None, par=None, parinfo=None,
         print("input arrays X and Y must be of equal shape.\n")
         return
 
-
     fa = {'x':x, 'y':y, 'err':err, 'weights':weights}
 
     if par is not None:
@@ -149,8 +149,3 @@ def plot_fit(y, mfit, x=None):
         print("Matplotlib is not available.\n")
         return
     pylab.plot(x,yy)
-
-def test():
-    import doctest
-    from . import gfit
-    return doctest.testmod(gfit)

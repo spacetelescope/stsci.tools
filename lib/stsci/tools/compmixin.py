@@ -22,11 +22,11 @@
    versus Python 3.x:
 
         Python 2.7
-        >>> 'a' < 2
+        >>> 'a' < 2  # doctest: +SKIP
         False
 
         Python 3.2.1
-        >>> 'a' < 2
+        >>> 'a' < 2   # doctest: +SKIP
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
         TypeError: unorderable types: str() < int()
@@ -78,4 +78,3 @@ class ComparableFloatBaseMixin(ComparableMixin):
             return method(self._cmpkey(), other._cmpkey())
         else:
             return method(float(self._cmpkey()), float(other))
-

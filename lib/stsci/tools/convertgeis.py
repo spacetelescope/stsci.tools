@@ -32,10 +32,10 @@
 
         If used in Pythons script, a user can, e. g.::
 
-            >>> import convertgeis
-            >>> hdulist = convertgeis.convert(GEISFileName)
+            >>> from stsci.tools import convertgeis
+            >>> hdulist = convertgeis.convert(GEISFileName)  # doctest: +SKIP
             (do whatever with hdulist)
-            >>> hdulist.writeto(FITSFileName)
+            >>> hdulist.writeto(FITSFileName)  # doctest: +SKIP
 
         The most basic usage from the command line::
 

@@ -46,7 +46,8 @@ setup(
         'pytest-runner'
     ],
     tests_require = [
-        'pytest'
+        'pytest',
+        'pytest-doctestplus'
     ],
     package_dir = {
         '': 'lib',

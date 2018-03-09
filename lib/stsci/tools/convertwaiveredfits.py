@@ -83,18 +83,18 @@ hduList : fits.HDUList
 Examples
 ========
 
->>> import convertwaiveredfits
+>>> from stsci.tools import convertwaiveredfits
 >>> hdulist = convertwaiveredfits.convertwaiveredfits(
-...     'u9zh010bm_c0f.fits', forceFileOutput=True)
+...     'u9zh010bm_c0f.fits', forceFileOutput=True)  # doctest: +SKIP
 
 This will convert the waivered FITS file ``u9zh010bm_c0f.fits``
 to multi-extension FITS format and write the output to the
 file ``u9zh010bm_c0h.fits``;  the returned ``HDUList`` is in
 multi-extension FITS format.
 
->>> import convertwaiveredfits
+>>> from stsci.tools import convertwaiveredfits
 >>> with open('u9zh010bm_c0f.fits', mode='rb') as inFile:
-...     hdulist = convertwaiveredfits.convertwaiveredfits(inFile, 'out.fits')
+...     hdulist = convertwaiveredfits.convertwaiveredfits(inFile, 'out.fits')  # doctest: +SKIP
 
 This will convert the waivered FITS file ``u9zh010bm_c0f.fits``
 to multi-extension FITS format and write the output to the
@@ -102,9 +102,9 @@ file ``out.fits``; the returned ``HDUList`` is in multi-extension
 FITS format.
 
 >>> from astropy.io import fits
->>> import convertwaiveredfits
+>>> from stsci.tools import convertwaiveredfits
 >>> with fits.open('u9zh010bm_c0f.fits') as inHdul:
-...     hdulist = convertwaiveredfits.convertwaiveredfits(inHdul)
+...     hdulist = convertwaiveredfits.convertwaiveredfits(inHdul)  # doctest: +SKIP
 
 This will convert the waivered FITS file ``u9zh010bm_c0f.fits``
 to multi-extension FITS format; no output file is generated;

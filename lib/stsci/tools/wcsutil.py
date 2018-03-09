@@ -149,8 +149,9 @@ class WCSObject:
 
         :Syntax: The basic syntax for using this object is::
 
-            >>> wcs = wcsutil.WCSObject(rootname,header=None,shape=None,
-            >>>                        pa_key='PA_V3',new=no,prefix=None)
+            >>> wcs = wcsutil.WCSObject(
+            ...     rootname, header=None, shape=None,
+            ...     pa_key='PA_V3', new=no, prefix=None)  # doctest: +SKIP
 
         This will create a WCSObject which provides basic WCS functions.
 

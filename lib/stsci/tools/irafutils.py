@@ -20,7 +20,14 @@ R. White, 1999 Jul 16
 """
 from __future__ import division, print_function
 
-import os, stat, string, sys, re, fnmatch, keyword, select
+import os
+import stat
+import string
+import sys
+import re
+import fnmatch
+import keyword
+import select
 from . import capable
 
 PY3K = sys.version_info[0] > 2
@@ -122,7 +129,7 @@ def csvSplit(line, delim=',', allowEol=True):
     >>> import csv
     >>> y = "arg1='str1', arg2='str, with, embedded, commas', arg3=7"
     >>> rdr = csv.reader( (y,), dialect='excel', quotechar="'", skipinitialspace=True)
-    >>> l = rdr.next(); print len(l), str(l)
+    >>> l = rdr.next(); print(len(l), str(l))  # doctest: +SKIP
     6 ["arg1='str1'", "arg2='str", 'with', 'embedded', "commas'", "arg3=7"]
 
     which we can see is not correct - we wanted 3 tokens.  This occurs in
@@ -132,7 +139,7 @@ def csvSplit(line, delim=',', allowEol=True):
 
     >>> x = "'str1', 'str, with, embedded, commas', 7"
     >>> rdr = csv.reader( (x,), dialect='excel', quotechar="'", skipinitialspace=True)
-    >>> l = rdr.next(); print len(l), str(l)
+    >>> l = rdr.next(); print(len(l), str(l))  # doctest: +SKIP
     3 ['str1', 'str, with, embedded, commas', '7']
 
     But even this usage is delicate - when we turn off skipinitialspace, it
@@ -140,7 +147,7 @@ def csvSplit(line, delim=',', allowEol=True):
 
     >>> x = "'str1', 'str, with, embedded, commas', 7"
     >>> rdr = csv.reader( (x,), dialect='excel', quotechar="'")
-    >>> l = rdr.next(); print len(l), str(l)
+    >>> l = rdr.next(); print(len(l), str(l))  # doctest: +SKIP
     6 ['str1', " 'str", ' with', ' embedded', " commas'", ' 7']
 
     So, for now, we'll roll our own.

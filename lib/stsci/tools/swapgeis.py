@@ -31,8 +31,8 @@
 
         If used in Pythons script, a user can, e. g.::
 
-            >>> import swapgeis
-            >>> swapgeis.byteswap(GEISFileName)
+            >>> from stsci.tools import swapgeis
+            >>> swapgeis.byteswap(GEISFileName)  # doctest: +SKIP
 
         The most basic usage from the command line::
 
