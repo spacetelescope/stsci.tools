@@ -1,25 +1,14 @@
 from __future__ import absolute_import, print_function, division
 
 import multiprocessing
-
-import numpy
+import time
 
 from ..mputil import launch_and_wait, best_tile_layout
 
 
 def takes_time(x):
     """Example function which takes some time to run."""
-    # import time
-    # START = time.time()
-    s = numpy.float64(1)
-
-    # assert x not in (3, 7, 9), "Simulate some errors"
-
-    for i in range(10000000):
-        s = (s + x) * s % 2399232
-
-    # elap = time.time() - START
-    # print(('Done "takes_time" x='+str(x)+': s = '+str(s)+', elapsed time = %.2f s' % elap))
+    time.sleep(0.001)  # 1 ms is long by computer standards?
 
 
 def test_launch_and_wait():

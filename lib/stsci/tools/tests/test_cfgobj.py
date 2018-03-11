@@ -5,8 +5,6 @@ import os
 import pprint
 import sys
 
-from astropy.utils.data import get_pkg_data_filename
-
 from .. import teal, vtor_checks
 
 PY2K = sys.version_info[0] < 3
@@ -18,7 +16,8 @@ else:
 
 
 def test_teal_vtor(tmpdir):
-    co = teal.load(get_pkg_data_filename('data/rt_sample.cfg'))
+    data_dir = os.path.join(os.path.dirname(__file__), 'data')
+    co = teal.load(os.path.join(data_dir, 'rt_sample.cfg'))
     f = tmpdir.join('output.txt')
 
     # TEST OBJ LOADING
@@ -51,14 +50,15 @@ def test_teal_vtor(tmpdir):
     pprint.pprint(co.getKwdArgs(), stream=f, indent=3, width=999)
 
     lines = f.readlines()
-    stripped = [l.replace('   ', ' ').replace('  ', ' ').replace('{ ', '{').replace(' }', '}').strip() + '\n' for l in lines]
+    stripped = [l.replace('   ', ' ').replace('  ', ' ').replace('{ ', '{').replace(' }', '}').strip() for l in lines]
+    lines = [l for l in stripped if len(l) > 0]
 
-    with open(get_pkg_data_filename('data/cfgobj_output.ref')) as fref:
+    with open(os.path.join(data_dir, 'cfgobj_output.ref')) as fref:
         ans = fref.readlines()
 
     bad_lines = []
-    for x, y in zip(stripped, ans):
-        if x.strip(os.linesep) != y:
+    for x, y in zip(lines, ans):
+        if x != y:
             bad_lines.append('{} : {}'.format(x, y))
 
     if len(bad_lines) > 0:

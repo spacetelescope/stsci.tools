@@ -19,7 +19,8 @@ def test_rotest():
     rot = None
 
     def quit():
-        sys.exit()
+        with pytest.raises(SystemExit):
+            sys.exit()
 
     def clicked():
         rot.insert(TKNTR.END, "\nClicked at " + time.asctime(), force=True)
