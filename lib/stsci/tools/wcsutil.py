@@ -147,7 +147,7 @@ class WCSObject:
         input exposure's header and provide conversion functionality
         from pixels to RA/Dec and back.
 
-        :Syntax: The basic syntax for using this object is::
+        The basic syntax for using this object is::
 
             >>> wcs = wcsutil.WCSObject(
             ...     rootname, header=None, shape=None,
