@@ -27,6 +27,9 @@ env:
         - CONDA_DEPENDENCIES='pytest pytest-doctestplus'
 
 matrix:
+    # Don't wait for allowed failures
+    fast_finish: true
+
     include:
         # TODO: Bump Python to 3.6 when pipeline upgrades to it.
         - python: 3.5
@@ -40,6 +43,15 @@ matrix:
         # Try Astropy development version
         - python: 3.6
           env: ASTROPY_VERSION=development MAIN_CMD="pytest" SETUP_CMD=""
+
+        # PEP8 check
+        - python: 3.6
+          env: MAIN_CMD="flake8 --count lib/stsci/tools" SETUP_CMD=""
+
+    allow_failures:
+        # PEP8 will fail for numerous reasons. Ignore it.
+        - python: 3.6
+          env: MAIN_CMD="flake8 --count lib/stsci/tools" SETUP_CMD=""
 
 before_install:
 
