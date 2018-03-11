@@ -46,7 +46,8 @@ setup(
         'pytest-runner'
     ],
     tests_require = [
-        'pytest'
+        'pytest',
+        'pytest-doctestplus'
     ],
     package_dir = {
         '': 'lib',
@@ -54,7 +55,7 @@ setup(
     packages = find_packages('lib'),
     package_data = {
         '': ['LICENSE.txt'],
-        'stsci/tools/tests': ['*.fits']
+        'stsci/tools/tests': ['data/*.*']
     },
     entry_points = {
         'console_scripts': [

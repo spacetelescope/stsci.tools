@@ -1,25 +1,20 @@
-#!/usr/bin/env python
-
-# $Id$
-
-"""fitsdiff is now a part of PyFITS--the fitsdiff in PyFITS replaces the
-fitsdiff that used to be in the module.
+"""fitsdiff is now a part of Astropy.
 
 Now this module just provides a wrapper around astropy.io.fits.diff for backwards
 compatibility with the old interface in case anyone uses it.
 """
-
 import os
 import sys
+
+from astropy.io.fits.diff import FITSDiff
+from astropy.io.fits.scripts.fitsdiff import log, main
+
 PY3K = sys.version_info[0] > 2
 if PY3K:
     string_types = str
 else:
     string_types = basestring
 
-
-from astropy.io.fits.diff import FITSDiff
-from astropy.io.fits.scripts.fitsdiff import log, main
 
 def fitsdiff(input1, input2, comment_excl_list='', value_excl_list='',
              field_excl_list='', maxdiff=10, delta=0.0, neglect_blanks=True,

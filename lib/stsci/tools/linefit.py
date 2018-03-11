@@ -8,19 +8,15 @@ Y = b0 + b1* X
 :version: '1.0 (2007-02-20)'
 
 """
-from __future__ import absolute_import, division, print_function # confidence high
+from __future__ import absolute_import, division, print_function  # confidence high
+
+import numpy as N
 
 from . import numerixenv
 numerixenv.check()
 
-
-import numpy as N
-from numpy.core import around
-
-
-__version__ = '1.0'          #Release version number only
-__vdate__ = '2007-02-20'     #Date of this version
-
+__version__ = '1.0'          # Release version number only
+__vdate__ = '2007-02-20'     # Date of this version
 
 
 def linefit(x, y, weights=None):
@@ -38,14 +34,16 @@ def linefit(x, y, weights=None):
 
     Examples
     --------
-    >>> x=N.array([-5, -4 ,-3 ,-2 ,-1, 0, 1, 2, 3, 4, 5])
-    >>> y=N.array([1, 5, 4, 7, 10, 8, 9, 13, 14, 13, 18])
+    >>> import numpy as N
+    >>> from numpy.core import around
+    >>> x = N.array([-5, -4 ,-3 ,-2 ,-1, 0, 1, 2, 3, 4, 5])
+    >>> y = N.array([1, 5, 4, 7, 10, 8, 9, 13, 14, 13, 18])
     >>> around(linefit(x,y), decimals=5)
-    array([ 9.27273,  1.43636])
-    >>> x=N.array([1.3,1.3,2.0,2.0,2.7,3.3,3.3,3.7,3.7,4.,4.,4.,4.7,4.7,5.,5.3,5.3,5.3,5.7,6.,6.,6.3,6.7])
+    array([9.27273, 1.43636])
+    >>> x = N.array([1.3,1.3,2.0,2.0,2.7,3.3,3.3,3.7,3.7,4.,4.,4.,4.7,4.7,5.,5.3,5.3,5.3,5.7,6.,6.,6.3,6.7])
     >>> y = N.array([2.3,1.8,2.8,1.5,2.2,3.8,1.8,3.7,1.7,2.8,2.8,2.2,3.2,1.9,1.8,3.5,2.8,2.1,3.4,3.2,3.,3.,5.9])
     >>> around(linefit(x,y), decimals=5)
-    array([ 1.42564,  0.31579])
+    array([1.42564, 0.31579])
     """
 
     if numerixenv.check_input(x) or numerixenv.check_input(y):
@@ -79,8 +77,3 @@ def linefit(x, y, weights=None):
     b0 = Yavg - b1 * Xavg
 
     return b0, b1
-
-def test():
-    import doctest
-    import linefit
-    return doctest.testmod(linefit)

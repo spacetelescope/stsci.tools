@@ -128,7 +128,7 @@
     A badly formatted set of arguments will raise a ``VdtParamError``.
 """
 
-from __future__ import division, print_function # confidence high
+from __future__ import division, print_function  # confidence high
 
 __version__ = '1.0.1'
 
@@ -344,7 +344,7 @@ class ValidateError(Exception):
     Any check function that fails ought to raise this error.
     (or a subclass)
 
-    >>> raise ValidateError
+    >>> raise ValidateError  # doctest: +SKIP
     Traceback (most recent call last):
     ValidateError
     """
@@ -359,7 +359,7 @@ class VdtUnknownCheckError(ValidateError):
 
     def __init__(self, value):
         """
-        >>> raise VdtUnknownCheckError('yoda')
+        >>> raise VdtUnknownCheckError('yoda')  # doctest: +SKIP
         Traceback (most recent call last):
         VdtUnknownCheckError: the check "yoda" is unknown.
         """
@@ -371,7 +371,7 @@ class VdtParamError(SyntaxError):
 
     def __init__(self, name, value):
         """
-        >>> raise VdtParamError('yoda', 'jedi')
+        >>> raise VdtParamError('yoda', 'jedi')  # doctest: +SKIP
         Traceback (most recent call last):
         VdtParamError: passed an incorrect value "jedi" for parameter "yoda".
         """
@@ -383,7 +383,7 @@ class VdtTypeError(ValidateError):
 
     def __init__(self, value):
         """
-        >>> raise VdtTypeError('jedi')
+        >>> raise VdtTypeError('jedi')  # doctest: +SKIP
         Traceback (most recent call last):
         VdtTypeError: the value "jedi" is of the wrong type.
         """
@@ -395,7 +395,7 @@ class VdtValueError(ValidateError):
 
     def __init__(self, value):
         """
-        >>> raise VdtValueError('jedi')
+        >>> raise VdtValueError('jedi')  # doctest: +SKIP
         Traceback (most recent call last):
         VdtValueError: the value "jedi" is unacceptable.
         """
@@ -407,7 +407,7 @@ class VdtValueTooSmallError(VdtValueError):
 
     def __init__(self, value):
         """
-        >>> raise VdtValueTooSmallError('0')
+        >>> raise VdtValueTooSmallError('0')  # doctest: +SKIP
         Traceback (most recent call last):
         VdtValueTooSmallError: the value "0" is too small.
         """
@@ -419,7 +419,7 @@ class VdtValueTooBigError(VdtValueError):
 
     def __init__(self, value):
         """
-        >>> raise VdtValueTooBigError('1')
+        >>> raise VdtValueTooBigError('1')  # doctest: +SKIP
         Traceback (most recent call last):
         VdtValueTooBigError: the value "1" is too big.
         """
@@ -431,7 +431,7 @@ class VdtValueTooShortError(VdtValueError):
 
     def __init__(self, value):
         """
-        >>> raise VdtValueTooShortError('jed')
+        >>> raise VdtValueTooShortError('jed')  # doctest: +SKIP
         Traceback (most recent call last):
         VdtValueTooShortError: the value "jed" is too short.
         """
@@ -445,7 +445,7 @@ class VdtValueTooLongError(VdtValueError):
 
     def __init__(self, value):
         """
-        >>> raise VdtValueTooLongError('jedie')
+        >>> raise VdtValueTooLongError('jedie')  # doctest: +SKIP
         Traceback (most recent call last):
         VdtValueTooLongError: the value "jedie" is too long.
         """
@@ -495,7 +495,7 @@ class Validator(object):
     >>> vtr1 = Validator(fdict)
     >>> vtr1.check('int_range(20, 40)', '30')
     30
-    >>> vtr1.check('int_range(20, 40)', '60')
+    >>> vtr1.check('int_range(20, 40)', '60')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooBigError: the value "60" is too big.
 
@@ -572,7 +572,6 @@ class Validator(object):
         self.baseErrorClass = ValidateError
         self._cache = {}
 
-
     def check(self, check, value, missing=False):
         """
         Usage: check(check, value)
@@ -584,10 +583,11 @@ class Validator(object):
 
         If the check fails, raises a ``ValidateError`` subclass.
 
-        >>> vtor.check('yoda', '')
+        >>> vtor = Validator()
+        >>> vtor.check('yoda', '')  # doctest: +SKIP
         Traceback (most recent call last):
         VdtUnknownCheckError: the check "yoda" is unknown.
-        >>> vtor.check('yoda()', '')
+        >>> vtor.check('yoda()', '')  # doctest: +SKIP
         Traceback (most recent call last):
         VdtUnknownCheckError: the check "yoda" is unknown.
 
@@ -711,6 +711,7 @@ class Validator(object):
         """
         Dummy check that always passes
 
+        >>> vtor = Validator()
         >>> vtor.check('', 0)
         0
         >>> vtor.check('', '0')
@@ -748,7 +749,7 @@ def _is_num_param(names, values, to_float=False):
     [0, 1]
     >>> _is_num_param(('', ''), (0, 1.0), to_float=True)
     [0.0, 1.0]
-    >>> _is_num_param(('a'), ('a'))
+    >>> _is_num_param(('a'), ('a'))  # doctest: +SKIP
     Traceback (most recent call last):
     VdtParamError: passed an incorrect value "a" for parameter "a".
     """
@@ -782,32 +783,33 @@ def is_integer(value, min=None, max=None):
     If the value is a string, then the conversion is done - if possible.
     Otherwise a VdtError is raised.
 
+    >>> vtor = Validator()
     >>> vtor.check('integer', '-1')
     -1
     >>> vtor.check('integer', '0')
     0
     >>> vtor.check('integer', 9)
     9
-    >>> vtor.check('integer', 'a')
+    >>> vtor.check('integer', 'a')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "a" is of the wrong type.
-    >>> vtor.check('integer', '2.2')
+    >>> vtor.check('integer', '2.2')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "2.2" is of the wrong type.
     >>> vtor.check('integer(10)', '20')
     20
     >>> vtor.check('integer(max=20)', '15')
     15
-    >>> vtor.check('integer(10)', '9')
+    >>> vtor.check('integer(10)', '9')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooSmallError: the value "9" is too small.
-    >>> vtor.check('integer(10)', 9)
+    >>> vtor.check('integer(10)', 9)  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooSmallError: the value "9" is too small.
-    >>> vtor.check('integer(max=20)', '35')
+    >>> vtor.check('integer(max=20)', '35')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooBigError: the value "35" is too big.
-    >>> vtor.check('integer(max=20)', 35)
+    >>> vtor.check('integer(max=20)', 35)  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooBigError: the value "35" is too big.
     >>> vtor.check('integer(0, 9)', False)
@@ -839,6 +841,7 @@ def is_float(value, min=None, max=None):
 
     This can accept negative values.
 
+    >>> vtor = Validator()
     >>> vtor.check('float', '2')
     2.0
 
@@ -850,17 +853,17 @@ def is_float(value, min=None, max=None):
     122.0
     >>> vtor.check('float', 8.4) * 10
     84.0
-    >>> vtor.check('float', 'a')
+    >>> vtor.check('float', 'a')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "a" is of the wrong type.
     >>> vtor.check('float(10.1)', '10.2') * 10
     102.0
     >>> vtor.check('float(max=20.2)', '15.1') * 10
     151.0
-    >>> vtor.check('float(10.0)', '9.0')
+    >>> vtor.check('float(10.0)', '9.0')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooSmallError: the value "9.0" is too small.
-    >>> vtor.check('float(max=20.0)', '35.0')
+    >>> vtor.check('float(max=20.0)', '35.0')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooBigError: the value "35.0" is too big.
     """
@@ -891,6 +894,7 @@ def is_boolean(value):
     """
     Check if the value represents a boolean.
 
+    >>> vtor = Validator()
     >>> vtor.check('boolean', 0)
     0
     >>> vtor.check('boolean', False)
@@ -923,10 +927,10 @@ def is_boolean(value):
     1
     >>> vtor.check('boolean', 'YES')
     1
-    >>> vtor.check('boolean', '')
+    >>> vtor.check('boolean', '')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "" is of the wrong type.
-    >>> vtor.check('boolean', 'up')
+    >>> vtor.check('boolean', 'up')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "up" is of the wrong type.
 
@@ -952,6 +956,7 @@ def is_ip_addr(value):
     Check that the supplied value is an Internet Protocol address, v.4,
     represented by a dotted-quad string, i.e. '1.2.3.4'.
 
+    >>> vtor = Validator()
     >>> vtor.check('ip_addr', '1 ')
     '1'
     >>> vtor.check('ip_addr', ' 1.2')
@@ -964,13 +969,13 @@ def is_ip_addr(value):
     '0.0.0.0'
     >>> vtor.check('ip_addr', '255.255.255.255')
     '255.255.255.255'
-    >>> vtor.check('ip_addr', '255.255.255.256')
+    >>> vtor.check('ip_addr', '255.255.255.256')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueError: the value "255.255.255.256" is unacceptable.
-    >>> vtor.check('ip_addr', '1.2.3.4.5')
+    >>> vtor.check('ip_addr', '1.2.3.4.5')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueError: the value "1.2.3.4.5" is unacceptable.
-    >>> vtor.check('ip_addr', 0)
+    >>> vtor.check('ip_addr', 0)  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "0" is of the wrong type.
     """
@@ -992,6 +997,7 @@ def is_list(value, min=None, max=None):
 
     It does no check on list members.
 
+    >>> vtor = Validator()
     >>> vtor.check('list', ())
     []
     >>> vtor.check('list', [])
@@ -1000,18 +1006,18 @@ def is_list(value, min=None, max=None):
     [1, 2]
     >>> vtor.check('list', [1, 2])
     [1, 2]
-    >>> vtor.check('list(3)', (1, 2))
+    >>> vtor.check('list(3)', (1, 2))  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooShortError: the value "(1, 2)" is too short.
-    >>> vtor.check('list(max=5)', (1, 2, 3, 4, 5, 6))
+    >>> vtor.check('list(max=5)', (1, 2, 3, 4, 5, 6))  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooLongError: the value "(1, 2, 3, 4, 5, 6)" is too long.
-    >>> vtor.check('list(min=3, max=5)', (1, 2, 3, 4))
+    >>> vtor.check('list(min=3, max=5)', (1, 2, 3, 4))  # doctest: +SKIP
     [1, 2, 3, 4]
-    >>> vtor.check('list', 0)
+    >>> vtor.check('list', 0)  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "0" is of the wrong type.
-    >>> vtor.check('list', '12')
+    >>> vtor.check('list', '12')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "12" is of the wrong type.
     """
@@ -1037,6 +1043,7 @@ def is_tuple(value, min=None, max=None):
 
     It does no check on members.
 
+    >>> vtor = Validator()
     >>> vtor.check('tuple', ())
     ()
     >>> vtor.check('tuple', [])
@@ -1045,18 +1052,18 @@ def is_tuple(value, min=None, max=None):
     (1, 2)
     >>> vtor.check('tuple', [1, 2])
     (1, 2)
-    >>> vtor.check('tuple(3)', (1, 2))
+    >>> vtor.check('tuple(3)', (1, 2))  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooShortError: the value "(1, 2)" is too short.
-    >>> vtor.check('tuple(max=5)', (1, 2, 3, 4, 5, 6))
+    >>> vtor.check('tuple(max=5)', (1, 2, 3, 4, 5, 6))  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooLongError: the value "(1, 2, 3, 4, 5, 6)" is too long.
     >>> vtor.check('tuple(min=3, max=5)', (1, 2, 3, 4))
     (1, 2, 3, 4)
-    >>> vtor.check('tuple', 0)
+    >>> vtor.check('tuple', 0)  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "0" is of the wrong type.
-    >>> vtor.check('tuple', '12')
+    >>> vtor.check('tuple', '12')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "12" is of the wrong type.
     """
@@ -1069,19 +1076,20 @@ def is_string(value, min=None, max=None):
 
     You can optionally specify the minimum and maximum number of members.
 
+    >>> vtor = Validator()
     >>> vtor.check('string', '0')
     '0'
-    >>> vtor.check('string', 0)
+    >>> vtor.check('string', 0)  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "0" is of the wrong type.
     >>> vtor.check('string(2)', '12')
     '12'
-    >>> vtor.check('string(2)', '1')
+    >>> vtor.check('string(2)', '1')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooShortError: the value "1" is too short.
     >>> vtor.check('string(min=2, max=3)', '123')
     '123'
-    >>> vtor.check('string(min=2, max=3)', '1234')
+    >>> vtor.check('string(min=2, max=3)', '1234')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooLongError: the value "1234" is too long.
     """
@@ -1107,6 +1115,7 @@ def is_int_list(value, min=None, max=None):
 
     Each list member is checked that it is an integer.
 
+    >>> vtor = Validator()
     >>> vtor.check('int_list', ())
     []
     >>> vtor.check('int_list', [])
@@ -1115,7 +1124,7 @@ def is_int_list(value, min=None, max=None):
     [1, 2]
     >>> vtor.check('int_list', [1, 2])
     [1, 2]
-    >>> vtor.check('int_list', [1, 'a'])
+    >>> vtor.check('int_list', [1, 'a'])  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "a" is of the wrong type.
     """
@@ -1130,6 +1139,7 @@ def is_bool_list(value, min=None, max=None):
 
     Each list member is checked that it is a boolean.
 
+    >>> vtor = Validator()
     >>> vtor.check('bool_list', ())
     []
     >>> vtor.check('bool_list', [])
@@ -1140,7 +1150,7 @@ def is_bool_list(value, min=None, max=None):
     >>> check_res = vtor.check('bool_list', [True, False])
     >>> check_res == [True, False]
     1
-    >>> vtor.check('bool_list', [True, 'a'])
+    >>> vtor.check('bool_list', [True, 'a'])  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "a" is of the wrong type.
     """
@@ -1155,6 +1165,7 @@ def is_float_list(value, min=None, max=None):
 
     Each list member is checked that it is a float.
 
+    >>> vtor = Validator()
     >>> vtor.check('float_list', ())
     []
     >>> vtor.check('float_list', [])
@@ -1163,7 +1174,7 @@ def is_float_list(value, min=None, max=None):
     [1.0, 2.0]
     >>> vtor.check('float_list', [1, 2.0])
     [1.0, 2.0]
-    >>> vtor.check('float_list', [1, 'a'])
+    >>> vtor.check('float_list', [1, 'a'])  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "a" is of the wrong type.
     """
@@ -1178,16 +1189,17 @@ def is_string_list(value, min=None, max=None):
 
     Each list member is checked that it is a string.
 
+    >>> vtor = Validator()
     >>> vtor.check('string_list', ())
     []
     >>> vtor.check('string_list', [])
     []
     >>> vtor.check('string_list', ('a', 'b'))
     ['a', 'b']
-    >>> vtor.check('string_list', ['a', 1])
+    >>> vtor.check('string_list', ['a', 1])  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "1" is of the wrong type.
-    >>> vtor.check('string_list', 'hello')
+    >>> vtor.check('string_list', 'hello')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "hello" is of the wrong type.
     """
@@ -1204,13 +1216,14 @@ def is_ip_addr_list(value, min=None, max=None):
 
     Each list member is checked that it is an IP address.
 
+    >>> vtor = Validator()
     >>> vtor.check('ip_addr_list', ())
     []
     >>> vtor.check('ip_addr_list', [])
     []
     >>> vtor.check('ip_addr_list', ('1.2.3.4', '5.6.7.8'))
     ['1.2.3.4', '5.6.7.8']
-    >>> vtor.check('ip_addr_list', ['a'])
+    >>> vtor.check('ip_addr_list', ['a'])  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueError: the value "a" is unacceptable.
     """
@@ -1227,6 +1240,7 @@ def force_list(value, min=None, max=None):
     A minumum of greater than one will fail if the user only supplies a
     string.
 
+    >>> vtor = Validator()
     >>> vtor.check('force_list', ())
     []
     >>> vtor.check('force_list', [])
@@ -1237,7 +1251,6 @@ def force_list(value, min=None, max=None):
     if not isinstance(value, (list, tuple)):
         value = [value]
     return is_list(value, min, max)
-
 
 
 fun_dict = {
@@ -1268,6 +1281,7 @@ def is_mixed_list(value, *args):
     The length of the list must match the number of positional
     arguments you supply.
 
+    >>> vtor = Validator()
     >>> mix_str = "mixed_list('integer', 'float', 'ip_addr', 'string', 'boolean')"
     >>> check_res = vtor.check(mix_str, (1, 2.0, '1.2.3.4', 'a', True))
     >>> check_res == [1, 2.0, '1.2.3.4', 'a', True]
@@ -1275,16 +1289,16 @@ def is_mixed_list(value, *args):
     >>> check_res = vtor.check(mix_str, ('1', '2.0', '1.2.3.4', 'a', 'True'))
     >>> check_res == [1, 2.0, '1.2.3.4', 'a', True]
     1
-    >>> vtor.check(mix_str, ('b', 2.0, '1.2.3.4', 'a', True))
+    >>> vtor.check(mix_str, ('b', 2.0, '1.2.3.4', 'a', True))  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "b" is of the wrong type.
-    >>> vtor.check(mix_str, (1, 2.0, '1.2.3.4', 'a'))
+    >>> vtor.check(mix_str, (1, 2.0, '1.2.3.4', 'a'))  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooShortError: the value "(1, 2.0, '1.2.3.4', 'a')" is too short.
-    >>> vtor.check(mix_str, (1, 2.0, '1.2.3.4', 'a', 1, 'b'))
+    >>> vtor.check(mix_str, (1, 2.0, '1.2.3.4', 'a', 1, 'b'))  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueTooLongError: the value "(1, 2.0, '1.2.3.4', 'a', 1, 'b')" is too long.
-    >>> vtor.check(mix_str, 0)
+    >>> vtor.check(mix_str, 0)  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "0" is of the wrong type.
 
@@ -1321,12 +1335,13 @@ def is_option(value, *options):
     """
     This check matches the value to any of a set of options.
 
+    >>> vtor = Validator()
     >>> vtor.check('option("yoda", "jedi")', 'yoda')
     'yoda'
-    >>> vtor.check('option("yoda", "jedi")', 'jed')
+    >>> vtor.check('option("yoda", "jedi")', 'jed')  # doctest: +SKIP
     Traceback (most recent call last):
     VdtValueError: the value "jed" is unacceptable.
-    >>> vtor.check('option("yoda", "jedi")', 0)
+    >>> vtor.check('option("yoda", "jedi")', 0)  # doctest: +SKIP
     Traceback (most recent call last):
     VdtTypeError: the value "0" is of the wrong type.
     """
@@ -1359,7 +1374,7 @@ def _test(value, *args, **keywargs):
     ...    ]
     >>> v = Validator({'test': _test})
     >>> for entry in checks:
-    ...     print(v.check(('test(%s)' % entry), 3))
+    ...     print(v.check(('test(%s)' % entry), 3))  # doctest: +SKIP
     (3, ('3', '6'), {'test': ['a', 'b', 'c'], 'max': '3', 'min': '1'})
     (3, ('3',), {})
     (3, ('3', '6'), {})
@@ -1387,7 +1402,7 @@ def _test(value, *args, **keywargs):
     >>> v.get_default_value('pass(default=None)')
     >>> v.get_default_value("string(default='None')")
     'None'
-    >>> v.get_default_value('pass')
+    >>> v.get_default_value('pass')  # doctest: +SKIP
     Traceback (most recent call last):
     KeyError: 'Check "pass" has no default value.'
     >>> v.get_default_value('pass(default=list(1, 2, 3, 4))')
@@ -1421,8 +1436,10 @@ def _test2():
     3
     """
 
+
 def _test3():
     r"""
+    >>> vtor = Validator()
     >>> vtor.check('string(default="")', '', missing=True)
     ''
     >>> vtor.check('string(default="\n")', '', missing=True)
@@ -1447,15 +1464,3 @@ def _test3():
     >>> vtor.check("string_list(default=list('\n'))", '', missing=True)
     ['\n']
     """
-
-
-if __name__ == '__main__':
-    # run the code tests in doctest format
-    import sys
-    import doctest
-    m = sys.modules.get('__main__')
-    globs = m.__dict__.copy()
-    globs.update({
-        'vtor': Validator(),
-    })
-    doctest.testmod(m, globs=globs)

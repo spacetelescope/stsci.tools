@@ -7,7 +7,7 @@ A vastly simpler way of doing this is to use a tkinter.Text widget and set
 it to DISABLED, but then you cannot select text.
 $Id$
 """
-from __future__ import division # confidence high
+from __future__ import division  # confidence high
 
 # System level modules
 import sys
@@ -18,8 +18,9 @@ if PY3K:
 else:
     import Tkinter as TKNTR
 
-ALLOWED_SYMS = ('c','Up','Down','Left','Right','Home','End','Prior','Next', \
-                'Shift_L', 'Shift_R')
+ALLOWED_SYMS = ('c', 'Up', 'Down', 'Left', 'Right', 'Home', 'End', 'Prior',
+                'Next', 'Shift_L', 'Shift_R')
+
 
 class ROText(TKNTR.Text):
 
@@ -51,53 +52,17 @@ class ROText(TKNTR.Text):
     # a way to disable text manip
     def ignoreMostKeys(self, event):
         if event.keysym not in ALLOWED_SYMS:
-            return "break" # have to return this string to stop the event
+            return "break"  # have to return this string to stop the event
         # To get copy/paste working on OSX we allow 'c' so that
         # they can type 'Command-c', but don't let a regular 'c' through.
-        if event.keysym in ('c','C'):
-            if sys.platform=='darwin' and hasattr(event,'state') and event.state != 0:
-                pass # allow this through, it is Command-c
+        if event.keysym in ('c', 'C'):
+            if (sys.platform == 'darwin' and hasattr(event, 'state') and
+                    event.state != 0):
+                pass  # allow this through, it is Command-c
             else:
                 return "break"
-
 
     def mouseLeft(self, event):
         if self._fbto:
             self._fbto.focus_set()
-        return "break" # have to return this string to stop the event
-
-
-# Test the above class
-if __name__ == '__main__':
-
-    import sys, time
-
-    rot = None
-
-    def quit():
-        sys.exit()
-
-    def clicked():
-        rot.insert(TKNTR.END, "\nClicked at "+time.asctime(), force=True)
-        rot.see(TKNTR.END)
-
-    # make our test window
-    top = TKNTR.Tk()
-    f = TKNTR.Frame(top)
-
-    sc = TKNTR.Scrollbar(f)
-    sc.pack(side=TKNTR.RIGHT, fill=TKNTR.Y)
-    rot = ROText(f, wrap=TKNTR.WORD, height=10, yscrollcommand=sc.set,
-                 focusBackTo=top)
-    rot.pack(side=TKNTR.TOP, fill=TKNTR.X, expand=True)
-    sc.config(command=rot.yview)
-    f.pack(side=TKNTR.TOP, fill=TKNTR.X)
-
-    b = TKNTR.Button(top, text='Click Me', command=clicked)
-    b.pack(side=TKNTR.TOP, fill=TKNTR.X, expand=1)
-
-    q = TKNTR.Button(top, text='Quit', command=quit)
-    q.pack(side=TKNTR.TOP)
-
-    # start
-    top.mainloop()
+        return "break"  # have to return this string to stop the event

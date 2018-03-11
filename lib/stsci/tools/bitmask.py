@@ -18,10 +18,7 @@ __version__ = '1.1.1'
 __vdate__ = '30-January-2018'
 __author__ = 'Mihai Cara'
 
-
-__all__ = ['interpret_bits_value', 'interpret_bit_flags', 'bitmask2mask',
-           'bitfield_to_boolean_mask', 'is_bit_flag']
-
+__all__ = ['interpret_bit_flags', 'bitfield_to_boolean_mask', 'is_bit_flag']
 
 # Revision history:
 # 0.1.0 (29-March-2015) - initial release based on code from stsci.skypac
@@ -394,7 +391,7 @@ good_mask_value=True, dtype=numpy.bool\_)
                [0, 0, 1, 1, 1, 0, 0, 1]])
         >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=0, dtype=bool)
         array([[ True,  True, False, False,  True, False, False,  True],
-               [False, False,  True,  True,  True, False, False,  True]], dtype=bool)
+               [False, False,  True,  True,  True, False, False,  True]])
         >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=6, good_mask_value=0, dtype=int)
         array([[0, 0, 1, 0, 0, 1, 1, 0],
                [1, 0, 0, 0, 0, 1, 0, 0]])
@@ -468,17 +465,6 @@ def interpret_bits_value(val):
         or `None` if input `val` parameter is `None` or an empty string.
         If input string value was prepended with '~', then returned
         value will have its bits flipped (inverse mask).
-
-    Examples
-    --------
-        >>> "{0:016b}".format(0xFFFF & interpret_bits_value(28) )
-        '0000000000011100'
-        >>> "{0:016b}".format(0xFFFF & interpret_bits_value('4,8,16') )
-        '0000000000011100'
-        >>> "{0:016b}".format(0xFFFF & interpret_bits_value('~4,8,16') )
-        '1111111111100011'
-        >>> "{0:016b}".format(0xFFFF & interpret_bits_value('~(4+8+16)') )
-        '1111111111100011'
 
     """
     if isinstance(val, int) or val is None:
@@ -612,27 +598,6 @@ def bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=np.bool_):
         e.g., 1 or 0 (or `True` or `False` if `dtype` is `bool`) according to
         values of to the input `bitmask` elements, `ignore_bits` parameter,
         and the `good_mask_value` parameter.
-
-    Examples
-    --------
-        >>> from stsci.tools import bitmask
-        >>> import numpy as np
-        >>> dqbits = np.asarray([[0,0,1,2,0,8,12,0],[10,4,0,0,0,16,6,0]])
-        >>> bitmask.bitmask2mask(dqbits, ignore_bits=0, dtype=int)
-        array([[1, 1, 0, 0, 1, 0, 0, 1],
-               [0, 0, 1, 1, 1, 0, 0, 1]])
-        >>> bitmask.bitmask2mask(dqbits, ignore_bits=0, dtype=bool)
-        array([[ True,  True, False, False,  True, False, False,  True],
-               [False, False,  True,  True,  True, False, False,  True]], dtype=bool)
-        >>> bitmask.bitmask2mask(dqbits, ignore_bits=6, good_mask_value=0, dtype=int)
-        array([[0, 0, 1, 0, 0, 1, 1, 0],
-               [1, 0, 0, 0, 0, 1, 0, 0]])
-        >>> bitmask.bitmask2mask(dqbits, ignore_bits=~6, good_mask_value=0, dtype=int)
-        array([[0, 0, 0, 1, 0, 0, 1, 0],
-               [1, 1, 0, 0, 0, 0, 1, 0]])
-        >>> bitmask.bitmask2mask(dqbits, ignore_bits='~(2+4)', good_mask_value=0, dtype=int)
-        array([[0, 0, 0, 1, 0, 0, 1, 0],
-               [1, 1, 0, 0, 0, 0, 1, 0]])
 
     """
     if not np.issubdtype(bitmask.dtype, np.integer):

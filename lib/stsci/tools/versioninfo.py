@@ -73,7 +73,7 @@ def printVersionInfo():
     # Print instruction message.
     print("PLEASE PASTE THE OUTPUT FROM THIS TASK ")
     print("INTO AN E-MAIL MESSAGE AND SEND IT WITH")
-    print("YOUR PROBLEM DESCRIPTION TO SSB!")
+    print("YOUR PROBLEM DESCRIPTION TO DATB!")
     print(" ")
     print("SUPPORT ADDRESS: help@stsci.edu ")
 

@@ -12,18 +12,19 @@ nmpfit.py is a version of mpfit.py which uses numarray.
 """
 from __future__ import absolute_import, division, print_function
 
-__version__ = '1.0'          #Release version number only
-__vdate__ = '2007-02-20'     #Date of this version
+import numpy as N
 
 from . import numerixenv
+from . import nmpfit
+
+__version__ = '1.0'          # Release version number only
+__vdate__ = '2007-02-20'     # Date of this version
+
 numerixenv.check()
 
-from . import nmpfit
-import numpy as N
-from numpy import random
 
 def _gauss_funct(p, fjac = None, x = None, y=None, err=None,
-weights=None):
+                 weights=None):
 
     """
     Defines the gaussian function to be used as the model.
@@ -48,18 +49,6 @@ weights=None):
     else:
         return [status, y-model]
 
-def test_gaussfit():
-    x=N.arange(10,20, 0.1)
-    #x1=N.arange(0,10,0.1)
-    #y1=5*N.e**(-(5-x1)**2/4)
-    n=random.randn(100)
-    y= 10*N.e**(-(15-x)**2/4) +n*3
-    #x=N.arange(100, typecode=N.Int)
-    #y=n.zeros(10, typecode=n.Float)
-    #y= random.rand(100)
-    #err = N.zeros(100)
-    #return gaussfit(x,y, maxiter=20) #, x,y, n
-    return gfit1d(y,x, maxiter=20)
 
 def gfit1d(y, x=None, err = None, weights=None, par=None, parinfo=None,
            maxiter=200, quiet=0):
@@ -97,8 +86,8 @@ def gfit1d(y, x=None, err = None, weights=None, par=None, parinfo=None,
     --------
     >>> x=N.arange(10,20, 0.1)
     >>> y= 10*N.e**(-(x-15)**2/4)
-    >>> print gfit1d(y,x=x, maxiter=20,quiet=1).params
-    [ 10.          15.           1.41421356]
+    >>> print(gfit1d(y,x=x, maxiter=20,quiet=1).params)
+    [10.         15.          1.41421356]
 
     """
     if numerixenv.check_input(x) or numerixenv.check_input(y):
@@ -114,7 +103,6 @@ def gfit1d(y, x=None, err = None, weights=None, par=None, parinfo=None,
     if x.shape != y.shape:
         print("input arrays X and Y must be of equal shape.\n")
         return
-
 
     fa = {'x':x, 'y':y, 'err':err, 'weights':weights}
 
@@ -161,8 +149,3 @@ def plot_fit(y, mfit, x=None):
         print("Matplotlib is not available.\n")
         return
     pylab.plot(x,yy)
-
-def test():
-    import doctest
-    from . import gfit
-    return doctest.testmod(gfit)

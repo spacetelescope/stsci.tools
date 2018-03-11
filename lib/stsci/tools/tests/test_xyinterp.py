@@ -1,70 +1,36 @@
-from __future__ import division # confidence high
+from __future__ import absolute_import, division
 
-from stsci.tools.xyinterp import xyinterp
-import numpy as N
+import numpy as np
+import pytest
 
-x=N.array((1,2,3,4,5))
-y=x.copy()
+from ..xyinterp import xyinterp
 
-def test_xyinterp_1():
-    #test 1
-    ans = xyinterp(x,y,3)
-    assert ans == 3, "Test 1 failed, ans = %f, should be 3"%ans
 
-def test_xyinterp_2():
-    #test 2
-    ans = xyinterp(x,y,3.5)
-    assert ans == 3.5, "Test 2 failed, ans = %f, should be 3.5"%ans
+class TestXYInterp(object):
+    def setup_class(self):
+        self.x = np.arange(1, 6)
+        self.y = self.x.copy()
 
-def test_xyinterp_3():
-    #test 3
-    try:
-        ans = xyinterp(x,y,-3)
-        raise AssertionError( "Test 3 failed; should have thrown an exception, answer = %s" % str(ans))
-    except ValueError:
-        pass
+    @pytest.mark.parametrize('val', [3, 3.5])
+    def test_same_arr(self, val):
+        assert xyinterp(self.x, self.y, val) == val
 
-def test_xyinterp_4():
-    #test 4
-    try:
-        ans = xyinterp(x,y,5.6)
-        raise AssertionError( "Test 4 failed; should have thrown an exception, answer = %s" % str(ans))
-    except ValueError:
-        pass
-    
-def test_xyinterp_5():
-    #test 5
-    x=N.array((1,3,7,9,12))
-    y=N.array((5,10,15,20,25))
-    ans = xyinterp(x,y,8)
-    assert ans == 17.5, "Test 5 failed, ans = %f, should be 17.5"%ans
+    @pytest.mark.parametrize('val', [-3, 5.6])
+    def test_same_arr_err(self, val):
+        with pytest.raises(ValueError):
+            xyinterp(self.x, self.y, val)
 
-def test_xyinterp_6():
-    #test 6
-    x=N.array((5,3,6,2,7,0))
-    y=N.array((4,6,2,4,6,2))
-    try:
-        ans = xyinterp(x,y,2)
-        raise AssertionError( "Test 6 failed; should have thrown an exception, answer = %s" % str(ans))
-    except ValueError:
-        pass
 
-def test_xyinterp_7():
-    #test 7
-    x=N.array((1,2,3,4,5))
-    y=N.arange(20)
-    
-    try:
-        ans = xyinterp(x,y,2)
-        raise AssertionError( "Test 7 failed; should have thrown an exception, answer = %s" % str(ans))
-    except ValueError:
-        pass
+def test_diff_arr():
+    x = np.array([1, 3, 7, 9, 12])
+    y = np.array([5, 10, 15, 20, 25])
+    assert xyinterp(x, y, 8) == 17.5
 
-if __name__ == '__main__':
-    test_xyinterp_1()
-    test_xyinterp_2()
-    test_xyinterp_3()
-    test_xyinterp_4()
-    test_xyinterp_5()
-    test_xyinterp_6()
-    test_xyinterp_7()
+
+@pytest.mark.parametrize(
+    ('x', 'y'),
+    [(np.array([5, 3, 6, 2, 7, 0]), np.array([4, 6, 2, 4, 6, 2])),
+     (np.arange(1, 6), np.arange(20))])
+def test_diff_arr_err(x, y):
+    with pytest.raises(ValueError):
+        xyinterp(x, y, 2)

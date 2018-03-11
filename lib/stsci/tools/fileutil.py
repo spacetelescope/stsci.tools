@@ -447,7 +447,7 @@ def buildRootname(filename, ext=None):
 
     ::
 
-        >>> rootname = buildRootname(filename, ext=['_dth.fits'])
+        >>> rootname = buildRootname(filename, ext=['_dth.fits'])  # doctest: +SKIP
 
     """
 

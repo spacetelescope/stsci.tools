@@ -53,7 +53,7 @@ def readASNTable(fname, output=None, prodonly=False):
     An association table can be read from a file using the following commands::
 
     >>> from stsci.tools import asnutil
-    >>> asntab = asnutil.readASNTable('j8bt06010_shifts_asn.fits', prodonly=False)
+    >>> asntab = asnutil.readASNTable('j8bt06010_shifts_asn.fits', prodonly=False)  # doctest: +SKIP
 
     The `asntab` object can now be passed to other code to provide relationships
     between input and output images defined by the association table.
@@ -205,14 +205,14 @@ class ASNTable(dict):
     --------
     Creating an ASNTable object from 3 filenames and a shift file would be done using::
 
-    >>> asnt=ASNTable([fname1,fname2,  fname3], shiftfile='shifts.txt')
+    >>> asnt=ASNTable([fname1,fname2,  fname3], shiftfile='shifts.txt')  # doctest: +SKIP
 
     The ASNTable object would have the 'members' and 'order'
     in the association table populated based on `infiles` and `shiftfile`.
 
     This creates a blank association table from the ASNTable object::
 
-    >>> asnt.create()
+    >>> asnt.create()  # doctest: +SKIP
 
     """
     def __init__(self, inlist=None, output=None, shiftfile=None):
@@ -557,15 +557,17 @@ class ShiftFile(dict):
 
         Read a shift file on disk using::
 
-        >>> sdict = ShiftFile('shifts.txt')
+        >>> sdict = ShiftFile('shifts.txt')  # doctest: +SKIP
 
         Pass values for the fields of the shift file and a dictionary with all files::
 
         >>> d={'j8bt06nyq_flt.fits': [0.0, 0.0, 0.0, 1.0],
-              'j8bt06nzq_flt.fits': [0.4091132, -0.5670202, 359.9983, 1.000165]}
+        ...    'j8bt06nzq_flt.fits': [0.4091132, -0.5670202, 359.9983, 1.000165]}
 
-        >>> sdict = ShiftFile(form='absolute', frame='output', units='pixels', order=['j8bt06nyq_flt.fits',
-                             'j8bt06nzq_flt.fits'], refimage='tweak_wcs.fits[wcs]', **d)
+        >>> sdict = ShiftFile(
+        ...     form='absolute', frame='output', units='pixels',
+        ...     order=['j8bt06nyq_flt.fits', 'j8bt06nzq_flt.fits'],
+        ...     refimage='tweak_wcs.fits[wcs]', **d)  # doctest: +SKIP
 
         The return value can then be used to provide the shift information to code in memory.
 
@@ -700,4 +702,3 @@ class ShiftFile(dict):
         fshifts= open(filename, 'w')
         fshifts.writelines(lines)
         fshifts.close()
-

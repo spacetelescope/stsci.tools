@@ -24,22 +24,34 @@ env:
         # so Cython is required for testing. If your package does not include
         # Cython code, you can set CONDA_DEPENDENCIES=''
         #- CONDA_DEPENDENCIES='Cython'
-        - CONDA_DEPENDENCIES='pytest'
+        - CONDA_DEPENDENCIES='pytest pytest-doctestplus'
 
 matrix:
+    # Don't wait for allowed failures
+    fast_finish: true
+
     include:
         # TODO: Bump Python to 3.6 when pipeline upgrades to it.
         - python: 3.5
-          env: ASTROPY_VERSION=stable MAIN_CMD="pytest lib/stsci/tools/tests/" SETUP_CMD=""
+          env: ASTROPY_VERSION=stable MAIN_CMD="pytest" SETUP_CMD=""
 
         # TODO: Bump Astropy version to LTS in the future?
         # Do a test in Python 2.
         - python: 2.7
-          env: ASTROPY_VERSION=1.3 MAIN_CMD="pytest lib/stsci/tools/tests/" SETUP_CMD=""
+          env: ASTROPY_VERSION=1.3 MAIN_CMD="pytest" SETUP_CMD=""
 
         # Try Astropy development version
         - python: 3.6
-          env: ASTROPY_VERSION=development MAIN_CMD="pytest lib/stsci/tools/tests/" SETUP_CMD=""
+          env: ASTROPY_VERSION=development MAIN_CMD="pytest" SETUP_CMD=""
+
+        # PEP8 check
+        - python: 3.6
+          env: MAIN_CMD="flake8 --count lib/stsci/tools" SETUP_CMD=""
+
+    allow_failures:
+        # PEP8 will fail for numerous reasons. Ignore it.
+        - python: 3.6
+          env: MAIN_CMD="flake8 --count lib/stsci/tools" SETUP_CMD=""
 
 before_install:
 

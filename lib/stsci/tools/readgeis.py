@@ -29,10 +29,10 @@
 
         If used in Pythons script, a user can, e. g.::
 
-            >>> import readgeis
-            >>> hdulist = readgeis.readgeis(GEISFileName)
+            >>> from stsci.tools import readgeis
+            >>> hdulist = readgeis.readgeis(GEISFileName)  # doctest: +SKIP
             (do whatever with hdulist)
-            >>> hdulist.writeto(FITSFileName)
+            >>> hdulist.writeto(FITSFileName)  # doctest: +SKIP
 
         The most basic usage from the command line::
 

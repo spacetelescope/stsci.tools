@@ -20,7 +20,14 @@ R. White, 1999 Jul 16
 """
 from __future__ import division, print_function
 
-import os, stat, string, sys, re, fnmatch, keyword, select
+import os
+import stat
+import string
+import sys
+import re
+import fnmatch
+import keyword
+import select
 from . import capable
 
 PY3K = sys.version_info[0] > 2
@@ -122,7 +129,7 @@ def csvSplit(line, delim=',', allowEol=True):
     >>> import csv
     >>> y = "arg1='str1', arg2='str, with, embedded, commas', arg3=7"
     >>> rdr = csv.reader( (y,), dialect='excel', quotechar="'", skipinitialspace=True)
-    >>> l = rdr.next(); print len(l), str(l)
+    >>> l = rdr.next(); print(len(l), str(l))  # doctest: +SKIP
     6 ["arg1='str1'", "arg2='str", 'with', 'embedded', "commas'", "arg3=7"]
 
     which we can see is not correct - we wanted 3 tokens.  This occurs in
@@ -132,7 +139,7 @@ def csvSplit(line, delim=',', allowEol=True):
 
     >>> x = "'str1', 'str, with, embedded, commas', 7"
     >>> rdr = csv.reader( (x,), dialect='excel', quotechar="'", skipinitialspace=True)
-    >>> l = rdr.next(); print len(l), str(l)
+    >>> l = rdr.next(); print(len(l), str(l))  # doctest: +SKIP
     3 ['str1', 'str, with, embedded, commas', '7']
 
     But even this usage is delicate - when we turn off skipinitialspace, it
@@ -140,7 +147,7 @@ def csvSplit(line, delim=',', allowEol=True):
 
     >>> x = "'str1', 'str, with, embedded, commas', 7"
     >>> rdr = csv.reader( (x,), dialect='excel', quotechar="'")
-    >>> l = rdr.next(); print len(l), str(l)
+    >>> l = rdr.next(); print(len(l), str(l))  # doctest: +SKIP
     6 ['str1', " 'str", ' with', ' embedded', " commas'", ' 7']
 
     So, for now, we'll roll our own.
@@ -255,30 +262,6 @@ def _getCharsUntil(buf, stopChar, branchForQuotes, allowEol):
         return preQuote+quotedPart+postQuote
     else:
         return buf # at end
-
-def testCsvSplit(quiet=True):
-    # test cases ( input-string, len(output-list), repr(output-list) )
-    cases = ( \
-(None,                0, "[]"),
-('',                  0, "[]"),
-(' ',                 1, "[' ']"),
-('a',                 1, "['a']"),
-(',',                 2, "['', '']"),
-(',a',                2, "['', 'a']"),
-('a,',                2, "['a', '']"),
-(',a,',               3, "['', 'a', '']"),
-("abc'-hi,ya-'xyz",   1, """["abc'-hi,ya-'xyz"]"""),
-('abc"double-quote,eg"xy,z',    2, """['abc"double-quote,eg"xy', 'z']"""),
-('abc"""triple-quote,eg"""xyz', 1, '[\'abc"""triple-quote,eg"""xyz\']'),
-("'s1', 'has, comma', z",       3, """["'s1'", " 'has, comma'", ' z']"""),
-("a='s1', b='has,comma,s', c",  3, """["a='s1'", " b='has,comma,s'", ' c']"""),
-    )
-    for c in cases:
-        if not quiet: print("Testing: "+repr(c[0]))
-        ll = csvSplit(c[0], ',', True)
-        assert len(ll) == c[1] and repr(ll) == c[2], \
-           "For case: "+repr(c[0])+" expected:\n"+c[2]+"\nbut got:\n"+repr(ll)
-    return True
 
 def rglob(root, pattern):
     """ Same thing as glob.glob, but recursively checks subdirs. """
