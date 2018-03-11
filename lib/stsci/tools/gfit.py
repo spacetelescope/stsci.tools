@@ -25,8 +25,7 @@ __version__ = '2.0'          # Release version number only
 __vdate__ = '2018-04-20'     # Date of this version
 
 
-
-def _gauss_funct(p, fjac = None, x = None, y=None, err=None,
+def _gauss_funct(p, fjac=None, x=None, y=None, err=None,
                  weights=None):
 
     """
