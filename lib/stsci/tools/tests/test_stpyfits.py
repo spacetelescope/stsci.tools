@@ -19,7 +19,7 @@ ASTROPY_VER_GE20 = LooseVersion(astropy.__version__) >= LooseVersion('2.0')
 
 class TestStpyfitsFunctions(FitsTestCase):
     def setup(self):
-        self.data_dir = os.path.dirname(__file__)
+        self.data_dir = os.path.join(os.path.dirname(__file__), 'data')
         self.temp_dir = tempfile.mkdtemp(prefix='stpyfits-test-')
 
         if ASTROPY_VER_GE13:
