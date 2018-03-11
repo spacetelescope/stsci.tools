@@ -55,7 +55,7 @@ setup(
     packages = find_packages('lib'),
     package_data = {
         '': ['LICENSE.txt'],
-        'stsci/tools/tests': ['data/*.fits']
+        'stsci/tools/tests': ['data/*.*']
     },
     entry_points = {
         'console_scripts': [

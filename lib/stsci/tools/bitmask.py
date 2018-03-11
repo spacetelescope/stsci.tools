@@ -18,10 +18,7 @@ __version__ = '1.1.1'
 __vdate__ = '30-January-2018'
 __author__ = 'Mihai Cara'
 
-
-__all__ = ['interpret_bits_value', 'interpret_bit_flags', 'bitmask2mask',
-           'bitfield_to_boolean_mask', 'is_bit_flag']
-
+__all__ = ['interpret_bit_flags', 'bitfield_to_boolean_mask', 'is_bit_flag']
 
 # Revision history:
 # 0.1.0 (29-March-2015) - initial release based on code from stsci.skypac
