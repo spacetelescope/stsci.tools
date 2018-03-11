@@ -599,27 +599,6 @@ def bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=np.bool_):
         values of to the input `bitmask` elements, `ignore_bits` parameter,
         and the `good_mask_value` parameter.
 
-    Examples
-    --------
-        >>> from stsci.tools import bitmask
-        >>> import numpy as np
-        >>> dqbits = np.asarray([[0,0,1,2,0,8,12,0],[10,4,0,0,0,16,6,0]])
-        >>> bitmask.bitmask2mask(dqbits, ignore_bits=0, dtype=int)
-        array([[1, 1, 0, 0, 1, 0, 0, 1],
-               [0, 0, 1, 1, 1, 0, 0, 1]])
-        >>> bitmask.bitmask2mask(dqbits, ignore_bits=0, dtype=bool)
-        array([[ True,  True, False, False,  True, False, False,  True],
-               [False, False,  True,  True,  True, False, False,  True]])
-        >>> bitmask.bitmask2mask(dqbits, ignore_bits=6, good_mask_value=0, dtype=int)
-        array([[0, 0, 1, 0, 0, 1, 1, 0],
-               [1, 0, 0, 0, 0, 1, 0, 0]])
-        >>> bitmask.bitmask2mask(dqbits, ignore_bits=~6, good_mask_value=0, dtype=int)
-        array([[0, 0, 0, 1, 0, 0, 1, 0],
-               [1, 1, 0, 0, 0, 0, 1, 0]])
-        >>> bitmask.bitmask2mask(dqbits, ignore_bits='~(2+4)', good_mask_value=0, dtype=int)
-        array([[0, 0, 0, 1, 0, 0, 1, 0],
-               [1, 1, 0, 0, 0, 0, 1, 0]])
-
     """
     if not np.issubdtype(bitmask.dtype, np.integer):
         raise TypeError("Input 'bitmask' array must be of integer type.")

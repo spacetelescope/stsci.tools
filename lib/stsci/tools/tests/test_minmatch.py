@@ -1,8 +1,12 @@
+from __future__ import absolute_import
+
 import pytest
-from stsci.tools.minmatch import MinMatchDict, AmbiguousKeyError
+
+from ..minmatch import MinMatchDict, AmbiguousKeyError
 
 BASEKEYS = tuple(['test', 'text', 'ten'])
 BASEVALUES = tuple([1, 2, 10])
+
 
 @pytest.fixture
 def mmd_keys():
@@ -46,7 +50,7 @@ def test_ambiguous_assignment_del_tes(mmd):
 
 def test_invalid_key_assignment(mmd):
     with pytest.raises(KeyError):
-        x = mmd['t']
+        mmd['t']
 
 
 def test_dict_sort(mmd, mmd_keys):
@@ -111,4 +115,3 @@ def test_update_dict(mmd):
     new_dict = dict(ab=0)
     mmd.update(new_dict)
     assert 'test' in mmd and 'ab' in mmd
-

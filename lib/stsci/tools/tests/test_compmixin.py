@@ -1,7 +1,10 @@
-import pytest
-import sys
-from stsci.tools.compmixin import ComparableMixin
+from __future__ import absolute_import
 
+import sys
+
+import pytest
+
+from ..compmixin import ComparableMixin
 
 if sys.version_info[0] < 3:
     string_types = basestring

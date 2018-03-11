@@ -1,6 +1,7 @@
 """This was pytools/utils/cfgobj in pandokia."""
 from __future__ import absolute_import
 
+import os
 import pprint
 import sys
 
@@ -57,7 +58,7 @@ def test_teal_vtor(tmpdir):
 
     bad_lines = []
     for x, y in zip(stripped, ans):
-        if x != y:
+        if x.strip(os.linesep) != y:
             bad_lines.append('{} : {}'.format(x, y))
 
     if len(bad_lines) > 0:

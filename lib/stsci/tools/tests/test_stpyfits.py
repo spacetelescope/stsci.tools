@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from __future__ import division  # confidence high
+from __future__ import absolute_import, division  # confidence high
 
 import os
 import tempfile
@@ -11,7 +11,7 @@ from astropy.io import fits
 from astropy.io.fits.tests import FitsTestCase
 from distutils.version import LooseVersion
 
-import stsci.tools.stpyfits as stpyfits
+from .. import stpyfits
 
 ASTROPY_VER_GE13 = LooseVersion(astropy.__version__) >= LooseVersion('1.3')
 ASTROPY_VER_GE20 = LooseVersion(astropy.__version__) >= LooseVersion('2.0')
