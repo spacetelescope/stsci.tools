@@ -13,7 +13,7 @@ def takes_time(x):
     # START = time.time()
     s = numpy.float64(1)
 
-    assert x not in (3, 7, 9), "Simulate some errors"
+    # assert x not in (3, 7, 9), "Simulate some errors"
 
     for i in range(10000000):
         s = (s + x) * s % 2399232

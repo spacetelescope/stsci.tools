@@ -3,6 +3,8 @@ from __future__ import absolute_import
 import sys
 import time
 
+import pytest
+
 from ..tkrotext import ROText
 
 PY3K = sys.version_info[0] > 2
@@ -24,7 +26,10 @@ def test_rotest():
         rot.see(TKNTR.END)
 
     # make our test window
-    top = TKNTR.Tk()
+    try:
+        top = TKNTR.Tk()
+    except Exception as e:
+        pytest.xfail(str(e))  # Travis does not have interactive session
     f = TKNTR.Frame(top)
 
     sc = TKNTR.Scrollbar(f)
