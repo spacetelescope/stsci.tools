@@ -108,7 +108,7 @@ class ListSingleSelectDialog(Dialog):
 
 
 if __name__ == "__main__":
-
+    """This is for manual testing only because it is interactive."""
     root = Tk()
     root.withdraw()
     root.update()
