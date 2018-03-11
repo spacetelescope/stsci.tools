@@ -2,7 +2,13 @@
 Python/Numeric version of this module was called mpfit. This version was modified to use numpy.
 """
 from __future__ import division, print_function # confidence medium
+
 __version__ = '0.2'
+
+import warnings
+
+warnings.warn("NMPFIT is deprecated - stsci.tools v 3.4.12 i sthe last version to contain it."
+
 
 """
 Perform Levenberg-Marquardt least-squares minimization, based on MINPACK-1.
@@ -2242,7 +2248,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
         if self.debug:
             print('Entering calc_covar...')
 
-        if numpy.rank(rr) != 2:
+        if rr.ndim != 2:
             print('ERROR: r must be a two-dimensional matrix')
             return(-1)
 
