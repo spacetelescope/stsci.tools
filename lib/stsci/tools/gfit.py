@@ -12,15 +12,18 @@ nmpfit.py is a version of mpfit.py which uses numarray.
 """
 from __future__ import absolute_import, division, print_function
 
-import numpy as N
+import numpy as np
 
-from . import numerixenv
 from . import nmpfit
 
-__version__ = '1.0'          # Release version number only
-__vdate__ = '2007-02-20'     # Date of this version
+import warnings
 
-numerixenv.check()
+warnings.warn("GFIT is deprecated - stsci.tools v 3.4.12 is the last version to contain it."
+              "Use astropy.modeling instead.")
+
+__version__ = '2.0'          # Release version number only
+__vdate__ = '2018-02=3-20'     # Date of this version
+
 
 
 def _gauss_funct(p, fjac = None, x = None, y=None, err=None,
@@ -32,9 +35,9 @@ def _gauss_funct(p, fjac = None, x = None, y=None, err=None,
     """
     if p[2] != 0.0:
         Z = (x - p[1]) / p[2]
-        model = p[0]*N.e ** (-Z**2 / 2.0)
+        model = p[0] * np.e ** (-Z ** 2 / 2.0)
     else:
-        model = N.zeros(N.size(x))
+        model = np.zeros(np.size(x))
 
     status = 0
     if weights is not None:
@@ -47,7 +50,7 @@ def _gauss_funct(p, fjac = None, x = None, y=None, err=None,
         return [status, (y - model) / err]
 
     else:
-        return [status, y-model]
+        return [status, y - model]
 
 
 def gfit1d(y, x=None, err = None, weights=None, par=None, parinfo=None,
@@ -90,27 +93,24 @@ def gfit1d(y, x=None, err = None, weights=None, par=None, parinfo=None,
     [10.         15.          1.41421356]
 
     """
-    if numerixenv.check_input(x) or numerixenv.check_input(y):
-        raise ValueError("Input is a NumArray array. This version of %s requires a Numpy array\n" % __name__)
-
-    y = y.astype(N.float)
+    y = y.astype(np.float)
     if weights is not None:
-        weights = weights.astype(N.float)
+        weights = weights.astype(np.float)
     if err is not None:
-        err = err.astype(N.float)
-    if x is None and len(y.shape)==1 :
-        x = N.arange(len(y)).astype(N.float)
+        err = err.astype(np.float)
+    if x is None and len(y.shape) == 1:
+        x = np.arange(len(y)).astype(np.float)
     if x.shape != y.shape:
         print("input arrays X and Y must be of equal shape.\n")
         return
 
-    fa = {'x':x, 'y':y, 'err':err, 'weights':weights}
+    fa = {'x': x, 'y': y, 'err': err, 'weights': weights}
 
     if par is not None:
         p = par
     else:
         ysigma = y.std()
-        ind = N.nonzero(y > ysigma)[0]
+        ind = np.nonzero(y > ysigma)[0]
         if len(ind) != 0:
             xind = int(ind.mean())
             p2 = x[xind]
@@ -123,15 +123,16 @@ def gfit1d(y, x=None, err = None, weights=None, par=None, parinfo=None,
             if (ymax - ymean) > (abs(ymin - ymean)):
                 p1 = ymax
             else: p1 = ymin
-            ind = (N.nonzero(y == p1))[0]
+            ind = (np.nonzero(y == p1))[0]
             p2 = x.mean()
             p3 = 1.
 
 
         p = [p1, p2, p3]
-    m=nmpfit.mpfit(_gauss_funct, p,parinfo = parinfo, functkw=fa,
-maxiter=maxiter, quiet=quiet)
-    if (m.status <=0): print('error message = ', m.errmsg)
+    #m = nmpfit.mpfit(_gauss_funct, p,parinfo = parinfo, functkw=fa,
+#maxiter=maxiter, quiet=quiet)
+    m = lfit(gauss_model, maxiter=maxiter, disp=quiet)
+    if (m.status <= 0): print('error message = ', m.errmsg)
     return m
 
 
