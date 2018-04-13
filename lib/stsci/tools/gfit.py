@@ -22,7 +22,7 @@ warnings.warn("GFIT is deprecated - stsci.tools v 3.4.12 is the last version to 
               "Use astropy.modeling instead.")
 
 __version__ = '2.0'          # Release version number only
-__vdate__ = '2018-02=3-20'     # Date of this version
+__vdate__ = '2018-04-20'     # Date of this version
 
 
 
@@ -87,8 +87,8 @@ def gfit1d(y, x=None, err = None, weights=None, par=None, parinfo=None,
 
     Examples
     --------
-    >>> x=N.arange(10,20, 0.1)
-    >>> y= 10*N.e**(-(x-15)**2/4)
+    >>> x = np.arange(10,20, 0.1)
+    >>> y= 10*np.e**(-(x-15)**2/4)
     >>> print(gfit1d(y,x=x, maxiter=20,quiet=1).params)
     [10.         15.          1.41421356]
 
