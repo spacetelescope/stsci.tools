@@ -129,9 +129,8 @@ def gfit1d(y, x=None, err = None, weights=None, par=None, parinfo=None,
 
 
         p = [p1, p2, p3]
-    #m = nmpfit.mpfit(_gauss_funct, p,parinfo = parinfo, functkw=fa,
-#maxiter=maxiter, quiet=quiet)
-    m = lfit(gauss_model, maxiter=maxiter, disp=quiet)
+    m = nmpfit.mpfit(_gauss_funct, p,parinfo = parinfo, functkw=fa,
+    maxiter=maxiter, quiet=quiet)
     if (m.status <= 0): print('error message = ', m.errmsg)
     return m
 
