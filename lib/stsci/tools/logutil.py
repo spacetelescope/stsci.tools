@@ -117,7 +117,7 @@ if not PY3K:
 else:
     import builtins
     def global_logging_raw_input(prompt):
-        retval = builtins._original_raw_input(prompt)        
+        retval = builtins._original_raw_input(prompt)
         if isinstance(sys.stdout, StreamTeeLogger):
             sys.stdout.log_orig(str(prompt) + retval, echo=False)
         return retval
@@ -237,16 +237,10 @@ class StreamTeeLogger(logging.Logger):
 
             # For each line in the buffer ending with \n, output that line to
             # the logger
-            begin = 0
-            end = message.find('\n', begin) + 1
-            while end > begin:
-                if self.buffer:
-                    self.log_orig(self.buffer, echo=True)
-                    self.buffer = ''
-                self.log_orig(message[begin:end].rstrip(), echo=True)
-                begin = end
-                end = message.find('\n', begin) + 1
-            self.buffer = self.buffer + message[begin:]
+            msgs = (self.buffer + message).split('\n')
+            self.buffer = msgs.pop(-1)
+            for m in msgs:
+                self.log_orig(m, echo=True)
         finally:
             self.__thread_local_ctx.write_count -= 1
 
