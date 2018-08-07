@@ -2,9 +2,9 @@
 A module that provides functions for manipulating bitmasks and data quality
 (DQ) arrays.
 
-:Authors: Mihai Cara (contact: help@stsci.edu)
+:Authors: Mihai Cara
 
-:License: `<http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE>`_
+:License: See LICENSE.txt
 
 """
 

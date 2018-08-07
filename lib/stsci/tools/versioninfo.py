@@ -61,10 +61,8 @@ def printVersionInfo():
 
     # Print instruction message.
     print("PLEASE PASTE THE OUTPUT FROM THIS TASK ")
-    print("INTO AN E-MAIL MESSAGE AND SEND IT WITH")
-    print("YOUR PROBLEM DESCRIPTION TO DATB!")
-    print(" ")
-    print("SUPPORT ADDRESS: help@stsci.edu ")
+    print("AND SEND IT WITH YOUR PROBLEM DESCRIPTION TO")
+    print("https://hsthelp.stsci.edu ")
 
 
 if __name__ == '__main__':

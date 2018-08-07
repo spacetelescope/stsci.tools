@@ -1,7 +1,7 @@
 """
 A module containing unit tests for the `bitmask` modue.
 
-:Authors: Mihai Cara (contact: help@stsci.edu)
+:Authors: Mihai Cara
 
 """
 from __future__ import (absolute_import, division, unicode_literals,
