@@ -72,10 +72,7 @@ IRAF compatibility functions (abbreviated list)::
         Returns true if file exists, where filename can include IRAF variables
 """
 
-from __future__ import division, print_function # confidence high
-
-from . import numerixenv
-numerixenv.check()
+from __future__ import absolute_import, division, print_function  # confidence high
 
 import astropy
 from . import stpyfits as fits

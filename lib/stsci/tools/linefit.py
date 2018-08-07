@@ -42,7 +42,6 @@ def linefit(x, y, weights=None):
     >>> around(linefit(x,y), decimals=5)
     array([1.42564, 0.31579])
     """
-
     if len(x) != len(y):
         print("Error: X and Y must have equal size\n")
         return

@@ -2,7 +2,7 @@
 Utility functions for handling bit masks and mask arrays.
 *********************************************************
 
-.. moduleauthor:: Mihai Cara <help@stsci.edu>
+.. moduleauthor:: Mihai Cara
 
 .. currentmodule:: stsci.tools.bitmask
 

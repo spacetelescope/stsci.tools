@@ -13,9 +13,10 @@
 #                                 loop over a taskList object. -- CJH
 #
 #       Version 0.2.0, 31-Mar-06: Added numpy to the task list. -- CJH
-from __future__ import division, print_function # confidence high
+from __future__ import division, print_function  # confidence high
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'
+
 
 def printVersionInfo():
     # Print the current path information
@@ -30,52 +31,39 @@ def printVersionInfo():
         print(" ")
 
     # Define the list of tasks to test
-    taskList = [
-                'numarray',
-                'numpy',
-                'Numeric',
-                'pyfits',
+    taskList = ['numpy',
+                'astropy',
+                'scipy',
+                'matplotlib',
                 'pyraf',
-                'multidrizzle',
-                'pydrizzle',
+                'drizzlepac',
                 'stsci.tools',
-                'calcos',
-                'convolve',
-                'image',
-                'imagemanip',
-                'imagestats',
-                'ndimage'
-                ]
+                'calcos']
 
     # Test the list of software tasks
     for software in taskList:
-        print(software+":")
+        print(software + ":")
         print("-----------")
         try:
             package = __import__(software)
             try:
-                print("version -> ",package.__version__)
+                print("version -> ", package.__version__)
             except:
                 print("__version__ attribute is not defined")
-            try:
-                print("SVN version -> ",package.__svn_version__)
-            except:
-                print("__svn_version__ attribute is not defined")
             try:
                 pathName = package.__path__
             except:
                 pathName = package.__file__
-            print("location -> ",pathName)
+            print("location -> ", pathName)
         except:
-            print(software+" not found in path...")
+            print(software + " not found in path...")
         print(" ")
 
     # Print instruction message.
     print("PLEASE PASTE THE OUTPUT FROM THIS TASK ")
-    print("INTO AN E-MAIL MESSAGE AND SEND IT WITH")
-    print("YOUR PROBLEM DESCRIPTION TO DATB!")
-    print(" ")
-    print("SUPPORT ADDRESS: help@stsci.edu ")
+    print("AND SEND IT WITH YOUR PROBLEM DESCRIPTION TO")
+    print("https://hsthelp.stsci.edu ")
+
 
 if __name__ == '__main__':
     printVersionInfo()

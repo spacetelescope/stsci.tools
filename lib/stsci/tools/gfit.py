@@ -4,7 +4,6 @@ Return the gaussian fit of a 1D array.
 Uses mpfit.py - a python implementation of the Levenberg-Marquardt
 least-squares minimization, based on MINPACK-1. See nmpfit.py for
 the history of this module (fortran -> idl -> python).
-nmpfit.py is a version of mpfit.py which uses numarray.
 
 @author: Nadia Dencheva
 @version: '1.0 (2007-02-20)'
@@ -25,8 +24,7 @@ __version__ = '2.0'          # Release version number only
 __vdate__ = '2018-04-20'     # Date of this version
 
 
-
-def _gauss_funct(p, fjac = None, x = None, y=None, err=None,
+def _gauss_funct(p, fjac=None, x=None, y=None, err=None,
                  weights=None):
 
     """
@@ -53,22 +51,22 @@ def _gauss_funct(p, fjac = None, x = None, y=None, err=None,
         return [status, y - model]
 
 
-def gfit1d(y, x=None, err = None, weights=None, par=None, parinfo=None,
+def gfit1d(y, x=None, err=None, weights=None, par=None, parinfo=None,
            maxiter=200, quiet=0):
     """
     Return the gaussian fit as an object.
 
     Parameters
     ----------
-    y:   1D Numarray array
+    y:   1D Numpy array
         The data to be fitted
-    x:   1D Numarray array
+    x:   1D Numpy array
         (optional) The x values of the y array. x and y must
         have the same shape.
-    err: 1D Numarray array
+    err: 1D Numpy array
         (optional) 1D array with measurement errors, must be
         the same shape as y
-    weights: 1D Numarray array
+    weights: 1D Numpy array
         (optiional) 1D array with weights, must be the same
         shape as y
     par:  List
