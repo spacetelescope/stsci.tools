@@ -7,7 +7,7 @@ __version__ = '0.2'
 
 import warnings
 
-warnings.warn("NMPFIT is deprecated - stsci.tools v 3.4.12 is the last version to contain it.")
+warnings.warn("NMPFIT is deprecated - stsci.tools v 3.4.13 is the last version to contain it.")
 
 
 """
