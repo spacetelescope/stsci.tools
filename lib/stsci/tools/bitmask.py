@@ -4,7 +4,7 @@ A module that provides functions for manipulating bitmasks and data quality
 
 :Authors: Mihai Cara
 
-:License: See LICENSE.txt
+:License: See LICENSE.md
 
 """
 
