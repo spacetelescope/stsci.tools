@@ -187,7 +187,7 @@ def csvSplit(line, delim=',', allowEol=True):
 # Since these strings will be short, the fastest method is re.search()
 _re_sq = re.compile(r"'")
 _re_dq = re.compile(r'"')
-_re_comma_sq_dq = re.compile('[,\'"]')
+_re_comma_sq_dq = re.compile(r'[,\'"]')
 
 def _getCharsUntil(buf, stopChar, branchForQuotes, allowEol):
 
