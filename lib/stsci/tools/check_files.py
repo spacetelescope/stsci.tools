@@ -15,13 +15,14 @@ def checkFiles(filelist,ivmlist = None):
 
     The list of science files should match the list of ivm files at the end.
     """
-
+    toclose = False
+    if isinstance(filelist[0], str):
+        toclose = True
     newfilelist, ivmlist = checkFITSFormat(filelist, ivmlist)
 
     # check for STIS association files. This must be done before
     # the other checks in order to handle correctly stis
     # assoc files
-    #if fits.getval(newfilelist[0], 'INSTRUME') == 'STIS':
     newfilelist, ivmlist = checkStisFiles(newfilelist, ivmlist)
     if newfilelist == []:
         return [], []
@@ -43,6 +44,8 @@ def checkFiles(filelist,ivmlist = None):
     if newfilelist == []:
         return [], []
 
+    if toclose:
+        newfilelist = [hdul.filename() for hdul in newfilelist]
     return newfilelist, ivmlist
 
 def checkFITSFormat(filelist, ivmlist=None):
