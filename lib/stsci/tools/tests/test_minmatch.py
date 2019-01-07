@@ -62,7 +62,7 @@ def test_getall(mmd):
 
 def test_getall_returns_expected_values(mmd):
     result = mmd.getall('t')
-    assert result == [x for x in BASEVALUES]
+    assert sorted(result) == [x for x in BASEVALUES]
 
 
 def test_del_key(mmd):
