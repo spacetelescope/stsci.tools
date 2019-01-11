@@ -15,13 +15,14 @@ def checkFiles(filelist,ivmlist = None):
 
     The list of science files should match the list of ivm files at the end.
     """
-
+    toclose = False
+    if isinstance(filelist[0], str):
+        toclose = True
     newfilelist, ivmlist = checkFITSFormat(filelist, ivmlist)
 
     # check for STIS association files. This must be done before
     # the other checks in order to handle correctly stis
     # assoc files
-    #if fits.getval(newfilelist[0], 'INSTRUME') == 'STIS':
     newfilelist, ivmlist = checkStisFiles(newfilelist, ivmlist)
     if newfilelist == []:
         return [], []
@@ -43,6 +44,8 @@ def checkFiles(filelist,ivmlist = None):
     if newfilelist == []:
         return [], []
 
+    if toclose:
+        newfilelist = [hdul.filename() for hdul in newfilelist]
     return newfilelist, ivmlist
 
 def checkFITSFormat(filelist, ivmlist=None):
@@ -82,9 +85,12 @@ def checkStisFiles(filelist, ivmlist=None):
         errormsg += "Quitting ...\n"
         raise ValueError(errormsg)
 
+    toclose = False
     for t in zip(filelist, ivmlist):
-
-        if fits.getval(t[0], 'INSTRUME') != 'STIS':
+        if isinstance(t[0], str):
+            t = (fits.open(t[0]), t[1])
+            toclose = True
+        if t[0][0].header['INSTRUME'] != 'STIS':
             newflist.append(t[0])
             newilist.append(t[1])
             continue
@@ -110,7 +116,8 @@ def checkStisFiles(filelist, ivmlist=None):
             raise ValueError(errormsg)
 
         stisExt2PrimKw([t[0]])
-
+        if toclose:
+            t[0].close()
     newflist.extend(assoc_files)
     newilist.extend(assoc_ilist)
     return newflist, newilist
@@ -119,16 +126,21 @@ def check_exptime(filelist):
     """
     Removes files with EXPTIME==0 from filelist.
     """
+    toclose = False
     removed_files = []
     for f in filelist:
+        if isinstance(f, str):
+            f = fits.open(f)
+            toclose = True
+
         try:
-            exptime = fileutil.getHeader(f+'[sci,1]')['EXPTIME']
+            exptime = f[0].header['EXPTIME']
         except KeyError:
-            removed_files.append(f)
+            removed_files.append(f.filename() or "")
             print("Warning:  There are files without keyword EXPTIME")
             continue
         if exptime <= 0:
-            removed_files.append(f)
+            removed_files.append(f.filename() or "")
             print("Warning:  There are files with zero exposure time: keyword EXPTIME = 0.0")
 
     if removed_files != []:
@@ -146,19 +158,25 @@ def checkNGOODPIX(filelist):
     WFPC2 c1f.fits arrays and NICMOS DQ arrays will need to be
     done separately (and later).
     """
+    toclose = False
     removed_files = []
     supported_instruments = ['ACS','STIS','WFC3']
     for inputfile in filelist:
-        if fileutil.getKeyword(inputfile,'instrume') in supported_instruments:
-            file = fits.open(inputfile)
-            ngood = 0
-            for extn in file:
-                if 'EXTNAME' in extn.header and extn.header['EXTNAME'] == 'SCI':
-                    ngood += extn.header['NGOODPIX']
-            file.close()
+        if isinstance(inputfile, str):
+            if fileutil.getKeyword(inputfile,'instrume') in supported_instruments:
+                inputfile = fits.open(inputfile)
+                toclose = True
+        elif inputfile[0].header['instrume'] not in supported_instruments:
+            continue
 
-            if (ngood == 0):
-                removed_files.append(inputfile)
+        ngood = 0
+        for extn in inputfile:
+            if 'EXTNAME' in extn.header and extn.header['EXTNAME'] == 'SCI':
+                ngood += extn.header['NGOODPIX']
+        if toclose:
+            inputfile.close()
+        if (ngood == 0):
+            removed_files.append(inputfile.filename() or "")
 
     if removed_files != []:
         print("Warning:  Files without valid pixels detected: keyword NGOODPIX = 0.0")
@@ -192,17 +210,21 @@ def stisObsCount(input):
     Output: Number of stis science extensions in input
     """
     count = 0
-    f = fits.open(input)
-    for ext in f:
+    toclose = False
+    if isinstance(input, str):
+        input = fits.open(input)
+        toclose = True
+    for ext in input:
         if 'extname' in ext.header:
             if (ext.header['extname'].upper() == 'SCI'):
                 count += 1
-    f.close()
+    if toclose:
+        input.close()
     return count
 
 def splitStis(stisfile, sci_count):
     """
-    :Purpose: Split a STIS association file into multiple imset MEF files.
+    Split a STIS association file into multiple imset MEF files.
 
     Split the corresponding spt file if present into single spt files.
     If an spt file can't be split or is missing a Warning is printed.
@@ -215,7 +237,12 @@ def splitStis(stisfile, sci_count):
     """
     newfiles = []
 
-    f = fits.open(stisfile)
+    toclose = False
+    if isinstance(stisfile, str):
+        f = fits.open(stisfile)
+        toclose = True
+    else:
+        f = stisfile
     hdu0 = f[0].copy()
 
 
@@ -288,13 +315,14 @@ def splitStis(stisfile, sci_count):
                 fitsobj.writeto(newfilename)
         except:
             print("Warning: Unable to split spt file %s " % sptfilename)
-        sptfile.close()
+        if toclose:
+            sptfile.close()
 
     return newfiles
 
 def stisExt2PrimKw(stisfiles):
     """
-        Several kw which are usuall yin the primary header
+        Several kw which are usually in the primary header
         are in the extension header for STIS. They are copied to
         the primary header for convenience.
         List if kw:
@@ -304,17 +332,21 @@ def stisExt2PrimKw(stisfiles):
     kw_list = ['DATE-OBS', 'EXPEND', 'EXPSTART', 'EXPTIME']
 
     for sfile in stisfiles:
+        toclose = False
+        if isinstance(sfile, str):
+            sfile = fits.open(sfile, mode='udpate')
+            toclose = True
         d = {}
         for k in kw_list:
-            d[k] = fits.getval(sfile, k, ext=1)
-
-        for item in d.items():
-            fits.setval(sfile, item[0], value=item[1], comment='Copied from extension header')
+            d[0].header[k] = d[1].header[k]
+        if toclose:
+            sfile.close()
 
 
 def isSTISSpectroscopic(fname):
 
-    if fits.getval(fname, 'OBSTYPE') == 'SPECTROSCOPIC':
+    if (isinstance(fname, fits.HDUList) and fname[0].header['OBSTYPE'] == 'SPECTROSCOPIC'
+        or isinstance(fname, str) and fits.getval(fname, 'OBSTYPE') == 'SPECTROSCOPIC'):
         print("Warning:  STIS spectroscopic files detected")
         print("Warning:  Removing %s from input list" % fname)
         return True
@@ -324,21 +356,27 @@ def isSTISSpectroscopic(fname):
 def checkPA_V3(fnames):
     removed_files = []
     for f in fnames:
+        toclose = False
+        if isinstance(f, str):
+            f = fits.open(f)
+            toclose = True
         try:
-            pav3 = fits.getval(f, 'PA_V3')
+            pav3 = f[0].header['PA_V3']
         except KeyError:
-            rootname = fits.getval(f, 'ROOTNAME')
+            rootname = f[0].header['ROOTNAME']
             sptfile = rootname+'_spt.fits'
             if fileutil.findFile(sptfile):
                 try:
                     pav3 = fits.getval(sptfile, 'PA_V3')
                 except KeyError:
                     print("Warning:  Files without keyword PA_V3 detected")
-                    removed_files.append(f)
-                fits.setval(f, 'PA_V3', value=pav3)
+                    removed_files.append(f.filename() or "")
+                f[0].header['PA_V3'] = pav3
             else:
                 print("Warning:  Files without keyword PA_V3 detected")
-                removed_files.append(f)
+                removed_files.append(f.filename() or "")
+        if toclose:
+            f.close()
     if removed_files != []:
         print("Warning:  Removing the following files from input list")
         for f in removed_files:

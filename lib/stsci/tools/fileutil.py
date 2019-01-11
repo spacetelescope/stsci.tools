@@ -266,7 +266,7 @@ def isFits(input):
     # if input is a fits file determine what kind of fits it is
     #waiver fits len(shape) == 3
     if isfits:
-        if not f:
+        if f is None:
             try:
                 f = fits.open(input, mode='readonly')
                 fileclose = True
@@ -281,7 +281,6 @@ def isFits(input):
                     fitstype = 'waiver'
             except IndexError:
                 fitstype = 'simple'
-
         else:
             fitstype = 'mef'
         if fileclose:
@@ -533,7 +532,6 @@ def getKeyword(filename, keyword, default=None, handle=None):
 
     Returns the value as a string.
     """
-
     # Insure that there is at least 1 extension specified...
     if filename.find('[') < 0:
         filename += '[0]'
