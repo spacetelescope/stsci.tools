@@ -336,9 +336,9 @@ def stisExt2PrimKw(stisfiles):
         if isinstance(sfile, str):
             sfile = fits.open(sfile, mode='udpate')
             toclose = True
-        d = {}
+        #d = {}
         for k in kw_list:
-            d[0].header[k] = d[1].header[k]
+            sfile[0].header[k] = sfile[1].header[k]
         if toclose:
             sfile.close()
 
