@@ -761,6 +761,8 @@ def openImage(filename, mode='readonly', memmap=False, writefits=True,
                 # handle to output FITS image instead...
                 fimg.close()
                 del fimg
+                # Image re-written as MEF, now it needs its WCS updated
+                #updatewcs.updatewcs(fitsname)
 
                 fimg = fits.open(fitsname, mode=mode, memmap=memmap)
 
@@ -813,7 +815,7 @@ def openImage(filename, mode='readonly', memmap=False, writefits=True,
             fimg.close()
             del fimg
             # Image re-written as MEF, now it needs its WCS updated
-            updatewcs.updatewcs(fitsname)
+            #updatewcs.updatewcs(fitsname)
 
             fimg = fits.open(fitsname, mode=mode, memmap=memmap)
 

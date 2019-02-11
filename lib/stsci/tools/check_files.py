@@ -339,6 +339,7 @@ def stisExt2PrimKw(stisfiles):
         #d = {}
         for k in kw_list:
             sfile[0].header[k] = sfile[1].header[k]
+            sfile[0].header.comments[k] = "Copied from extension header"
         if toclose:
             sfile.close()
 
@@ -438,21 +439,47 @@ def waiver2mef(sciname, newname=None, convert_dq=True):
     """
 
     def convert(file):
-        newfilename = fileutil.buildNewRootname(file, extn='_c0h.fits')
+        if isinstance(file, fits.HDUList):
+            filename = file.filename()
+        else:
+            filename = file
+        newfilename = fileutil.buildNewRootname(filename, extn='_c0h.fits')
         try:
-            newimage = fileutil.openImage(file, writefits=True,
-                                          fitsname=newfilename,mode='update', clobber=True)
-            del newimage
-            return newfilename
+            newimage = fileutil.openImage(filename,writefits=True,
+                                          fitsname=newfilename,clobber=True,
+                                          mode='update')
+            return newimage
         except IOError:
             print('Warning: File %s could not be found' % file)
             return None
 
+    def convert2(file):
+        if isinstance(file, fits.HDUList):
+            newfilename = fileutil.buildNewRootname(file.filename(), extn='_c0h.fits')
+            file.writeto(newfilename, overwrite=True)
+            newimage = file
+        else:
+            newfilename = fileutil.buildNewRootname(file, extn='_c0h.fits')
+            try:
+                newimage = fileutil.openImage(file,writefits=True,
+                                              fitsname=newfilename,clobber=True)
+                #del newimage
+            except IOError:
+                print('Warning: File %s could not be found' % file)
+                return None
+        return newimage
+
     newsciname = convert(sciname)
     if convert_dq:
-        dq_name = convert(fileutil.buildNewRootname(sciname, extn='_c1h.fits'))
+        if isinstance(newsciname, fits.HDUList):
+            dqfilename = newsciname.filename()
+        else:
+            dqfilename = newsciname
+
+        dq_name = convert(fileutil.buildNewRootname(dqfilename, extn='_c1h.fits'))
 
     return newsciname
+
 
 
 def geis2mef(sciname, convert_dq=True):
