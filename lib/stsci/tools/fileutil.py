@@ -423,7 +423,6 @@ def buildNewRootname(filename, extn=None, extlist=None):
         except:
             raise ValueError("Can't determine the filename of an wavered HDUList object.")
     for suffix in _extlist:
-        print('filename',filename)
         _indx = filename.find(suffix)
         if _indx > 0: break
 
@@ -705,14 +704,17 @@ def openImage(filename, mode='readonly', memmap=False, writefits=True,
         name to use for GEIS-derived MEF file,
         if None and writefits==`True`, will use 'buildFITSName()' to generate one
     """
-    # Insure that the filename is always fully expanded
-    # This will not affect filenames without paths or
-    # filenames specified with extensions.
-    filename = osfn(filename)
+    if not isinstance(filename, fits.HDUList):
+        # Insure that the filename is always fully expanded
+        # This will not affect filenames without paths or
+        # filenames specified with extensions.
+        filename = osfn(filename)
 
-    # Extract the rootname and extension specification
-    # from input image name
-    _fname, _iextn = parseFilename(filename)
+        # Extract the rootname and extension specification
+        # from input image name
+        _fname, _iextn = parseFilename(filename)
+    else:
+        _fname = filename
 
     # Check whether we have a FITS file and if so what type
     isfits, fitstype = isFits(_fname)
