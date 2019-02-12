@@ -417,7 +417,13 @@ def buildNewRootname(filename, extn=None, extlist=None):
     if extlist:
         _extlist += extlist
 
+    if isinstance(filename, fits.HDUList):
+        try:
+            filename = filename.filename()
+        except:
+            raise ValueError("Can't determine the filename of an wavered HDUList object.")
     for suffix in _extlist:
+        print('filename',filename)
         _indx = filename.find(suffix)
         if _indx > 0: break
 
@@ -699,8 +705,6 @@ def openImage(filename, mode='readonly', memmap=False, writefits=True,
         name to use for GEIS-derived MEF file,
         if None and writefits==`True`, will use 'buildFITSName()' to generate one
     """
-    from stwcs import updatewcs
-
     # Insure that the filename is always fully expanded
     # This will not affect filenames without paths or
     # filenames specified with extensions.
@@ -755,8 +759,6 @@ def openImage(filename, mode='readonly', memmap=False, writefits=True,
                 # handle to output FITS image instead...
                 fimg.close()
                 del fimg
-                # Image re-written as MEF, now it needs its WCS updated
-                updatewcs.updatewcs(fitsname)
 
                 fimg = fits.open(fitsname, mode=mode, memmap=memmap)
 

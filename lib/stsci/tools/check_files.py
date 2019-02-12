@@ -439,9 +439,10 @@ def waiver2mef(sciname, newname=None, convert_dq=True):
 
     def convert(file):
         newfilename = fileutil.buildNewRootname(file, extn='_c0h.fits')
+        print('newfilename', newfilename)
         try:
-            newimage = fileutil.openImage(file,writefits=True,
-                                          fitsname=newfilename,clobber=True)
+            newimage = fileutil.openImage(file,writefits=False, writefits=True,
+                                          fitsname=newfilename,mode='update', clobber=True)
             del newimage
             return newfilename
         except IOError:
@@ -453,7 +454,6 @@ def waiver2mef(sciname, newname=None, convert_dq=True):
         dq_name = convert(fileutil.buildNewRootname(sciname, extn='_c1h.fits'))
 
     return newsciname
-
 
 
 def geis2mef(sciname, convert_dq=True):
