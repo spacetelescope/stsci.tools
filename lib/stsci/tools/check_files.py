@@ -98,8 +98,10 @@ def checkStisFiles(filelist, ivmlist=None):
             removed_files.append(t[0])
             continue
         sci_count = stisObsCount(t[0])
+        stisExt2PrimKw([t[0]])
         if sci_count >1:
             newfilenames = splitStis(t[0], sci_count)
+            
             assoc_files.extend(newfilenames)
             removed_files.append(t[0])
             if (isinstance(t[1], tuple) and t[1][0] is not None) or \
@@ -115,7 +117,6 @@ def checkStisFiles(filelist, ivmlist=None):
             errormsg = "No valid 'SCI extension in STIS file\n"
             raise ValueError(errormsg)
 
-        stisExt2PrimKw([t[0]])
         if toclose:
             t[0].close()
     newflist.extend(assoc_files)
@@ -244,7 +245,7 @@ def splitStis(stisfile, sci_count):
     else:
         f = stisfile
     hdu0 = f[0].copy()
-
+    stisfilename = stisfile.filename()
 
     for count in range(1,sci_count+1):
         fitsobj = fits.HDUList()
@@ -269,6 +270,7 @@ def splitStis(stisfile, sci_count):
             fitsobj[1].header['EXTVER'] = 1
             fitsobj[2].header['EXTVER'] = 1
             fitsobj[3].header['EXTVER'] = 1
+            
         except ValueError:
             print('\nWarning:')
             print('Extension version %d of the input file %s does not' %(count, stisfile))
@@ -286,10 +288,14 @@ def splitStis(stisfile, sci_count):
 
             # Write out the new file
         fitsobj.writeto(newfilename)
-        newfiles.append(newfilename)
+        # Insure returned HDUList is associated with a file
+        fitsobj.close()
+        fitsobj = fits.open(newfilename, mode='update')
+        newfiles.append(fitsobj) # Return HDUList, not filename
+
     f.close()
 
-    sptfilename = fileutil.buildNewRootname(stisfile, extn='_spt.fits')
+    sptfilename = fileutil.buildNewRootname(stisfilename, extn='_spt.fits')
     try:
         sptfile = fits.open(sptfilename)
     except IOError:
@@ -333,9 +339,11 @@ def stisExt2PrimKw(stisfiles):
 
     for sfile in stisfiles:
         toclose = False
+
         if isinstance(sfile, str):
-            sfile = fits.open(sfile, mode='udpate')
+            sfile = fits.open(sfile, mode='update')
             toclose = True
+
         #d = {}
         for k in kw_list:
             sfile[0].header[k] = sfile[1].header[k]
