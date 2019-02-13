@@ -421,7 +421,7 @@ def buildNewRootname(filename, extn=None, extlist=None):
         try:
             filename = filename.filename()
         except:
-            raise ValueError("Can't determine the filename of an wavered HDUList object.")
+            raise ValueError("Can't determine the filename of an waivered HDUList object.")
     for suffix in _extlist:
         _indx = filename.find(suffix)
         if _indx > 0: break
