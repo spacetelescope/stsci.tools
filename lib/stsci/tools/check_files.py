@@ -1,8 +1,21 @@
 from __future__ import division, print_function # confidence high
 
-from stsci.tools import parseinput, fileutil
+import astropy
+from stsci.tools import parseinput, fileutil, convertwaiveredfits, readgeis
 from astropy.io import fits
 import os
+import sys
+
+from distutils.version import LooseVersion
+
+PY3K = sys.version_info[0] > 2
+if PY3K:
+    string_types = str
+else:
+    string_types = basestring
+
+ASTROPY_VER_GE13 = LooseVersion(astropy.__version__) >= LooseVersion('1.3')
+
 
 def checkFiles(filelist,ivmlist = None):
     """
@@ -101,7 +114,7 @@ def checkStisFiles(filelist, ivmlist=None):
         stisExt2PrimKw([t[0]])
         if sci_count >1:
             newfilenames = splitStis(t[0], sci_count)
-            
+
             assoc_files.extend(newfilenames)
             removed_files.append(t[0])
             if (isinstance(t[1], tuple) and t[1][0] is not None) or \
@@ -270,7 +283,7 @@ def splitStis(stisfile, sci_count):
             fitsobj[1].header['EXTVER'] = 1
             fitsobj[2].header['EXTVER'] = 1
             fitsobj[3].header['EXTVER'] = 1
-            
+
         except ValueError:
             print('\nWarning:')
             print('Extension version %d of the input file %s does not' %(count, stisfile))
@@ -438,7 +451,7 @@ def convert2fits(sci_ivm):
 
     return removed_files, translated_names, newivmlist
 
-def waiver2mef(sciname, newname=None, convert_dq=True):
+def waiver2mef(sciname, newname=None, convert_dq=True, writefits=True):
     """
     Converts a GEIS science file and its corresponding
     data quality file (if present) to MEF format
@@ -446,48 +459,57 @@ def waiver2mef(sciname, newname=None, convert_dq=True):
     Returns the new name of the science image.
     """
 
-    def convert(file):
-        if isinstance(file, fits.HDUList):
-            filename = file.filename()
-        else:
-            filename = file
-        newfilename = fileutil.buildNewRootname(filename, extn='_c0h.fits')
-        try:
-            newimage = fileutil.openImage(filename,writefits=True,
-                                          fitsname=newfilename,clobber=True,
-                                          mode='update')
-            return newimage
-        except IOError:
-            print('Warning: File %s could not be found' % file)
-            return None
+    if isinstance(sciname, fits.HDUList):
+        filename = sciname.filename()
+    else:
+        filename = sciname
 
-    def convert2(file):
-        if isinstance(file, fits.HDUList):
-            newfilename = fileutil.buildNewRootname(file.filename(), extn='_c0h.fits')
-            file.writeto(newfilename, overwrite=True)
-            newimage = file
-        else:
-            newfilename = fileutil.buildNewRootname(file, extn='_c0h.fits')
+    try:
+        clobber = True
+        fimg = convertwaiveredfits.convertwaiveredfits(filename)
+
+        #check for the existence of a data quality file
+        _dqname = fileutil.buildNewRootname(filename, extn='_c1f.fits')
+        dqexists = os.path.exists(_dqname)
+        if convert_dq and dqexists:
             try:
-                newimage = fileutil.openImage(file,writefits=True,
-                                              fitsname=newfilename,clobber=True)
-                #del newimage
-            except IOError:
-                print('Warning: File %s could not be found' % file)
-                return None
-        return newimage
+                dqfile = convertwaiveredfits.convertwaiveredfits(_dqname)
+                dqfitsname = fileutil.buildNewRootname(_dqname, extn='_c1h.fits')
+            except Exception:
+                print("Could not read data quality file %s" % _dqname)
+        if writefits:
+            # User wants to make a FITS copy and update it
+            # using the filename they have provided
+            rname = fileutil.buildNewRootname(filename)
+            fitsname = fileutil.buildNewRootname(rname, extn='_c0h.fits')
 
-    newsciname = convert(sciname)
-    if convert_dq:
-        if isinstance(newsciname, fits.HDUList):
-            dqfilename = newsciname.filename()
-        else:
-            dqfilename = newsciname
+            # Write out GEIS image as multi-extension FITS.
+            fexists = os.path.exists(fitsname)
+            if (fexists and clobber) or not fexists:
+                print('Writing out WAIVERED as MEF to ', fitsname)
+                if ASTROPY_VER_GE13:
+                    fimg.writeto(fitsname, overwrite=clobber)
+                else:
+                    fimg.writeto(fitsname, clobber=clobber)
+                if dqexists:
+                    print('Writing out WAIVERED as MEF to ', dqfitsname)
+                    if ASTROPY_VER_GE13:
+                        dqfile.writeto(dqfitsname, overwrite=clobber)
+                    else:
+                        dqfile.writeto(dqfitsname, clobber=clobber)
+            # Now close input GEIS image, and open writable
+            # handle to output FITS image instead...
+            fimg.close()
+            del fimg
+            # Image re-written as MEF, now it needs its WCS updated
+            #updatewcs.updatewcs(fitsname)
 
-        dq_name = convert(fileutil.buildNewRootname(dqfilename, extn='_c1h.fits'))
+            fimg = fits.open(fitsname, mode='update', memmap=False)
 
-    return newsciname
-
+        return fimg
+    except IOError:
+        print('Warning: File %s could not be found' % sciname)
+        return None
 
 
 def geis2mef(sciname, convert_dq=True):
@@ -497,23 +519,57 @@ def geis2mef(sciname, convert_dq=True):
     Writes out both files to disk.
     Returns the new name of the science image.
     """
+    clobber = True
+    mode = 'update'
+    memmap = True
+    # Input was specified as a GEIS image, but no FITS copy
+    # exists.  Read it in with 'readgeis' and make a copy
+    # then open the FITS copy...
+    try:
+        # Open as a GEIS image for reading only
+        fimg = readgeis.readgeis(sciname)
+    except Exception:
+        raise IOError("Could not open GEIS input: %s" % sciname)
 
-    def convert(file):
-        newfilename = fileutil.buildFITSName(file)
+    #check for the existence of a data quality file
+    _dqname = buildNewRootname(sciname, extn='.c1h')
+    dqexists = os.path.exists(_dqname)
+    if dqexists:
         try:
-            newimage = fileutil.openImage(file,writefits=True,
-                fitsname=newfilename, clobber=True)
-            del newimage
-            return newfilename
-        except IOError:
-            print('Warning: File %s could not be found' % file)
-            return None
+            dqfile = readgeis.readgeis(_dqname)
+            dqfitsname = fileutil.buildFITSName(_dqname)
+        except Exception:
+            print("Could not read data quality file %s" % _dqname)
 
-    newsciname = convert(sciname)
-    if convert_dq:
-        dq_name = convert(sciname.split('.')[0] + '.c1h')
+    # Check to see if user wanted to update GEIS header.
+    # or write out a multi-extension FITS file and return a handle to it
+    # User wants to make a FITS copy and update it
+    # using the filename they have provided
+    fitsname = buildFITSName(sciname)
 
-    return newsciname
+    # Write out GEIS image as multi-extension FITS.
+    fexists = os.path.exists(fitsname)
+    if (fexists and clobber) or not fexists:
+            print('Writing out GEIS as MEF to ', fitsname)
+            if ASTROPY_VER_GE13:
+                fimg.writeto(fitsname, overwrite=clobber)
+            else:
+                fimg.writeto(fitsname, clobber=clobber)
+            if dqexists:
+                print('Writing out GEIS as MEF to ', dqfitsname)
+                if ASTROPY_VER_GE13:
+                    dqfile.writeto(dqfitsname, overwrite=clobber)
+                else:
+                    dqfile.writeto(dqfitsname, clobber=clobber)
+        # Now close input GEIS image, and open writable
+        # handle to output FITS image instead...
+        fimg.close()
+        del fimg
+        # Image re-written as MEF, now it needs its WCS updated
+        #updatewcs.updatewcs(fitsname)
+
+        fimg = fits.open(fitsname, mode=mode, memmap=memmap)
+    return fimg
 
 def countInput(input):
     files = parseinput.parseinput(input)
