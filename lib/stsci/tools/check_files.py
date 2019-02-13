@@ -497,14 +497,12 @@ def waiver2mef(sciname, newname=None, convert_dq=True, writefits=True):
                         dqfile.writeto(dqfitsname, overwrite=clobber)
                     else:
                         dqfile.writeto(dqfitsname, clobber=clobber)
-            # Now close input GEIS image, and open writable
-            # handle to output FITS image instead...
-            fimg.close()
-            del fimg
-            # Image re-written as MEF, now it needs its WCS updated
-            #updatewcs.updatewcs(fitsname)
+        # Now close input GEIS image, and open writable
+        # handle to output FITS image instead...
+        fimg.close()
+        del fimg
 
-            fimg = fits.open(fitsname, mode='update', memmap=False)
+        fimg = fits.open(fitsname, mode='update', memmap=False)
 
         return fimg
     except IOError:
@@ -532,7 +530,7 @@ def geis2mef(sciname, convert_dq=True):
         raise IOError("Could not open GEIS input: %s" % sciname)
 
     #check for the existence of a data quality file
-    _dqname = buildNewRootname(sciname, extn='.c1h')
+    _dqname = fileutil.buildNewRootname(sciname, extn='.c1h')
     dqexists = os.path.exists(_dqname)
     if dqexists:
         try:
@@ -545,7 +543,7 @@ def geis2mef(sciname, convert_dq=True):
     # or write out a multi-extension FITS file and return a handle to it
     # User wants to make a FITS copy and update it
     # using the filename they have provided
-    fitsname = buildFITSName(sciname)
+    fitsname = fileutil.buildFITSName(sciname)
 
     # Write out GEIS image as multi-extension FITS.
     fexists = os.path.exists(fitsname)
@@ -561,14 +559,12 @@ def geis2mef(sciname, convert_dq=True):
                     dqfile.writeto(dqfitsname, overwrite=clobber)
                 else:
                     dqfile.writeto(dqfitsname, clobber=clobber)
-        # Now close input GEIS image, and open writable
-        # handle to output FITS image instead...
-        fimg.close()
-        del fimg
-        # Image re-written as MEF, now it needs its WCS updated
-        #updatewcs.updatewcs(fitsname)
+    # Now close input GEIS image, and open writable
+    # handle to output FITS image instead...
+    fimg.close()
+    del fimg
+    fimg = fits.open(fitsname, mode=mode, memmap=memmap)
 
-        fimg = fits.open(fitsname, mode=mode, memmap=memmap)
     return fimg
 
 def countInput(input):
