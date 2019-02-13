@@ -1,8 +1,9 @@
 import os
-import tempfile
+import shutil
 
 import pytest
 from astropy.io import fits
+from astropy.io.fits import diff
 
 from .. import fileutil as fu
 from .. import check_files
@@ -37,3 +38,19 @@ def test_check_files():
 
     fname = os.path.join(data_dir, 'o4sp040b0_raw.fits')
     assert check_files.checkFiles([fname]) == ([], [])
+
+
+def test_waivered_fits():
+    """
+    Test converting wavered FITS to multiextension FITS.
+    """
+    c0f_name = 'u40x010hm_c0f.fits'
+    c0h_name = 'u40x010hm_c0h.fits'
+    path_name = os.path.join(data_dir, c0f_name)
+    shutil.copyfile(path_name, c0f_name)
+    check_files.checkFiles([c0f_name])
+    fobj = fits.open(c0f_name, mode='update')
+    fnew, _ = check_files.checkFiles([fobj])
+    assert fu.isFits(fnew[0]) == (True, 'mef')
+    report = diff.FITSDiff(fnew[0], c0h_name).report()
+    assert report.splitlines()[-1] == 'No differences found.'
