@@ -150,17 +150,17 @@ def check_exptime(filelist):
         try:
             exptime = f[0].header['EXPTIME']
         except KeyError:
-            removed_files.append(f.filename() or "")
+            removed_files.append(f or None)
             print("Warning:  There are files without keyword EXPTIME")
             continue
         if exptime <= 0:
-            removed_files.append(f.filename() or "")
+            removed_files.append(f or None)
             print("Warning:  There are files with zero exposure time: keyword EXPTIME = 0.0")
 
     if removed_files != []:
         print("Warning:  Removing the following files from input list")
         for f in removed_files:
-            print('\t',f)
+            print('\t',f.filename())
     return removed_files
 
 def checkNGOODPIX(filelist):
