@@ -150,17 +150,17 @@ def check_exptime(filelist):
         try:
             exptime = f[0].header['EXPTIME']
         except KeyError:
-            removed_files.append(f.filename() or "")
+            removed_files.append(f)
             print("Warning:  There are files without keyword EXPTIME")
             continue
         if exptime <= 0:
-            removed_files.append(f.filename() or "")
+            removed_files.append(f)
             print("Warning:  There are files with zero exposure time: keyword EXPTIME = 0.0")
 
     if removed_files != []:
         print("Warning:  Removing the following files from input list")
         for f in removed_files:
-            print('\t',f)
+            print('\t',f.filename() or "")
     return removed_files
 
 def checkNGOODPIX(filelist):
@@ -187,16 +187,16 @@ def checkNGOODPIX(filelist):
         for extn in inputfile:
             if 'EXTNAME' in extn.header and extn.header['EXTNAME'] == 'SCI':
                 ngood += extn.header['NGOODPIX']
+        if (ngood == 0):
+            removed_files.append(inputfile)
         if toclose:
             inputfile.close()
-        if (ngood == 0):
-            removed_files.append(inputfile.filename() or "")
 
     if removed_files != []:
         print("Warning:  Files without valid pixels detected: keyword NGOODPIX = 0.0")
         print("Warning:  Removing the following files from input list")
         for f in removed_files:
-            print('\t',f)
+            print('\t',f.filename() or "")
 
     return removed_files
 
