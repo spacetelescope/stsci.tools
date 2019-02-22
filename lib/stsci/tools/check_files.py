@@ -196,7 +196,7 @@ def checkNGOODPIX(filelist):
         print("Warning:  Files without valid pixels detected: keyword NGOODPIX = 0.0")
         print("Warning:  Removing the following files from input list")
         for f in removed_files:
-            print('\t',f.inputfile() or "")
+            print('\t',f.filename() or "")
 
     return removed_files
 
