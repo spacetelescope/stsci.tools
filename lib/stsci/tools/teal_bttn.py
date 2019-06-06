@@ -58,8 +58,10 @@ class TealActionParButton(eparoption.ActionEparButton):
                                      tealGui, code)
             # done
             tealGui.debug('Finished: "'+self.getButtonLabel()+'"')
+
         except Exception as ex:
-            msg = 'Error executing: "'+self.getButtonLabel()+'"\n'+ex.message
+            msg = 'Error executing: {}\n{}"'.format(
+                self.getButtonLabel(), ex.args[0])
             msgFull = msg+'\n'+''.join(traceback.format_exc())
             msgFull+= "CODE:\n"+code
             if tealGui:

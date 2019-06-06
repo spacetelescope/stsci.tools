@@ -1,18 +1,62 @@
-RELIC-INFO
-lib/stsci/*/version.py
-*/*/version.py
-__pycache__/
-build/
-dist/
-.eggs/
-.DS_Store
-.pytest_cache
-*.egg-info
-*.pyc
-.DS_Store
-.cache
+# Compiled files
+*.py[cod]
+*.a
 *.o
-*.dylib
 *.so
-*.pyc
+__pycache__
+
+# Other generated files
+*/version.py
+*/cython_version.py
+htmlcov
+.coverage
+MANIFEST
+.ipynb_checkpoints
+
+# Sphinx
+docs/api
+docs/_build/
+
+# WingIDE
+*.wpr
+*.wpu
+
+# Eclipse editor project files
+.project
+.pydevproject
+.settings
+
+# Pycharm editor project files
+.idea
+
+# Packages/installer info
+*.egg
+*.egg-info
+dist/
+build/
+eggs
+.eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+distribute-*.tar.gz
+relic/
+RELIC-INFO
+.pytest_cache
+.cache
+
+# codecov
+.coverage
+*.coverage.*
+
+# Other
+*~
+.settings
+*.dylib
 *.swp
+
+# Mac OSX
+.DS_Store
