@@ -66,7 +66,7 @@ def with_stpyfits(func):
     return wrapped_with_stpyfits
 
 
-class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
+class _ConstantValueImageBaseHDU(fits.header._DelayedHeader):
     """
     A class that extends the `astropy.io.fits.hdu.base._BaseHDU` class to extend its
     behavior to implement STScI specific extensions to `astropy.io.fits`.
@@ -74,9 +74,9 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
     The `astropy.io.fits.hdu.base._BaseHDU class` is:
     """
 
-    __doc__ += fits.hdu.image._ImageBaseHDU.__doc__
+    __doc__ += fits.header._DelayedHeader.__doc__
 
-    def __init__(self, data=None, header=None, do_not_scale_image_data=False,
+    def __get__(self, data=None, header=None, do_not_scale_image_data=False,
                  uint=False, **kwargs):
         if header and 'PIXVALUE' in header and header['NAXIS'] == 0:
             header = header.copy()
