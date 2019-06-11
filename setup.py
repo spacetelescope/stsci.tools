@@ -43,7 +43,7 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
     install_requires = [
-        'astropy',
+        'astropy<=3.1',
         'numpy',
     ],
     setup_requires = [
