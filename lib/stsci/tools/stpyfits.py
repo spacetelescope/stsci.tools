@@ -22,8 +22,27 @@ from distutils.version import LooseVersion
 
 PY3K = sys.version_info[0] > 2
 ASTROPY_VER_GE20 = LooseVersion(astropy.__version__) >= LooseVersion('2.0')
+ASTROPY_VER_GE32 = LooseVersion(astropy.__version__) >= LooseVersion('3.2')
 
 STPYFITS_ENABLED = False  # Not threadsafe TODO: (should it be?)
+
+if ASTROPY_VER_GE32:
+    from astropy.io.fits.header import _DelayedHeader, Header
+
+    class _NoDelayedHeader(_DelayedHeader):
+        def __get__(self, obj, owner=None):
+            if obj._header_str is not None:
+                hdr = Header.fromstring(obj._header_str)
+                obj._header_str = None
+            else:
+                raise AttributeError("'{}' object has no attribute '_header'"
+                                     .format(obj.__class__.__name__))
+
+            obj.__dict__['_header'] = hdr
+            return hdr
+else:
+    class _NoDelayedHeader(object):  # Dummy class
+        pass
 
 
 # Register the extension classes; simply importing stpyfits does not
@@ -75,9 +94,11 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
     """
 
     __doc__ += fits.hdu.image._ImageBaseHDU.__doc__
+    _header = _NoDelayedHeader()
 
     def __init__(self, data=None, header=None, do_not_scale_image_data=False,
                  uint=False, **kwargs):
+
         if header and 'PIXVALUE' in header and header['NAXIS'] == 0:
             header = header.copy()
             # Add NAXISn keywords for each NPIXn keyword in the header and

@@ -47,6 +47,7 @@ relic/
 RELIC-INFO
 .pytest_cache
 .cache
+version.py
 
 # codecov
 .coverage
