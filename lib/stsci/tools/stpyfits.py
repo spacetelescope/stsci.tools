@@ -31,14 +31,74 @@ if ASTROPY_VER_GE32:
 
     class _NoDelayedHeader(_DelayedHeader):
         def __get__(self, obj, owner=None):
-            if obj._header_str is not None:
-                hdr = Header.fromstring(obj._header_str)
-                obj._header_str = None
-            else:
-                raise AttributeError("'{}' object has no attribute '_header'"
-                                     .format(obj.__class__.__name__))
+            try:
+                hdr = obj.__dict__['_header']
+            except KeyError:
+                if obj._header_str is not None:
+                    hdr = Header.fromstring(obj._header_str)
+                    obj._header_str = None
+                else:
+                    raise AttributeError("'{}' object has no attribute '_header'"
+                                         .format(obj.__class__.__name__))
 
-            obj.__dict__['_header'] = hdr
+                obj.__dict__['_header'] = hdr
+
+            # Similar to the stuff in _ConstantValueImageBaseHDU constructor.
+            if hdr and 'PIXVALUE' in hdr and hdr['NAXIS'] == 0:
+                hdr = hdr.copy()
+                # Add NAXISn keywords for each NPIXn keyword in the header and
+                # remove the NPIXn keywords
+                naxis = 0
+                for card in reversed(hdr['NPIX*'].cards):
+                    try:
+                        idx = int(card.keyword[len('NPIX'):])
+                    except ValueError:
+                        continue
+                    hdrlen = len(hdr)
+                    hdr.set('NAXIS' + str(idx), card.value,
+                            card.comment, after='NAXIS')
+                    del hdr[card.keyword]
+                    if len(hdr) < hdrlen:
+                        # A blank card was used when updating the header; add the
+                        # blank back in.
+                        # TODO: Fix header.set so that it has an option not to
+                        # use a blank card--this is a detail that we really
+                        # shouldn't have to worry about otherwise
+                        hdr.append()
+
+                    # Presumably the NPIX keywords are in order of their axis, but
+                    # just in case somehow they're not...
+                    naxis = max(naxis, idx)
+
+                # Update the NAXIS keyword with the correct number of axes
+                hdr['NAXIS'] = naxis
+            elif hdr and 'PIXVALUE' in hdr:
+                pixval = hdr['PIXVALUE']
+                if hdr['BITPIX'] > 0:
+                    if PY3K:
+                        pixval = int(pixval)
+                    else:
+                        pixval = long(pixval)
+                data = obj.__dict__['data']
+                arrayval = self._check_constant_value_data(data)
+                if arrayval is not None:
+                    hdr = hdr.copy()
+                    # Update the PIXVALUE keyword if necessary
+                    if arrayval != pixval:
+                        hdr['PIXVALUE'] = arrayval
+                else:
+                    hdr = hdr.copy()
+                    # There is a PIXVALUE keyword but NAXIS is not 0 and the data
+                    # does not match the PIXVALUE.
+                    # Must remove the PIXVALUE and NPIXn keywords so we recognize
+                    # that there is non-constant data in the file.
+                    del hdr['PIXVALUE']
+                    for card in hdr['NPIX*'].cards:
+                        try:
+                            idx = int(card.keyword[len('NPIX'):])
+                        except ValueError:
+                            continue
+                        del hdr[card.keyword]
             return hdr
 else:
     class _NoDelayedHeader(object):  # Dummy class
@@ -98,61 +158,62 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
 
     def __init__(self, data=None, header=None, do_not_scale_image_data=False,
                  uint=False, **kwargs):
-
-        if header and 'PIXVALUE' in header and header['NAXIS'] == 0:
-            header = header.copy()
-            # Add NAXISn keywords for each NPIXn keyword in the header and
-            # remove the NPIXn keywords
-            naxis = 0
-            for card in reversed(header['NPIX*'].cards):
-                try:
-                    idx = int(card.keyword[len('NPIX'):])
-                except ValueError:
-                    continue
-                hdrlen = len(header)
-                header.set('NAXIS' + str(idx), card.value,
-                           card.comment, after='NAXIS')
-                del header[card.keyword]
-                if len(header) < hdrlen:
-                    # A blank card was used when updating the header; add the
-                    # blank back in.
-                    # TODO: Fix header.set so that it has an option not to
-                    # use a blank card--this is a detail that we really
-                    # shouldn't have to worry about otherwise
-                    header.append()
-
-                # Presumably the NPIX keywords are in order of their axis, but
-                # just in case somehow they're not...
-                naxis = max(naxis, idx)
-
-            # Update the NAXIS keyword with the correct number of axes
-            header['NAXIS'] = naxis
-        elif header and 'PIXVALUE' in header:
-            pixval = header['PIXVALUE']
-            if header['BITPIX'] > 0:
-                if PY3K:
-                    pixval = int(pixval)
-                else:
-                    pixval = long(pixval)
-            arrayval = self._check_constant_value_data(data)
-            if arrayval is not None:
+        # For astropy>=3.2, we let _NoDelayedHeader descriptor do this.
+        if not ASTROPY_VER_GE32:
+            if header and 'PIXVALUE' in header and header['NAXIS'] == 0:
                 header = header.copy()
-                # Update the PIXVALUE keyword if necessary
-                if arrayval != pixval:
-                    header['PIXVALUE'] = arrayval
-            else:
-                header = header.copy()
-                # There is a PIXVALUE keyword but NAXIS is not 0 and the data
-                # does not match the PIXVALUE.
-                # Must remove the PIXVALUE and NPIXn keywords so we recognize
-                # that there is non-constant data in the file.
-                del header['PIXVALUE']
-                for card in header['NPIX*'].cards:
+                # Add NAXISn keywords for each NPIXn keyword in the header and
+                # remove the NPIXn keywords
+                naxis = 0
+                for card in reversed(header['NPIX*'].cards):
                     try:
                         idx = int(card.keyword[len('NPIX'):])
                     except ValueError:
                         continue
+                    hdrlen = len(header)
+                    header.set('NAXIS' + str(idx), card.value,
+                               card.comment, after='NAXIS')
                     del header[card.keyword]
+                    if len(header) < hdrlen:
+                        # A blank card was used when updating the header; add the
+                        # blank back in.
+                        # TODO: Fix header.set so that it has an option not to
+                        # use a blank card--this is a detail that we really
+                        # shouldn't have to worry about otherwise
+                        header.append()
+
+                    # Presumably the NPIX keywords are in order of their axis, but
+                    # just in case somehow they're not...
+                    naxis = max(naxis, idx)
+
+                # Update the NAXIS keyword with the correct number of axes
+                header['NAXIS'] = naxis
+            elif header and 'PIXVALUE' in header:
+                pixval = header['PIXVALUE']
+                if header['BITPIX'] > 0:
+                    if PY3K:
+                        pixval = int(pixval)
+                    else:
+                        pixval = long(pixval)
+                arrayval = self._check_constant_value_data(data)
+                if arrayval is not None:
+                    header = header.copy()
+                    # Update the PIXVALUE keyword if necessary
+                    if arrayval != pixval:
+                        header['PIXVALUE'] = arrayval
+                else:
+                    header = header.copy()
+                    # There is a PIXVALUE keyword but NAXIS is not 0 and the data
+                    # does not match the PIXVALUE.
+                    # Must remove the PIXVALUE and NPIXn keywords so we recognize
+                    # that there is non-constant data in the file.
+                    del header['PIXVALUE']
+                    for card in header['NPIX*'].cards:
+                        try:
+                            idx = int(card.keyword[len('NPIX'):])
+                        except ValueError:
+                            continue
+                        del header[card.keyword]
 
         # Make sure to pass any arguments other than data and header as
         # keyword arguments, because PrimaryHDU and ImageHDU have stupidly
