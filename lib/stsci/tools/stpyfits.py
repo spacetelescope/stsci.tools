@@ -45,7 +45,6 @@ if ASTROPY_VER_GE32:
 
             # Similar to the stuff in _ConstantValueImageBaseHDU constructor.
             if hdr and 'PIXVALUE' in hdr and hdr['NAXIS'] == 0:
-                hdr = hdr.copy()
                 # Add NAXISn keywords for each NPIXn keyword in the header and
                 # remove the NPIXn keywords
                 naxis = 0
@@ -80,14 +79,12 @@ if ASTROPY_VER_GE32:
                     else:
                         pixval = long(pixval)
                 data = obj.__dict__['data']
-                arrayval = self._check_constant_value_data(data)
+                arrayval = obj._check_constant_value_data(data)
                 if arrayval is not None:
-                    hdr = hdr.copy()
                     # Update the PIXVALUE keyword if necessary
                     if arrayval != pixval:
                         hdr['PIXVALUE'] = arrayval
                 else:
-                    hdr = hdr.copy()
                     # There is a PIXVALUE keyword but NAXIS is not 0 and the data
                     # does not match the PIXVALUE.
                     # Must remove the PIXVALUE and NPIXn keywords so we recognize
