@@ -1,3 +1,5 @@
+# $Id$
+
 """
 The stpyfits module is an extension to the `astropy.io.fits` module which offers
 additional features specific to STScI.  These features include the handling
@@ -15,12 +17,13 @@ from astropy.io import fits
 # A few imports for backward compatibility; in the earlier stpyfits these were
 # overridden, but with fits's new extension system it's not necessary
 from astropy.io.fits.util import _is_int
+from astropy.io.fits.header import Header
 from astropy.utils import lazyproperty
 from distutils.version import LooseVersion
 
 PY3K = sys.version_info[0] > 2
 ASTROPY_VER_GE20 = LooseVersion(astropy.__version__) >= LooseVersion('2.0')
-ASTROPY_VER_GE32 = LooseVersion(astropy.__version__) >= LooseVersion('3.2')
+#ASTROPY_VER_GE32 = LooseVersion(astropy.__version__) >= LooseVersion('3.2')
 
 STPYFITS_ENABLED = False  # Not threadsafe TODO: (should it be?)
 
@@ -74,28 +77,12 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
     """
 
     __doc__ += fits.hdu.image._ImageBaseHDU.__doc__
+    _header = Header()
 
     def __init__(self, data=None, header=None, do_not_scale_image_data=False,
                  uint=False, **kwargs):
-        self._header_set_up = False
-
-        # For astropy>=3.2, we cannot do this until the entire header is loaded.
-        if not ASTROPY_VER_GE32:
-            self._setup_header(header, data)
-
-        # Make sure to pass any arguments other than data and header as
-        # keyword arguments, because PrimaryHDU and ImageHDU have stupidly
-        # different signatures for __init__
-        super(_ConstantValueImageBaseHDU, self).__init__(
-            data, header, do_not_scale_image_data=do_not_scale_image_data,
-            uint=uint)
-
-    def _setup_header(self, header, data):
-        self._header_set_up = True
-
         if header and 'PIXVALUE' in header and header['NAXIS'] == 0:
-            if not ASTROPY_VER_GE32:
-                header = header.copy()
+            header = header.copy()
             # Add NAXISn keywords for each NPIXn keyword in the header and
             # remove the NPIXn keywords
             naxis = 0
@@ -131,14 +118,12 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
                     pixval = long(pixval)
             arrayval = self._check_constant_value_data(data)
             if arrayval is not None:
-                if not ASTROPY_VER_GE32:
-                    header = header.copy()
+                header = header.copy()
                 # Update the PIXVALUE keyword if necessary
                 if arrayval != pixval:
                     header['PIXVALUE'] = arrayval
             else:
-                if not ASTROPY_VER_GE32:
-                    header = header.copy()
+                header = header.copy()
                 # There is a PIXVALUE keyword but NAXIS is not 0 and the data
                 # does not match the PIXVALUE.
                 # Must remove the PIXVALUE and NPIXn keywords so we recognize
@@ -151,14 +136,19 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
                         continue
                     del header[card.keyword]
 
+        # Make sure to pass any arguments other than data and header as
+        # keyword arguments, because PrimaryHDU and ImageHDU have stupidly
+        # different signatures for __init__
+        super(_ConstantValueImageBaseHDU, self).__init__(
+            data, header, do_not_scale_image_data=do_not_scale_image_data,
+            uint=uint)
+
     @property
     def size(self):
         """
         The HDU's size should always come up as zero so long as there's no
         actual data in it other than the constant value array.
         """
-        if ASTROPY_VER_GE32 and not self._header_set_up:
-            self._setup_header(self._header, self.__dict__['data'])
 
         if 'PIXVALUE' in self._header:
             return 0
@@ -167,9 +157,6 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
 
     @lazyproperty
     def data(self):
-        if ASTROPY_VER_GE32 and not self._header_set_up:
-            self._setup_header(self._header, self.__dict__['data'])
-
         if ('PIXVALUE' in self._header and 'NPIX1' not in self._header and
                 self._header['NAXIS'] > 0):
             bitpix = self._header['BITPIX']
@@ -256,9 +243,6 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
                 naxis == 0)
 
     def update_header(self):
-        if ASTROPY_VER_GE32 and not self._header_set_up:
-            self._setup_header(self._header, self.__dict__['data'])
-
         if (not self._modified and not self._header._modified and
                 (self._has_data and self.shape == self.data.shape)):
             # Not likely that anything needs updating
@@ -325,12 +309,11 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
 
     def _check_constant_value_data(self, data):
         """Verify that the HDU's data is a constant value array."""
-        try:
-            arrayval = data.flat[0]
-            if np.all(data == arrayval):
-                return arrayval
-        except Exception:
-            pass  # return None
+
+        arrayval = data.flat[0]
+        if np.all(data == arrayval):
+            return arrayval
+        return None
 
 
 class ConstantValuePrimaryHDU(_ConstantValueImageBaseHDU,
