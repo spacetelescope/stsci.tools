@@ -88,9 +88,8 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
             else:  # Force load all the possible NPIX* for caching
                 reversed_npix_cards = []
                 for i in range(1000, 0, -1):  # 1000 is enough?
-                    idx = 'NPIX{}'.format(i)
                     try:
-                        header[idx]
+                        idx = header['NPIX{}'.format(i)].cards
                     except Exception:
                         continue
                     reversed_npix_cards.append(idx)
