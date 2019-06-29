@@ -119,7 +119,10 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
                 naxis = max(naxis, idx)
 
             # Update the NAXIS keyword with the correct number of axes
-            header['NAXIS'] = naxis
+            if not ASTROPY_VER_GE32:
+                header['NAXIS'] = naxis
+            else:
+                header.set('NAXIS', naxis)
         elif header and 'PIXVALUE' in header:
             pixval = header['PIXVALUE']
             if header['BITPIX'] > 0:
