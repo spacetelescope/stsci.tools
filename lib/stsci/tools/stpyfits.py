@@ -84,6 +84,12 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
         if header and 'PIXVALUE' in header and header['NAXIS'] == 0:
             if not ASTROPY_VER_GE32:
                 header = header.copy()
+            else:  # Force load all the possible NPIX* keywords to cache it
+                for i in range(1, 1001):  # This is enough, right?
+                    try:
+                        header['NPIX{}'.format(i)]
+                    except Exception:
+                        pass
             # Add NAXISn keywords for each NPIXn keyword in the header and
             # remove the NPIXn keywords
             naxis = 0
