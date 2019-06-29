@@ -78,6 +78,7 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
     def __init__(self, data=None, header=None, do_not_scale_image_data=False,
                  uint=False, **kwargs):
         self._arrayval = self._check_constant_value_data(data)
+        self._header_set_up = False
 
         # For astropy>=3.2, we cannot do this until the entire header is loaded.
         if not ASTROPY_VER_GE32:
@@ -90,10 +91,9 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
             data, header, do_not_scale_image_data=do_not_scale_image_data,
             uint=uint)
 
-        if ASTROPY_VER_GE32:
-            self._setup_header(header)
-
     def _setup_header(self, header):
+        self._header_set_up = True
+
         if header and 'PIXVALUE' in header and header['NAXIS'] == 0:
             header = header.copy()
             # Add NAXISn keywords for each NPIXn keyword in the header and
@@ -156,6 +156,8 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
         The HDU's size should always come up as zero so long as there's no
         actual data in it other than the constant value array.
         """
+        if ASTROPY_VER_GE32 and not self._header_set_up:
+            self._setup_header(self._header)
 
         if 'PIXVALUE' in self._header:
             return 0
@@ -164,6 +166,9 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
 
     @lazyproperty
     def data(self):
+        if ASTROPY_VER_GE32 and not self._header_set_up:
+            self._setup_header(self._header)
+
         if ('PIXVALUE' in self._header and 'NPIX1' not in self._header and
                 self._header['NAXIS'] > 0):
             bitpix = self._header['BITPIX']
@@ -250,6 +255,9 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
                 naxis == 0)
 
     def update_header(self):
+        if ASTROPY_VER_GE32 and not self._header_set_up:
+            self._setup_header(self._header)
+
         if (not self._modified and not self._header._modified and
                 (self._has_data and self.shape == self.data.shape)):
             # Not likely that anything needs updating
