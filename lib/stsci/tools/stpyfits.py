@@ -324,7 +324,8 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
 
     def _check_constant_value_data(self, data):
         """Verify that the HDU's data is a constant value array."""
-
+        if data is None:
+            return None
         arrayval = data.flat[0]
         if np.all(data == arrayval):
             return arrayval
