@@ -23,7 +23,7 @@ from distutils.version import LooseVersion
 
 PY3K = sys.version_info[0] > 2
 ASTROPY_VER_GE20 = LooseVersion(astropy.__version__) >= LooseVersion('2.0')
-#ASTROPY_VER_GE32 = LooseVersion(astropy.__version__) >= LooseVersion('3.2')
+ASTROPY_VER_GE32 = LooseVersion(astropy.__version__) >= LooseVersion('3.2')
 
 STPYFITS_ENABLED = False  # Not threadsafe TODO: (should it be?)
 
@@ -82,7 +82,8 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
     def __init__(self, data=None, header=None, do_not_scale_image_data=False,
                  uint=False, **kwargs):
         if header and 'PIXVALUE' in header and header['NAXIS'] == 0:
-            header = header.copy()
+            if not ASTROPY_VER_GE32:
+                header = header.copy()
             # Add NAXISn keywords for each NPIXn keyword in the header and
             # remove the NPIXn keywords
             naxis = 0
@@ -118,12 +119,14 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
                     pixval = long(pixval)
             arrayval = self._check_constant_value_data(data)
             if arrayval is not None:
-                header = header.copy()
+                if not ASTROPY_VER_GE32:
+                    header = header.copy()
                 # Update the PIXVALUE keyword if necessary
                 if arrayval != pixval:
                     header['PIXVALUE'] = arrayval
             else:
-                header = header.copy()
+                if not ASTROPY_VER_GE32:
+                    header = header.copy()
                 # There is a PIXVALUE keyword but NAXIS is not 0 and the data
                 # does not match the PIXVALUE.
                 # Must remove the PIXVALUE and NPIXn keywords so we recognize
