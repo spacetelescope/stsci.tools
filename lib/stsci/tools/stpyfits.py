@@ -84,16 +84,21 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
         if header and 'PIXVALUE' in header and header['NAXIS'] == 0:
             if not ASTROPY_VER_GE32:
                 header = header.copy()
-            else:  # Force load all the possible NPIX* keywords to cache it
-                for i in range(1, 1001):  # This is enough, right?
+                reversed_npix_cards = reversed(header['NPIX*'].cards)
+            else:  # Force load all the possible NPIX* for caching
+                reversed_npix_cards = []
+                for i in range(1000, 0, -1):  # 1000 is enough?
+                    idx = 'NPIX{}'.format(i)
                     try:
-                        header['NPIX{}'.format(i)]
+                        header[idx]
                     except Exception:
-                        pass
+                        continue
+                    reversed_npix_cards.append(idx)
+
             # Add NAXISn keywords for each NPIXn keyword in the header and
             # remove the NPIXn keywords
             naxis = 0
-            for card in reversed(header['NPIX*'].cards):
+            for card in reversed_npix_cards:
                 try:
                     idx = int(card.keyword[len('NPIX'):])
                 except ValueError:
