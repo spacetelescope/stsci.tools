@@ -123,6 +123,8 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
             if not ASTROPY_VER_GE32:
                 header['NAXIS'] = naxis
             else:
+                # _BasicHeader has no set interface
+                header._raw_cards['NAXIS'] = naxis
                 header._cards['NAXIS'] = Card('NAXIS', naxis)
         elif header and 'PIXVALUE' in header:
             pixval = header['PIXVALUE']
