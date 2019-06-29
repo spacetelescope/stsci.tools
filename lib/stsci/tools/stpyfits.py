@@ -77,12 +77,11 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
 
     def __init__(self, data=None, header=None, do_not_scale_image_data=False,
                  uint=False, **kwargs):
-        self._arrayval = self._check_constant_value_data(data)
         self._header_set_up = False
 
         # For astropy>=3.2, we cannot do this until the entire header is loaded.
         if not ASTROPY_VER_GE32:
-            self._setup_header(header)
+            self._setup_header(header, data)
 
         # Make sure to pass any arguments other than data and header as
         # keyword arguments, because PrimaryHDU and ImageHDU have stupidly
@@ -91,11 +90,12 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
             data, header, do_not_scale_image_data=do_not_scale_image_data,
             uint=uint)
 
-    def _setup_header(self, header):
+    def _setup_header(self, header, data):
         self._header_set_up = True
 
         if header and 'PIXVALUE' in header and header['NAXIS'] == 0:
-            header = header.copy()
+            if not ASTROPY_VER_GE32:
+                header = header.copy()
             # Add NAXISn keywords for each NPIXn keyword in the header and
             # remove the NPIXn keywords
             naxis = 0
@@ -129,15 +129,16 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
                     pixval = int(pixval)
                 else:
                     pixval = long(pixval)
-            if self._arrayval is not None:
-                header = header.copy()
+            arrayval = self._check_constant_value_data(data)
+            if arrayval is not None:
+                if not ASTROPY_VER_GE32:
+                    header = header.copy()
                 # Update the PIXVALUE keyword if necessary
-                if self._arrayval != pixval:
-                    header['PIXVALUE'] = self._arrayval
-                # Do not need self._arrayval any longer after this part.
-                del self._arrayval
+                if arrayval != pixval:
+                    header['PIXVALUE'] = arrayval
             else:
-                header = header.copy()
+                if not ASTROPY_VER_GE32:
+                    header = header.copy()
                 # There is a PIXVALUE keyword but NAXIS is not 0 and the data
                 # does not match the PIXVALUE.
                 # Must remove the PIXVALUE and NPIXn keywords so we recognize
@@ -157,7 +158,7 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
         actual data in it other than the constant value array.
         """
         if ASTROPY_VER_GE32 and not self._header_set_up:
-            self._setup_header(self._header)
+            self._setup_header(self._header, self.__dict__['data'])
 
         if 'PIXVALUE' in self._header:
             return 0
@@ -167,7 +168,7 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
     @lazyproperty
     def data(self):
         if ASTROPY_VER_GE32 and not self._header_set_up:
-            self._setup_header(self._header)
+            self._setup_header(self._header, self.__dict__['data'])
 
         if ('PIXVALUE' in self._header and 'NPIX1' not in self._header and
                 self._header['NAXIS'] > 0):
@@ -256,7 +257,7 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
 
     def update_header(self):
         if ASTROPY_VER_GE32 and not self._header_set_up:
-            self._setup_header(self._header)
+            self._setup_header(self._header, self.__dict__['data'])
 
         if (not self._modified and not self._header._modified and
                 (self._has_data and self.shape == self.data.shape)):
