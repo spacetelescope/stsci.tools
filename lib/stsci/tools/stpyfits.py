@@ -18,7 +18,6 @@ from astropy.io import fits
 # overridden, but with fits's new extension system it's not necessary
 from astropy.io.fits.util import _is_int
 from astropy.io.fits.header import Header
-from astropy.io.fits.card import Card
 from astropy.utils import lazyproperty
 from distutils.version import LooseVersion
 
@@ -123,7 +122,7 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
             if not ASTROPY_VER_GE32:
                 header['NAXIS'] = naxis
             else:
-                header._cards['NAXIS'] = Card.fromstring(str(naxis))
+                header._cards['NAXIS'].value = naxis
         elif header and 'PIXVALUE' in header:
             pixval = header['PIXVALUE']
             if header['BITPIX'] > 0:
