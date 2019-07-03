@@ -22,6 +22,7 @@ from distutils.version import LooseVersion
 
 PY3K = sys.version_info[0] > 2
 ASTROPY_VER_GE20 = LooseVersion(astropy.__version__) >= LooseVersion('2.0')
+ASTROPY_VER_GE32 = LooseVersion(astropy.__version__) >= LooseVersion('3.2')
 
 STPYFITS_ENABLED = False  # Not threadsafe TODO: (should it be?)
 
@@ -51,6 +52,14 @@ def with_stpyfits(func):
         global STPYFITS_ENABLED
         was_enabled = STPYFITS_ENABLED
         enable_stpyfits()
+        if ASTROPY_VER_GE32:
+            from astropy.io.fits.header import _BasicHeader
+            fromfile_orig = _BasicHeader.fromfile
+
+            def fromfile_patch(*args):
+                raise Exception
+            _BasicHeader.fromfile = fromfile_patch
+
         try:
             # BUG: Forcefully disable lazy loading.
             # Lazy loading breaks ability to initialize ConstantValueHDUs
@@ -62,6 +71,8 @@ def with_stpyfits(func):
             # Only disable stpyfits if it wasn't already enabled
             if not was_enabled:
                 disable_stpyfits()
+
+            _BasicHeader.fromfile = fromfile_orig
         return retval
     return wrapped_with_stpyfits
 
