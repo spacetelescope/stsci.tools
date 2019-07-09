@@ -292,7 +292,7 @@ def setWritePrivs(fname, makeWritable, ignoreErrors=False):
 
 def removeEscapes(value, quoted=0):
 
-    """Remove escapes from in front of quotes (which IRAF seems to
+    r"""Remove escapes from in front of quotes (which IRAF seems to
     just stick in for fun sometimes.)  Remove \-newline too.
     If quoted is true, removes all blanks following \-newline
     (which is a nasty thing IRAF does for continuations inside
