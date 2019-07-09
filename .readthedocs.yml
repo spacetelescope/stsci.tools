@@ -6,8 +6,8 @@ version: 2
 
 python:
   version: 3.6
+  system_packages: true
   install:
-    - system_packages: true
     - requirements: .rtd-environment.yml
     - method: setuptools
       path: stsci.tools
