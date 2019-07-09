@@ -72,7 +72,9 @@ def with_stpyfits(func):
             if not was_enabled:
                 disable_stpyfits()
 
-            _BasicHeader.fromfile = fromfile_orig
+            if ASTROPY_VER_GE32:
+                _BasicHeader.fromfile = fromfile_orig
+
         return retval
     return wrapped_with_stpyfits
 
