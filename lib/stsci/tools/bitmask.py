@@ -244,7 +244,7 @@ def interpret_bit_flags(bit_flags, flip_bits=None):
 
 def bitfield_to_boolean_mask(bitfield, ignore_flags=0, flip_bits=None,
                              good_mask_value=True, dtype=np.bool_):
-    """
+    r"""
     bitfield_to_boolean_mask(bitfield, ignore_flags=None, flip_bits=None, \
 good_mask_value=True, dtype=numpy.bool\_)
     Converts an array of bit fields to a boolean (or integer) mask array
@@ -512,7 +512,7 @@ def interpret_bits_value(val):
 @deprecated(since='3.4.6', message='', name='bitmask2mask',
             alternative='bitfield_to_boolean_mask')
 def bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=np.bool_):
-    """
+    r"""
     bitmask2mask(bitmask, ignore_bits, good_mask_value=1, dtype=numpy.bool\_)
     Interprets an array of bit flags and converts it to a "binary" mask array.
     This function is particularly useful to convert data quality arrays to
