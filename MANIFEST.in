@@ -1,3 +1,4 @@
+include LICENSE.md
 include RELIC-INFO
 exclude lib/stsci/tools/version.py
 recursive-include lib/stsci/tools/tests *
