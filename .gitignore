@@ -6,12 +6,13 @@
 __pycache__
 
 # Other generated files
-*/version.py
+version.py
 */cython_version.py
 htmlcov
 .coverage
 MANIFEST
 .ipynb_checkpoints
+u40x010hm*.fits
 
 # Sphinx
 docs/api
