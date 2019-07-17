@@ -17,7 +17,7 @@ of the list).
 3.6.0 (2019-07-17)
 ------------------
 
-- Update stpyfits to be compatible with astropy v3.2.1 []#101]
+- Update stpyfits to be compatible with astropy v3.2.1 [#101]
 
 - Fixes a crash in TEAL when loading MDRIZTAB parameters in astrodrizzle [#95]
 
