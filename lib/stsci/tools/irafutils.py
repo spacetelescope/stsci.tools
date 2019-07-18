@@ -187,7 +187,7 @@ def csvSplit(line, delim=',', allowEol=True):
 # Since these strings will be short, the fastest method is re.search()
 _re_sq = re.compile(r"'")
 _re_dq = re.compile(r'"')
-_re_comma_sq_dq = re.compile('[,\'"]')
+_re_comma_sq_dq = re.compile(r'[,\'"]')
 
 def _getCharsUntil(buf, stopChar, branchForQuotes, allowEol):
 
@@ -292,7 +292,7 @@ def setWritePrivs(fname, makeWritable, ignoreErrors=False):
 
 def removeEscapes(value, quoted=0):
 
-    """Remove escapes from in front of quotes (which IRAF seems to
+    r"""Remove escapes from in front of quotes (which IRAF seems to
     just stick in for fun sometimes.)  Remove \-newline too.
     If quoted is true, removes all blanks following \-newline
     (which is a nasty thing IRAF does for continuations inside

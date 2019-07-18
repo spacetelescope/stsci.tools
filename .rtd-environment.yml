@@ -1,6 +1,2 @@
-name: stsci.tools
-
-dependencies:
-  - python>=3
-  - numpy
-  - astropy
+numpy
+astropy
