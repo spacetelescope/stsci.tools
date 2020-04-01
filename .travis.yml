@@ -7,7 +7,7 @@ os:
 
 python:
     - 2.7
-    - 3.6
+    - 3.7
 
 # Setting sudo to false opts in to Travis-CI container-based builds.
 sudo: false
@@ -38,19 +38,19 @@ matrix:
 
         # Do a test in Python 2.
         - python: 2.7
-          env: NUMPY_VERSION=1.15 ASTROPY_VERSION=lts SETUP_CMD="test"
+          env: NUMPY_VERSION=1.15 ASTROPY_VERSION=2.0.15 SETUP_CMD="test"
 
         # Try Astropy development version
-        - python: 3.7
+        - python: 3.8
           env: ASTROPY_VERSION=development SETUP_CMD="test"
 
         # PEP8 check
-        - python: 3.7
+        - python: 3.8
           env: MAIN_CMD="flake8 --count lib/stsci/tools" SETUP_CMD=""
 
     allow_failures:
         # PEP8 will fail for numerous reasons. Ignore it.
-        - python: 3.7
+        - python: 3.8
           env: MAIN_CMD="flake8 --count lib/stsci/tools" SETUP_CMD=""
 
 before_install:
