@@ -6,7 +6,6 @@ os:
     - linux
 
 python:
-    - 2.7
     - 3.7
 
 # Setting sudo to false opts in to Travis-CI container-based builds.
@@ -35,10 +34,6 @@ matrix:
     include:
         - python: 3.6
           env: ASTROPY_VERSION=stable SETUP_CMD="test"
-
-        # Do a test in Python 2.
-        - python: 2.7
-          env: NUMPY_VERSION=1.15 ASTROPY_VERSION=2.0.15 SETUP_CMD="test"
 
         # Try Astropy development version
         - python: 3.8
@@ -97,4 +92,4 @@ after_success:
     # If coveralls.io is set up for this package, uncomment the line
     # below and replace "packagename" with the name of your package.
     # The coveragerc file may be customized as needed for your package.
-    - if [[ $SETUP_CMD == *--coverage* ]]; then coveralls --rcfile='synphot/tests/coveragerc'; fi
+    #- if [[ $SETUP_CMD == *--coverage* ]]; then coveralls --rcfile='lib/stsci/tools/tests/coveragerc'; fi
