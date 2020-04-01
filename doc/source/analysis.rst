@@ -8,19 +8,9 @@ linefit
 .. automodule:: stsci.tools.linefit
    :members:
 
-nmpfit
-======
-.. automodule:: stsci.tools.nmpfit
-   :members:
-
 xyinterp
 ========
 .. automodule:: stsci.tools.xyinterp
-   :members:
-
-gfit
-====
-.. automodule:: stsci.tools.gfit
    :members:
 
 Image Combination Modules
