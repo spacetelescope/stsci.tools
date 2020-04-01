@@ -1032,7 +1032,7 @@ class Section(dict):
         1.0
         >>> a['b'] = '3.2'
         >>> a.as_float('b')  # doctest: +FLOAT_CMP
-        3.2000000000000002
+        3.2
         """
         return float(self[key])
 
