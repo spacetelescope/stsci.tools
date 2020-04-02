@@ -5,8 +5,6 @@
 """
         readgeis: Read GEIS file and convert it to a FITS extension file.
 
-        License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
-
         Usage:
 
                 readgeis.py [options] GEISname FITSname

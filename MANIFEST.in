@@ -3,6 +3,7 @@ include CHANGES.rst
 include LICENSE.md
 
 include setup.cfg
+include pyproject.toml
 
 recursive-include lib/stsci/tools/tests *
 recursive-include doc *

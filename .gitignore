@@ -46,6 +46,7 @@ develop-eggs
 distribute-*.tar.gz
 .pytest_cache
 .cache
+pip-wheel-metadata/
 
 # codecov
 .coverage

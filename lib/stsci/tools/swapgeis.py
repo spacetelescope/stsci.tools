@@ -5,8 +5,6 @@
 """
         swapgeis: Read GEIS file, byteswap it and write out to a new GEIS file.
 
-        License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
-
         Usage:
 
                 swapgeis.py [options] GEISname newGEISname
