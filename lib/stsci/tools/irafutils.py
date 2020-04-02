@@ -47,7 +47,8 @@ def printColsAuto(in_strings, term_width=80, min_pad=1):
             you will see twice this many spaces between 2 strings)
     """
     # sanity check
-    assert in_strings and len(in_strings)>0, 'Unexpected: '+repr(in_strings)
+    if not in_strings or len(in_strings) <= 0:
+        raise ValueError('Unexpected: ' + repr(in_strings))
 
     # get max width in input
     maxWidth = len(max(in_strings, key=len)) + (2*min_pad) # width with pad
@@ -227,7 +228,8 @@ def _getCharsUntil(buf, stopChar, branchForQuotes, allowEol):
         return buf[:1 + mo.start()] # return token plus stopChar at end
 
     # Should not get to this point unless in a branch-for-quotes situation.
-    assert branchForQuotes,"Programming error! shouldnt be here w/out branching"
+    if not branchForQuotes:
+        raise ValueError("Programming error! Shouldn't be here w/out branching")
 
     # Quotes were found.
     # There are two kinds, but double quotes could be the start of
@@ -514,7 +516,7 @@ def launchBrowser(url, brow_bin='mozilla', subj=None):
     pid = os.fork()
     if pid == 0: # child
         if sys.platform == 'darwin':
-            if 0 != os.system('open "'+url+'"'): # does not seem to keep '#.*'
+            if 0 != os.system('open "'+url+'"'): # does not seem to keep '#.*'  # nosec
                 print("Error opening URL: "+url)
         os._exit(0)
 #       The following retries if "-remote" doesnt work, opening a new browser

@@ -20,7 +20,8 @@ def sigStrToKwArgsDict(checkFuncSig):
         of the keyword args and their values. """
     p1 = checkFuncSig.find('(')
     p2 = checkFuncSig.rfind(')')
-    assert p1 > 0 and p2 > 0 and p2 > p1, "Invalid signature: "+checkFuncSig
+    if p1 <= 0 or p2 <= 0 or p2 <= p1:
+        raise ValueError("Invalid signature: " + checkFuncSig)
     argParts = irafutils.csvSplit(checkFuncSig[p1+1:p2], ',', True)
     argParts = [x.strip() for x in argParts]
     retval = {}

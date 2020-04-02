@@ -15,18 +15,21 @@ class WatchedProcess(object):
         self._start_time = None
 
     def start_process(self):
-        assert self.state == 0, "Already started: "+str(self.process)
+        if self.state != 0:
+            raise RuntimeError("Already started: " + str(self.process))
         self._start_time = time.time()
         self.process.start()
         self.state = 1
 
     def join_process(self):
-        assert self.state >= 1, "Not started: "+str(self.process)
+        if self.state < 1:
+            raise RuntimeError("Not started: " + str(self.process))
         self.process.join()
         self.state = 2
 
     def time_since_started(self):
-        assert self.state > 0, "Not yet started: "+str(self.process)
+        if self.state <= 0:
+            raise RuntimeError("Not yet started: " + str(self.process))
         return time.time() - self._start_time
 
     def __repr__(self):
@@ -65,9 +68,10 @@ def launch_and_wait(mp_proc_list, pool_size):
             if p.state == 1: # been started
                 if not p.process.is_alive():
                     p.state = 2 # process has finished or been terminated
-                    assert p.process.exitcode is not None, \
-                           "Process is not alive but has no exitcode? "+ \
-                           str(p.process)
+                    if p.process.exitcode is None:
+                        raise RuntimeError(
+                            "Process is not alive but has no exitcode? " +
+                            str(p.process))
 
         # now figure num_running
         num_running = len([p for p in procs if p.state == 1])

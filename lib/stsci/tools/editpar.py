@@ -1334,7 +1334,8 @@ class EditParDialog(object):
         This same logic is used for GUI help, task help, log msgs, etc. """
 
         # sanity check
-        assert kind in ('epar', 'task', 'log'), 'Unknown help kind: '+str(kind)
+        if kind not in ('epar', 'task', 'log'):
+            raise ValueError('Unknown help kind: ' + str(kind))
 
         #-----------------------------------------
         # See if they'd like to view in a browser
