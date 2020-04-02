@@ -1,18 +1,21 @@
 .. _change_log:
 
-=======================
-stsci.tools change log
-=======================
+======================
+stsci.tools Change Log
+======================
 
-The version of stsci.tools can be identified using ::
+The version of stsci.tools can be identified using:
 
-> python
 >>> import stsci.tools
 >>> stsci.tools.__version__
 
 The following notes provide some details on what has been revised for each
 version in reverse chronological order (most recent version at the top
 of the list).
+
+3.7.0 (unreleased)
+------------------
+
 
 3.6.0 (2019-07-17)
 ------------------

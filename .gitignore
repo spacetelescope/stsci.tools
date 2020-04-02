@@ -6,7 +6,7 @@
 __pycache__
 
 # Other generated files
-version.py
+lib/stsci/tools/version.py
 */cython_version.py
 htmlcov
 .coverage
@@ -44,8 +44,6 @@ sdist
 develop-eggs
 .installed.cfg
 distribute-*.tar.gz
-relic/
-RELIC-INFO
 .pytest_cache
 .cache
 
