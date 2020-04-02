@@ -1,5 +1,7 @@
-from __future__ import division  # confidence high
-from .version import *
+try:
+    from .version import version as __version__
+except ImportError:
+    __version__ = ''
 
 
-__vdate__ = __version_date__
+__vdate__ = ''  # Not used anymore but kept for historical reason

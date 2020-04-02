@@ -15,8 +15,6 @@
 #       Version 0.2.0, 31-Mar-06: Added numpy to the task list. -- CJH
 from __future__ import division, print_function  # confidence high
 
-__version__ = '0.3.0'
-
 
 def printVersionInfo():
     # Print the current path information

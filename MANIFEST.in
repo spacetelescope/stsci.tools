@@ -1,4 +1,14 @@
+include README.md
+include CHANGES.rst
 include LICENSE.md
-include RELIC-INFO
-exclude lib/stsci/tools/version.py
+
+include setup.cfg
+
 recursive-include lib/stsci/tools/tests *
+recursive-include doc *
+
+prune build
+prune docs/build
+prune docs/api
+
+global-exclude *.pyc *.o
