@@ -47,7 +47,7 @@ def printColsAuto(in_strings, term_width=80, min_pad=1):
             you will see twice this many spaces between 2 strings)
     """
     # sanity check
-    if not in_strings or len(in_strings) <= 0:
+    if not in_strings:
         raise ValueError('Unexpected: ' + repr(in_strings))
 
     # get max width in input
@@ -516,7 +516,7 @@ def launchBrowser(url, brow_bin='mozilla', subj=None):
     pid = os.fork()
     if pid == 0: # child
         if sys.platform == 'darwin':
-            if 0 != os.system('open "'+url+'"'): # does not seem to keep '#.*'  # nosec
+            if os.system('open "'+url+'"'): # does not seem to keep '#.*'  # nosec
                 print("Error opening URL: "+url)
         os._exit(0)
 #       The following retries if "-remote" doesnt work, opening a new browser
