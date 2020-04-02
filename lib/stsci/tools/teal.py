@@ -659,7 +659,7 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
 
         # Get name(s) of any triggers that this par triggers
         triggerNamesTup = self._taskParsObj.getTriggerStrings(scope, name)
-        if triggerNamesTup is None or len(triggerNamesTup) <= 0:
+        if not triggerNamesTup:
             raise ValueError('Empty trigger name for: "' + name + '", consult the .cfgspc file.')
 
         # Loop through all trigger names - each one is a trigger to kick off -

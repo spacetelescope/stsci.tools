@@ -15,7 +15,7 @@ class WatchedProcess(object):
         self._start_time = None
 
     def start_process(self):
-        if self.state != 0:
+        if self.state:
             raise RuntimeError("Already started: " + str(self.process))
         self._start_time = time.time()
         self.process.start()
