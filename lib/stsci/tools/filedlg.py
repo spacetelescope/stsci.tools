@@ -27,7 +27,7 @@ from . import capable
 
 PY3K = sys.version_info[0] > 2
 if PY3K:
-    from subprocess import getoutput
+    from subprocess import getoutput  # nosec
 else:
     from commands import getoutput
 
@@ -220,11 +220,11 @@ class FileDialog(ModalDialog):
         cwd = self.cwd
         self.fileLb.delete(0, self.fileLb.size())
         filter = self.filterEntry.get()
-        # '*' will list recurively, we don't want that.
+        # '*' will list recursively, we don't want that.
         if filter == '*':
             filter = ''
         cmd = "/bin/ls " + os.path.join(cwd, filter)
-        cmdOutput = getoutput(cmd)
+        cmdOutput = getoutput(cmd)  # nosec
         files = cmdOutput.split("\n")
         files.sort()
         for i in range(len(files)):

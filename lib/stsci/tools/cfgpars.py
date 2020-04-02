@@ -263,7 +263,8 @@ def getParsObjForPyPkg(pkgName, strict):
         flist = [f for f in flist if os.path.basename(f) == tname+'.cfg']
         if len(flist) > 0:
             theFile = flist[0]
-            assert len(flist) == 1, str(flist) # should never happen
+            if len(flist) != 1:  # should never happen
+                raise ValueError(str(flist))
 
     # Add code to check an env. var defined area?  (speak to users first)
 
@@ -411,8 +412,8 @@ def integrityTestAllPkgCfgFiles(pkgObj, output=True):
     """ Given a package OBJECT, inspect it and find all installed .cfg file-
     using tasks under it.  Then them one at a time via
     integrityTestTaskCfgFile, and report any/all errors. """
-    assert type(pkgObj) == type(os), \
-           "Expected module arg, got: "+str(type(pkgObj))
+    if type(pkgObj) != type(os):
+        raise ValueError("Expected module arg, got: " + str(type(pkgObj)))
     taskDict = findAllCfgTasksUnderDir(os.path.dirname(pkgObj.__file__))
     # taskDict is { cfgFileName : taskName }
     errors = []
@@ -427,9 +428,10 @@ def integrityTestAllPkgCfgFiles(pkgObj, output=True):
         except Exception as e:
             errors.append(str(e))
 
-    assert len(errors) == 0, 'Errors found while integrity testing .cfg '+ \
-              'file(s) found under "'+pkgObj.__name__+'":\n'+ \
-              ('\n'.join(errors))
+    if len(errors) != 0:
+        raise ValueError('Errors found while integrity testing .cfg ' +
+                         'file(s) found under "' + pkgObj.__name__ + '":\n' +
+                         ('\n'.join(errors)))
 
 
 def integrityTestTaskCfgFile(taskName, cfgFileName=None):
@@ -478,8 +480,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         self.__paramList = []
 
         # Set up ConfigObj stuff
-        assert setAllToDefaults or os.path.isfile(cfgFileName), \
-               "Config file not found: "+cfgFileName
+        if not setAllToDefaults and not os.path.isfile(cfgFileName):
+            raise ValueError("Config file not found: " + cfgFileName)
         self.__taskName = ''
         if setAllToDefaults:
             # they may not have given us a real file name here since they
@@ -518,8 +520,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             self.__taskName = vtor_checks.sigStrToKwArgsDict(sigStr)['default']
         else:
             cfgSpecPath = self._findAssociatedConfigSpecFile(cfgFileName)
-        assert os.path.exists(cfgSpecPath), \
-               "Matching configspec not found!  Expected: "+cfgSpecPath
+        if not os.path.exists(cfgSpecPath):
+            raise ValueError("Matching configspec not found!  Expected: " + cfgSpecPath)
 
         self.debug('ConfigObjPars: .cfg='+str(cfgFileName)+ \
                    ', .cfgspc='+str(cfgSpecPath)+ \
@@ -653,10 +655,11 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
             # our param list.  BUT, we need to preserve the order our list
             # has had up until now (by unique parameter name).
             namesInOrder = [p.fullName() for p in self.__paramList]
-            assert len(namesInOrder) == len(new_list), \
-                   'Mismatch in num pars, had: '+str(len(namesInOrder))+ \
-                   ', now we have: '+str(len(new_list))+', '+ \
-                   str([p.fullName() for p in new_list])
+            if len(namesInOrder) != len(new_list):
+                raise ValueError(
+                    'Mismatch in num pars, had: ' + str(len(namesInOrder)) +
+                    ', now we have: ' + str(len(new_list)) + ', ' +
+                    str([p.fullName() for p in new_list]))
             self.__paramList[:] = [] # clear list, keep same pointer
             # create a flat dict view of new_list, for ease of use in next step
             new_list_dict = {} # can do in one step in v2.7
@@ -743,10 +746,12 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
         # of the data:  the ConfigObj dict, and the __paramList ...
         # We rely on the idxHint arg so we don't have to search the __paramList
         # every time this is called, which could really slows things down.
-        assert idxHint is not None, "ConfigObjPars relies on a valid idxHint"
-        assert name == self.__paramList[idxHint].name, \
-               'Error in setParam, name: "'+name+'" != name at idxHint: "'+\
-               self.__paramList[idxHint].name+'", idxHint: '+str(idxHint)
+        if idxHint is None:
+            raise ValueError("ConfigObjPars relies on a valid idxHint")
+        if name != self.__paramList[idxHint].name:
+            raise ValueError(
+                'Error in setParam, name: "' + name + '" != name at idxHint: "' +
+                self.__paramList[idxHint].name + '", idxHint: ' + str(idxHint))
         self.__paramList[idxHint].set(val)
 
     def saveParList(self, *args, **kw):
@@ -1019,8 +1024,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     trgs = chk_args_dict.get('triggers')
                     if trgs and len(trgs)>0:
                         # eg. _allTriggers['STEP2.xy'] == ('_rule1_','_rule3_')
-                        assert absKeyName not in self._allTriggers, \
-                            'More than 1 of these in .cfgspc?: '+absKeyName
+                        if absKeyName in self._allTriggers:
+                            raise ValueError('More than 1 of these in .cfgspc?: ' + absKeyName)
                         # we force this to always be a sequence
                         if isinstance(trgs, (list,tuple)):
                             self._allTriggers[absKeyName] = trgs
@@ -1030,8 +1035,8 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                     excs = chk_args_dict.get('executes')
                     if excs and len(excs)>0:
                         # eg. _allExecutes['STEP2.xy'] == ('_rule1_','_rule3_')
-                        assert absKeyName not in self._allExecutes, \
-                            'More than 1 of these in .cfgspc?: '+absKeyName
+                        if absKeyName in self._allExecutes:
+                            raise ValueError('More than 1 of these in .cfgspc?: ' + absKeyName)
                         # we force this to always be a sequence
                         if isinstance(excs, (list,tuple)):
                             self._allExecutes[absKeyName] = excs
@@ -1071,12 +1076,13 @@ class ConfigObjPars(taskpars.TaskPars, configobj.ConfigObj):
                         #         'STEP3.azimuth': 'inactive_if'}
                         if depName in self._allDepdcs:
                             thisRulesDict = self._allDepdcs[depName]
-                            assert not absKeyName in thisRulesDict, \
-                                'Cant yet handle multiple actions for the '+ \
-                                'same par and the same rule.  For "'+depName+ \
-                                '" dict was: '+str(thisRulesDict)+ \
-                                ' while trying to add to it: '+\
-                                str({absKeyName:depType})
+                            if absKeyName in thisRulesDict:
+                                raise ValueError(
+                                    'Cant yet handle multiple actions for the ' +
+                                    'same par and the same rule.  For "' + depName +
+                                    '" dict was: ' + str(thisRulesDict) +
+                                    ' while trying to add to it: ' +
+                                    str({absKeyName: depType}))
                             thisRulesDict[absKeyName] = depType
                         else:
                             self._allDepdcs[depName] = {absKeyName:depType}

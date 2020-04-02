@@ -29,7 +29,8 @@ class IterFitsFile(object):
 
     def set_inmemory(self,val):
         """Sets inmemory attribute to either True or False """
-        assert type(val) is bool, 'Please specify either True or False'
+        if type(val) is not bool:
+            raise TypeError('Input value must be boolean')
         self.inmemory = val
 
     def _shape(self):

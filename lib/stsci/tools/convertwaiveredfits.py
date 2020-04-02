@@ -431,7 +431,7 @@ def toMultiExtensionFits(waiveredObject,
                 # Handle floating point values
                 #
                 fmt = '%'+format[1:]+'G'
-                d = eval(fmt % float(whdul[1].data.field(keyword)[i]))
+                d = eval(fmt % float(whdul[1].data.field(keyword)[i]))  # nosec
             else:
                 d = whdul[1].data.field(keyword)[i]
 

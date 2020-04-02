@@ -2168,7 +2168,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
                 continue
 
             cmd = 'p[' + str(i) + '] = ' + ptied[i]
-            exec(cmd)
+            exec(cmd)  # nosec
 
         return p
 

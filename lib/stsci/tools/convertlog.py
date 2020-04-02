@@ -140,8 +140,7 @@ def main():
         elif o in ("-k", "--keep"):
             keep = True
         else:
-            assert False, "unhandled option"
-
+            raise ValueError("unhandled option")
 
     trl_file = args[0]
     try:

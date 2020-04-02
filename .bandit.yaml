@@ -1,0 +1,3 @@
+exclude_dirs:
+  - lib/stsci/tools/tests
+  - ci-helpers

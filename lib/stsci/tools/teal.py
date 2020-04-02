@@ -182,8 +182,8 @@ def teal(theTask, parent=None, loadOnly=False, returnAs="dict",
                 print(re.message.replace('\n\n','\n'))
         return obj
     else:
-        assert returnAs in ("dict", "status", None), \
-               "Invalid value for returnAs arg: "+str(returnAs)
+        if returnAs not in ("dict", "status", None):
+            raise ValueError("Invalid value for returnAs arg: " + str(returnAs))
         dlg = None
         try:
             # if setting to all defaults, go ahead and load it here, pre-GUI
@@ -310,8 +310,8 @@ def _isInstalled(fullFname):
     try:
         import site
         instAreas = site.getsitepackages()
-    except:
-        pass # python 2.6 and lower don't have site.getsitepackages()
+    except Exception:
+        instAreas = []  # python 2.6 and lower don't have site.getsitepackages()
     if len(instAreas) < 1:
         instAreas = [ os.path.dirname(os.__file__) ]
     for ia in instAreas:
@@ -357,7 +357,7 @@ def execEmbCode(SCOPE, NAME, VAL, TEAL, codeStr):
         PARENT = TEAL.top
     OUT = None
     ldict = locals() # will have OUT in it
-    exec(codeStr, globals(), ldict)
+    exec(codeStr, globals(), ldict)  # nosec
     return ldict['OUT']
 
 
@@ -596,8 +596,8 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
         saved (e.g. to a file). """
 
         # Sanity check - this case shouldn't occur
-        assert self._lastSavedState is not None, \
-               "BUG: Please report this as it should never occur."
+        if self._lastSavedState is None:
+            raise RuntimeError("BUG: Please report this as it should never occur.")
 
         # Force the current GUI values into our model in memory, but don't
         # change anything.  Don't save to file, don't even convert bad
@@ -659,8 +659,8 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
 
         # Get name(s) of any triggers that this par triggers
         triggerNamesTup = self._taskParsObj.getTriggerStrings(scope, name)
-        assert triggerNamesTup is not None and len(triggerNamesTup) > 0, \
-               'Empty trigger name for: "'+name+'", consult the .cfgspc file.'
+        if not triggerNamesTup:
+            raise ValueError('Empty trigger name for: "' + name + '", consult the .cfgspc file.')
 
         # Loop through all trigger names - each one is a trigger to kick off -
         # in the order that they appear in the tuple we got.  Most cases will
@@ -705,9 +705,10 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
                     greenlight = True # means run rule for any possible action
                 else: # 'when' was set to something so we need to check action
                     # check value of action (poor man's enum)
-                    assert action in editpar.GROUP_ACTIONS, \
-                        "Unknown action: "+str(action)+', expected one of: '+ \
-                        str(editpar.GROUP_ACTIONS)
+                    if action not in editpar.GROUP_ACTIONS:
+                        raise ValueError("Unknown action: " + str(action) +
+                                         ', expected one of: ' +
+                                         str(editpar.GROUP_ACTIONS))
                     # check value of 'when' (allow them to use comma-sep'd str)
                     # (readers be aware that values must be those possible for
                     #  'action', and 'always' is also allowed)

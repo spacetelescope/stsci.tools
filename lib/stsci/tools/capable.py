@@ -37,7 +37,8 @@ def which_darwin_linkage(force_otool_check=False):
     """
 
     # sanity check
-    assert sys.platform=='darwin', 'Incorrect usage, not on OSX'
+    if sys.platform != 'darwin':
+        raise OSError('Incorrect usage, not on OSX')
 
     # If not forced to run otool, then make some quick and dirty
     # simple checks/assumptions, which do not add to startup time and do not
@@ -71,7 +72,7 @@ def which_darwin_linkage(force_otool_check=False):
         import tkinter as TKNTR
     else:
         import Tkinter as TKNTR
-    import subprocess
+    import subprocess  # nosec
     try:
         tk_dyn_lib = TKNTR._tkinter.__file__
     except AttributeError: # happens on Ureka
@@ -79,7 +80,7 @@ def which_darwin_linkage(force_otool_check=False):
             return 'aqua'
         else:
             return 'unknown'
-    libs = subprocess.check_output(('/usr/bin/otool', '-L', tk_dyn_lib)).decode('ascii')
+    libs = subprocess.check_output(('/usr/bin/otool', '-L', tk_dyn_lib)).decode('ascii')  # nosec
     if libs.find('/libX11.') >= 0:
         return "x11"
     else:

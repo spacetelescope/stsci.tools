@@ -17,6 +17,7 @@ env:
         # overridden underneath. They are defined here in order to save having
         # to repeat them for all configurations.
         - NUMPY_VERSION=stable
+        - INSTALL_CMD='python setup.py build'
         - MAIN_CMD='python setup.py'
         - ASTROPY_VERSION=stable
         - SETUP_CMD='egg_info'
@@ -41,12 +42,16 @@ matrix:
 
         # PEP8 check
         - python: 3.8
-          env: MAIN_CMD="flake8 --count lib/stsci/tools" SETUP_CMD=""
+          env: MAIN_CMD="flake8 --count lib/stsci/tools" SETUP_CMD="" INSTALL_CMD=""
+
+        # Security audit
+        - python: 3.8
+          env: MAIN_CMD="bandit -r . -c .bandit.yaml" SETUP_CMD="" INSTALL_CMD="" PIP_DEPENDENCIES="bandit"
 
     allow_failures:
         # PEP8 will fail for numerous reasons. Ignore it.
         - python: 3.8
-          env: MAIN_CMD="flake8 --count lib/stsci/tools" SETUP_CMD=""
+          env: MAIN_CMD="flake8 --count lib/stsci/tools" SETUP_CMD="" INSTALL_CMD=""
 
 before_install:
 
@@ -85,7 +90,7 @@ install:
     # other dependencies.
 
 script:
-    - python setup.py build
+    - $INSTALL_CMD
     - $MAIN_CMD $SETUP_CMD
 
 after_success:
