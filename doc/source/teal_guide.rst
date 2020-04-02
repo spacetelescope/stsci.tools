@@ -116,7 +116,7 @@ Defining the Help String
 The help information presented by the TEAL GUI comes from the ``getHelpAsString()`` function and gets displayed in a simple ASCII window.  The definition of this function can rely on help information included in the source code as docstrings or from an entirely separate file for tasks which have a large number of parameters or require long explanations to understand how to use the task.  The example from the `resetbits` task was simply::
 
     def getHelpAsString():
-        helpString = 'resetbits Version '+__version__+__vdate__+'\n'
+        helpString = 'resetbits Version '+__version__+'\n'
         helpString += __doc__+'\n'
 
         return helpString
