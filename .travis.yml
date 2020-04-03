@@ -49,7 +49,7 @@ matrix:
         - os: linux
           env: PIP_DEPENDENCIES="sphinx"
                INSTALL_CMD="pip install -e ."
-               MAIN_CMD="cd doc; make linkcheck"
+               MAIN_CMD="cd doc && make linkcheck"
 
         # PEP8 check
         - os: linux
