@@ -5,6 +5,10 @@ os:
 
 dist: xenial
 
+# We need a full clone to make sure setuptools_scm works properly
+git:
+    depth: false
+
 env:
     global:
         # The following versions are the 'default' for tests, unless
@@ -27,7 +31,7 @@ jobs:
 
         # Older version
         - os: linux
-          env: PYTHON_VERSION=3.6 NUMPY_VERSION=1.16 ASTROPY_VERSION=lts
+          env: PYTHON_VERSION=3.6 NUMPY_VERSION=1.16 ASTROPY_VERSION=3.2.3
 
         # Try Astropy development version
         - os: linux
