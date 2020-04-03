@@ -6,7 +6,7 @@ except ImportError:
     TESTED_VERSIONS = {}
 
 try:
-    from .version import version
+    from stsci.tools import __version__ as version
 except ImportError:
     version = 'unknown'
 
