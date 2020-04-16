@@ -2,8 +2,6 @@
 #  Program: parseinput.py
 #  Author:  Christopher Hanley
 #
-#  License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
-#
 #  History:
 #   Version 0.1,  11/02/2004: Initial Creation -- CJH
 #   Version 0.1.2 01/10/2005: Removed the appending of "_drz.fits" to extracted
@@ -216,4 +214,3 @@ def countinputs(inputlist):
             numASNfiles += 1
 
     return numInputs,numASNfiles
-

@@ -3,8 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+***************************************
 Welcome to stsci.tools's documentation!
-=======================================
+***************************************
 
 The STSCI.TOOLS package in STScI_Python provides many functions for use by multiple software packages.
 
@@ -18,13 +19,7 @@ Contents:
    imgutils
    analysis
    bitmask
-
-Building a TEAL Interface for Tasks
------------------------------------
-.. toctree::
-
    teal_guide
-
 
 Indices and tables
 ==================
@@ -32,4 +27,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

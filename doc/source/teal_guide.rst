@@ -1,4 +1,3 @@
-=====================================
 Cookbook for Building TEAL Interfaces
 =====================================
 
@@ -13,7 +12,6 @@ takes a special effort, and this document provides a step-by-step
 walkthrough of how to build TEAL interfaces for any Python task to
 make this effort as easy as possible.
 
-------------
 Introduction
 ------------
 
@@ -23,7 +21,6 @@ This document does not assume the user has any familiarity with using configobj 
 
 The development of the TEAL interface for the task `resetbits` in the `betadrizzle` package is used as an example.  More elaborate examples will be explained after the development of the TEAL interface for `resetbits` has been described.
 
-----------------------
 Building the Interface
 ----------------------
 
@@ -31,7 +28,7 @@ The order of operations provided by this document is not the only order in which
 
 
 Step 1: Defining the Parameters
-===============================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The primary purpose for developing a TEAL interface is to provide a GUI which can be used to set the values for the task's parameters. This requires that the developer identify the full set of task parameters which the user will be required to provide when running the task. The signature for the task `resetbits` is::
 
@@ -40,7 +37,8 @@ The primary purpose for developing a TEAL interface is to provide a GUI which ca
 These parameters now have to be described in a pair of configobj parameter files in order to define the parameters, their types and any validation that may need to be performed on the input values.
 
 Default Values for the Parameters
----------------------------------
+"""""""""""""""""""""""""""""""""
+
 The first file which needs to be defined provides the default values for each parameter.  Default values can be any string or numerical value, including "" or None.
 
 This task will simply need::
@@ -60,7 +58,8 @@ This file needs to be saved with a filename extension of `.cfg` in a `pars/` sub
 This file will then get installed in the directory `betadrizzle/pars/resetbits.cfg` with the instructions on how to set that up coming in the last step of this process.
 
 Parameter Validation Rules
---------------------------
+""""""""""""""""""""""""""
+
 The type for the parameter values, along with the definition of any range of valid values, is defined in the second configobj file: the configobj specification (configspec) file or `cfgspc` file.  This file can also provide rules for how the GUI should respond to input values as well, turning the TEAL GUI into an active assistant for the user when editing large or complex sets of parameters.
 
 For this example, we have a very basic set of parameters to define without any advance logic required. TEAL provides validators for a wide range of parameter types, including:
@@ -99,7 +98,8 @@ Each of these parameter types includes a description of the parameter as the `co
 
 
 Step 2: TEAL Functions for the Task
-===================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 TEAL requires that a couple of functions be defined within the task in order for the GUI to know how to get the help for the task and to run the task.  The functions that need to be defined are:
 
   * ``run(configObj)``
@@ -112,7 +112,8 @@ The sole input from TEAL will be a ConfigObj instance, a class which provides al
 .. note:: The ``run()`` and ``getHelpAsString()`` functions, along with the task's primary user interface function, all need to be in the module with the same name as the task, as TEAL finds the task by importing the taskname. Or, these two functions may instead be arranged as methods of a task class, if desired.
 
 Defining the Help String
-------------------------
+""""""""""""""""""""""""
+
 The help information presented by the TEAL GUI comes from the ``getHelpAsString()`` function and gets displayed in a simple ASCII window.  The definition of this function can rely on help information included in the source code as docstrings or from an entirely separate file for tasks which have a large number of parameters or require long explanations to understand how to use the task.  The example from the `resetbits` task was simply::
 
     def getHelpAsString():
@@ -137,7 +138,8 @@ More complex tasks may require the documentation which would be too long to comf
 The parameter ``__taskname__`` should already have been defined for the task and gets used to find the file on disk with the name ``__taskname__.help``. The parameter ``__file__`` specifies where the task's module has been installed with the assumption that the help file has been installed in the same directory.  The task `betadrizzle` uses separate files and can be used as an example of how this can be implemented.
 
 Defining How to Run the Task
-----------------------------
+""""""""""""""""""""""""""""
+
 The ConfigObj instance passed by TEAL into the module needs to be interpreted and used to run the application.  There are a couple of different models which can be used to define the interface between the ``run()`` function and the task's primary user interface function (i.e. how it would be called in a script).
 
   #. The ``run()`` function interprets the ConfigObj instance and calls the user interface
@@ -162,7 +164,8 @@ Interactive use of this function would use the function ``reset_dq_bits()``.  Th
 
 
 Step 3: Advertising TEAL-enabled Tasks
-======================================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Any task which has a TEAL interface implemented can be advertised to users of the package through the use of a ``teal`` function: ``teal.print_tasknames()``.  This function call can be added to the package's `__init__.py` module so that everytime the package gets imported, or reloaded, interactively, it will print out a message listing all the tasks which have TEAL GUI's available for use.  This listing will not be printed out when importing the package from another task.  The `__init__.py` module for the `betadrizzle` package has the following lines::
 
     # These lines allow TEAL to print out the names of TEAL-enabled tasks
@@ -172,7 +175,8 @@ Any task which has a TEAL interface implemented can be advertised to users of th
 
 
 Step 4: Setting Up Installation
-===============================
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 The additional files which have been added to the package with the task now need to be installed alongside the module for the task.  Packages in the `STScI_Python` release get installed using Python's `distutils` mechanisms defined through the ``defsetup.py`` module. This file includes a dictionary for `setupargs` that describe the package and the files which need to be installed.  This needs to be updated to include all the new files as ``data_files`` by adding the following line to the ``setupargs`` dictionary definition::
 
   'data_files':  [(pkg+"/pars",['lib/pars/*']),( pkg, ['lib/*.help'])],
@@ -181,48 +185,35 @@ This will add the ConfigObj files in the `pars/` directory to the package while 
 
 
 Step 5: Testing the GUI
-=======================
+^^^^^^^^^^^^^^^^^^^^^^^
+
 Upon installing the new code, the TEAL interface will be available for the task.  There are a couple of ways of starting the GUI along with a way to grab the ConfigObj instance directly without starting up the GUI at all.
 
-Running the GUI under PYRAF
----------------------------
-The TEAL GUI can be started under PYRAF as if it were a standard IRAF task with the syntax::
-
-    >>> import <package>
-    >>> epar <taskname>
-
-For example, our task ``resetbits`` was installed as part of the ``betadrizzle`` package, so we could start the GUI using::
-
-    >>> import betadrizzle
-    >>> epar resetbits
-
-The fact that this task has a valid TEAL interface can be verified by insuring that the taskname gets printed out after the `import` statement.
-
-Running the GUI using Python
-----------------------------
-Fundamentally, TEAL is a Python GUI that can be run interactively under any Python interpreter, not just PyRAF.  It can be called for our example task using the syntax::
+Fundamentally, TEAL is a Python GUI that can be run interactively under any Python interpreter.  It can be called for our example task using the syntax::
 
     >>> from stsci.tools import teal
     >>> cobj = teal.teal('resetbits')
 
 Getting the ConfigObj Without Starting the GUI
-----------------------------------------------
+""""""""""""""""""""""""""""""""""""""""""""""
+
 The function for starting the TEAL GUI, ``teal.teal()``, has a parameter to control whether or not to start the GUI at all.  The ConfigObj instance can be returned for the task without starting the GUI by using the `loadOnly` parameter. For our example task, we would use the command::
 
     >>> cobj = teal.teal('resetbits',loadOnly=True)
 
 The output variable `cobj` can then be passed along or examined depending on what needs to be done at the time.
 
----------------
 Advanced Topics
 ---------------
+
 The topics presented here describe how to take advantage of some of TEAL's more advanced functions for controlling the behavior of the GUI and for working with complex sets of parameters.
 
 Most of the examples for these advanced topics use the ConfgObj files and code defined for betadrizzle.
 
 
 Parameter Sections
-==================
+^^^^^^^^^^^^^^^^^^
+
 The ConfigObj specification allows for parameters to be organized into sections of related parameters.  The parameters defined in these sections remain together in a single dictionary within the ConfigObj instance so that they can be passed into tasks or interpreted as a single unit.  Use of sections within TEAL provides for the opportunity to control the GUI's behaviors based on whether or not the parameters in a given section need to be edited by the user.
 
 A parameter section can be defined simply by providing a title using the following syntax in both the .cfg and .cfgspc files::
@@ -252,7 +243,8 @@ These two sets of definitions work together to define the 'STEP 1: STATIC MASK' 
 
 
 Section Triggers
-================
+^^^^^^^^^^^^^^^^
+
 The behavior of the TEAL GUI can be controlled for each section in a number of ways, primarily as variations on the behavior of turning off the ability to edit the parameters in a section based on another parameters value.  A section parameter can be defined to allow the user to explicitly specify whether or not they need to work with those parameters.  This can the control whether or not the remainder of the parameters are editable through the use of the `triggers` argument in the .cfgspc file for the section parameter.
 
 The supported values for the `triggers` argument currently understood by TEAL are:
@@ -265,7 +257,8 @@ The example for defining the section 'STEP 1: STATIC MASK' illustrates how to us
 Another argument defined as ``is_set_by="_rule<#>"`` allows the user to define when this section trigger can be set by other parameters using code and logic provided by the user. The value, ``_rule<#>_`` refers to code in the specified rule (defined at the end of the `.cfgspc` file) to determine what to do. The code which will be run must be found in the configspec file itself, although that code could reference other packages which are already installed.
 
 Use of Rules
-------------
+^^^^^^^^^^^^
+
 A special section can be appended to the end of the ConfigObj files (.cfg and .cfgspc files) to define rules which can implement nearly arbitrary code to determine how the GUI should treat parameter sections or even individual parameter settings. The return value for a rule should always be a boolean value that can be used in the logic of setting parameter values.
 
 This capability has been implemented in `betadrizzle` to control whether or not whole sections of parameters are even editable (used) to safeguard the user from performing steps which need more than 1 input when only 1 input is provided. The use of the ``_rule<#>_`` trigger can be seen in the `betadrizzle` .cfgspc file::
@@ -299,7 +292,8 @@ For the rule itself, one can optionally state (via the ``when`` argument) when t
 These options can be provided as a comma-separated list for combinations, although care should be taken to avoid any logic problems for when the rule gets evaluated.  If a ``when`` argument is not supplied, the value of ``always`` is assumed.
 
 Tricky Rules
-------------
+^^^^^^^^^^^^
+
 A parameter can also be controlled by multiple other parameters using the same
 rule. The example below shows how to get ``par1`` to be grayed out if
 ``do_step1`` and ``do_step2`` are both disabled.
@@ -352,4 +346,4 @@ under ``Help`` menu also shows you what it is doing.
 
 
 .. _`ConfigObj module`: http://www.voidspace.org.uk/python/configobj.html
-.. _`Numpy Documentation`: http://projects.scipy.org/numpy/wiki/CodingStyleGuidelines
+.. _`Numpy Documentation`: https://numpydoc.readthedocs.io/en/latest/format.html

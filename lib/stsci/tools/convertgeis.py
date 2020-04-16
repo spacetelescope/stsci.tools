@@ -5,8 +5,6 @@
 """
         convertgeis: Read GEIS file and convert it to a waivered-FITS file.
 
-        License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
-
         Usage:
 
                 convertgeis.py [options] GEISname FITSname

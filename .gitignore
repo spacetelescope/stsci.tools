@@ -12,7 +12,6 @@ htmlcov
 .coverage
 MANIFEST
 .ipynb_checkpoints
-u40x010hm*.fits
 
 # Sphinx
 docs/api
@@ -46,6 +45,7 @@ develop-eggs
 distribute-*.tar.gz
 .pytest_cache
 .cache
+pip-wheel-metadata/
 
 # codecov
 .coverage

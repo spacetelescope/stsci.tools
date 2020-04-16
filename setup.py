@@ -1,45 +1,32 @@
 #!/usr/bin/env python
-from setuptools import setup, find_packages
 
-setup(
-    name = 'stsci.tools',
-    use_scm_version={'write_to': 'lib/stsci/tools/version.py'},
-    author = 'STScI',
-    author_email = 'help@stsci.edu',
-    description = 'Collection of STScI utility functions',
-    url = 'https://github.com/spacetelescope/stsci.tools',
-    classifiers = [
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: BSD License',
-        'Operating System :: OS Independent',
-        'Programming Language :: Python',
-        'Topic :: Scientific/Engineering :: Astronomy',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-    ],
-    install_requires = [
-        'astropy',
-        'numpy',
-    ],
-    setup_requires = [
-        'setuptools_scm',
-        'pytest-runner'
-    ],
-    tests_require = [
-        'pytest',
-        'pytest-doctestplus'
-    ],
-    package_dir = {
-        '': 'lib',
-    },
-    packages = find_packages('lib'),
-    package_data = {
-        '': ['LICENSE.txt'],
-        'stsci/tools/tests': ['data/*.*']
-    },
-    entry_points = {
-        'console_scripts': [
-            'convertwaiveredfits=stsci.tools.convertwaiveredfits:main',
-            'convertlog=stsci.tools.convertlog:main'
-        ],
-    },
-)
+import sys
+from setuptools import setup
+
+TEST_HELP = """
+Note: running tests is no longer done using 'python setup.py test'. Instead
+you will need to run:
+    pip install -e .
+    pytest
+For more information, see:
+  https://docs.astropy.org/en/latest/development/testguide.html#running-tests
+"""
+
+if 'test' in sys.argv:
+    print(TEST_HELP)
+    sys.exit(1)
+
+DOCS_HELP = """
+Note: building the documentation is no longer done using
+'python setup.py build_docs'. Instead you will need to run:
+    cd docs
+    make html
+For more information, see:
+  https://docs.astropy.org/en/latest/install.html#builddocs
+"""
+
+if 'build_docs' in sys.argv or 'build_sphinx' in sys.argv:
+    print(DOCS_HELP)
+    sys.exit(1)
+
+setup(use_scm_version={'write_to': 'lib/stsci/tools/version.py'})

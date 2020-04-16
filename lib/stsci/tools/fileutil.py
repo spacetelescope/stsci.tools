@@ -1195,7 +1195,7 @@ def rAsciiLine(ifile):
 
 #######################################################
 #
-#
+#  UPDATE: We don't support IRAF/PyRAF anymore.
 #
 #  IRAF environment variable interpretation routines
 #      extracted from PyRAF's 'iraffunction.py'
@@ -1302,12 +1302,8 @@ def untranslateName(s):
 def envget(var, default=None):
     """Get value of IRAF or OS environment variable."""
 
-    if 'pyraf' in sys.modules:
-        #ONLY if pyraf is already loaded, import iraf into the namespace
-        from pyraf import iraf
-    else:
-        # else set iraf to None so it knows to not use iraf's environment
-        iraf = None
+    # set iraf to None so it knows to not use iraf's environment
+    iraf = None
 
     try:
         if iraf:
@@ -1364,12 +1360,8 @@ def osfn(filename):
 def defvar(varname):
     """Returns true if CL variable is defined."""
 
-    if 'pyraf' in sys.modules:
-        #ONLY if pyraf is already loaded, import iraf into the namespace
-        from pyraf import iraf
-    else:
-        # else set iraf to None so it knows to not use iraf's environment
-        iraf = None
+    # set iraf to None so it knows to not use iraf's environment
+    iraf = None
 
     if iraf:
         _irafdef = iraf.envget(varname)

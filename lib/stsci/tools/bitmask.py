@@ -1,13 +1,7 @@
-"""
-A module that provides functions for manipulating bitmasks and data quality
+"""A module that provides functions for manipulating bitmasks and data quality
 (DQ) arrays.
 
-:Authors: Mihai Cara
-
-:License: See LICENSE.md
-
 """
-
 import sys
 import warnings
 import six
@@ -69,7 +63,7 @@ def is_bit_flag(n):
 
     Returns
     -------
-    bool
+    result : bool
         ``True`` if input ``n`` is a bit flag and ``False`` if it is not.
 
     """
@@ -129,19 +123,19 @@ def interpret_bit_flags(bit_flags, flip_bits=None):
 
     Examples
     --------
-        >>> from stsci.tools.bitmask import interpret_bit_flags
-        >>> "{0:016b}".format(0xFFFF & interpret_bit_flags(28))
-        '0000000000011100'
-        >>> "{0:016b}".format(0xFFFF & interpret_bit_flags('4,8,16'))
-        '0000000000011100'
-        >>> "{0:016b}".format(0xFFFF & interpret_bit_flags('~4,8,16'))
-        '1111111111100011'
-        >>> "{0:016b}".format(0xFFFF & interpret_bit_flags('~(4+8+16)'))
-        '1111111111100011'
-        >>> "{0:016b}".format(0xFFFF & interpret_bit_flags([4, 8, 16]))
-        '0000000000011100'
-        >>> "{0:016b}".format(0xFFFF & interpret_bit_flags([4, 8, 16], flip_bits=True))
-        '1111111111100011'
+    >>> from stsci.tools.bitmask import interpret_bit_flags
+    >>> "{0:016b}".format(0xFFFF & interpret_bit_flags(28))
+    '0000000000011100'
+    >>> "{0:016b}".format(0xFFFF & interpret_bit_flags('4,8,16'))
+    '0000000000011100'
+    >>> "{0:016b}".format(0xFFFF & interpret_bit_flags('~4,8,16'))
+    '1111111111100011'
+    >>> "{0:016b}".format(0xFFFF & interpret_bit_flags('~(4+8+16)'))
+    '1111111111100011'
+    >>> "{0:016b}".format(0xFFFF & interpret_bit_flags([4, 8, 16]))
+    '0000000000011100'
+    >>> "{0:016b}".format(0xFFFF & interpret_bit_flags([4, 8, 16], flip_bits=True))
+    '1111111111100011'
 
     """
     has_flip_bits = flip_bits is not None
@@ -244,9 +238,7 @@ def interpret_bit_flags(bit_flags, flip_bits=None):
 
 def bitfield_to_boolean_mask(bitfield, ignore_flags=0, flip_bits=None,
                              good_mask_value=True, dtype=np.bool_):
-    r"""
-    bitfield_to_boolean_mask(bitfield, ignore_flags=None, flip_bits=None, \
-good_mask_value=True, dtype=numpy.bool\_)
+    """
     Converts an array of bit fields to a boolean (or integer) mask array
     according to a bitmask constructed from the supplied bit flags (see
     ``ignore_flags`` parameter).
@@ -268,19 +260,19 @@ good_mask_value=True, dtype=numpy.bool\_)
         bits in the input ``bitfield`` should be *ignored* (i.e., zeroed), or
         `None`.
 
-        | Setting ``ignore_flags`` to `None` effectively will make
-          `bitfield_to_boolean_mask` interpret all ``bitfield`` elements
-          as "good" regardless of their value.
+        Setting ``ignore_flags`` to `None` effectively will make
+        `bitfield_to_boolean_mask` interpret all ``bitfield`` elements
+        as "good" regardless of their value.
 
-        | When ``ignore_flags`` argument is an integer bitmask, it will be
-          combined using bitwise-NOT and bitwise-AND with each element of the
-          input ``bitfield`` array (``~ignore_flags & bitfield``). If the
-          resultant bitfield element is non-zero, that element will be
-          interpreted as a "bad" in the output boolean mask and it will be
-          interpreted as "good" otherwise. ``flip_bits`` parameter may be used
-          to flip the bits (``bitwise-NOT``) of the bitmask thus effectively
-          changing the meaning of the ``ignore_flags`` parameter from "ignore"
-          to "use only" these flags.
+        When ``ignore_flags`` argument is an integer bitmask, it will be
+        combined using bitwise-NOT and bitwise-AND with each element of the
+        input ``bitfield`` array (``~ignore_flags & bitfield``). If the
+        resultant bitfield element is non-zero, that element will be
+        interpreted as a "bad" in the output boolean mask and it will be
+        interpreted as "good" otherwise. ``flip_bits`` parameter may be used
+        to flip the bits (``bitwise-NOT``) of the bitmask thus effectively
+        changing the meaning of the ``ignore_flags`` parameter from "ignore"
+        to "use only" these flags.
 
         .. note::
 
@@ -288,18 +280,18 @@ good_mask_value=True, dtype=numpy.bool\_)
             non-zero elements in the input ``bitfield`` array are to be
             interpreted as "bad".
 
-        | When ``ignore_flags`` argument is an Python list of integer bit
-          flags, these flags are added together to create an integer bitmask.
-          Each item in the list must be a flag, i.e., an integer that is an
-          integer power of 2. In order to flip the bits of the resultant
-          bitmask, use ``flip_bits`` parameter.
+        When ``ignore_flags`` argument is an Python list of integer bit
+        flags, these flags are added together to create an integer bitmask.
+        Each item in the list must be a flag, i.e., an integer that is an
+        integer power of 2. In order to flip the bits of the resultant
+        bitmask, use ``flip_bits`` parameter.
 
-        | Alternatively, ``ignore_flags`` may be a string of comma- or
-          '+'-separated list of integer bit flags that should be added together
-          to create an integer bitmask. For example, both ``'4,8'`` and
-          ``'4+8'`` are equivalent and indicate that bit flags 4 and 8 in
-          the input ``bitfield`` array should be ignored when generating
-          boolean mask.
+        Alternatively, ``ignore_flags`` may be a string of comma- or
+        '+'-separated list of integer bit flags that should be added together
+        to create an integer bitmask. For example, both ``'4,8'`` and
+        ``'4+8'`` are equivalent and indicate that bit flags 4 and 8 in
+        the input ``bitfield`` array should be ignored when generating
+        boolean mask.
 
         .. note::
 
@@ -369,7 +361,7 @@ good_mask_value=True, dtype=numpy.bool\_)
         or 0 (if ``dtype`` is of numerical type) and values of corresponding
         to "bad" flags will be `True` (or 1).
 
-    dtype : data-type (Default = numpy.bool\_)
+    dtype : data-type
         The desired data-type for the output binary mask array.
 
     Returns
@@ -383,30 +375,30 @@ good_mask_value=True, dtype=numpy.bool\_)
 
     Examples
     --------
-        >>> from stsci.tools import bitmask
-        >>> import numpy as np
-        >>> dqbits = np.asarray([[0,0,1,2,0,8,12,0],[10,4,0,0,0,16,6,0]])
-        >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=0, dtype=int)
-        array([[1, 1, 0, 0, 1, 0, 0, 1],
-               [0, 0, 1, 1, 1, 0, 0, 1]])
-        >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=0, dtype=bool)
-        array([[ True,  True, False, False,  True, False, False,  True],
-               [False, False,  True,  True,  True, False, False,  True]])
-        >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=6, good_mask_value=0, dtype=int)
-        array([[0, 0, 1, 0, 0, 1, 1, 0],
-               [1, 0, 0, 0, 0, 1, 0, 0]])
-        >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=~6, good_mask_value=0, dtype=int)
-        array([[0, 0, 0, 1, 0, 0, 1, 0],
-               [1, 1, 0, 0, 0, 0, 1, 0]])
-        >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=6, flip_bits=True, good_mask_value=0, dtype=int)
-        array([[0, 0, 0, 1, 0, 0, 1, 0],
-               [1, 1, 0, 0, 0, 0, 1, 0]])
-        >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags='~(2+4)', good_mask_value=0, dtype=int)
-        array([[0, 0, 0, 1, 0, 0, 1, 0],
-               [1, 1, 0, 0, 0, 0, 1, 0]])
-        >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=[2, 4], flip_bits=True, good_mask_value=0, dtype=int)
-        array([[0, 0, 0, 1, 0, 0, 1, 0],
-               [1, 1, 0, 0, 0, 0, 1, 0]])
+    >>> from stsci.tools import bitmask
+    >>> import numpy as np
+    >>> dqbits = np.asarray([[0,0,1,2,0,8,12,0],[10,4,0,0,0,16,6,0]])
+    >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=0, dtype=int)
+    array([[1, 1, 0, 0, 1, 0, 0, 1],
+           [0, 0, 1, 1, 1, 0, 0, 1]])
+    >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=0, dtype=bool)
+    array([[ True,  True, False, False,  True, False, False,  True],
+           [False, False,  True,  True,  True, False, False,  True]])
+    >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=6, good_mask_value=0, dtype=int)
+    array([[0, 0, 1, 0, 0, 1, 1, 0],
+           [1, 0, 0, 0, 0, 1, 0, 0]])
+    >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=~6, good_mask_value=0, dtype=int)
+    array([[0, 0, 0, 1, 0, 0, 1, 0],
+           [1, 1, 0, 0, 0, 0, 1, 0]])
+    >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=6, flip_bits=True, good_mask_value=0, dtype=int)
+    array([[0, 0, 0, 1, 0, 0, 1, 0],
+           [1, 1, 0, 0, 0, 0, 1, 0]])
+    >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags='~(2+4)', good_mask_value=0, dtype=int)
+    array([[0, 0, 0, 1, 0, 0, 1, 0],
+           [1, 1, 0, 0, 0, 0, 1, 0]])
+    >>> bitmask.bitfield_to_boolean_mask(dqbits, ignore_flags=[2, 4], flip_bits=True, good_mask_value=0, dtype=int)
+    array([[0, 0, 0, 1, 0, 0, 1, 0],
+           [1, 1, 0, 0, 0, 0, 1, 0]])
 
     """
     bitfield = np.asarray(bitfield)

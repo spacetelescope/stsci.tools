@@ -2,8 +2,6 @@
 """
         convertlog: Read ASCII trailer file and convert it to a waivered-FITS file.
 
-        License: http://www.stsci.edu/resources/software_hardware/pyraf/LICENSE
-
         Usage:
 
                 convertlog.py [OPTIONS] trailer_filename

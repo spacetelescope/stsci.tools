@@ -373,12 +373,9 @@ def print_tasknames(pkgName, aDir, term_width=80, always=False,
         not be reported even though they still exist.
     """
     # See if we can bail out early
-    if not always:
-        # We can't use the sys.ps1 check if in PyRAF since it changes sys
-        if 'pyraf' not in sys.modules:
-           # sys.ps1 is only defined in interactive mode
-           if not hasattr(sys, 'ps1'):
-               return # leave here, we're in someone's script
+    # sys.ps1 is only defined in interactive mode
+    if not always and not hasattr(sys, 'ps1'):
+        return  # leave here, we're in someone's script
 
     # Check for tasks
     taskDict = cfgpars.findAllCfgTasksUnderDir(aDir)
@@ -960,8 +957,7 @@ class ConfigObjEparDialog(editpar.EditParDialog): # i.e. TEAL
         if probStr:
             errmsg += '\n\t'+probStr
         errmsg += '\nTry editing/deleting: "' + \
-                  self._taskParsObj.filename+'" (or, if in PyRAF: "unlearn ' + \
-                  self.taskName+'").'
+                  self._taskParsObj.filename+'").'
         print(errmsg)
         return True # as we said, not that big a deal
 
