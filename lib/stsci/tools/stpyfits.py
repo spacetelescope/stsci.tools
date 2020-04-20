@@ -6,10 +6,7 @@ additional features specific to STScI.  These features include the handling
 of Constant Data Value Arrays.
 
 """
-from __future__ import division
-
 import functools
-import sys
 import numpy as np
 
 import astropy
@@ -20,8 +17,6 @@ from astropy.io.fits.util import _is_int
 from astropy.utils import lazyproperty
 from distutils.version import LooseVersion
 
-PY3K = sys.version_info[0] > 2
-ASTROPY_VER_GE20 = LooseVersion(astropy.__version__) >= LooseVersion('2.0')
 ASTROPY_VER_GE32 = LooseVersion(astropy.__version__) >= LooseVersion('3.2')
 
 STPYFITS_ENABLED = False  # Not threadsafe TODO: (should it be?)
@@ -122,10 +117,7 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
         elif header and 'PIXVALUE' in header:
             pixval = header['PIXVALUE']
             if header['BITPIX'] > 0:
-                if PY3K:
-                    pixval = int(pixval)
-                else:
-                    pixval = long(pixval)
+                pixval = int(pixval)
             arrayval = self._check_constant_value_data(data)
             if arrayval is not None:
                 header = header.copy()
@@ -180,10 +172,7 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
             code = BITPIX2DTYPE[bitpix]
             pixval = self._header['PIXVALUE']
             if code in ['uint8', 'int16', 'int32', 'int64']:
-                if PY3K:
-                    pixval = int(pixval)
-                else:
-                    pixval = long(pixval)
+                pixval = int(pixval)
 
             raw_data = np.zeros(shape=dims, dtype=code) + pixval
 
@@ -265,10 +254,7 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
             # actually matches the PIXVALUE
             pixval = self._header['PIXVALUE']
             if self._header['BITPIX'] > 0:
-                if PY3K:
-                    pixval = int(pixval)
-                else:
-                    pixval = long(pixval)
+                pixval = int(pixval)
 
             if self.data is None or self.data.nbytes == 0:
                 # Empty data array; just keep the existing PIXVALUE
@@ -302,12 +288,8 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
 
     def _summary(self):
         summ = super(_ConstantValueImageBaseHDU, self)._summary()
-        if ASTROPY_VER_GE20:
-            outsumm = ((summ[0], summ[1],
-                        summ[2].replace('ConstantValue', '')) + summ[3:])
-        else:
-            outsumm = ((summ[0],
-                        summ[1].replace('ConstantValue', '')) + summ[2:])
+        outsumm = ((summ[0], summ[1],
+                    summ[2].replace('ConstantValue', '')) + summ[3:])
         return outsumm
 
     def _writedata_internal(self, fileobj):

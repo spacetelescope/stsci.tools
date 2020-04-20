@@ -6,21 +6,14 @@
 """
 $Id$
 """
-from __future__ import absolute_import, division, print_function # confidence high
-import sys
-PY3K = sys.version_info[0] > 2
-
 from . import capable, irafutils
 
 if capable.OF_GRAPHICS:
-    if PY3K:
-        from tkinter import *
-        from tkinter.simpledialog import Dialog
-    else:
-        from Tkinter import *
-        from tkSimpleDialog import Dialog
+    from tkinter import *  # noqa
+    from tkinter.simpledialog import Dialog
 else:
     Dialog = object
+
 
 class ListSingleSelectDialog(Dialog):
 

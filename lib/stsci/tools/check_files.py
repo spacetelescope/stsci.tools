@@ -1,20 +1,6 @@
-from __future__ import division, print_function # confidence high
-
-import astropy
 from stsci.tools import parseinput, fileutil, convertwaiveredfits, readgeis
 from astropy.io import fits
 import os
-import sys
-
-from distutils.version import LooseVersion
-
-PY3K = sys.version_info[0] > 2
-if PY3K:
-    string_types = str
-else:
-    string_types = basestring
-
-ASTROPY_VER_GE13 = LooseVersion(astropy.__version__) >= LooseVersion('1.3')
 
 
 def checkFiles(filelist,ivmlist = None):
@@ -487,16 +473,11 @@ def waiver2mef(sciname, newname=None, convert_dq=True, writefits=True):
             fexists = os.path.exists(fitsname)
             if (fexists and clobber) or not fexists:
                 print('Writing out WAIVERED as MEF to ', fitsname)
-                if ASTROPY_VER_GE13:
-                    fimg.writeto(fitsname, overwrite=clobber)
-                else:
-                    fimg.writeto(fitsname, clobber=clobber)
+                fimg.writeto(fitsname, overwrite=clobber)
                 if dqexists:
                     print('Writing out WAIVERED as MEF to ', dqfitsname)
-                    if ASTROPY_VER_GE13:
-                        dqfile.writeto(dqfitsname, overwrite=clobber)
-                    else:
-                        dqfile.writeto(dqfitsname, clobber=clobber)
+                    dqfile.writeto(dqfitsname, overwrite=clobber)
+
         # Now close input GEIS image, and open writable
         # handle to output FITS image instead...
         fimg.close()
@@ -549,16 +530,11 @@ def geis2mef(sciname, convert_dq=True):
     fexists = os.path.exists(fitsname)
     if (fexists and clobber) or not fexists:
             print('Writing out GEIS as MEF to ', fitsname)
-            if ASTROPY_VER_GE13:
-                fimg.writeto(fitsname, overwrite=clobber)
-            else:
-                fimg.writeto(fitsname, clobber=clobber)
+            fimg.writeto(fitsname, overwrite=clobber)
             if dqexists:
                 print('Writing out GEIS as MEF to ', dqfitsname)
-                if ASTROPY_VER_GE13:
-                    dqfile.writeto(dqfitsname, overwrite=clobber)
-                else:
-                    dqfile.writeto(dqfitsname, clobber=clobber)
+                dqfile.writeto(dqfitsname, overwrite=clobber)
+
     # Now close input GEIS image, and open writable
     # handle to output FITS image instead...
     fimg.close()
@@ -567,6 +543,7 @@ def geis2mef(sciname, convert_dq=True):
 
     return fimg
 
+
 def countInput(input):
     files = parseinput.parseinput(input)
     count = len(files[0])
@@ -574,7 +551,7 @@ def countInput(input):
         if fileutil.isFits(f)[0]:
             try:
                 ins = fits.getval(f, 'INSTRUME')
-            except: # allow odd fits files; do not stop the count
+            except Exception:  # allow odd fits files; do not stop the count
                 ins = None
             if ins == 'STIS':
                 count += (stisObsCount(f)-1)

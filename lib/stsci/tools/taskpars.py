@@ -2,9 +2,11 @@
 
 $Id$
 """
-from __future__ import division # confidence high
 
-class NoExecError(Exception): pass
+
+class NoExecError(Exception):
+    pass
+
 
 class TaskPars:
     """ This represents a task's collection of configurable parameters.

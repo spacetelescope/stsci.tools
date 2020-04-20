@@ -71,10 +71,6 @@ IRAF compatibility functions (abbreviated list)::
     access(filename)
         Returns true if file exists, where filename can include IRAF variables
 """
-
-from __future__ import absolute_import, division, print_function  # confidence high
-
-import astropy
 from . import stpyfits as fits
 from . import readgeis
 from . import convertwaiveredfits
@@ -84,19 +80,10 @@ import copy
 import os
 import re
 import shutil
-import sys
 
 import time as _time
 import numpy as np
-from distutils.version import LooseVersion
 
-PY3K = sys.version_info[0] > 2
-if PY3K:
-    string_types = str
-else:
-    string_types = basestring
-
-ASTROPY_VER_GE13 = LooseVersion(astropy.__version__) >= LooseVersion('1.3')
 
 # Environment variable handling - based on iraffunctions.py
 # define INDEF, yes, no, EOF, Verbose, userIrafHome
@@ -108,10 +95,9 @@ no = False
 # List of supported default file types
 # It will look for these file types by default
 # when trying to recognize input rootnames.
-EXTLIST =  ['_crj.fits', '_flt.fits', '_flc.fits', '_sfl.fits', '_cal.fits',
-            '_raw.fits', '.c0h', '.hhh', '_c0h.fits', '_c0f.fits', '_c1f.fits',
-            '.fits']
-
+EXTLIST = ['_crj.fits', '_flt.fits', '_flc.fits', '_sfl.fits', '_cal.fits',
+           '_raw.fits', '.c0h', '.hhh', '_c0h.fits', '_c0f.fits', '_c1f.fits',
+           '.fits']
 
 BLANK_ASNDICT = {
     'output': None,
@@ -591,7 +577,7 @@ def getKeyword(filename, keyword, default=None, handle=None):
     # So, the following piece of code CHECKS for this and FIXES the string,
     # very simply by removing the last character if it is a "/".
     # This fix courtesy of Anton Koekemoer, 2002.
-    elif isinstance(value, string_types):
+    elif isinstance(value, str):
         if value[-1:] == '/':
             value = value[:-1]
 
@@ -747,16 +733,11 @@ def openImage(filename, mode='readonly', memmap=False, writefits=True,
                 fexists = os.path.exists(fitsname)
                 if (fexists and clobber) or not fexists:
                     print('Writing out WAIVERED as MEF to ', fitsname)
-                    if ASTROPY_VER_GE13:
-                        fimg.writeto(fitsname, overwrite=clobber)
-                    else:
-                        fimg.writeto(fitsname, clobber=clobber)
+                    fimg.writeto(fitsname, overwrite=clobber)
                     if dqexists:
                         print('Writing out WAIVERED as MEF to ', dqfitsname)
-                        if ASTROPY_VER_GE13:
-                            dqfile.writeto(dqfitsname, overwrite=clobber)
-                        else:
-                            dqfile.writeto(dqfitsname, clobber=clobber)
+                        dqfile.writeto(dqfitsname, overwrite=clobber)
+
                 # Now close input GEIS image, and open writable
                 # handle to output FITS image instead...
                 fimg.close()
@@ -785,31 +766,25 @@ def openImage(filename, mode='readonly', memmap=False, writefits=True,
             try:
                 dqfile = readgeis.readgeis(_dqname)
                 dqfitsname = buildFITSName(_dqname)
-            except:
+            except Exception:
                 print("Could not read data quality file %s" % _dqname)
 
         # Check to see if user wanted to update GEIS header.
         # or write out a multi-extension FITS file and return a handle to it
         if writefits:
-                # User wants to make a FITS copy and update it
-                # using the filename they have provided
+            # User wants to make a FITS copy and update it
+            # using the filename they have provided
             if fitsname is None:
                 fitsname = buildFITSName(_fname)
 
             # Write out GEIS image as multi-extension FITS.
             fexists = os.path.exists(fitsname)
             if (fexists and clobber) or not fexists:
-                    print('Writing out GEIS as MEF to ', fitsname)
-                    if ASTROPY_VER_GE13:
-                        fimg.writeto(fitsname, overwrite=clobber)
-                    else:
-                        fimg.writeto(fitsname, clobber=clobber)
-                    if dqexists:
-                        print('Writing out GEIS as MEF to ', dqfitsname)
-                        if ASTROPY_VER_GE13:
-                            dqfile.writeto(dqfitsname, overwrite=clobber)
-                        else:
-                            dqfile.writeto(dqfitsname, clobber=clobber)
+                print('Writing out GEIS as MEF to ', fitsname)
+                fimg.writeto(fitsname, overwrite=clobber)
+                if dqexists:
+                    print('Writing out GEIS as MEF to ', dqfitsname)
+                    dqfile.writeto(dqfitsname, overwrite=clobber)
             # Now close input GEIS image, and open writable
             # handle to output FITS image instead...
             fimg.close()
@@ -889,7 +864,7 @@ def countExtn(fimg, extname='SCI'):
     """
 
     closefits = False
-    if isinstance(fimg, string_types):
+    if isinstance(fimg, str):
         fimg = fits.open(fimg)
         closefits = True
 
@@ -952,7 +927,7 @@ def getExtn(fimg, extn=None):
             # We are working with GEIS group syntax
             _indx = str(extn[:extn.find('/')])
             _extn = fimg[int(_indx)]
-        elif isinstance(extn, string_types):
+        elif isinstance(extn, str):
             if extn.strip() == '':
                 _extn = None  # force error since invalid name was provided
             # Only one extension value specified...
@@ -1116,7 +1091,7 @@ def removeFile(inlist):
     like 'iraf.imdelete'.
     """
 
-    if not isinstance(inlist, string_types):
+    if not isinstance(inlist, str):
     # We do have a list, so delete all filenames in list.
         # Treat like a list of full filenames
         _ldir = os.listdir('.')
@@ -1400,13 +1375,15 @@ def set(*args, **kw):
         #
         # Flag any other syntax as an error.
         if (len(args) != 1 or len(kw) != 0 or
-                not isinstance(args[0], string_types) or args[0][:1] != '@'):
+                not isinstance(args[0], str) or args[0][:1] != '@'):
             raise SyntaxError("set requires name=value pairs")
+
 
 # currently do not distinguish set from reset
 # this will change when keep/bye/unloading are implemented
 
 reset = set
+
 
 def show(*args, **kw):
     """Print value of IRAF or OS environment variables."""

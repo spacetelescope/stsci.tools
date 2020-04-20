@@ -7,16 +7,8 @@ A vastly simpler way of doing this is to use a tkinter.Text widget and set
 it to DISABLED, but then you cannot select text.
 $Id$
 """
-from __future__ import division  # confidence high
-
-# System level modules
 import sys
-PY3K = sys.version_info[0] > 2
-
-if PY3K:
-    import tkinter as TKNTR
-else:
-    import Tkinter as TKNTR
+import tkinter as TKNTR
 
 ALLOWED_SYMS = ('c', 'Up', 'Down', 'Left', 'Right', 'Home', 'End', 'Prior',
                 'Next', 'Shift_L', 'Shift_R')

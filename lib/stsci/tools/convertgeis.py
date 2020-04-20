@@ -61,22 +61,14 @@
         necessary to put them in quotes.
 
 """
-
 # Developed by Science Software Branch, STScI, USA.
-# This version needs pyfits 0.9.6.3 or later
-# and numpy version 1.0.4 or later
-
-from __future__ import division, print_function # confidence high
-
-__version__ = "1.0 (25 Feb, 2011), \xa9 AURA"
-
-import os, sys
+import os
+import sys
 from astropy.io import fits
 import numpy
-import array
+from functools import reduce
 
-if sys.version_info[0] > 2:
-    from functools import reduce
+__version__ = "1.0 (25 Feb, 2011), \xa9 AURA"
 
 # definitions used to convert GEIS record into numpy objects
 geis_fmt = {'REAL':'f', 'DOUBLE': 'f', 'INTEGER':'i', 'LOGICAL':'i','CHARACTER':'S'}
@@ -88,6 +80,7 @@ cols_pfmt = {'REAL':'E', 'DOUBLE': 'D', 'INTEGER': 'J', 'LOGICAL':'A', 'CHARACTE
 # Keywords which require special unit conversion
 # keywords which are output as long-floats without using exponential formatting
 kw_DOUBLE = ['CRVAL1','CRVAL2','FPKTTIME','LPKTTIME']
+
 
 def stsci2(hdulist, filename):
     """For STScI GEIS files, need to do extra steps."""

@@ -1,70 +1,41 @@
 #!/usr/bin/env python
-from __future__ import absolute_import, division  # confidence high
-
 import os
 import tempfile
 
-import astropy
 import numpy as np
 import pytest
 from astropy.io import fits
 from astropy.io.fits.tests import FitsTestCase
-from distutils.version import LooseVersion
 
 from .. import stpyfits
-
-ASTROPY_VER_GE13 = LooseVersion(astropy.__version__) >= LooseVersion('1.3')
-ASTROPY_VER_GE20 = LooseVersion(astropy.__version__) >= LooseVersion('2.0')
 
 
 class TestStpyfitsFunctions(FitsTestCase):
     def setup(self):
         self.data_dir = os.path.join(os.path.dirname(__file__), 'data')
         self.temp_dir = tempfile.mkdtemp(prefix='stpyfits-test-')
-
-        if ASTROPY_VER_GE13:
-            self.writekwargs = {'overwrite': True}
-        else:
-            self.writekwargs = {'clobber': True}
+        self.writekwargs = {'overwrite': True}
 
     def test_InfoConvienceFunction(self):
         """Test the info convience function in both the fits and stpyfits
         namespace."""
 
-        if ASTROPY_VER_GE20:
-            ans1 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 215, (), '', ''),
-                    (1, 'SCI', 1, 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
-                    (2, 'ERR', 1, 'ImageHDU', 71, (62, 44), 'int16', ''),
-                    (3, 'DQ', 1, 'ImageHDU', 71, (62, 44), 'int16', ''),
-                    (4, 'SCI', 2, 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
-                    (5, 'ERR', 2, 'ImageHDU', 71, (62, 44), 'int16', ''),
-                    (6, 'DQ', 2, 'ImageHDU', 71, (62, 44), 'int16', '')]
-            ans2 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 215, (), '', ''),
-                    (1, 'SCI', 1, 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
-                    (2, 'ERR', 1, 'ImageHDU', 71, (), '', ''),
-                    (3, 'DQ', 1, 'ImageHDU', 71, (), '', ''),
-                    (4, 'SCI', 2, 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
-                    (5, 'ERR', 2, 'ImageHDU', 71, (), '', ''),
-                    (6, 'DQ', 2, 'ImageHDU', 71, (), '', '')]
-            ans3 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (10, 10), 'int32', '')]
-            ans4 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (), '', '')]
-        else:
-            ans1 = [(0, 'PRIMARY', 'PrimaryHDU', 215, (), '', ''),
-                    (1, 'SCI', 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
-                    (2, 'ERR', 'ImageHDU', 71, (62, 44), 'int16', ''),
-                    (3, 'DQ', 'ImageHDU', 71, (62, 44), 'int16', ''),
-                    (4, 'SCI', 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
-                    (5, 'ERR', 'ImageHDU', 71, (62, 44), 'int16', ''),
-                    (6, 'DQ', 'ImageHDU', 71, (62, 44), 'int16', '')]
-            ans2 = [(0, 'PRIMARY', 'PrimaryHDU', 215, (), '', ''),
-                    (1, 'SCI', 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
-                    (2, 'ERR', 'ImageHDU', 71, (), '', ''),
-                    (3, 'DQ', 'ImageHDU', 71, (), '', ''),
-                    (4, 'SCI', 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
-                    (5, 'ERR', 'ImageHDU', 71, (), '', ''),
-                    (6, 'DQ', 'ImageHDU', 71, (), '', '')]
-            ans3 = [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'int32', '')]
-            ans4 = [(0, 'PRIMARY', 'PrimaryHDU', 7, (), '', '')]
+        ans1 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 215, (), '', ''),
+                (1, 'SCI', 1, 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
+                (2, 'ERR', 1, 'ImageHDU', 71, (62, 44), 'int16', ''),
+                (3, 'DQ', 1, 'ImageHDU', 71, (62, 44), 'int16', ''),
+                (4, 'SCI', 2, 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
+                (5, 'ERR', 2, 'ImageHDU', 71, (62, 44), 'int16', ''),
+                (6, 'DQ', 2, 'ImageHDU', 71, (62, 44), 'int16', '')]
+        ans2 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 215, (), '', ''),
+                (1, 'SCI', 1, 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
+                (2, 'ERR', 1, 'ImageHDU', 71, (), '', ''),
+                (3, 'DQ', 1, 'ImageHDU', 71, (), '', ''),
+                (4, 'SCI', 2, 'ImageHDU', 141, (62, 44), 'int16 (rescales to uint16)', ''),
+                (5, 'ERR', 2, 'ImageHDU', 71, (), '', ''),
+                (6, 'DQ', 2, 'ImageHDU', 71, (), '', '')]
+        ans3 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (10, 10), 'int32', '')]
+        ans4 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (), '', '')]
 
         assert stpyfits.info(self.data('o4sp040b0_raw.fits'), output=False) == ans1
         assert fits.info(self.data('o4sp040b0_raw.fits'), output=False) == ans2
@@ -171,16 +142,10 @@ class TestStpyfitsFunctions(FitsTestCase):
         info3 = fits.info(self.temp('new1.fits'), output=False)
         info4 = stpyfits.info(self.temp('new1.fits'), output=False)
 
-        if ASTROPY_VER_GE20:
-            ans1 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (), '', '')]
-            ans2 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (10, 10), 'int32', '')]
-            ans3 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (), '', '')]
-            ans4 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (10, 10), 'uint8', '')]
-        else:
-            ans1 = [(0, 'PRIMARY', 'PrimaryHDU', 6, (), '', '')]
-            ans2 = [(0, 'PRIMARY', 'PrimaryHDU', 6, (10, 10), 'int32', '')]
-            ans3 = [(0, 'PRIMARY', 'PrimaryHDU', 6, (), '', '')]
-            ans4 = [(0, 'PRIMARY', 'PrimaryHDU', 6, (10, 10), 'uint8', '')]
+        ans1 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (), '', '')]
+        ans2 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (10, 10), 'int32', '')]
+        ans3 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (), '', '')]
+        ans4 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (10, 10), 'uint8', '')]
 
         assert info1 == ans1
         assert info2 == ans2
@@ -220,24 +185,14 @@ class TestStpyfitsFunctions(FitsTestCase):
         stpyfits.append(self.temp('new.fits'), hdu.data, hdu.header)
         fits.append(self.temp('new1.fits'), hdu1.data, hdu1.header)
 
-        if ASTROPY_VER_GE20:
-            ans1 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (10, 10), 'int32', ''),
-                    (1, '', 1, 'ImageHDU', 8, (10, 10), 'int32', '')]
-            ans2 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (10, 10), 'uint8', ''),
-                    (1, '', 1, 'ImageHDU', 8, (10, 10), 'uint8', '')]
-            ans3 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (10, 10), 'int32', ''),
-                    (1, '', 1, 'ImageHDU', 8, (10, 10), 'int32', '')]
-            ans4 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (), '', ''),
-                    (1, '', 1, 'ImageHDU', 8, (), '', '')]
-        else:
-            ans1 = [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'int32', ''),
-                    (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')]
-            ans2 = [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'uint8', ''),
-                    (1, '', 'ImageHDU', 8, (10, 10), 'uint8', '')]
-            ans3 = [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'int32', ''),
-                    (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')]
-            ans4 = [(0, 'PRIMARY', 'PrimaryHDU', 7, (), '', ''),
-                    (1, '', 'ImageHDU', 8, (), '', '')]
+        ans1 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (10, 10), 'int32', ''),
+                (1, '', 1, 'ImageHDU', 8, (10, 10), 'int32', '')]
+        ans2 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (10, 10), 'uint8', ''),
+                (1, '', 1, 'ImageHDU', 8, (10, 10), 'uint8', '')]
+        ans3 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (10, 10), 'int32', ''),
+                (1, '', 1, 'ImageHDU', 8, (10, 10), 'int32', '')]
+        ans4 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (), '', ''),
+                (1, '', 1, 'ImageHDU', 8, (), '', '')]
 
         assert stpyfits.info(self.temp('new.fits'), output=False) == ans1
         assert stpyfits.info(self.temp('new1.fits'), output=False) == ans2
@@ -302,16 +257,10 @@ class TestStpyfitsFunctions(FitsTestCase):
 
         stpyfits.update(self.temp('new.fits'), d, hdu.header, 1)
 
-        if ASTROPY_VER_GE20:
-            ans1 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (), '', ''),
-                    (1, '', 1, 'ImageHDU', 8, (), '', '')]
-            ans2 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (10, 10), 'int32', ''),
-                    (1, '', 1, 'ImageHDU', 8, (10, 10), 'int32', '')]
-        else:
-            ans1 = [(0, 'PRIMARY', 'PrimaryHDU', 7, (), '', ''),
-                    (1, '', 'ImageHDU', 8, (), '', '')]
-            ans2 = [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'int32', ''),
-                    (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')]
+        ans1 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (), '', ''),
+                (1, '', 1, 'ImageHDU', 8, (), '', '')]
+        ans2 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (10, 10), 'int32', ''),
+                (1, '', 1, 'ImageHDU', 8, (10, 10), 'int32', '')]
 
         assert fits.info(self.temp('new.fits'), output=False) == ans1
         assert stpyfits.info(self.temp('new.fits'), output=False) == ans2
@@ -420,16 +369,10 @@ class TestStpyfitsFunctions(FitsTestCase):
 
         hdul.writeto(self.temp('new.fits'), **self.writekwargs)
 
-        if ASTROPY_VER_GE20:
-            ans1 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (10, 10), 'int32', ''),
-                    (1, '', 1, 'ImageHDU', 8, (10, 10), 'int32', '')]
-            ans2 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (), '', ''),
-                    (1, '', 1, 'ImageHDU', 8, (), '', '')]
-        else:
-            ans1 = [(0, 'PRIMARY', 'PrimaryHDU', 7, (10, 10), 'int32', ''),
-                    (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')]
-            ans2 = [(0, 'PRIMARY', 'PrimaryHDU', 7, (), '', ''),
-                    (1, '', 'ImageHDU', 8, (), '', '')]
+        ans1 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (10, 10), 'int32', ''),
+                (1, '', 1, 'ImageHDU', 8, (10, 10), 'int32', '')]
+        ans2 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 7, (), '', ''),
+                (1, '', 1, 'ImageHDU', 8, (), '', '')]
 
         assert stpyfits.info(self.temp('new.fits'), output=False) == ans1
         assert fits.info(self.temp('new.fits'), output=False) == ans2
@@ -542,24 +485,14 @@ class TestStpyfitsFunctions(FitsTestCase):
         hdul.flush()
         hdul.close()
 
-        if ASTROPY_VER_GE20:
-            ans1 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (10,), 'int32', ''),
-                    (1, '', 1, 'ImageHDU', 8, (10, 10), 'int32', '')]
-            ans2 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (), '', ''),
-                    (1, '', 1, 'ImageHDU', 8, (), '', '')]
-            ans3 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (15,), 'int32', ''),
-                    (1, '', 1, 'ImageHDU', 8, (10, 10), 'int32', '')]
-            ans4 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (), '', ''),
-                    (1, '', 1, 'ImageHDU', 8, (), '', '')]
-        else:
-            ans1 = [(0, 'PRIMARY', 'PrimaryHDU', 6, (10,), 'int32', ''),
-                    (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')]
-            ans2 = [(0, 'PRIMARY', 'PrimaryHDU', 6, (), '', ''),
-                    (1, '', 'ImageHDU', 8, (), '', '')]
-            ans3 = [(0, 'PRIMARY', 'PrimaryHDU', 6, (15,), 'int32', ''),
-                    (1, '', 'ImageHDU', 8, (10, 10), 'int32', '')]
-            ans4 = [(0, 'PRIMARY', 'PrimaryHDU', 6, (), '', ''),
-                    (1, '', 'ImageHDU', 8, (), '', '')]
+        ans1 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (10,), 'int32', ''),
+                (1, '', 1, 'ImageHDU', 8, (10, 10), 'int32', '')]
+        ans2 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (), '', ''),
+                (1, '', 1, 'ImageHDU', 8, (), '', '')]
+        ans3 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (15,), 'int32', ''),
+                (1, '', 1, 'ImageHDU', 8, (10, 10), 'int32', '')]
+        ans4 = [(0, 'PRIMARY', 1, 'PrimaryHDU', 6, (), '', ''),
+                (1, '', 1, 'ImageHDU', 8, (), '', '')]
 
         assert stpyfits.info(self.temp('new.fits'), output=False) == ans1
         assert fits.info(self.temp('new.fits'), output=False) == ans2

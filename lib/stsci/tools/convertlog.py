@@ -36,17 +36,15 @@
 
 """
 # Developed by Science Software Branch, STScI, USA.
-
-from __future__ import division, print_function # confidence high
-
-__version__ = "1.0 (7 Jan, 2016), \xa9 AURA"
-
 import os
 import sys
 from astropy.io import fits
 import numpy as np
 
 import textwrap
+
+__version__ = "1.0 (7 Jan, 2016), \xa9 AURA"
+
 
 def convert(input, width=132, output=None, keep=False):
 

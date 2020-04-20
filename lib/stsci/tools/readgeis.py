@@ -59,20 +59,15 @@
         necessary to put them in quotes.
 
 """
-
 # Developed by Science Software Branch, STScI, USA.
-# This version needs pyfits 0.9.6.3 or later
-# and numpy version 1.0.4 or later
-
-from __future__ import division, print_function # confidence high
+import os
+import sys
+from astropy.io import fits
+import numpy
+from functools import reduce
 
 __version__ = "2.2 (18 Feb, 2011), \xa9 AURA"
 
-import os, sys
-from astropy.io import fits
-import numpy
-from numpy import memmap
-from functools import reduce
 
 def stsci(hdulist):
     """For STScI GEIS files, need to do extra steps."""

@@ -127,11 +127,7 @@
 
     A badly formatted set of arguments will raise a ``VdtParamError``.
 """
-
-from __future__ import division, print_function  # confidence high
-
 __version__ = '1.0.1'
-
 
 __all__ = (
     '__version__',
@@ -161,26 +157,16 @@ __all__ = (
     'is_string_list',
     'is_ip_addr_list',
     'is_mixed_list',
-    'is_option',
-    '__docformat__',
+    'is_option'
 )
 
 
 import re
-import sys
-PY3K = sys.version_info[0] > 2
 
-if PY3K:
-    string_types = str
-    number_types = (int, float)
-    int_or_string_types = (int, str)
-    number_or_string_types = (int, float, str)
-    long = int
-else:
-    string_types = basestring
-    number_types = (int, long, float)
-    int_or_string_types = (int, long, basestring)
-    number_or_string_types = (int, long, float, basestring)
+number_types = (int, float)
+int_or_string_types = (int, str)
+number_or_string_types = (int, float, str)
+long = int
 
 _list_arg = re.compile(r'''
     (?:
@@ -258,17 +244,6 @@ _paramstring = r'''
     '''
 
 _matchstring = '^%s*' % _paramstring
-
-# Python pre 2.2.1 doesn't have bool
-try:
-    bool
-except NameError:
-    def bool(val):
-        """Simple boolean equivalent function. """
-        if val:
-            return 1
-        else:
-            return 0
 
 
 def dottedQuadToNum(ip):
@@ -452,7 +427,7 @@ class VdtValueTooLongError(VdtValueError):
         ValidateError.__init__(self, 'the value "%s" is too long.' % (value,))
 
 
-class Validator(object):
+class Validator:
     """
     Validator is an object that allows you to register a set of 'checks'.
     These checks take input and test that it conforms to the check.
@@ -818,7 +793,7 @@ def is_integer(value, min=None, max=None):
     (min_val, max_val) = _is_num_param(('min', 'max'), (min, max))
     if not isinstance(value, int_or_string_types):
         raise VdtTypeError(value)
-    if isinstance(value, string_types):
+    if isinstance(value, str):
         # if it's a string - does it represent an integer ?
         try:
             value = int(value)
@@ -935,7 +910,7 @@ def is_boolean(value):
     VdtTypeError: the value "up" is of the wrong type.
 
     """
-    if isinstance(value, string_types):
+    if isinstance(value, str):
         try:
             return bool_dict[value.lower()]
         except KeyError:
@@ -979,7 +954,7 @@ def is_ip_addr(value):
     Traceback (most recent call last):
     VdtTypeError: the value "0" is of the wrong type.
     """
-    if not isinstance(value, string_types):
+    if not isinstance(value, str):
         raise VdtTypeError(value)
     value = value.strip()
     try:
@@ -1022,7 +997,7 @@ def is_list(value, min=None, max=None):
     VdtTypeError: the value "12" is of the wrong type.
     """
     (min_len, max_len) = _is_num_param(('min', 'max'), (min, max))
-    if isinstance(value, string_types):
+    if isinstance(value, str):
         raise VdtTypeError(value)
     try:
         num_members = len(value)
@@ -1093,7 +1068,7 @@ def is_string(value, min=None, max=None):
     Traceback (most recent call last):
     VdtValueTooLongError: the value "1234" is too long.
     """
-    if not isinstance(value, string_types):
+    if not isinstance(value, str):
         raise VdtTypeError(value)
     (min_len, max_len) = _is_num_param(('min', 'max'), (min, max))
     try:
@@ -1203,7 +1178,7 @@ def is_string_list(value, min=None, max=None):
     Traceback (most recent call last):
     VdtTypeError: the value "hello" is of the wrong type.
     """
-    if isinstance(value, string_types):
+    if isinstance(value, str):
         raise VdtTypeError(value)
     return [is_string(mem) for mem in is_list(value, min, max)]
 
@@ -1345,9 +1320,9 @@ def is_option(value, *options):
     Traceback (most recent call last):
     VdtTypeError: the value "0" is of the wrong type.
     """
-    if not isinstance(value, string_types):
+    if not isinstance(value, str):
         raise VdtTypeError(value)
-    if not value in options:
+    if value not in options:
         raise VdtValueError(value)
     return value
 

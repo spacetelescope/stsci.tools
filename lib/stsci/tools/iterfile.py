@@ -1,17 +1,15 @@
-from __future__ import division # confidence high
-
 from astropy.io import fits
 
 __version__ = '0.3 (01-July-2014)'
 
 
-class IterFitsFile(object):
+class IterFitsFile:
     """ This class defines an object which can be used to
         access the data from a FITS file without leaving
         the file-handle open between reads.
 
     """
-    def __init__(self,name):
+    def __init__(self, name):
         self.name = name
         self.fname = None
         self.extn = None

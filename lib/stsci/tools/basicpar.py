@@ -3,19 +3,18 @@
 
 $Id$
 """
-from __future__ import absolute_import, division, print_function # confidence high
-
-import re, sys
+import re
+import sys
 from . import irafutils, minmatch
 from .irafglobals import INDEF, Verbose, yes, no
 
-if sys.version_info[0] > 2:
-    int_types = (int, )
-else:
-    int_types = (int, long)
-    
+int_types = (int, )
+
+
 # container class used for __deepcopy__ method
-class _EmptyClass: pass
+class _EmptyClass:
+    pass
+
 
 # -----------------------------------------------------
 # Warning (non-fatal) error.  Raise an exception if in

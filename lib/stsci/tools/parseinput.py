@@ -1,4 +1,3 @@
-
 #  Program: parseinput.py
 #  Author:  Christopher Hanley
 #
@@ -13,20 +12,18 @@
 #   Version 0.1.5 10/11/2005: Corrected typo in errorstr variable name discovered
 #                   by external user j.e.geach@durham.ac.uk.
 
-from __future__ import division # confidence high
-
-__version__ = '0.1.5 (10/11/2005)'
-__author__  = 'Christopher Hanley'
-
 # irafglob provides the ability to recursively parse user input that
 # is in the form of wildcards and '@' files.
-from . import irafglob
 from .irafglob import irafglob
 
 from . import fileutil
 from stsci.tools.asnutil import readASNTable
 
-def parseinput(inputlist,outputname=None, atfile=None):
+__version__ = '0.1.5 (10/11/2005)'
+__author__ = 'Christopher Hanley'
+
+
+def parseinput(inputlist, outputname=None, atfile=None):
     """
     Recursively parse user input based upon the irafglob
     program and construct a list of files that need to be processed.

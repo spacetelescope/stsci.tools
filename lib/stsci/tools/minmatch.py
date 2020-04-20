@@ -22,24 +22,13 @@ $Id$
 
 R. White, 2000 January 28
 """
-from __future__ import division, print_function # confidence high
+import copy
+from collections import UserDict
 
-import sys, copy
-PY3K = sys.version_info[0] > 2
-if PY3K:
-    string_types = str
-else:
-    string_types = basestring
-
-# Need to import UserDict - 3.x has it in collections, 2.x has it in UserDict,
-# and the 2to3 tool doesn't fix this for us; the following should handle it all
-try:
-    from collections import UserDict # try for 3.x
-except ImportError:
-    from UserDict import UserDict # must be in 2.x
 
 class AmbiguousKeyError(KeyError):
     pass
+
 
 class MinMatchDict(UserDict):
 
@@ -83,7 +72,7 @@ class MinMatchDict(UserDict):
         # check for exact match first
         # ambiguous key is ok if there is exact match
         if key in self.data: return key
-        if not isinstance(key, string_types):
+        if not isinstance(key, str):
             raise KeyError("MinMatchDict keys must be strings")
         # no exact match, so look for unique minimum match
         if self.mmkeys is None: self._mmInit()
@@ -246,5 +235,3 @@ class QuietMinMatchDict(MinMatchDict):
                 return 0
         else:
             return key in self.data
-
-

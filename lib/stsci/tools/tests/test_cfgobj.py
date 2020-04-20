@@ -1,18 +1,9 @@
 """This was pytools/utils/cfgobj in pandokia."""
-from __future__ import absolute_import
-
+import io as StringIO
 import os
 import pprint
-import sys
 
 from .. import teal, vtor_checks
-
-PY2K = sys.version_info[0] < 3
-
-if PY2K:
-    import StringIO
-else:
-    import io as StringIO
 
 
 def test_teal_vtor(tmpdir):

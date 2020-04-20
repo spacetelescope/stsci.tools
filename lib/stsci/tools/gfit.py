@@ -9,8 +9,6 @@ the history of this module (fortran -> idl -> python).
 @version: '1.0 (2007-02-20)'
 
 """
-from __future__ import absolute_import, division, print_function
-
 import numpy as np
 
 from . import nmpfit

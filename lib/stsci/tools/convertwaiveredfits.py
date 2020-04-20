@@ -111,25 +111,9 @@ to multi-extension FITS format; no output file is generated;
 the returned ``HDUList`` is in multi-extension format.
 
 """
-from __future__ import division, print_function  # confidence high
-
-#
-# -----------------------------------------------------------------------------
-# Import required modules
-# -----------------------------------------------------------------------------
-#
 import os
 import sys
-import astropy
 from astropy.io import fits
-from distutils.version import LooseVersion
-
-if sys.version_info[0] < 3:
-    string_types = basestring
-else:
-    string_types = str
-
-ASTROPY_VER_GE13 = LooseVersion(astropy.__version__) >= LooseVersion('1.3')
 
 __version__ = "1.1 (15 June, 2015)"
 
@@ -331,7 +315,7 @@ def toMultiExtensionFits(waiveredObject,
     else:
         try:
             whdul = fits.open(waiveredObject)
-            if isinstance(waiveredObject, string_types):
+            if isinstance(waiveredObject, str):
                 inputObjectDescription = "file " + waiveredObject
             else:
                 inputObjectDescription = "file " + waiveredObject.name
@@ -498,11 +482,7 @@ def toMultiExtensionFits(waiveredObject,
             head,tail = os.path.split(multiExtensionFileName)
             mhdul[0].header.set('FILENAME', value=tail, after='NEXTEND')
 
-        if ASTROPY_VER_GE13:
-            mhdul.writeto(multiExtensionFileName, overwrite=True)
-        else:
-            mhdul.writeto(multiExtensionFileName, clobber=True)
-
+        mhdul.writeto(multiExtensionFileName, overwrite=True)
         verboseString = verboseString[:-1] + " and written to " + \
                         multiExtensionFileName + "."
 

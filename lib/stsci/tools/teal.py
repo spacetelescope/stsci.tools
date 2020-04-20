@@ -1,23 +1,18 @@
 """ Main module for the ConfigObj version of the parameter task editor: TEAL.
 $Id$
 """
-from __future__ import absolute_import, division, print_function # confidence high
-
-import os, sys, traceback
+import os
+import sys
+import traceback
 from . import configobj, cfgpars, editpar, vtor_checks
 from .cfgpars import APP_NAME
 from .irafutils import printColsAuto, rglob, setWritePrivs
 from . import capable
 
-PY3K = sys.version_info[0] > 2
-
 if capable.OF_GRAPHICS:
-    if PY3K:
-        from tkinter.filedialog import askopenfilename
-        from tkinter.messagebox import showerror, showwarning
-    else:
-        from tkFileDialog import askopenfilename
-        from tkMessageBox import showerror, showwarning
+    from tkinter.filedialog import askopenfilename
+    from tkinter.messagebox import showerror, showwarning
+
 
 # tool help
 tealHelpString = """\
@@ -306,12 +301,10 @@ def _isInstalled(fullFname):
     installed area (versus a user-owned file) """
     if not fullFname: return False
     if not os.path.exists(fullFname): return False
-    instAreas = []
-    try:
-        import site
-        instAreas = site.getsitepackages()
-    except Exception:
-        instAreas = []  # python 2.6 and lower don't have site.getsitepackages()
+
+    import site
+    instAreas = site.getsitepackages()
+
     if len(instAreas) < 1:
         instAreas = [ os.path.dirname(os.__file__) ]
     for ia in instAreas:
@@ -319,15 +312,12 @@ def _isInstalled(fullFname):
             return True
     return False
 
+
 def popUpErr(parent=None, message="", title="Error"):
     # withdraw root, could standardize w/ EditParDialog.__init__()
     if parent is None:
-        if PY3K:
-            import tkinter
-            root = tkinter.Tk()
-        else:
-            import Tkinter
-            root = Tkinter.Tk()
+        import tkinter
+        root = tkinter.Tk()
 #       root.lift()
         root.after_idle(root.withdraw)
     showerror(message=message, title=title, parent=parent)
@@ -339,27 +329,19 @@ def popUpErr(parent=None, message="", title="Error"):
 # describes it well.
 
 
-
 def execEmbCode(SCOPE, NAME, VAL, TEAL, codeStr):
     """ .cfgspc embedded code execution is done here, in a relatively confined
         space.  The variables available to the code to be executed are:
               SCOPE, NAME, VAL, PARENT, TEAL
         The code string itself is expected to set a var named OUT
     """
-    # This was all we needed in Python 2.x
-#   OUT = None
-#   exec codeStr
-#   return OUT
-
-    # In Python 3 (& 2.x) be more explicit:  http://bugs.python.org/issue4831
     PARENT = None
     if TEAL:
         PARENT = TEAL.top
     OUT = None
-    ldict = locals() # will have OUT in it
+    ldict = locals()  # will have OUT in it
     exec(codeStr, globals(), ldict)  # nosec
     return ldict['OUT']
-
 
 
 def print_tasknames(pkgName, aDir, term_width=80, always=False,

@@ -2,9 +2,7 @@
 (DQ) arrays.
 
 """
-import sys
 import warnings
-import six
 import numpy as np
 from astropy.utils import deprecated
 
@@ -43,7 +41,7 @@ __all__ = ['interpret_bit_flags', 'bitfield_to_boolean_mask', 'is_bit_flag']
 #          the argument `bitfield` can hold.
 # 1.1.1 (30-January-2018) - Improved filtering of high bits in flags.
 #
-INT_TYPE = (int, long,) if sys.version_info < (3,) else (int,)
+INT_TYPE = (int, )
 MAX_UINT_TYPE = np.maximum_sctype(np.uint)
 SUPPORTED_FLAGS = int(np.bitwise_not(
     0, dtype=MAX_UINT_TYPE, casting='unsafe'
@@ -153,7 +151,7 @@ def interpret_bit_flags(bit_flags, flip_bits=None):
             )
         return None
 
-    elif isinstance(bit_flags, six.string_types):
+    elif isinstance(bit_flags, str):
         if has_flip_bits:
             raise TypeError(
                 "Keyword argument 'flip_bits' is not permitted for "

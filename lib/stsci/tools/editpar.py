@@ -4,25 +4,18 @@ $Id$
 
 Taken from pyraf/lib/epar.py, originally signed "M.D. De La Pena, 2000 Feb. 4"
 """
-from __future__ import absolute_import, division, print_function # confidence high
+import os
+import sys
+import tempfile
+import time
 
-#System level modules
-import os, sys, tempfile, time
 from . import capable
 
-PY3K = sys.version_info[0] > 2
-
 if capable.OF_GRAPHICS:
-    if PY3K:
-        from tkinter import  _default_root
-        from tkinter import *
-        from tkinter.filedialog import asksaveasfilename
-        from tkinter.messagebox import askokcancel, askyesno, showwarning
-    else:
-        from Tkinter import  _default_root
-        from Tkinter import *
-        from tkFileDialog import asksaveasfilename
-        from tkMessageBox import askokcancel, askyesno, showwarning
+    from tkinter import  _default_root
+    from tkinter import *
+    from tkinter.filedialog import asksaveasfilename
+    from tkinter.messagebox import askokcancel, askyesno, showwarning
 
 # stsci.tools modules
 from .irafglobals import userWorkingHome
@@ -67,10 +60,11 @@ HELPX   = 300
 HELPY   = 25
 
 
-class UnfoundParamError(Exception): pass
+class UnfoundParamError(Exception):
+    pass
 
 
-class EditParDialog(object):
+class EditParDialog:
 
     def __init__(self, theTask, parent=None, isChild=0,
                  title="Parameter Editor", childList=None,
@@ -1234,14 +1228,6 @@ class EditParDialog(object):
         self.top.destroy()
 
         print("\nTask "+self.taskName+" is running...\n")
-
-        # Before running the task, clear any already-handled exceptions that
-        # will be erroneously picked up by the task's logger utility.
-        # This is temporary.  Remove this line when logging is fixed.
-        try:
-            sys.exc_clear() # not present in PY3K
-        except AttributeError:
-            pass
 
         # Run the task
         try:

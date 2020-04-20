@@ -17,24 +17,10 @@
    For more complex comparisons (where type-checking needs to occur and
    comparisons to other types are allowed), simply override _compare() instead
    of _cmpkey().
-
-   BEWARE that comparing different types has different results in Python 2.x
-   versus Python 3.x:
-
-        Python 2.7
-        >>> 'a' < 2  # doctest: +SKIP
-        False
-
-        Python 3.2.1
-        >>> 'a' < 2   # doctest: +SKIP
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-        TypeError: unorderable types: str() < int()
 """
-from __future__ import print_function
 
 
-class ComparableMixin(object):
+class ComparableMixin:
     def _compare(self, other, method):
         try:
             return method(self._cmpkey(), other._cmpkey())

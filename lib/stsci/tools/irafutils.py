@@ -18,8 +18,6 @@ $Id$
 
 R. White, 1999 Jul 16
 """
-from __future__ import division, print_function
-
 import os
 import stat
 import string
@@ -30,13 +28,8 @@ import keyword
 import select
 from . import capable
 
-PY3K = sys.version_info[0] > 2
-
 if capable.OF_GRAPHICS:
-    if PY3K:
-        import tkinter as TKNTR
-    else:
-        import Tkinter as TKNTR
+    import tkinter as TKNTR
 
 
 def printColsAuto(in_strings, term_width=80, min_pad=1):
@@ -455,9 +448,9 @@ class _TkRead:
             # (shouldnt happen now with init_tk_default_root)
             s = []
             while nbytes>0:
-                snew = os.read(fd, nbytes) # returns bytes in PY3K
+                snew = os.read(fd, nbytes)
                 if snew:
-                    if PY3K: snew = snew.decode('ascii','replace')
+                    snew = snew.decode('ascii', 'replace')
                     s.append(snew)
                     nbytes -= len(snew)
                 else:
@@ -483,8 +476,8 @@ class _TkRead:
             # if EOF was encountered on a tty, avoid reading again because
             # it actually requests more data
             if select.select([fd],[],[],0)[0]:
-                snew = os.read(fd, self.nbytes) # returns bytes in PY3K
-                if PY3K: snew = snew.decode('ascii','replace')
+                snew = os.read(fd, self.nbytes)
+                snew = snew.decode('ascii', 'replace')
                 self.value.append(snew)
                 self.nbytes -= len(snew)
             else:
@@ -495,12 +488,14 @@ class _TkRead:
         except OSError:
             raise IOError("Error reading from %s" % (fd,))
 
+
 def launchBrowser(url, brow_bin='mozilla', subj=None):
     """ Given a URL, try to pop it up in a browser on most platforms.
     brow_bin is only used on OS's where there is no "open" or "start" cmd.
     """
 
-    if not subj: subj = url
+    if not subj:
+        subj = url
 
     # Tries to use webbrowser module on most OSes, unless a system command
     # is needed.  (E.g. win, linux, sun, etc)

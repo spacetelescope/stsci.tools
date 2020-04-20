@@ -1,6 +1,5 @@
-from __future__ import absolute_import, division, print_function # confidence high
-
-import copy, os
+import copy
+import os
 
 from astropy.io import fits
 import numpy as N

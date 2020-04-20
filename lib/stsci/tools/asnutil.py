@@ -5,18 +5,13 @@ association tables and shift files.
 :author: Warren Hack, Nadia Dencheva
 :version: '0.1 (2008-01-03)'
 """
-
-from __future__ import absolute_import, division, print_function # confidence high
-
 from . import fileutil as fu
 from . import wcsutil
 import astropy
 from astropy.io import fits
 import numpy as N
-import os.path, time
-from distutils.version import LooseVersion
-
-ASTROPY_VER_GE13 = LooseVersion(astropy.__version__) >= LooseVersion('1.3')
+import os.path
+import time
 
 __version__ = '0.2(2015-06-23)'
 
@@ -413,10 +408,7 @@ class ASNTable(dict):
         cols = fits.ColDefs([memname,memtype,memprsn,xoffset,yoffset,xdelta,ydelta,rotation,scale])
         hdu = fits.BinTableHDU.from_columns(cols)
         fasn.append(hdu)
-        if ASTROPY_VER_GE13:
-            fasn.writeto(outfile, overwrite=True)
-        else:
-            fasn.writeto(outfile, clobber=True)
+        fasn.writeto(outfile, overwrite=True)
         fasn.close()
         mem0 = self['order'][0]
         refimg = self['members'][mem0]['refimage']

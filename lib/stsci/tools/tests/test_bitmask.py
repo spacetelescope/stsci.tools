@@ -1,12 +1,9 @@
 """
-A module containing unit tests for the `bitmask` modue.
+A module containing unit tests for the `bitmask` module.
 
 :Authors: Mihai Cara
 
 """
-from __future__ import (absolute_import, division, unicode_literals,
-                        print_function)
-
 import warnings
 import numpy as np
 import pytest
@@ -25,8 +22,8 @@ MAX_INT_FLAG = np.left_shift(
 )
 SUPER_LARGE_FLAG = 1 << np.iinfo(MAX_UINT_TYPE).bits
 EXTREME_TEST_DATA = np.array([
-        0, 1, 1 + 1 << 2, MAX_INT_FLAG, ~0, MAX_INT_TYPE(MAX_UINT_FLAG),
-        1 + MAX_INT_TYPE(MAX_UINT_FLAG)
+    0, 1, 1 + 1 << 2, MAX_INT_FLAG, ~0, MAX_INT_TYPE(MAX_UINT_FLAG),
+    1 + MAX_INT_TYPE(MAX_UINT_FLAG)
 ], dtype=MAX_INT_TYPE)
 
 

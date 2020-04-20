@@ -6,14 +6,11 @@ For now, this is tkinter based, but it is imported lazily.
 
 $Id$
 """
-
-from __future__ import division, print_function # confidence high
-
-import sys
 from . import irafutils
 
 _theRoot = None
-_lastSel = '' # our own copy of the last selected text (for PRIMARY)
+_lastSel = ''  # our own copy of the last selected text (for PRIMARY)
+
 
 # Install our own PRIMARY request handler.
 def ch_handler(offset=0, length=-1, **kw):

@@ -3,10 +3,9 @@
 
 $Id$
 """
-from __future__ import division, print_function # confidence high
-
 import traceback
 from . import eparoption, vtor_checks
+
 
 class TealActionParButton(eparoption.ActionEparButton):
 
