@@ -1,12 +1,9 @@
 #!/usr/bin/env python
-#
-from __future__ import division, print_function
-
 import math
 import time
 
 
-class WatchedProcess(object):
+class WatchedProcess:
     """ MINIMAL wrapper around multiprocessing.Process so we can more easily track/time them. """
 
     def __init__(self, proc):

@@ -7,15 +7,10 @@
 """
 $Id$
 """
-from __future__ import division # confidence high
-
 import sys
 
-PY3K = sys.version_info[0] > 2
-if PY3K:
-    from tkinter import *
-else:
-    from Tkinter import *
+from tkinter import *  # noqa
+
 
 class Dialog:
 

@@ -16,21 +16,11 @@
 # http://lists.sourceforge.net/lists/listinfo/configobj-develop
 # Comments, suggestions and bug reports welcome.
 
-from __future__ import absolute_import, division, generators
-
 import os
 import re
 import sys
 
 from codecs import BOM_UTF8, BOM_UTF16, BOM_UTF16_BE, BOM_UTF16_LE
-
-# To conditionally use version dependent code
-PY3K = sys.version_info[0] > 2
-
-if PY3K:
-    string_types = str
-else:
-    string_types = basestring
 
 # imported lazily to avoid startup performance hit if it isn't used
 compiler = None
@@ -159,7 +149,7 @@ class UnknownType(Exception):
     pass
 
 
-class Builder(object):
+class Builder:
 
     def build(self, o):
         m = getattr(self, 'build_' + o.__class__.__name__, None)
@@ -175,14 +165,9 @@ class Builder(object):
 
     def build_Dict(self, o):
         d = {}
-        if PY3K:
-            i = map(self.build, o.getChildren())
-            for el in i:
-                d[el] = next(i)
-        else:
-            i = iter(map(self.build, o.getChildren()))
-            for el in i:
-                d[el] = i.next()
+        i = map(self.build, o.getChildren())
+        for el in i:
+            d[el] = next(i)
         return d
 
     def build_Tuple(self, o):
@@ -308,7 +293,7 @@ class UnreprError(ConfigObjError):
 
 
 
-class InterpolationEngine(object):
+class InterpolationEngine:
     """
     A helper class to help perform string interpolation.
 
@@ -582,7 +567,7 @@ class Section(dict):
                 return self._interpolate(key, val)
             if isinstance(val, list):
                 def _check(entry):
-                    if isinstance(entry, string_types):
+                    if isinstance(entry, str):
                         return self._interpolate(key, entry)
                     return entry
                 new = [_check(entry) for entry in val]
@@ -605,7 +590,7 @@ class Section(dict):
         ``unrepr`` must be set when setting a value to a dictionary, without
         creating a new sub-section.
         """
-        if not isinstance(key, string_types):
+        if not isinstance(key, str):
             raise ValueError('The key "%s" is not a string.' % key)
 
         # add the comment
@@ -639,11 +624,11 @@ class Section(dict):
             if key not in self:
                 self.scalars.append(key)
             if not self.main.stringify:
-                if isinstance(value, string_types):
+                if isinstance(value, str):
                     pass
                 elif isinstance(value, (list, tuple)):
                     for entry in value:
-                        if not isinstance(entry, string_types):
+                        if not isinstance(entry, str):
                             raise TypeError('Value is not a string "%s".' % entry)
                 else:
                     raise TypeError('Value is not a string "%s".' % value)
@@ -984,7 +969,7 @@ class Section(dict):
             return False
         else:
             try:
-                if not isinstance(val, string_types):
+                if not isinstance(val, str):
                     # TODO: Why do we raise a KeyError here?
                     raise KeyError()
                 else:
@@ -1251,12 +1236,11 @@ class ConfigObj(Section):
         self._original_configspec = configspec
         self._load(infile, configspec)
 
-
     def _load(self, infile, configspec):
-        if isinstance(infile, string_types):
+        if isinstance(infile, str):
             self.filename = infile
             if os.path.isfile(infile):
-                h = open(infile) # !!! was 'rb' but fails PY3K and we dont need
+                h = open(infile)
                 infile = h.read() or []
                 h.close()
             elif self.file_error:
@@ -1479,7 +1463,7 @@ class ConfigObj(Section):
                     else:
                         infile = newline
                     # UTF8 - don't decode
-                    if isinstance(infile, string_types):
+                    if isinstance(infile, str):
                         return infile.splitlines(True)
                     else:
                         return infile
@@ -1487,7 +1471,7 @@ class ConfigObj(Section):
                 return self._decode(infile, encoding)
 
         # No BOM discovered and no encoding specified, just return
-        if isinstance(infile, string_types):
+        if isinstance(infile, str):
             # infile read from a file will be a single string
             return infile.splitlines(True)
         return infile
@@ -1507,7 +1491,7 @@ class ConfigObj(Section):
 
         if is a string, it also needs converting to a list.
         """
-        if isinstance(infile, string_types):
+        if isinstance(infile, str):
             # can't be unicode
             # NOTE: Could raise a ``UnicodeDecodeError``
             return infile.decode(encoding).splitlines(True)
@@ -1515,12 +1499,8 @@ class ConfigObj(Section):
             # NOTE: The isinstance test here handles mixed lists of unicode/string
             # NOTE: But the decode will break on any non-string values
             # NOTE: Or could raise a ``UnicodeDecodeError``
-            if PY3K:
-                if not isinstance(line, str):
-                    infile[i] = line.decode(encoding)
-            else:
-                if not isinstance(line, unicode):
-                    infile[i] = line.decode(encoding)
+            if not isinstance(line, str):
+                infile[i] = line.decode(encoding)
         return infile
 
 
@@ -1538,7 +1518,7 @@ class ConfigObj(Section):
         Used by ``stringify`` within validate, to turn non-string values
         into strings.
         """
-        if not isinstance(value, string_types):
+        if not isinstance(value, str):
             return str(value)
         else:
             return value
@@ -1791,7 +1771,7 @@ class ConfigObj(Section):
                 return self._quote(value[0], multiline=False) + ','
             return ', '.join([self._quote(val, multiline=False)
                 for val in value])
-        if not isinstance(value, string_types):
+        if not isinstance(value, str):
             if self.stringify:
                 value = str(value)
             else:
@@ -2122,7 +2102,6 @@ class ConfigObj(Section):
         if outfile is not None:
             outfile.write(output)
         else:
-            # !!! write mode was 'wb' but that fails in PY3K and we dont need
             h = open(self.filename, 'w')
             h.write(output)
             h.close()
@@ -2352,7 +2331,7 @@ class ConfigObj(Section):
         This method raises a ``ReloadError`` if the ConfigObj doesn't have
         a filename attribute pointing to a file.
         """
-        if not isinstance(self.filename, string_types):
+        if not isinstance(self.filename, str):
             raise ReloadError()
 
         filename = self.filename
@@ -2370,8 +2349,7 @@ class ConfigObj(Section):
         self._load(filename, configspec)
 
 
-
-class SimpleVal(object):
+class SimpleVal:
     """
     A simple validator.
     Can be used to check that all members expected are present.

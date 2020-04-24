@@ -1,8 +1,6 @@
 """
 Python/Numeric version of this module was called mpfit. This version was modified to use numpy.
 """
-from __future__ import division, print_function # confidence medium
-
 __version__ = '0.2'
 
 import warnings

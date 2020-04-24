@@ -2,125 +2,26 @@
 A collection of utilities for handling output to standard out/err as well as
 to file-based or other logging handlers through a single interface.
 """
-
-
+import builtins
 import inspect
 import logging
 import os
 import sys
 import threading
-from stsci.tools.for2to3 import tostr
-
-PY3K = sys.version_info[0] > 2
-
-if PY3K:
-    from io import StringIO
-else:
-    from cStringIO import StringIO
 
 global_logging_started = False
 
 
-# The global_logging system replaces the raw_input builtin (input on Python 3)
-# for two reasons:
+# The global_logging system replaces the input builtin
+# because:
 #
 #  1) It's the easiest way to capture the raw_input prompt and subsequent user
 #     input to the log.
-#
-#  2) On Python 2.x raw_input() does not play nicely with GUI toolkits if
-#     sys.stdout has been replaced by a non-file object (as global_logging
-#     does).  The default raw_input() implementation first checks that
-#     sys.stdout and sys.stdin are connected to a terminal.  If so it uses the
-#     PyOS_Readline() implementation, which allows a GUI's event loop to run
-#     while waiting for user input via PyOS_InputHook().  However, if
-#     sys.stdout is not attached to a terminal, raw_input() uses
-#     PyFile_GetLine(), which blocks until a line is entered on sys.stdin,
-#     thus preventing the GUI from updating.  It doesn't matter if sys.stdin is
-#     still attached to the terminal even if sys.stdout isn't, nor does it
-#     automatically fall back on sys.__stdout__ and sys.__stdin__.
-#
-#     This replacement raw_input() reimplements most of the built in
-#     raw_input(), but is aware that sys.stdout may have been replaced and
-#     knows how to find the real stdout if so.
-#
-#     Note that this is a non-issue in Python 3 which has a new implementation
-#     in which it doesn't matter what sys.stdout points to--only that it has a
-#     fileno() method that returns the correct file descriptor for the
-#     console's stdout.
-if not PY3K:
-    import __builtin__ as builtins
-    from ctypes import pythonapi, py_object, c_void_p, c_char_p
-
-    # PyFile_AsFile returns a FILE * from a python file object.
-    # This is used later with pythonapi.PyOS_Readline to perform
-    # the readline.
-    pythonapi.PyFile_AsFile.argtypes = (py_object,)
-    pythonapi.PyFile_AsFile.restype = c_void_p
-    pythonapi.PyOS_Readline.argtypes = (c_void_p, c_void_p, c_char_p)
-    pythonapi.PyOS_Readline.restype = c_char_p
-
-    def global_logging_raw_input(prompt):
-        def get_stream(name):
-            if hasattr(sys, name):
-                stream = getattr(sys, name)
-                if isinstance(stream, file):
-                    return stream
-                elif isinstance(stream, StreamTeeLogger):
-                    return stream.stream
-            if hasattr(sys, '__%s__' % name):
-                stream = getattr(sys, '__%s__' % name)
-                if isinstance(stream, file):
-                    return stream
-            return None
-
-        def check_interactive(stream, name):
-            try:
-                fd = stream.fileno()
-            except:
-                # Could be an AttributeError, an OSError, and IOError, or who
-                # knows what else...
-                return False
-
-            realfd = {'stdin': 0, 'stdout': 1, 'stderr': 2}[name]
-
-            return fd == realfd and os.isatty(fd)
-
-
-        stdout = get_stream('stdout')
-        stdin = get_stream('stdin')
-        stderr = get_stream('stderr')
-
-        if stdout is None:
-            raise RuntimeError('raw_input(): lost sys.stdout')
-        if stdin is None:
-            raise RuntimeError('raw_input(): lost sys.stdin')
-        if stderr is None:
-            raise RuntimeError('raw_input(): lost sys.stderr')
-
-        if (not check_interactive(stdin, 'stdin') or
-            not check_interactive(stdout, 'stdout')):
-            # Use the built-in raw_input(); this will repeat some of the checks
-            # we just did, but will save us from having to reimplement
-            # raw_input() in its entirety
-            retval = builtins._original_raw_input(prompt)
-        else:
-            stdout.flush()
-            infd = pythonapi.PyFile_AsFile(stdin)
-            outfd = pythonapi.PyFile_AsFile(stdout)
-            retval = pythonapi.PyOS_Readline(infd, outfd, str(prompt))
-            retval = retval.rstrip('\n')
-
-        if isinstance(sys.stdout, StreamTeeLogger):
-            sys.stdout.log_orig(str(prompt) + retval, echo=False)
-
-        return retval
-else:
-    import builtins
-    def global_logging_raw_input(prompt):
-        retval = builtins._original_raw_input(prompt)
-        if isinstance(sys.stdout, StreamTeeLogger):
-            sys.stdout.log_orig(str(prompt) + retval, echo=False)
-        return retval
+def global_logging_raw_input(prompt):
+    retval = builtins._original_raw_input(prompt)
+    if isinstance(sys.stdout, StreamTeeLogger):
+        sys.stdout.log_orig(str(prompt) + retval, echo=False)
+    return retval
 
 
 class StreamTeeLogger(logging.Logger):
@@ -310,7 +211,7 @@ class StreamTeeLogger(logging.Logger):
         return rv
 
 
-class EchoFilter(object):
+class EchoFilter:
     """
     A logger filter primarily for use with `StreamTeeLogger`.  Adding an
     `EchoFilter` to a `StreamTeeLogger` instances allows control over which
@@ -364,7 +265,7 @@ class EchoFilter(object):
         return True
 
 
-class LoggingExceptionHook(object):
+class LoggingExceptionHook:
     def __init__(self, logger, level=logging.ERROR):
         self._oldexcepthook = sys.excepthook
         self.logger = logger
@@ -395,9 +296,6 @@ def setup_global_logging():
 
     global global_logging_started
 
-    if not PY3K:
-        sys.exc_clear()
-
     if global_logging_started:
         return
 
@@ -421,7 +319,7 @@ def setup_global_logging():
 
     logging.captureWarnings(True)
 
-    rawinput = 'input' if PY3K else 'raw_input'
+    rawinput = 'input'
     builtins._original_raw_input = getattr(builtins, rawinput)
     setattr(builtins, rawinput, global_logging_raw_input)
 
@@ -450,13 +348,11 @@ def teardown_global_logging():
     del exc_type
     del exc_value
     del exc_traceback
-    if not PY3K:
-        sys.exc_clear()
 
     del sys.excepthook
     logging.captureWarnings(False)
 
-    rawinput = 'input' if PY3K else 'raw_input'
+    rawinput = 'input'
     if hasattr(builtins, '_original_raw_input'):
         setattr(builtins, rawinput, builtins._original_raw_input)
         del builtins._original_raw_input
@@ -588,86 +484,3 @@ class _LogTeeHandler(logging.Handler):
                     return True
             curr_frame = curr_frame.f_back
         return False
-
-
-if sys.version_info[:2] < (2, 7):
-    # We need to backport logging.captureWarnings
-    import warnings
-
-    PY26 = sys.version_info[:2] >= (2, 6)
-
-    logging._warnings_showwarning = None
-
-    class NullHandler(logging.Handler):
-        """
-        This handler does nothing. It's intended to be used to avoid the "No
-        handlers could be found for logger XXX" one-off warning. This is
-        important for library code, which may contain code to log events. If a
-        user of the library does not configure logging, the one-off warning
-        might be produced; to avoid this, the library developer simply needs to
-        instantiate a NullHandler and add it to the top-level logger of the
-        library module or package.
-        """
-
-        def handle(self, record):
-            pass
-
-        def emit(self, record):
-            pass
-
-        def createLock(self):
-            self.lock = None
-
-    logging.NullHandler = NullHandler
-
-
-    def _showwarning(message, category, filename, lineno, file=None,
-                     line=None):
-        """
-        Implementation of showwarnings which redirects to logging, which will
-        first check to see if the file parameter is None. If a file is
-        specified, it will delegate to the original warnings implementation of
-        showwarning. Otherwise, it will call warnings.formatwarning and will
-        log the resulting string to a warnings logger named "py.warnings" with
-        level logging.WARNING.
-        """
-
-        if file is not None:
-            if logging._warnings_showwarning is not None:
-                if PY26:
-                    _warnings_showwarning(message, category, filename, lineno,
-                                          file, line)
-                else:
-                    # Python 2.5 and below don't support the line argument
-                    _warnings_showwarning(message, category, filename, lineno,
-                                          file)
-        else:
-            if PY26:
-                s = warnings.formatwarning(message, category, filename, lineno,
-                                           line)
-            else:
-                s = warnings.formatwarning(message, category, filename, lineno)
-
-            logger = logging.getLogger("py.warnings")
-            if not logger.handlers:
-                logger.addHandler(NullHandler())
-            logger.warning("%s", s)
-    logging._showwarning = _showwarning
-    del _showwarning
-
-    def captureWarnings(capture):
-        """
-        If capture is true, redirect all warnings to the logging package.
-        If capture is False, ensure that warnings are not redirected to logging
-        but to their original destinations.
-        """
-        if capture:
-            if logging._warnings_showwarning is None:
-                logging._warnings_showwarning = warnings.showwarning
-                warnings.showwarning = logging._showwarning
-        else:
-            if logging._warnings_showwarning is not None:
-                warnings.showwarning = logging._warnings_showwarning
-                logging._warnings_showwarning = None
-    logging.captureWarnings = captureWarnings
-    del captureWarnings

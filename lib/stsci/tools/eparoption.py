@@ -21,22 +21,15 @@ $Id$
 
 M.D. De La Pena, 1999 August 05
 """
-from __future__ import absolute_import, division, print_function # confidence high
-
 # System level modules
-import sys, string
+import sys
+import string
+
 from . import capable
 
-PY3K = sys.version_info[0] > 2
-
 if capable.OF_GRAPHICS:
-    if PY3K:
-        from tkinter import *
-        from tkinter.filedialog import askdirectory, askopenfilename
-    else:
-        from Tkinter import *
-        from tkFileDialog import askdirectory, askopenfilename
-
+    from tkinter import *
+    from tkinter.filedialog import askdirectory, askopenfilename
 else:
     StringVar = None
 
@@ -54,7 +47,7 @@ XSHIFT   = 110
 DSCRPTN_FLAG = ' (***)'
 
 
-class EparOption(object):
+class EparOption:
 
     """EparOption base class
 

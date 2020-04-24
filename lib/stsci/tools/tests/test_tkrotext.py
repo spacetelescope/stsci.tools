@@ -1,18 +1,10 @@
-from __future__ import absolute_import
-
 import sys
 import time
+import tkinter as TKNTR
 
 import pytest
 
 from ..tkrotext import ROText
-
-PY3K = sys.version_info[0] > 2
-
-if PY3K:
-    import tkinter as TKNTR
-else:
-    import Tkinter as TKNTR
 
 
 def test_rotest():

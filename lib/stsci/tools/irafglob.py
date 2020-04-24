@@ -1,11 +1,13 @@
-from __future__ import absolute_import, division # confidence high
 import glob
+
 try:
-    from .fileutil import osfn # added to provide interpretation of environment variables
-except:
+    from .fileutil import osfn  # added to provide interpretation of environment variables
+except Exception:
     osfn = None
+
 __author__ = 'Paul Barrett'
 __version__ = '1.1'
+
 
 def irafglob(inlist, atfile=None):
     """ Returns a list of filenames based on the type of IRAF input.

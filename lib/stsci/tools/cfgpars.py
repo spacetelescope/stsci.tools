@@ -2,14 +2,11 @@
 
 $Id$
 """
-from __future__ import absolute_import, division, print_function # confidence high
-
-import copy, glob, os, stat, sys
-
-if sys.version_info[0] > 2:
-    string_types = str
-else:
-    string_types = basestring
+import copy
+import glob
+import os
+import stat
+import sys
 
 # ConfigObj modules
 from . import configobj, validate
@@ -22,8 +19,10 @@ from . import basicpar, eparoption, irafutils, taskpars, vtor_checks
 APP_NAME = 'TEAL'
 TASK_NAME_KEY = '_task_name_'
 
+
 class DuplicateKeyError(Exception):
     pass
+
 
 class NoCfgFileError(Exception):
     pass
@@ -147,8 +146,8 @@ def findCfgFileForPkg(pkgName, theExt, pkgObj=None, taskName=None):
             # One last case to try is something like "csc_kill" from
             # "acstools.csc_kill", but this convenience capability will only be
             # allowed if the parent pkg (acstools) has already been imported.
-            if isinstance(pkgName, string_types) and pkgName.find('.') < 0:
-                matches = [x for x in sys.modules.keys() \
+            if isinstance(pkgName, str) and pkgName.find('.') < 0:
+                matches = [x for x in sys.modules.keys()
                            if x.endswith("."+pkgName)]
                 if len(matches)>0:
                     throwIt = False

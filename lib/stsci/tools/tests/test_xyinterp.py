@@ -1,12 +1,10 @@
-from __future__ import absolute_import, division
-
 import numpy as np
 import pytest
 
 from ..xyinterp import xyinterp
 
 
-class TestXYInterp(object):
+class TestXYInterp:
     def setup_class(self):
         self.x = np.arange(1, 6)
         self.y = self.x.copy()

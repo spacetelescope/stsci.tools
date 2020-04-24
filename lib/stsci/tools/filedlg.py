@@ -20,25 +20,15 @@
 """
 $Id$
 """
-from __future__ import absolute_import, division # confidence high
-
-import sys, os
+import os
 from . import capable
 
-PY3K = sys.version_info[0] > 2
-if PY3K:
-    from subprocess import getoutput  # nosec
-else:
-    from commands import getoutput
+from subprocess import getoutput  # nosec
 
 if capable.OF_GRAPHICS:
-    if PY3K:
-        import tkinter as TKNTR
-    else:
-        import Tkinter as TKNTR
-
+    import tkinter as TKNTR
     from . import alert
-    from .dialog import *
+    from .dialog import *  # noqa
 else:
     ModalDialog = object
 

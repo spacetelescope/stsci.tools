@@ -25,23 +25,14 @@ $Id$
 
 Taken from pyraf.irafglobals, originally signed "R. White, 2000 Jan 5"
 """
-from __future__ import absolute_import, division
-
-import sys
-PY3K = sys.version_info[0] > 2
-
-if PY3K:
-    string_types = str
-    number_types = (int, float)
-else:
-    string_types = basestring
-    number_types = (int, long, float)
-
 import os
 from . import compmixin
 _os = os
 _compmixin = compmixin
 del os, compmixin
+
+number_types = (int, float)
+
 
 class IrafError(Exception):
     def __init__(self, msg, errno=-1, errmsg="", errtask=""):
@@ -49,6 +40,7 @@ class IrafError(Exception):
         self.errno = errno
         self.errmsg = errmsg or msg
         self.errtask = errtask
+
 
 # -----------------------------------------------------
 # Verbose: verbosity flag
@@ -122,7 +114,7 @@ class _Boolean(_compmixin.ComparableMixin):
         # If a string, compare with string value of this parameter.
         # Allow uppercase "YES", "NO" as well as lowercase.
         # Also allows single letter abbrevation "y" or "n".
-        if isinstance(other, string_types):
+        if isinstance(other, str):
             ovalue = other.lower()
             if len(ovalue)==1:
                 return method(self.__strvalue[0], ovalue)
@@ -174,7 +166,7 @@ class _EOFClass(_compmixin.ComparableMixin):
             # Despite trying to create only one EOF object, there
             # could be more than one.  All EOFs are equal.
             return method(1, 1)
-        if isinstance(other, string_types):
+        if isinstance(other, str):
             # If a string, compare with 'EOF'
             return method("EOF", other)
         if isinstance(other, number_types):
@@ -188,16 +180,18 @@ class _EOFClass(_compmixin.ComparableMixin):
     def __int__(self): return -2
     def __float__(self): return -2.0
 
+
 # initialize EOF to None first so singleton scheme works
 
 EOF = None
 EOF = _EOFClass()
 
+
 # -----------------------------------------------------
 # define IRAF-like INDEF object
 # -----------------------------------------------------
 
-class _INDEFClass(object):
+class _INDEFClass:
     """Class of singleton INDEF (undefined) object"""
 
     def __new__(cls):

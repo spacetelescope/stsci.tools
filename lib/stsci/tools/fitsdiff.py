@@ -9,24 +9,18 @@ import sys
 from astropy.io.fits.diff import FITSDiff
 from astropy.io.fits.scripts.fitsdiff import log, main
 
-PY3K = sys.version_info[0] > 2
-if PY3K:
-    string_types = str
-else:
-    string_types = basestring
-
 
 def fitsdiff(input1, input2, comment_excl_list='', value_excl_list='',
              field_excl_list='', maxdiff=10, delta=0.0, neglect_blanks=True,
              output=None):
 
-    if isinstance(comment_excl_list, string_types):
+    if isinstance(comment_excl_list, str):
         comment_excl_list = list_parse(comment_excl_list)
 
-    if isinstance(value_excl_list, string_types):
+    if isinstance(value_excl_list, str):
         value_excl_list = list_parse(value_excl_list)
 
-    if isinstance(field_excl_list, string_types):
+    if isinstance(field_excl_list, str):
         field_excl_list = list_parse(field_excl_list)
 
     diff = FITSDiff(input1, input2, ignore_keywords=value_excl_list,

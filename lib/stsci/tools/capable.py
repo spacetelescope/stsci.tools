@@ -5,12 +5,11 @@ performance concerns.
 
 $Id$
 """
+import os
+import sys
 
-from __future__ import division # confidence high
-
-import os, sys
-PY3K = sys.version_info[0] > 2
 descrip = "basic capabilities file, last edited: 28 Dec 2017"
+
 
 def is_darwin_and_x():
     """ Convenience function.  Returns True if is an X11-linked Python/tkinter
@@ -68,10 +67,7 @@ def which_darwin_linkage(force_otool_check=False):
         # OK, no trace of PyObjC found - need to fall through to the forced otool check.
 
     # Use otool shell command
-    if PY3K:
-        import tkinter as TKNTR
-    else:
-        import Tkinter as TKNTR
+    import tkinter as TKNTR
     import subprocess  # nosec
     try:
         tk_dyn_lib = TKNTR._tkinter.__file__
@@ -153,10 +149,7 @@ if OF_GRAPHICS and sys.platform == 'darwin':
 # is there.  If it is not, we are not capable of graphics.
 if OF_GRAPHICS :
     try :
-        if PY3K:
-            import tkinter as TKNTR
-        else:
-            import Tkinter as TKNTR
+        import tkinter as TKNTR
     except ImportError :
         TKINTER_IMPORT_FAILED = 1
         OF_GRAPHICS = False

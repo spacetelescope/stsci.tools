@@ -13,9 +13,12 @@ The following notes provide some details on what has been revised for each
 version in reverse chronological order (most recent version at the top
 of the list).
 
-3.7.0 (unreleased)
+4.0.0 (unreleased)
 ------------------
 
+- Removed Python 2 support. Python 3.6 or later is now required. [#121]
+
+- ``astropy`` 2 or later is now required. [#121]
 
 3.6.0 (2019-07-17)
 ------------------

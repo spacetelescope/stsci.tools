@@ -1,15 +1,6 @@
-from __future__ import absolute_import
-
-import sys
-
 import pytest
 
 from ..compmixin import ComparableMixin
-
-if sys.version_info[0] < 3:
-    string_types = basestring
-else:
-    string_types = str
 
 
 class SimpleStr(ComparableMixin):
@@ -37,7 +28,7 @@ class AnyType(ComparableMixin):
         if isinstance(other, self.__class__):
             # recurse, get 2 logic below
             return self._compare(other.val, method)
-        if isinstance(other, string_types):
+        if isinstance(other, str):
             return method(str(self.val), other)
         elif other is None and self.val is None:
             return method(0, 0)
@@ -46,7 +37,7 @@ class AnyType(ComparableMixin):
             return method(str(self.val), '')
         elif isinstance(other, int):
             # handle ONLY case where self.val is a single char or an int
-            if isinstance(self.val, string_types) and len(self.val) == 1:
+            if isinstance(self.val, str) and len(self.val) == 1:
                 return method(ord(self.val), other)
             else:
                 # assume we are int-like

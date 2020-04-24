@@ -12,7 +12,6 @@
 #                                 loop over a taskList object. -- CJH
 #
 #       Version 0.2.0, 31-Mar-06: Added numpy to the task list. -- CJH
-from __future__ import division, print_function  # confidence high
 
 
 def printVersionInfo():
@@ -23,7 +22,7 @@ def printVersionInfo():
         import sys
         print(sys.path)
         print(" ")
-    except:
+    except Exception:
         print("Unable to get sys information.")
         print(" ")
 
@@ -44,14 +43,14 @@ def printVersionInfo():
             package = __import__(software)
             try:
                 print("version -> ", package.__version__)
-            except:
+            except Exception:
                 print("__version__ attribute is not defined")
             try:
                 pathName = package.__path__
-            except:
+            except Exception:
                 pathName = package.__file__
             print("location -> ", pathName)
-        except:
+        except Exception:
             print(software + " not found in path...")
         print(" ")
 
