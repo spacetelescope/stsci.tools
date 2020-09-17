@@ -14,9 +14,9 @@ env:
         # The following versions are the 'default' for tests, unless
         # overridden underneath. They are defined here in order to save having
         # to repeat them for all configurations.
-        - PYTHON_VERSION=3.7
+        - PYTHON_VERSION=3.8
         - NUMPY_VERSION=stable
-        - ASTROPY_VERSION=stable
+        - ASTROPY_VERSION=4.1rc2
         - INSTALL_CMD="pip install -e .[test]"
         - MAIN_CMD="pytest"
         - PIP_DEPENDENCIES=''
@@ -28,40 +28,6 @@ jobs:
 
     include:
         - os: linux
-
-        # Older version
-        - os: linux
-          env: PYTHON_VERSION=3.6 NUMPY_VERSION=1.16 ASTROPY_VERSION=3.2.3
-
-        # Try Astropy development version
-        - os: linux
-          env: PYTHON_VERSION=3.8 ASTROPY_VERSION=development
-
-        # Security audit
-        - os: linux
-          env: PIP_DEPENDENCIES="bandit"
-               INSTALL_CMD="" MAIN_CMD="bandit -r . -c .bandit.yaml"
-
-        # PEP 517
-        - os: linux
-          env: PIP_DEPENDENCIES="pep517 twine"
-               INSTALL_CMD="python -m pep517.build --source ."
-               MAIN_CMD="twine check dist/*"
-
-        # Sphinx linkcheck
-        - os: linux
-          env: PIP_DEPENDENCIES="sphinx"
-               INSTALL_CMD="pip install -e ."
-               MAIN_CMD="cd doc && make linkcheck"
-
-        # PEP8 check
-        - os: linux
-          env: INSTALL_CMD="" MAIN_CMD="flake8 --count lib/stsci/tools"
-
-    allow_failures:
-        # PEP8 will fail for numerous reasons. Ignore it.
-        - os: linux
-          env: INSTALL_CMD="" MAIN_CMD="flake8 --count lib/stsci/tools"
 
 before_install:
 
