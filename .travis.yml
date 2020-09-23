@@ -44,8 +44,8 @@ jobs:
 
         # PEP 517
         - os: linux
-          env: PIP_DEPENDENCIES="pep517 twine"
-               INSTALL_CMD="python -m pep517.build --source ."
+          env: PIP_DEPENDENCIES="build twine"
+               INSTALL_CMD="python -m build --sdist ."
                MAIN_CMD="twine check dist/*"
 
         # Sphinx linkcheck
