@@ -124,6 +124,6 @@ jobs:
         python -m pip install -e .
     - name: Docs link check
       run: |
-        cd docs
+        cd doc
         make linkcheck
       shell: bash
