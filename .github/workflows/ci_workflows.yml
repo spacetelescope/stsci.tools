@@ -83,7 +83,7 @@ jobs:
     - name: Install and build
       run: |
         python -m pip install --upgrade pip wheel setuptools
-        python -m pip install git+https://github.com/astropy/astropy.git@master#egg=astropy
+        python -m pip install git+https://github.com/astropy/astropy.git@main#egg=astropy
         python -m pip install -e .[test]
     - name: Test with dev deps
       run: pytest
