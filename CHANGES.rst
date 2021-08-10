@@ -16,9 +16,13 @@ of the list).
 4.0.0 (unreleased)
 ------------------
 
+- Deprecated ``bitmask`` module and switched to ``astropy.nddata.bitmask``
+  while it is deprecated. Astropy's implementation originated from
+  ``stsci.tools`` and should be backward compatible. [#135]
+
 - Removed Python 2 support. Python 3.6 or later is now required. [#121]
 
-- ``astropy`` 2 or later is now required. [#121]
+- ``astropy`` 3.1 or later is now required. [#135]
 
 3.6.0 (2019-07-17)
 ------------------
