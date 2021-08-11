@@ -4,8 +4,8 @@ import tempfile
 import pytest
 from astropy.io.fits.tests import FitsTestCase
 
-from .. import fileutil as F
-from .. import stpyfits
+from stsci.tools import fileutil as F
+from stsci.tools import stpyfits
 
 
 class TestIsFits(FitsTestCase):

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from ..xyinterp import xyinterp
+from stsci.tools.xyinterp import xyinterp
 
 
 class TestXYInterp:

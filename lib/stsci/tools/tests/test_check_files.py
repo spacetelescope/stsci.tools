@@ -4,8 +4,8 @@ import shutil
 from astropy.io import fits
 from astropy.io.fits import diff
 
-from .. import fileutil as fu
-from .. import check_files
+from stsci.tools import fileutil as fu
+from stsci.tools import check_files
 
 data_dir = os.path.join(os.path.dirname(__file__), 'data')
 

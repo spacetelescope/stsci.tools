@@ -4,7 +4,7 @@ import tkinter as TKNTR
 
 import pytest
 
-from ..tkrotext import ROText
+from stsci.tools.tkrotext import ROText
 
 
 def test_rotest():

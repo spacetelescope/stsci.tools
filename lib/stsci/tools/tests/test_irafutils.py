@@ -1,5 +1,5 @@
 import pytest
-from ..irafutils import csvSplit
+from stsci.tools.irafutils import csvSplit
 
 
 @pytest.mark.parametrize('input_str,input_len,expected', [

@@ -1,7 +1,7 @@
 """This was pandokia breadcrumb test in stuff.py"""
 import os
 
-from .. import capable
+from stsci.tools import capable
 
 
 def setup_module():
