@@ -20,6 +20,8 @@ of the list).
 
 - ``astropy`` 2 or later is now required. [#121]
 
+- Improved compatibility of the ``bitmask`` module with ``numpy 1.21``. [#136]
+
 3.6.0 (2019-07-17)
 ------------------
 
