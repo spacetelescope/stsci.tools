@@ -416,7 +416,7 @@ def bitfield_to_boolean_mask(bitfield, ignore_flags=0, flip_bits=None,
     ignore_mask = ignore_mask & SUPPORTED_FLAGS
 
     # invert the "ignore" mask:
-    ignore_mask = np.bitwise_not(ignore_mask, dtype=bitfield.dtype,
+    ignore_mask = np.bitwise_not(ignore_mask, dtype=bitfield.dtype.type,
                                  casting='unsafe')
 
     mask = np.empty_like(bitfield, dtype=np.bool_)
