@@ -1,5 +1,5 @@
 """
-Python/Numeric version of this module was called mpfit. This version was modified to use np.
+Python/Numeric version of this module was called mpfit. This version was modified to use numpy.
 """
 __version__ = '0.2'
 
