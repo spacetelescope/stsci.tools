@@ -7,7 +7,7 @@ import pytest
 from astropy.io import fits
 from astropy.io.fits.tests import FitsTestCase
 
-from .. import stpyfits
+from stsci.tools import stpyfits
 
 
 class TestStpyfitsFunctions(FitsTestCase):

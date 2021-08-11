@@ -3,7 +3,7 @@ import io as StringIO
 import os
 import pprint
 
-from .. import teal, vtor_checks
+from stsci.tools import teal, vtor_checks
 
 
 def test_teal_vtor(tmpdir):

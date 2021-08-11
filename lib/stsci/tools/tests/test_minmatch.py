@@ -1,6 +1,6 @@
 import pytest
 
-from ..minmatch import MinMatchDict, AmbiguousKeyError
+from stsci.tools.minmatch import MinMatchDict, AmbiguousKeyError
 
 BASEKEYS = tuple(['test', 'text', 'ten'])
 BASEVALUES = tuple([1, 2, 10])

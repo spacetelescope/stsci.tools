@@ -1,6 +1,6 @@
 import pytest
 
-from ..compmixin import ComparableMixin
+from stsci.tools.compmixin import ComparableMixin
 
 
 class SimpleStr(ComparableMixin):

@@ -1,7 +1,7 @@
 import multiprocessing
 import time
 
-from ..mputil import launch_and_wait, best_tile_layout
+from stsci.tools.mputil import launch_and_wait, best_tile_layout
 
 
 def takes_time(x):
