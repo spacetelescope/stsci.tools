@@ -89,13 +89,13 @@ def gfit1d(y, x=None, err=None, weights=None, par=None, parinfo=None,
     [10.         15.          1.41421356]
 
     """
-    y = y.astype(np.float)
+    y = y.astype(float)
     if weights is not None:
-        weights = weights.astype(np.float)
+        weights = weights.astype(float)
     if err is not None:
-        err = err.astype(np.float)
+        err = err.astype(float)
     if x is None and len(y.shape) == 1:
-        x = np.arange(len(y)).astype(np.float)
+        x = np.arange(len(y)).astype(float)
     if x.shape != y.shape:
         print("input arrays X and Y must be of equal shape.\n")
         return
