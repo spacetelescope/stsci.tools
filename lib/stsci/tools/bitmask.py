@@ -6,8 +6,8 @@ import warnings
 import numpy as np
 from astropy.utils import deprecated
 
-__version__ = '1.1.1'
-__vdate__ = '30-January-2018'
+__version__ = '1.1.2'
+__vdate__ = '10-August-2021'
 __author__ = 'Mihai Cara'
 
 __all__ = ['interpret_bit_flags', 'bitfield_to_boolean_mask', 'is_bit_flag']
@@ -40,6 +40,7 @@ __all__ = ['interpret_bit_flags', 'bitfield_to_boolean_mask', 'is_bit_flag']
 #          `ignore_flags` argument contains bit flags beyond what the type of
 #          the argument `bitfield` can hold.
 # 1.1.1 (30-January-2018) - Improved filtering of high bits in flags.
+# 1.1.2 (11-August-2021) - Improved compatibility with numpy 1.21.*.
 #
 INT_TYPE = (int, )
 MAX_UINT_TYPE = np.maximum_sctype(np.uint)
