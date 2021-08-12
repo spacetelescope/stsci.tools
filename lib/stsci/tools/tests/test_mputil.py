@@ -1,31 +1,59 @@
 import multiprocessing
 import time
+import pytest
+from itertools import product
+
+from astropy.io import fits
+from astropy.utils.data import get_pkg_data_filename
 
 from stsci.tools.mputil import launch_and_wait, best_tile_layout
 
 
-def takes_time(x):
+SUPPORTED_START_METHODS = []
+for sm in ['spawn', 'fork', 'forkserver']:
+    try:
+        multiprocessing.get_context(sm)
+        SUPPORTED_START_METHODS.append(sm)
+    except ValueError:
+        pass
+
+
+def takes_time(x, img):
     """Example function which takes some time to run."""
     time.sleep(0.001)  # 1 ms is long by computer standards?
 
 
-def test_launch_and_wait():
+@pytest.mark.parametrize('fname, method', (
+    x for x in product([None, 'data/o4sp040b0_raw.fits'],
+                       SUPPORTED_START_METHODS)
+))
+def test_launch_and_wait(fname, method):
     """Illustrate use of launch_and_wait"""
     p = None
     subprocs = []
+    # Passing fits.HDUList in Python 3.8 would cause crash due to spawn start
+    # method:
+    #
+    if fname is None:
+        img = None
+    else:
+        img = fits.open(get_pkg_data_filename(fname))
 
-    for item in range(2, 10):
-        # print(("mputil: instantiating Process for x = "+str(item)))
-        p = multiprocessing.Process(target=takes_time, args=(item,),
-                                    name='takes_time()')
+    for item in range(2, 5):
+        mp_ctx = multiprocessing.get_context(method)
+        p = mp_ctx.Process(target=takes_time, args=(item, img),
+                           name='takes_time()')
         subprocs.append(p)
 
-    # launch em, pool-fashion
-    launch_and_wait(subprocs, 3)
+    if method != 'fork' and fname:
+        with pytest.raises(TypeError):
+            # launch em, pool-fashion
+            launch_and_wait(subprocs, 3)
+    else:
+        launch_and_wait(subprocs, 3)
 
-    # NOTE: If no exception raised by now, considered passed.
-    # by now, all should be finished
-    # print("All subprocs should be finished and joined.")
+    if img:
+        img.close()
 
 
 def test_best_tile_layout():
