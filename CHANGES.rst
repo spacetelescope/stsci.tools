@@ -13,6 +13,9 @@ The following notes provide some details on what has been revised for each
 version in reverse chronological order (most recent version at the top
 of the list).
 
+4.0.2 (unreleased)
+------------------
+
 4.0.1 (2021-08-31)
 ------------------
 
