@@ -3,7 +3,7 @@ documentation:
   - .readthedocs.yml
   - doc/**/*
   - '*.md'
-  - '*.rst'
+  - any: ['*.rst', '!CHANGES.rst']
 
 tests:
   - .bandit.yaml
