@@ -16,6 +16,7 @@ of the list).
 4.0.1 (Unreleased)
 ------------------
 
+- Fixed unpickling of IrafPar. [#141]
 
 4.0.0 (2021-08-12)
 ------------------

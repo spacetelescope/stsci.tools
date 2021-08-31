@@ -586,7 +586,8 @@ class IrafPar:
 
     def __setstate__(self, state):
         """Restore state info from pickle"""
-        self.__dict__ = state
+        self.__dict__.clear()
+        self.__dict__.update(state)
         if self.choice is not None:
             self._setChoiceDict()
 
