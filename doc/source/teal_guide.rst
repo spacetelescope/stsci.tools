@@ -345,5 +345,5 @@ To debug your tricky rule, you can add print-out lines to your rule. TEAL log
 under ``Help`` menu also shows you what it is doing.
 
 
-.. _`ConfigObj module`: http://www.voidspace.org.uk/python/configobj.html
+.. _`ConfigObj module`: https://configobj.readthedocs.io
 .. _`Numpy Documentation`: https://numpydoc.readthedocs.io/en/latest/format.html
