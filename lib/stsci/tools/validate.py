@@ -6,15 +6,11 @@
 #         nico AT tekNico DOT net
 
 # This software is licensed under the terms of the BSD license.
-# http://www.voidspace.org.uk/python/license.shtml
+# https://github.com/DiffSK/configobj/blob/master/LICENSE
 # Basically you're free to copy, modify, distribute and relicense it,
 # So long as you keep a copy of the license with it.
 
-# Scripts maintained at http://www.voidspace.org.uk/python/index.shtml
-# For information about bugfixes, updates and support, please join the
-# ConfigObj mailing list:
-# http://lists.sourceforge.net/lists/listinfo/configobj-develop
-# Comments, suggestions and bug reports welcome.
+# Scripts maintained at https://github.com/DiffSK/configobj
 
 """
     The Validator object is used to check that supplied values
@@ -496,7 +492,7 @@ class Validator:
     ConfigObj, an alternative to ConfigParser which supports lists and
     can validate a config file using a config schema.
     For more details on using Validator with ConfigObj see:
-    http://www.voidspace.org.uk/python/configobj.html
+    https://configobj.readthedocs.io
     """
 
     # this regex does the initial parsing of the checks
