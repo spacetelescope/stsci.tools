@@ -4,17 +4,12 @@
 # E-mail: fuzzyman AT voidspace DOT org DOT uk
 #         nico AT tekNico DOT net
 
-# ConfigObj 4
-# http://www.voidspace.org.uk/python/configobj.html
+# https://configobj.readthedocs.io
 
 # Released subject to the BSD License
-# Please see http://www.voidspace.org.uk/python/license.shtml
+# Please see https://github.com/DiffSK/configobj/blob/master/LICENSE
 
-# Scripts maintained at http://www.voidspace.org.uk/python/index.shtml
-# For information about bugfixes, updates and support, please join the
-# ConfigObj mailing list:
-# http://lists.sourceforge.net/lists/listinfo/configobj-develop
-# Comments, suggestions and bug reports welcome.
+# Scripts maintained at https://github.com/DiffSK/configobj
 
 import os
 import re
