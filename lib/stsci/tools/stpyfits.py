@@ -15,9 +15,9 @@ from astropy.io import fits
 # overridden, but with fits's new extension system it's not necessary
 from astropy.io.fits.util import _is_int
 from astropy.utils import lazyproperty
-from distutils.version import LooseVersion
+from packaging.version import Version
 
-ASTROPY_VER_GE32 = LooseVersion(astropy.__version__) >= LooseVersion('3.2')
+ASTROPY_VER_GE32 = Version(astropy.__version__) >= Version('3.2')
 
 STPYFITS_ENABLED = False  # Not threadsafe TODO: (should it be?)
 
