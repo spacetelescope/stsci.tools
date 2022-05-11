@@ -13,8 +13,13 @@ The following notes provide some details on what has been revised for each
 version in reverse chronological order (most recent version at the top
 of the list).
 
-4.0.2 (unreleased)
+4.1.0 (unreleased)
 ------------------
+
+- Dropped support Python 3.6 and 3.7. Minimum required version of Python
+  is now 3.8. [#146]
+
+- Minimum required version of ``astropy`` is now 5.0.4. [#146]
 
 4.0.1 (2021-08-31)
 ------------------
