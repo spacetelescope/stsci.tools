@@ -2,7 +2,7 @@ documentation:
 - changed-files:
   - any-glob-to-any-file:
     - .github/**/*.md
-    - .readthedocs.yml
+    - .readthedocs.yaml
     - doc/**/*
     - '*.md'
   - all-globs-to-any-file:
