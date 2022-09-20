@@ -365,7 +365,7 @@ def bitfield_to_boolean_mask(bitfield, ignore_flags=0, flip_bits=None,
 
         Defaults to `True`
 
-    dtype : data-type
+    dtype : type, str
         The desired data-type for the output binary mask array.
 
     Returns
