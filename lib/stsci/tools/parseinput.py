@@ -46,7 +46,7 @@ def parseinput(inputlist, outputname=None, atfile=None):
     outputname: str
         desired name for output product to be created from the input files
 
-    atfile: typing.Callable
+    atfile: object
         function to use in interpreting the @-file columns that gets passed to irafglob
 
     Returns
