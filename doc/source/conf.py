@@ -212,5 +212,6 @@ intersphinx_mapping = {
 nitpicky = True
 nitpick_ignore = [
     ('py:class', 'stsci.tools.stpyfits._ConstantValueImageBaseHDU'),
-    ('py:class', 'fits.hdu.PrimaryHDU'),
+    ('py:class', 'astropy.io.fits.hdu.image.PrimaryHDU'),
+    ('py:class', 'astropy.io.fits.hdu.image.ImageHDU'),
 ]
