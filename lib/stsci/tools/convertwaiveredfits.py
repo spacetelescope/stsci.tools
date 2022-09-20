@@ -113,6 +113,7 @@ the returned ``HDUList`` is in multi-extension format.
 """
 import os
 import sys
+
 from astropy.io import fits
 
 __version__ = "1.1 (15 June, 2015)"
@@ -224,10 +225,11 @@ def _processCommandLineArgs():
                 _usage()
                 sys.exit(1)
         else:
-            for i in range(0,len(files)):
+            for i in range(0, len(files)):
                 outputFileNames.append(None)
 
-    return files,outputFileNames,conversionFormat,verbose
+    return files, outputFileNames, conversionFormat, verbose
+
 
 def _verify(waiveredHdul):
     """
@@ -257,8 +259,8 @@ def _verify(waiveredHdul):
                 # The Alternate HDU must be a TableHDU
                 #
                 if waiveredHdul[0].data.shape[0] == \
-                   waiveredHdul[1].data.shape[0] or \
-                   waiveredHdul[1].data.shape[0] == 1:
+                        waiveredHdul[1].data.shape[0] or \
+                        waiveredHdul[1].data.shape[0] == 1:
                     #
                     # The number of arrays in the Primary HDU must match
                     # the number of rows in the TableHDU.  This includes
@@ -269,44 +271,49 @@ def _verify(waiveredHdul):
     # Not a valid waivered Fits file
     #
     raise ValueError("Input object does not represent a valid waivered" + \
-                      " FITS file")
+                     " FITS file")
+
 
 def toMultiExtensionFits(waiveredObject,
                          multiExtensionFileName=None,
                          forceFileOutput=False,
                          verbose=False):
     """
-        Convert the input waivered FITS object to a multi-extension FITS
-        HDUList object.  Generate an output multi-extension FITS file if
-        requested.
+    Convert the input waivered FITS object to a multi-extension FITS
+    HDUList object.  Generate an output multi-extension FITS file if
+    requested.
 
-        Parameters:
+    Parameters
+    ----------
 
-          waiveredObject  input object representing a waivered FITS file;
-                          either a astroyp.io.fits.HDUList object, a file object, or a
-                          file specification
+    waiveredObject: astropy.io.fits.HDUList, str
+        input object representing a waivered FITS file;
+        either an ``astropy.io.fits.HDUList`` object, a file object,
+        or a file specification
 
-          outputFileName  file specification for the output file
-                          Default: None - do not generate an output file
+    outputFileName: str, None
+        file specification for the output file
+        Default: None - do not generate an output file
 
-          forceFileOutput force the generation of an output file when the
-                          outputFileName parameter is None; the output file
-                          specification will be the same as the input file
-                          specification with the last character of the base
-                          name replaced with the character 'h'.
-                          Default: False
+    forceFileOutput: bool
+        force the generation of an output file when the outputFileName parameter is None;
+        the output file specification will be the same as the input file specification with
+        the last character of the base name replaced with the character 'h'.
+        Default: False
 
-          verbose         provide verbose output
-                          Default: False
+    verbose: bool
+        provide verbose output
+        Default: False
 
-        Returns:
+    Returns
+    ----------
+    mhdul: astropy.io.fits.HDUList
+        an ``astropy.io.fits.HDUList`` object in multi-extension FITS format.
 
-          mhdul           an HDUList object in multi-extension FITS format.
-
-        Exceptions:
-
-          TypeError       Input object is not a HDUList, a file object or a
-                          file name
+    Exceptions
+    ----------
+    TypeError
+        Input object is not a ``astropy.io.fits.HDUList``, a file object or a file name
     """
 
     if isinstance(waiveredObject, fits.HDUList):
@@ -325,18 +332,18 @@ def toMultiExtensionFits(waiveredObject,
 
     _verify(whdul)
 
-    undesiredPrimaryHeaderKeywords = ['ORIGIN','FITSDATE','FILENAME',
-                                      'ALLG-MAX','ALLG-MIN','ODATTYPE',
-                                      'SDASMGNU','OPSIZE','CTYPE2',
-                                      'CD2_2','CD2_1','CD1_2','CTYPE3',
-                                      'CD3_3','CD3_1','CD1_3','CD2_3',
+    undesiredPrimaryHeaderKeywords = ['ORIGIN', 'FITSDATE', 'FILENAME',
+                                      'ALLG-MAX', 'ALLG-MIN', 'ODATTYPE',
+                                      'SDASMGNU', 'OPSIZE', 'CTYPE2',
+                                      'CD2_2', 'CD2_1', 'CD1_2', 'CTYPE3',
+                                      'CD3_3', 'CD3_1', 'CD1_3', 'CD2_3',
                                       'CD3_2']
     #
     # Create the multi-extension primary header as a copy of the
     # wavered file primary header
     #
     mPHeader = whdul[0].header
-    originalDataType =  whdul[0].header.get('ODATTYPE','')
+    originalDataType = whdul[0].header.get('ODATTYPE', '')
     #
     # Remove primary header cards with keywords matching the
     # list of undesired primary header keywords
@@ -384,7 +391,7 @@ def toMultiExtensionFits(waiveredObject,
     instrument = mPHeader.get('INSTRUME', '')
     nrows = whdul[1].data.shape[0]
 
-    for i in range(0,nrows):
+    for i in range(0, nrows):
         #
         # Create the basic HDU from the data
         #
@@ -401,7 +408,7 @@ def toMultiExtensionFits(waiveredObject,
         # Add cards to the header for each keyword in the column
         # names of the secondary HDU table from the wavered file
         #
-        for keyword,format,unit in zip(wcols.names,wcols.formats,wcols.units):
+        for keyword, format, unit in zip(wcols.names, wcols.formats, wcols.units):
             if unit == 'LOGICAL-':
                 #
                 # Handle logical values
@@ -414,7 +421,7 @@ def toMultiExtensionFits(waiveredObject,
                 #
                 # Handle floating point values
                 #
-                fmt = '%'+format[1:]+'G'
+                fmt = '%' + format[1:] + 'G'
                 d = eval(fmt % float(whdul[1].data.field(keyword)[i]))  # nosec
             else:
                 d = whdul[1].data.field(keyword)[i]
@@ -422,64 +429,64 @@ def toMultiExtensionFits(waiveredObject,
             kw_descr = ""
             if keyword in whdul[1].header:
                 kw_descr = whdul[1].header[keyword]
-            mhdul[i+1].header[keyword] = (d, kw_descr)
+            mhdul[i + 1].header[keyword] = (d, kw_descr)
         #
         # If original data is unsigned short then scale the data.
         #
         if originalDataType == 'USHORT':
-            mhdul[i+1].scale('int16','',bscale=1,bzero=32768)
-            mhdul[i+1].header.set('BSCALE', value=1, before='BZERO')
+            mhdul[i + 1].scale('int16', '', bscale=1, bzero=32768)
+            mhdul[i + 1].header.set('BSCALE', value=1, before='BZERO')
         #
         # For WFPC2 and FOS instruments require additional header cards
         #
-        if instrument in ('WFPC2','FOC'):
+        if instrument in ('WFPC2', 'FOC'):
             #
             # Add EXTNAME card to header
             #
-            mhdul[i+1].header['EXTNAME'] = (mPHeader.get('FILETYPE',''),
-                                            'extension name')
+            mhdul[i + 1].header['EXTNAME'] = (mPHeader.get('FILETYPE', ''),
+                                              'extension name')
             #
             # Add EXTVER card to the header
             #
-            mhdul[i+1]._extver = i+1
-            mhdul[i+1].header.set('EXTVER', value=i+1,
-                                  comment='extension version number',
-                                  after='EXTNAME')
+            mhdul[i + 1]._extver = i + 1
+            mhdul[i + 1].header.set('EXTVER', value=i + 1,
+                                    comment='extension version number',
+                                    after='EXTNAME')
             #
             # Add the EXPNAME card to the header
             #
-            mhdul[i+1].header.set('EXPNAME',
-                                  mPHeader.get('ROOTNAME', ''),
-                                  '9 character exposure identifier',
-                                  before='EXTVER')
+            mhdul[i + 1].header.set('EXPNAME',
+                                    mPHeader.get('ROOTNAME', ''),
+                                    '9 character exposure identifier',
+                                    before='EXTVER')
             #
             # Add the INHERIT card to the header.
             #
-            mhdul[i+1].header.set('INHERIT', True,
-                                  'inherit the primary header',
-                                  after='EXTVER')
+            mhdul[i + 1].header.set('INHERIT', True,
+                                    'inherit the primary header',
+                                    after='EXTVER')
             #
             # Add the ROOTNAME card to the header
             #
-            mhdul[i+1].header.set('ROOTNAME',
-                                  mPHeader.get('ROOTNAME', ''),
-                                  'rootname of the observationset',
-                                  after='INHERIT')
+            mhdul[i + 1].header.set('ROOTNAME',
+                                    mPHeader.get('ROOTNAME', ''),
+                                    'rootname of the observationset',
+                                    after='INHERIT')
 
     if not multiExtensionFileName and forceFileOutput:
-        base,ext = os.path.splitext(whdul[0]._file.name)
-        multiExtensionFileName = base[:-1]+'h'+ext
+        base, ext = os.path.splitext(whdul[0]._file.name)
+        multiExtensionFileName = base[:-1] + 'h' + ext
 
     verboseString = "Input " + inputObjectDescription + \
                     " converted to multi-extension FITS format."
 
     if multiExtensionFileName:
-        if instrument in ('WFPC2','FOC'):
+        if instrument in ('WFPC2', 'FOC'):
             #
             # write the FILENAME card to the header for the WFPC2 and FOC
             # instruments
             #
-            head,tail = os.path.split(multiExtensionFileName)
+            head, tail = os.path.split(multiExtensionFileName)
             mhdul[0].header.set('FILENAME', value=tail, after='NEXTEND')
 
         mhdul.writeto(multiExtensionFileName, overwrite=True)
@@ -498,41 +505,43 @@ def convertwaiveredfits(waiveredObject,
                         convertTo='multiExtension',
                         verbose=False):
     """
-        Convert the input waivered FITS object to various formats.  The
-        default conversion format is multi-extension FITS.  Generate an output
-        file in the desired format if requested.
+    Convert the input waivered FITS object to various formats.  The
+    default conversion format is multi-extension FITS.  Generate an output
+    file in the desired format if requested.
 
-        Parameters:
+    Parameters
+    ----------
+    waiveredObject: astropy.io.fits.HDUList, str
+        input object representing a waivered FITS file;
+        either an ``astropy.io.fits.HDUList`` object, a file object,
+        or a file specification
 
-          waiveredObject  input object representing a waivered FITS file;
-                          either a astropy.io.fits.HDUList object, a file object, or a
-                          file specification
+    outputFileName: str
+        file specification for the output file
+        Default: None - do not generate an output file
 
-          outputFileName  file specification for the output file
-                          Default: None - do not generate an output file
+    forceFileOutput: bool
+        force the generation of an output file when the outputFileName parameter is None;
+        the output file specification will be the same as the input file specification with
+        the last character of the base name replaced with the character `h` in multi-extension FITS format.
+        Default: False
 
-          forceFileOutput force the generation of an output file when the
-                          outputFileName parameter is None; the output file
-                          specification will be the same as the input file
-                          specification with the last character of the base
-                          name replaced with the character `h` in
-                          multi-extension FITS format.
+    convertTo: str
+        target conversion type
+        Default: 'multiExtension'
 
-                          Default: False
+    verbose: bool
+        provide verbose output
+        Default: False
 
-          convertTo       target conversion type
-                          Default: 'multiExtension'
+    Returns
+    -------
+    hdul: astropy.io.fits.HDUList
+        an HDUList object in the requested format.
 
-          verbose         provide verbose output
-                          Default: False
-
-        Returns:
-
-          hdul            an HDUList object in the requested format.
-
-        Exceptions:
-
-           ValueError       Conversion type is unknown
+    Exceptions
+    ----------
+    ValueError       Conversion type is unknown
     """
 
     if convertTo == 'multiExtension':
@@ -540,18 +549,20 @@ def convertwaiveredfits(waiveredObject,
     else:
         raise ValueError('Conversion type ' + convertTo + ' unknown')
 
-    return func(*(waiveredObject,outputFileName,forceFileOutput,verbose))
+    return func(*(waiveredObject, outputFileName, forceFileOutput, verbose))
+
+
 #
 # *****************************************************************************
 # Main Program callable from the shell
 # *****************************************************************************
 #
 
-def main() :
-    files,outputFiles,conversionFormat,verbose = _processCommandLineArgs()
+def main():
+    files, outputFiles, conversionFormat, verbose = _processCommandLineArgs()
 
-    for f,outputfile in zip(files,outputFiles):
-        convertwaiveredfits(f,outputfile,True,conversionFormat,verbose)
+    for f, outputfile in zip(files, outputFiles):
+        convertwaiveredfits(f, outputfile, True, conversionFormat, verbose)
 
     sys.exit()
 

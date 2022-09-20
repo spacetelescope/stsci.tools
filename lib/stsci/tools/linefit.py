@@ -19,13 +19,12 @@ def linefit(x, y, weights=None):
     """
     Parameters
     ----------
-    y: 1D numpy array
-        The data to be fitted
-    x: 1D numpy array
-        The x values of the y array. x and y must
-        have the same shape.
-    weights:   1D numpy array, must have the same shape as x and y
-        weight values
+    y: numpy.ndarray
+        The data to be fitted (a 1D array)
+    x: numpy.ndarray
+        The ``x`` values of the ``y`` array. ``x`` and ``y`` must have the same shape (1D array).
+    weights: numpy.ndarray
+        weight values, with the same shape as ``x`` and ``y``
 
     Examples
     --------
