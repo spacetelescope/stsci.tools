@@ -210,3 +210,7 @@ intersphinx_mapping = {
 
 # Enable nitpicky mode - which ensures that all references in the docs resolve.
 nitpicky = True
+nitpick_ignore = [
+    ('py:class', 'stsci.tools.stpyfits._ConstantValueImageBaseHDU'),
+    ('py:class', 'fits.hdu.PrimaryHDU'),
+]

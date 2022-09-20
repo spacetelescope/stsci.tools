@@ -252,7 +252,7 @@ def bitfield_to_boolean_mask(bitfield, ignore_flags=0, flip_bits=None,
         as "good" values. However, see ``ignore_flags`` parameter on how to
         selectively ignore some bits in the ``bitfield`` array data.
 
-    ignore_flags : int, str, list, None (Default = 0)
+    ignore_flags : int, str, list, None
         An integer bitmask, a Python list of bit flags, a comma- or
         '+'-separated string list of integer bit flags that indicate what
         bits in the input ``bitfield`` should be *ignored* (i.e., zeroed), or
@@ -315,13 +315,15 @@ def bitfield_to_boolean_mask(bitfield, ignore_flags=0, flip_bits=None,
             an ``ignore_flags`` string value of ``'~0'`` would be equivalent
             to setting ``ignore_flags=None``.
 
+        Defaults to ``0``
+
         .. warning::
 
             Because prepending '~' to a string ``ignore_flags`` is equivalent
             to setting ``flip_bits`` to `True`, ``flip_bits`` cannot be used
             with string ``ignore_flags`` and it must be set to `None`.
 
-    flip_bits : bool, None (Default = None)
+    flip_bits : bool, None
         Specifies whether or not to invert the bits of the bitmask either
         supplied directly through ``ignore_flags`` parameter or built from the
         bit flags passed through ``ignore_flags`` (only when bit flags are
@@ -337,6 +339,8 @@ def bitfield_to_boolean_mask(bitfield, ignore_flags=0, flip_bits=None,
         specified by prepending '~' to string bit flag lists
         (see documentation for ``ignore_flags`` for more details).
 
+        Defaults to `None`
+
         .. warning::
             This parameter can be set to either `True` or `False` **ONLY** when
             ``ignore_flags`` is either an integer bitmask or a Python
@@ -344,7 +348,7 @@ def bitfield_to_boolean_mask(bitfield, ignore_flags=0, flip_bits=None,
             `None` or a string list of flags, ``flip_bits`` **MUST** be set
             to `None`.
 
-    good_mask_value : int, bool (Default = True)
+    good_mask_value : int, bool
         This parameter is used to derive the values that will be assigned to
         the elements in the output boolean mask array that correspond to the
         "good" bit fields (that are 0 after zeroing bits specified by
@@ -358,6 +362,8 @@ def bitfield_to_boolean_mask(bitfield, ignore_flags=0, flip_bits=None,
         fields in ``bitfield`` will be `False` (if ``dtype`` is `numpy.bool_`)
         or 0 (if ``dtype`` is of numerical type) and values of corresponding
         to "bad" flags will be `True` (or 1).
+
+        Defaults to `True`
 
     dtype : data-type
         The desired data-type for the output binary mask array.

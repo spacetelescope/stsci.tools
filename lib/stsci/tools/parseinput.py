@@ -39,21 +39,21 @@ def parseinput(inputlist, outputname=None, atfile=None):
 
     Parameters
     ----------
-    inputlist - string
+    inputlist: str
         specification of input files using either wild-cards, @-file or
         comma-separated list of filenames
 
-    outputname - string
+    outputname: str
         desired name for output product to be created from the input files
 
-    atfile - object
+    atfile: function
         function to use in interpreting the @-file columns that gets passed to irafglob
 
     Returns
     -------
-    files - list of strings
+    files: list[str]
         names of output files to be processed
-    newoutputname - string
+    newoutputname: str
         name of output file to be created.
 
     See Also
@@ -136,11 +136,11 @@ def checkASN(filename):
 
     Parameters
     ----------
-    filename: string
+    filename: str
 
     Returns
     -------
-    validASN  : boolean value
+    validASN  : bool
 
     """
     # Extract the file extn type:
@@ -160,11 +160,11 @@ def isValidAssocExtn(extname):
 
     Parameters
     ----------
-    extname : string
+    extname : str
 
     Returns
     -------
-    isValid  : boolean value
+    isValid  : bool
 
     """
     # Define a list of valid extension types to define an association table.
@@ -184,7 +184,7 @@ def countinputs(inputlist):
 
     Parameters
     ----------
-    inputlist   : string
+    inputlist   : str
         the user input
 
     Returns
