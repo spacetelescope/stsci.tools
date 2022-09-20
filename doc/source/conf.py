@@ -207,3 +207,6 @@ intersphinx_mapping = {
                    (None, 'http://data.astropy.org/intersphinx/matplotlib.inv')),
     'astropy': ('https://docs.astropy.org/en/stable/', None)
 }
+
+# Enable nitpicky mode - which ensures that all references in the docs resolve.
+nitpicky = True
