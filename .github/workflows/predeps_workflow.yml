@@ -2,8 +2,6 @@ name: rc-testing
 
 on:
   workflow_dispatch:
-  # REMOVE ME
-  pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -17,7 +15,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest]
+        # TODO: Add more OS when we are sure this package can run on those.
+        #os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
