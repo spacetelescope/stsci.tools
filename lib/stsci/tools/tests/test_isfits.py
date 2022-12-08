@@ -2,14 +2,15 @@ import os
 import tempfile
 
 import pytest
-from astropy.io.fits.tests import FitsTestCase
 
 from stsci.tools import fileutil as F
 from stsci.tools import stpyfits
 
+from . import FitsTestCase
+
 
 class TestIsFits(FitsTestCase):
-    def setup(self):
+    def setup_method(self):
         self.data_dir = os.path.join(os.path.dirname(__file__), 'data')
         self.temp_dir = tempfile.mkdtemp(prefix='isfits-test-')
 

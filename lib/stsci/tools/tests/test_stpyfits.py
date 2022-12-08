@@ -5,13 +5,14 @@ import tempfile
 import numpy as np
 import pytest
 from astropy.io import fits
-from astropy.io.fits.tests import FitsTestCase
 
 from stsci.tools import stpyfits
 
+from . import FitsTestCase
+
 
 class TestStpyfitsFunctions(FitsTestCase):
-    def setup(self):
+    def setup_method(self):
         self.data_dir = os.path.join(os.path.dirname(__file__), 'data')
         self.temp_dir = tempfile.mkdtemp(prefix='stpyfits-test-')
         self.writekwargs = {'overwrite': True}
