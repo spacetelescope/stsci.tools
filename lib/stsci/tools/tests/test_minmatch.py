@@ -55,7 +55,7 @@ def test_missing_key_returns_none(mmd):
 
 
 def test_getall(mmd):
-    return mmd.getall('t')
+    assert mmd.getall('t') == [1, 2, 10]
 
 
 def test_getall_returns_expected_values(mmd):
