@@ -309,11 +309,11 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
 
 
 class ConstantValuePrimaryHDU(_ConstantValueImageBaseHDU,
-                              fits.hdu.PrimaryHDU):
+                              astropy.io.fits.PrimaryHDU):
     """Primary HDUs with constant value arrays."""
 
 
-class ConstantValueImageHDU(_ConstantValueImageBaseHDU, fits.hdu.ImageHDU):
+class ConstantValueImageHDU(_ConstantValueImageBaseHDU, astropy.io.fits.ImageHDU):
     """Image extension HDUs with constant value arrays."""
 
 
