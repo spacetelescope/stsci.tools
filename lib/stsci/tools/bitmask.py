@@ -43,9 +43,8 @@ __all__ = ['interpret_bit_flags', 'bitfield_to_boolean_mask', 'is_bit_flag']
 # 1.1.2 (11-August-2021) - Improved compatibility with numpy 1.21.*.
 #
 INT_TYPE = (int, )
-MAX_UINT_TYPE = np.maximum_sctype(np.uint)
 SUPPORTED_FLAGS = int(np.bitwise_not(
-    0, dtype=MAX_UINT_TYPE, casting='unsafe'
+    0, dtype="uint64", casting='unsafe'
 ))
 
 
