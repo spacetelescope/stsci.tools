@@ -23,7 +23,7 @@ jobs:
   #  runs-on: ubuntu-latest
   #  steps:
   #  - name: Checkout code
-  #    uses: actions/checkout@v3
+  #    uses: actions/checkout@v4
   #    with:
   #      fetch-depth: 0
   #  - name: Set up Python
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Set up Python
@@ -61,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Set up Python
@@ -80,7 +80,7 @@ jobs:
     needs: [pep_and_audit, initial_tests]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Set up Python
@@ -90,7 +90,7 @@ jobs:
     - name: Install and build
       run: |
         python -m pip install --upgrade pip wheel setuptools
-        python -m pip install git+https://github.com/astropy/astropy.git@main#egg=astropy
+        python -m pip install --extra-index-url https://pypi.anaconda.org/astropy/simple astropy>=0.0.dev0 --pre --upgrade
         python -m pip install -e .[test]
     - name: Test with dev deps
       run: pytest
@@ -100,7 +100,7 @@ jobs:
     needs: [pep_and_audit, initial_tests]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Set up Python
@@ -120,15 +120,15 @@ jobs:
     needs: [pep_and_audit, initial_tests]
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.x'
     - name: Install and build
       run: |
-        python -m pip install --upgrade pip wheel setuptools sphinx
-        python -m pip install -e .
+        python -m pip install --upgrade pip wheel setuptools
+        python -m pip install -e .[docs]
     - name: Docs link check
       run: |
         cd doc
