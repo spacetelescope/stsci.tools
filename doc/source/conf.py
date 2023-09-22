@@ -24,7 +24,7 @@ from stsci.tools import __version__
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.imgmath',
-              'sphinx.ext.napoleon',
+              'numpydoc',
               'sphinx.ext.intersphinx',
               'sphinx.ext.autosummary',
               'sphinx.ext.doctest']
