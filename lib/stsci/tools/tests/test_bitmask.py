@@ -10,8 +10,8 @@ import pytest
 
 from stsci.tools import bitmask
 
-MAX_INT_TYPE = np.maximum_sctype(int)
-MAX_UINT_TYPE = np.maximum_sctype(np.uint)
+MAX_INT_TYPE = np.int64
+MAX_UINT_TYPE = np.uint64
 MAX_UINT_FLAG = np.left_shift(
     MAX_UINT_TYPE(1),
     MAX_UINT_TYPE(np.iinfo(MAX_UINT_TYPE).bits - 1)
