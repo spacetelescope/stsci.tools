@@ -30,7 +30,7 @@ def linefit(x, y, weights=None):
     Examples
     --------
     >>> import numpy as N
-    >>> from numpy.core import around
+    >>> from numpy import around
     >>> x = np.array([-5, -4 ,-3 ,-2 ,-1, 0, 1, 2, 3, 4, 5])
     >>> y = np.array([1, 5, 4, 7, 10, 8, 9, 13, 14, 13, 18])
     >>> around(linefit(x,y), decimals=5)
