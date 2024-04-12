@@ -1,12 +1,18 @@
 documentation:
-  - .github/**/*.md
-  - .readthedocs.yml
-  - doc/**/*
-  - '*.md'
-  - any: ['*.rst', '!CHANGES.rst']
+- changed-files:
+  - any-glob-to-any-file:
+    - .github/**/*.md
+    - .readthedocs.yml
+    - doc/**/*
+    - '*.md'
+  - all-globs-to-any-file:
+    - '*.rst'
+    - '!CHANGES.rst'
 
 tests:
-  - .bandit.yaml
-  - .github/**/*.yml
-  - conftest.py
-  - lib/stsci/tools/tests/**/*
+- changed-files:
+  - any-glob-to-any-file:
+    - .bandit.yaml
+    - .github/**/*.yml
+    - conftest.py
+    - lib/stsci/tools/tests/**/*
