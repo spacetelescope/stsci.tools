@@ -29,7 +29,3 @@ jobs:
             repo: context.repo.repo,
             body: '👋 Thank you for your draft pull request! Do you know that you can use `[ci skip]` or `[skip ci]` in your commit messages to skip running continuous integration tests until you are ready?'
           })
-    - name: Special comment
-      uses: pllim/action-special_pr_comment@main
-      with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
