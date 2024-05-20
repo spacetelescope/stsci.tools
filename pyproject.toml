@@ -103,11 +103,9 @@ filterwarnings = [
     "ignore:unclosed file:ResourceWarning",
 ]
 
-[tool.flake8]
-ignore = [
+[tool.ruff.lint]
+extend-ignore = [
     "E501",
     "W504",
 ]
 
-[tool.distutils.bdist_wheel]
-universal = 1
