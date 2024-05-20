@@ -72,12 +72,8 @@ license-files = [
 
 [tool.setuptools.packages.find]
 where = [
-    "lib",
+    "lib/",
 ]
-namespaces = false
-
-[tool.setuptools.package-dir]
-"" = "lib"
 
 [tool.setuptools.package-data]
 "stsci.tools.tests" = [
