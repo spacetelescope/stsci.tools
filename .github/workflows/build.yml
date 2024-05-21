@@ -10,6 +10,7 @@ jobs:
   build:
     uses: OpenAstronomy/github-actions-workflows/.github/workflows/publish_pure_python.yml@v1
     with:
+      test_command: python -c "import stsci.tools"
       upload_to_pypi: ${{ (github.event_name == 'release') && (github.event.action == 'released') }}
     secrets:
       pypi_token: ${{ secrets.PYPI_PASSWORD_STSCI_MAINTAINER }}
