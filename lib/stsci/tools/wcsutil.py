@@ -156,7 +156,7 @@ class WCSObject:
 
         Parameters
         ==========
-        rootname: string
+        rootname: str
             filename in a format supported by IRAF, specifically::
 
                 filename.hhh[group] -or-
@@ -167,12 +167,12 @@ class WCSObject:
             PyFITS header object from which WCS keywords can be read
         shape:    tuple
             tuple giving (nx,ny,pscale)
-        pa_key: string
+        pa_key: str
             name of keyword to read in telescopy orientation
-        new: boolean
+        new: bool
             specify a new object rather than creating one by
             reading in keywords from an existing image
-        prefix: string
+        prefix: str
             string to use as prefix for creating archived versions
             of WCS keywords, if such keywords do not already exist
 

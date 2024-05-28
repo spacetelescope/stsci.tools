@@ -44,16 +44,16 @@ def xyinterp(x,y,xval):
 
     See Also
     ========
-    numpy
+    numpy.interp
 
     Parameters
     ==========
 
-    x: 1D numpy array
-        independent variable array: MUST BE SORTED
+    x: numpy.ndarray
+        independent 1-dimensional variable array: MUST BE SORTED
 
-    y: 1D numpy array
-        dependent variable array
+    y: numpy.ndarray
+        dependent 1-dimensional variable array
 
     xval: float
         the x value at which you want to know the value of y
