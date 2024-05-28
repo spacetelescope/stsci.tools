@@ -1,5 +1,107 @@
+[project]
+name = "stsci.tools"
+description = "Collection of STScI utility functions"
+requires-python = ">=3.8"
+authors = [
+    { name = "STScI", email = "help@stsci.edu" },
+]
+keywords = [
+    "astronomy",
+    "astrophysics",
+    "utility",
+]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "packaging",
+    "numpy",
+    "astropy>=5.0.4",
+]
+dynamic = [
+    "version",
+]
+
+[project.readme]
+file = "README.md"
+content-type = "text/markdown"
+
+[project.license]
+file = "LICENSE.md"
+content-type = "text/plain"
+
+[project.urls]
+Homepage = "https://www.github.com/spacetelescope/stsci.tools"
+
+[project.scripts]
+convertwaiveredfits = "stsci.tools.convertwaiveredfits:main"
+convertlog = "stsci.tools.convertlog:main"
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-astropy-header",
+    "pytest-doctestplus",
+]
+docs = [
+    "sphinx",
+    "numpydoc",
+    "sphinx_rtd_theme",
+]
+
 [build-system]
-requires = ["setuptools>=30.3.0",
-            "setuptools_scm",
-            "wheel"]
+requires = [
+    "setuptools>=30.3.0",
+    "setuptools_scm",
+    "wheel",
+]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+zip-safe = false
+include-package-data = false
+license-files = [
+    "LICENSE.md",
+]
+
+[tool.setuptools.packages.find]
+where = [
+    "lib/",
+]
+
+[tool.setuptools.package-data]
+"stsci.tools.tests" = [
+    "data/*.*",
+]
+
+[tool.setuptools_scm]
+version_file = "lib/stsci/tools/version.py"
+
+[tool.pytest.ini_options]
+minversion = "6"
+testpaths = [
+    "lib/stsci/tools",
+]
+addopts = "--doctest-modules"
+astropy_header = true
+xfail_strict = true
+filterwarnings = [
+    "error",
+    "ignore:.*Column disp option",
+    "ignore:NMPFIT is deprecated",
+    "ignore:GFIT is deprecated",
+    "ignore:unclosed file:ResourceWarning",
+]
+
+[tool.ruff.lint]
+extend-ignore = [
+    "E501",
+    "W504",
+]
+
