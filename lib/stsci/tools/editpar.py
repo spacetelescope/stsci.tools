@@ -5,7 +5,6 @@ $Id$
 Taken from pyraf/lib/epar.py, originally signed "M.D. De La Pena, 2000 Feb. 4"
 """
 import os
-import sys
 import tempfile
 import time
 
