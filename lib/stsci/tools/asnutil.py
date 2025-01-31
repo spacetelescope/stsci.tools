@@ -13,7 +13,7 @@ import numpy as N
 import os.path
 import time
 
-__version__ = '0.2(2015-06-23)'
+__version__ = '0.2.1 (2025-01-31)'
 
 
 def readASNTable(fname, output=None, prodonly=False):
@@ -84,18 +84,18 @@ def readASNTable(fname, output=None, prodonly=False):
 
     # set output name
     if output is None:
-        if prod_dth:
+        if prod_dth.size:
             output = d['MEMNAME'][prod_dth[0]]
-        elif prod_rpt:
+        elif prod_rpt.size:
             output = d['MEMNAME'][prod_rpt[0]]
-        elif prod_crj:
+        elif prod_crj.size:
             output = d['MEMNAME'][prod_crj[0]]
         else:
             output = fname.split('_')[0]
 
     if prodonly:
         input = d['MEMTYPE'].find('PROD')==0
-        if prod_dth:
+        if prod_dth.size:
             input[prod_dth] = False
     else:
         input = (d['MEMTYPE'].find('EXP')==0)
@@ -114,7 +114,8 @@ def readASNTable(fname, output=None, prodonly=False):
         dshift = False
         try:
             units=colunits[colnames.index('XOFFSET')]
-        except: units='pixels'
+        except:
+            units='pixels'
         xshifts = list(d['XOFFSET'])
         yshifts = list(d['YOFFSET'])
     elif ('XDELTA' in colnames and d['XDELTA'].any()) or  ('YDELTA' in colnames and d['YDELTA'].any()):
@@ -122,7 +123,8 @@ def readASNTable(fname, output=None, prodonly=False):
         dshift = True
         try:
             units=colunits[colnames.index('XDELTA')]
-        except: units='pixels'
+        except:
+            units='pixels'
         xshifts = list(d['XDELTA'])
         yshifts = list(d['YDELTA'])
     else:
@@ -140,7 +142,8 @@ def readASNTable(fname, output=None, prodonly=False):
         except KeyError: refimage = None
         try:
             frame = hdr['shframe']
-        except KeyError: frame = 'input'
+        except KeyError:
+            frame = 'input'
         if 'ROTATION' in colnames:
             rots = list(d['ROTATION'])
         if 'SCALE' in colnames:
@@ -150,12 +153,13 @@ def readASNTable(fname, output=None, prodonly=False):
             row = r
             xshift = xshifts[r]
             yshift = yshifts[r]
-            if rots: rot = rots[r]
-            if scales: scale = scales[r]
+            if rots:
+                rot = rots[r]
+            if scales:
+                scale = scales[r]
             members[infiles[r]] = ASNMember(row=row, dshift=dshift, abshift=abshift, rot=rot, xshift=xshift,
-                                      yshift=yshift, scale=scale, refimage=refimage, shift_frame=frame,
-                                      shift_units=units)
-
+                                          yshift=yshift, scale=scale, refimage=refimage, shift_frame=frame,
+                                          shift_units=units)
 
         asndict= ASNTable(infiles, output=output)
         asndict.create()
