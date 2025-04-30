@@ -12,7 +12,6 @@ keywords = [
 ]
 classifiers = [
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -24,6 +23,7 @@ dependencies = [
     "numpy>=1.19.3",
     "astropy>=5.0.4",
 ]
+license-files = ["LICENSE.md"]
 dynamic = [
     "version",
 ]
@@ -31,10 +31,6 @@ dynamic = [
 [project.readme]
 file = "README.md"
 content-type = "text/markdown"
-
-[project.license]
-file = "LICENSE.md"
-content-type = "text/plain"
 
 [project.urls]
 Homepage = "https://www.github.com/spacetelescope/stsci.tools"
@@ -66,9 +62,6 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 zip-safe = false
 include-package-data = false
-license-files = [
-    "LICENSE.md",
-]
 
 [tool.setuptools.packages.find]
 where = [
