@@ -3,7 +3,7 @@ name = "stsci.tools"
 description = "Collection of STScI utility functions"
 requires-python = ">=3.9"
 authors = [
-    { name = "STScI", email = "help@stsci.edu" },
+    { name = "STScI" },
 ]
 keywords = [
     "astronomy",
