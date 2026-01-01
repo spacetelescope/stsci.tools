@@ -14,6 +14,8 @@ updates:
     actions:
       patterns:
         - "*"
+  cooldown:
+    default-days: 7
 - package-ecosystem: "github-actions" # See documentation for possible values
   directory: ".github/workflows" # Location of package manifests
   schedule:
@@ -22,3 +24,5 @@ updates:
     actions:
       patterns:
         - "*"
+  cooldown:
+    default-days: 7
