@@ -1,7 +1,7 @@
 [project]
 name = "stsci.tools"
 description = "Collection of STScI utility functions"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     { name = "STScI" },
 ]
@@ -41,7 +41,7 @@ convertlog = "stsci.tools.convertlog:main"
 
 [project.optional-dependencies]
 test = [
-    "pytest",
+    "pytest>=9.0",
     "pytest-astropy-header",
     "pytest-doctestplus",
 ]
@@ -76,12 +76,12 @@ where = [
 [tool.setuptools_scm]
 version_file = "lib/stsci/tools/version.py"
 
-[tool.pytest.ini_options]
-minversion = "6"
+[tool.pytest]
+minversion = "9.0"
 testpaths = [
     "lib/stsci/tools",
 ]
-addopts = "--doctest-modules"
+addopts = ["--doctest-modules"]
 astropy_header = true
 xfail_strict = true
 filterwarnings = [
