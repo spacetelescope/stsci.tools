@@ -1122,7 +1122,6 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
             ## From this point on, only the square matrix, consisting of the
             ## triangle of R, is needed.
             fjac = fjac[0:n, 0:n]
-            fjac.shape = [n, n]
             temp = fjac.copy()
             for i in range(n):
                 temp[:,i] = fjac[:, ipvt[i]]
