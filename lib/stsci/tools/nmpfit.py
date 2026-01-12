@@ -1338,8 +1338,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
             if (n > 0 and sz[0] >= n and sz[1] >= n and len(ipvt) >= n):
                 catch_msg = 'computing the covariance matrix'
-                cv = self.calc_covar(fjac[0:n,0:n], ipvt[0:n])
-                cv.shape = [n, n]
+                cv = self.calc_covar(fjac[0:n,0:n], ipvt[0:n]).reshape((n, n))
                 nn = len(xall)
 
                 ## Fill in actual covariance matrix, accounting for fixed
@@ -1535,13 +1534,11 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
             ## This definition is c1onsistent with CURVEFIT
             ## Sign error found (thanks Jesus Fernandez <fernande@irm.chu-caen.fr>)
-            fjac.shape = [m,nall]
-            fjac = -fjac
+            fjac = -fjac.reshape((m, nall))
 
             ## Select only the free parameters
             if len(ifree) < nall:
-                fjac = fjac[:,ifree]
-                fjac.shape = [m, n]
+                fjac = fjac[:,ifree].reshape((m, n))
                 return(fjac)
 
         fjac = np.zeros([m, n], float)
@@ -2254,8 +2251,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         if ipvt is None:
             ipvt = np.arange(n)
-        r = rr.copy()
-        r.shape = [n,n]
+        r = rr.copy().reshape((n, n))
 
         ## For the inverse of r in the full upper triangle of r
         l = -1
