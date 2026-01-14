@@ -13,10 +13,15 @@ The following notes provide some details on what has been revised for each
 version in reverse chronological order (most recent version at the top
 of the list).
 
-4.1.2 (unreleased)
+4.2.1 (unreleased)
+------------------
+
+
+4.2.0 (2025-02-06)
 ------------------
 
 - Numpy 2 compatibility for asnutil module. [#170]
+- Remove unused modules [#162]
 
 4.1.1 (2024-07-01)
 ------------------
