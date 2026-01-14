@@ -2251,7 +2251,7 @@ e.g. mpfit.status, mpfit.errmsg, mpfit.params, npfit.niter, mpfit.covar.
 
         if ipvt is None:
             ipvt = np.arange(n)
-        r = rr.copy().reshape((n, n))
+        r = rr.reshape((n, n), copy=True)
 
         ## For the inverse of r in the full upper triangle of r
         l = -1
