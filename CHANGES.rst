@@ -13,7 +13,7 @@ The following notes provide some details on what has been revised for each
 version in reverse chronological order (most recent version at the top
 of the list).
 
-4.2.1 (unreleased)
+4.3.0 (unreleased)
 ------------------
 
 - Numpy 2.5 compatibility [#191]
