@@ -20,7 +20,7 @@ classifiers = [
 ]
 dependencies = [
     "packaging",
-    "numpy>=1.19.3",
+    "numpy>=1.21.6",
     "astropy>=5.0.4",
 ]
 license-files = ["LICENSE.md"]
