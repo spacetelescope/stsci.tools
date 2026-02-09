@@ -16,6 +16,9 @@ of the list).
 4.2.1 (unreleased)
 ------------------
 
+- Numpy 2.5 compatibility [#191]
+- Minimum supported Python is now 3.10 and numpy 1.21.6 [#174, #187]
+- Fixed packaging for setuptools 82 [#194]
 
 4.2.0 (2025-02-06)
 ------------------
