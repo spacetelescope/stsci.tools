@@ -90,7 +90,6 @@ filterwarnings = [
     "ignore:NMPFIT is deprecated",
     "ignore:GFIT is deprecated",
     "ignore:unclosed file:ResourceWarning",
-    "ignore:The chararray class is deprecated:DeprecationWarning",
 ]
 
 [tool.ruff.lint]
