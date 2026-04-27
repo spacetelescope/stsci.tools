@@ -9,6 +9,7 @@ of Constant Data Value Arrays.
 import functools
 import numpy as np
 
+import astropy
 from astropy.io import fits
 # A few imports for backward compatibility; in the earlier stpyfits these were
 # overridden, but with fits's new extension system it's not necessary
