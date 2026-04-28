@@ -17,7 +17,7 @@ from astropy.io.fits.util import _is_int
 from astropy.utils import lazyproperty
 from packaging.version import Version
 
-ASTROPY_VER_GE32 = Version(astropy.__version__) >= Version('3.2')
+NUMPY_LT_2_5 = Version(np.__version__) < Version("2.5.0.dev0")
 
 STPYFITS_ENABLED = False  # Not threadsafe TODO: (should it be?)
 
@@ -47,13 +47,14 @@ def with_stpyfits(func):
         global STPYFITS_ENABLED
         was_enabled = STPYFITS_ENABLED
         enable_stpyfits()
-        if ASTROPY_VER_GE32:
-            from astropy.io.fits.header import _BasicHeader
-            fromfile_orig = _BasicHeader.fromfile
 
-            def fromfile_patch(*args):
-                raise Exception
-            _BasicHeader.fromfile = fromfile_patch
+        from astropy.io.fits.header import _BasicHeader
+        fromfile_orig = _BasicHeader.fromfile
+
+        def fromfile_patch(*args):
+            raise Exception
+
+        _BasicHeader.fromfile = fromfile_patch
 
         try:
             # BUG: Forcefully disable lazy loading.
@@ -67,8 +68,7 @@ def with_stpyfits(func):
             if not was_enabled:
                 disable_stpyfits()
 
-            if ASTROPY_VER_GE32:
-                _BasicHeader.fromfile = fromfile_orig
+            _BasicHeader.fromfile = fromfile_orig
 
         return retval
     return wrapped_with_stpyfits
@@ -179,7 +179,10 @@ class _ConstantValueImageBaseHDU(fits.hdu.image._ImageBaseHDU):
             if raw_data.dtype.str[0] != '>':
                 raw_data = raw_data.byteswap(True)
 
-            raw_data.dtype = raw_data.dtype.newbyteorder('>')
+            if NUMPY_LT_2_5:
+                raw_data.dtype = raw_data.dtype.newbyteorder('>')
+            else:
+                np.ndarray._set_dtype(raw_data, raw_data.dtype.newbyteorder('>'))
 
             if self._bzero != 0 or self._bscale != 1:
                 if bitpix > 16:  # scale integers to Float64
