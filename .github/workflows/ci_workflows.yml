@@ -73,7 +73,7 @@ jobs:
         python -m pip install --upgrade pip wheel setuptools
         python -m pip install -e .[test]
     - name: Test without optional deps
-      run: pytest
+      run: pytest -v
 
   dev_deps_tests:
     runs-on: ubuntu-latest

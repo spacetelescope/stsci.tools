@@ -23,10 +23,8 @@ def takes_time(x, img):
     time.sleep(0.001)  # 1 ms is long by computer standards?
 
 
-@pytest.mark.parametrize('fname, method', (
-    x for x in product([None, 'data/o4sp040b0_raw.fits'],
-                       SUPPORTED_START_METHODS)
-))
+@pytest.mark.parametrize("fname", [None, 'data/o4sp040b0_raw.fits'])
+@pytest.mark.parametrize("method", SUPPORTED_START_METHODS)
 def test_launch_and_wait(fname, method):
     """Illustrate use of launch_and_wait"""
     p = None
