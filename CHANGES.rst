@@ -13,10 +13,15 @@ The following notes provide some details on what has been revised for each
 version in reverse chronological order (most recent version at the top
 of the list).
 
+4.3.1 (2026-09-08)
+------------------
+
+- Pytest 10 compatibility
+- Numpy 2.5 compatibility [#191]
+
 4.3.0 (2026-02-09)
 ------------------
 
-- Numpy 2.5 compatibility [#191]
 - Minimum supported Python is now 3.10 and numpy 1.21.6 [#174, #187]
 - Fixed packaging for setuptools 82 [#194]
 
